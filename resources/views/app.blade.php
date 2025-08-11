@@ -19,11 +19,15 @@
 
         <style>
             html {
-                background-color: oklch(1 0 0);
+                background-color: white;
             }
 
             html.dark {
-                background-color: oklch(0.145 0 0);
+                background-color: rgb(24, 24, 27);
+            }
+            
+            body {
+                background-color: transparent;
             }
         </style>
 

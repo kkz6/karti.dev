@@ -1,3 +1,5 @@
 <?php
 
-return [];
+return [
+    Modules\Frontend\Providers\FrontendServiceProvider::class,
+];

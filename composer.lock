@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "659c742785f548f5e29f007484bfb7e4",
+    "content-hash": "65d3b6e6e030a5adf8870b9f5b79b4f2",
     "packages": [
         {
             "name": "amphp/amp",
@@ -4020,6 +4020,38 @@
                     "Modules\\Auth\\Tests\\": "tests/",
                     "Modules\\Auth\\Database\\Factories\\": "database/factories/",
                     "Modules\\Auth\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "modules/frontend",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "modules/frontend",
+                "reference": "506d7eed00d655c3a2c257bf51cc5bb8804bb54f"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Modules\\Frontend\\Providers\\FrontendServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Modules\\Frontend\\": "src/",
+                    "Modules\\Frontend\\Tests\\": "tests/",
+                    "Modules\\Frontend\\Database\\Factories\\": "database/factories/",
+                    "Modules\\Frontend\\Database\\Seeders\\": "database/seeders/"
                 }
             },
             "license": [
