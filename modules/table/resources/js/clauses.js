@@ -1,5 +1,6 @@
 // Simple clause symbols for table filters
 let clauseSymbols = {
+    // Basic equality
     'equals': '=',
     'not_equals': '≠',
 
@@ -39,6 +40,7 @@ let clauseSymbols = {
     'after': '▶',
     'equal_or_after': '≥',
 
+    // Legacy mappings (for backward compatibility)
     '=': '=',
     '!=': '≠',
     '>': '>',
@@ -46,13 +48,7 @@ let clauseSymbols = {
     '<': '<',
     '<=': '≤',
     'like': '∼',
-    'not_like': '≁',
-    'in': '∈',
-    'not_in': '∉',
-    'between': '⇔',
-    'not_between': '⇎',
-    'is_null': '∅',
-    'is_not_null': '≠∅'
+    'not_like': '≁'
 };
 
 export const getSymbolForClause = (clause) => {

@@ -1,11 +1,26 @@
 import { useLang } from '@shared/hooks/use-lang'
-import { Button } from '@shared/components/ui/button'
 import { cn } from '@shared/lib/utils'
-import { ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from '@shared/components/ui/pagination'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@shared/components/ui/select'
 import { useMemo } from 'react'
 
-export default function Pagination({ meta, options, perPage, type = 'full', onClick, onChange }) {
+export default function TablePagination({ meta, options, perPage, type = 'full', onClick, onChange }) {
     const { t } = useLang();
+
     const translatedString = useMemo(() => {
         let params = {
             current_page: meta.current_page,
@@ -28,76 +43,137 @@ export default function Pagination({ meta, options, perPage, type = 'full', onCl
         }
 
         return t(type === 'full' ? 'table::table.current_page_of_last' : 'table::table.current_page', params)
-    }, [meta, type])
+    }, [meta, type, t])
+
+    // Generate page numbers to show
+    const generatePageNumbers = () => {
+        const current = meta.current_page;
+        const total = meta.last_page;
+        const delta = 2; // Pages to show on each side of current page
+        const pages = [];
+
+        // Always show first page
+        pages.push(1);
+
+        // Calculate range around current page
+        const rangeStart = Math.max(2, current - delta);
+        const rangeEnd = Math.min(total - 1, current + delta);
+
+        // Add ellipsis after first page if needed
+        if (rangeStart > 2) {
+            pages.push('...');
+        }
+
+        // Add range around current page
+        for (let i = rangeStart; i <= rangeEnd; i++) {
+            pages.push(i);
+        }
+
+        // Add ellipsis before last page if needed
+        if (rangeEnd < total - 1) {
+            pages.push('...');
+        }
+
+        // Always show last page (if there's more than one page)
+        if (total > 1) {
+            pages.push(total);
+        }
+
+        return pages;
+    };
+
+    const pageNumbers = generatePageNumbers();
 
     return (
-        <div className="it-pagination flex w-full justify-between space-x-6 md:w-auto md:items-center lg:space-x-8 rtl:space-x-reverse">
-            <div className="flex flex-col md:flex-row md:items-center">
-                <p className="mb-1 font-medium md:mb-0 md:me-2">{t('table::table.rows_per_page')}</p>
-                <select
-                    value={perPage}
-                    className={cn(
-                        "it-pagination-per-page-select",
-                        "border-input bg-background text-foreground flex h-8 w-full items-center justify-between rounded-md border px-3 py-1.5 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
-                    )}
-                    onChange={(e) => onChange(e.target.value)}
+        <div className="it-pagination flex w-full flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            {/* Rows per page */}
+            <div className="flex items-center gap-2">
+                <p className="text-sm font-medium">{t('table::table.rows_per_page')}</p>
+                <Select
+                    value={perPage.toString()}
+                    onValueChange={(value) => onChange(parseInt(value))}
                 >
-                    {options.map((option) => (
-                        <option
-                            key={option}
-                            value={option}
-                        >
-                            {option}
-                        </option>
-                    ))}
-                </select>
+                    <SelectTrigger className="it-pagination-per-page-select h-8 w-auto min-w-[70px]">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {options.map((option) => (
+                            <SelectItem
+                                key={option}
+                                value={option.toString()}
+                            >
+                                {option}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
-            <div className="flex flex-col md:flex-row md:items-center">
-                {type !== 'cursor' && <div className="mb-1 font-medium tabular-nums md:mb-0 md:me-4">{translatedString}</div>}
-                <div className="flex flex-row items-center space-x-2 rtl:flex-row-reverse">
-                    <Button
-                        disabled={meta.on_first_page}
-                        variant="outline"
-                        size="sm"
-                        className="it-pagination-first-page-button"
-                        onClick={() => onClick(meta.first_page_url)}
-                        aria-label="Go to first page"
-                    >
-                        <ChevronsLeft className="size-4" />
-                    </Button>
-                    <Button
-                        disabled={!meta.prev_page_url}
-                        variant="outline"
-                        size="sm"
-                        className="it-pagination-previous-page-button"
-                        onClick={() => onClick(meta.prev_page_url)}
-                        aria-label="Go to previous page"
-                    >
-                        <ChevronLeft className="size-4" />
-                    </Button>
-                    <Button
-                        disabled={!meta.next_page_url}
-                        variant="outline"
-                        size="sm"
-                        className="it-pagination-next-page-button"
-                        onClick={() => onClick(meta.next_page_url)}
-                        aria-label="Go to next page"
-                    >
-                        <ChevronRight className="size-4" />
-                    </Button>
-                    {type === 'full' && (
-                        <Button
-                            disabled={meta.on_last_page}
-                            variant="outline"
-                            size="sm"
-                            className="it-pagination-last-page-button"
-                            onClick={() => onClick(meta.last_page_url)}
-                            aria-label="Go to last page"
-                        >
-                            <ChevronsRight className="size-4" />
-                        </Button>
-                    )}
-                </div>
+
+            {/* Page info and navigation */}
+            <div className="flex items-center gap-4">
+                {/* Page info */}
+                <p className="text-sm text-muted-foreground">
+                    {translatedString}
+                </p>
+
+                {/* Pagination */}
+                {meta.last_page > 1 && (
+                    <Pagination>
+                        <PaginationContent>
+                            {/* Previous button */}
+                            <PaginationItem>
+                                <PaginationPrevious
+                                    href="#"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        if (!meta.on_first_page) {
+                                            onClick(meta.current_page - 1);
+                                        }
+                                    }}
+                                    className={cn(
+                                        meta.on_first_page && "pointer-events-none opacity-50"
+                                    )}
+                                />
+                            </PaginationItem>
+
+                            {/* Page numbers */}
+                            {pageNumbers.map((page, index) => (
+                                <PaginationItem key={index}>
+                                    {page === '...' ? (
+                                        <PaginationEllipsis />
+                                    ) : (
+                                        <PaginationLink
+                                            href="#"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                onClick(page);
+                                            }}
+                                            isActive={page === meta.current_page}
+                                        >
+                                            {page}
+                                        </PaginationLink>
+                                    )}
+                                </PaginationItem>
+                            ))}
+
+                            {/* Next button */}
+                            <PaginationItem>
+                                <PaginationNext
+                                    href="#"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        if (!meta.on_last_page) {
+                                            onClick(meta.current_page + 1);
+                                        }
+                                    }}
+                                    className={cn(
+                                        meta.on_last_page && "pointer-events-none opacity-50"
+                                    )}
+                                />
+                            </PaginationItem>
+                        </PaginationContent>
+                    </Pagination>
+                )}
             </div>
         </div>
     )

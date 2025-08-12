@@ -4,6 +4,13 @@ import { Input } from '@shared/components/ui/input'
 import { Button } from '@shared/components/ui/button'
 import { Calendar } from '@shared/components/ui/calendar'
 import { Popover, PopoverTrigger, PopoverContent } from '@shared/components/ui/popover'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@shared/components/ui/select'
 import { cn } from '@shared/lib/utils'
 import { getSymbolForClause } from './clauses'
 import { Filter as FilterIcon, Search, X, CalendarIcon } from 'lucide-react'
@@ -116,24 +123,27 @@ const Filter = ({ filter, value, onChange, onRemove }) => {
                             <div className="me-2 w-5">
                                 <FilterIcon className="size-5" />
                             </div>
-                            <select
-                                ref={clauseSelectRef}
+                            <Select
                                 value={value.clause}
-                                onChange={(e) => setFilterClause(e.target.value)}
-                                className={cn(
-                                    "it-filter-clause-select-input w-full",
-                                    "border-input bg-background text-foreground flex h-8 items-center justify-between rounded-md border px-3 py-1.5 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
-                                )}
+                                onValueChange={(newClause) => setFilterClause(newClause)}
                             >
-                                {filter.clauses.map((clause) => (
-                                    <option
-                                        key={clause}
-                                        value={clause}
-                                    >
-                                        {t(`table::table.clause_${clause}`)}
-                                    </option>
-                                ))}
-                            </select>
+                                <SelectTrigger
+                                    ref={clauseSelectRef}
+                                    className="it-filter-clause-select-input w-full h-8"
+                                >
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {filter.clauses.map((clause) => (
+                                        <SelectItem
+                                            key={clause}
+                                            value={clause}
+                                        >
+                                            {t(`table::table.clause_${clause}`)}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                     )}
                     {filter.type !== 'boolean' && value.clause !== 'is_set' && value.clause !== 'is_not_set' && (
@@ -169,31 +179,50 @@ const Filter = ({ filter, value, onChange, onRemove }) => {
                                         className="w-full"
                                     />
                                 ) : filter.type === 'set' ? (
-                                    <select
-                                        value={value.value}
-                                        onChange={(e) => {
-                                            if (value.clause === 'in' || value.clause === 'not_in' || filter.multiple) {
+                                    (value.clause === 'in' || value.clause === 'not_in' || filter.multiple) ? (
+                                        // Multiple selection - keep native select for now as Shadcn doesn't have multi-select
+                                        <select
+                                            value={value.value}
+                                            onChange={(e) => {
                                                 const selectedValues = Array.from(e.target.selectedOptions, (option) => option.value)
                                                 setFilterValue(selectedValues)
-                                            } else {
-                                                setFilterValue(e.target.value)
-                                            }
-                                        }}
-                                        className={cn(
-                                            "w-full",
-                                            "border-input bg-background text-foreground flex h-8 items-center justify-between rounded-md border px-3 py-1.5 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
-                                        )}
-                                        multiple={value.clause === 'in' || value.clause === 'not_in' || filter.multiple}
-                                    >
-                                        {filter.options.map((option) => (
-                                            <option
-                                                key={option.value}
-                                                value={option.value}
-                                            >
-                                                {option.label}
-                                            </option>
-                                        ))}
-                                    </select>
+                                            }}
+                                            className={cn(
+                                                "w-full",
+                                                "border-input bg-background text-foreground flex h-8 items-center justify-between rounded-md border px-3 py-1.5 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
+                                            )}
+                                            multiple
+                                        >
+                                            {filter.options.map((option) => (
+                                                <option
+                                                    key={option.value}
+                                                    value={option.value}
+                                                >
+                                                    {option.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    ) : (
+                                        // Single selection - use Shadcn Select
+                                        <Select
+                                            value={value.value || ''}
+                                            onValueChange={(newValue) => setFilterValue(newValue)}
+                                        >
+                                            <SelectTrigger className="w-full h-8">
+                                                <SelectValue placeholder="Select an option..." />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {filter.options.map((option) => (
+                                                    <SelectItem
+                                                        key={option.value}
+                                                        value={option.value}
+                                                    >
+                                                        {option.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )
                                                                     ) : filter.type === 'date' ? (
                                         <Popover>
                                             <PopoverTrigger asChild>
