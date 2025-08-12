@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Category extends Model
 {
@@ -30,7 +31,12 @@ class Category extends Model
         'sort_order' => 0,
     ];
 
-    public function articles(): BelongsToMany
+    public function articles(): HasMany
+    {
+        return $this->hasMany(Article::class);
+    }
+
+    public function articlesMany(): BelongsToMany
     {
         return $this->belongsToMany(Article::class, 'article_categories');
     }

@@ -4099,7 +4099,7 @@
             "dist": {
                 "type": "path",
                 "url": "modules/pages",
-                "reference": "c7fc9f7e24bccc18b078d971a163e06857cbc4f7"
+                "reference": "a99ae61df68099579e8d7ab1b9318a78c1cf1ff8"
             },
             "type": "library",
             "extra": {

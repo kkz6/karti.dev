@@ -5,6 +5,7 @@ namespace Modules\Blog\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -25,6 +26,8 @@ class Article extends Model
         'meta_title',
         'meta_description',
         'reading_time_minutes',
+        'category_id',
+        'user_id',
     ];
 
     protected $casts = [
@@ -35,6 +38,16 @@ class Article extends Model
     protected $attributes = [
         'status' => 'draft',
     ];
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(\Modules\Auth\Models\User::class);
+    }
 
     public function categories(): BelongsToMany
     {
@@ -54,7 +67,7 @@ class Article extends Model
     public function scopePublished($query)
     {
         return $query->where('status', 'published')
-                    ->where('published_at', '<=', now());
+            ->where('published_at', '<=', now());
     }
 
     public function scopeDraft($query)

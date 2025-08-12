@@ -3,13 +3,13 @@
 namespace Modules\Blog\Tables;
 
 use Modules\Blog\Models\Article;
+use Modules\Table\Table;
 use Modules\Table\Action;
 use Modules\Table\Columns;
 use Modules\Table\Export;
 use Modules\Table\Filters;
-use Modules\Table\Table;
 
-class ArticleTable extends Table
+class Articles extends Table
 {
     protected ?string $resource = Article::class;
 
