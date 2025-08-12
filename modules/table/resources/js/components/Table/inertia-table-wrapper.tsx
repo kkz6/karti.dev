@@ -1,6 +1,6 @@
 import { EmptyState } from '@shared/components/ui/empty-state';
 import { LucideIcon } from 'lucide-react';
-import Table from '../../Table.jsx';
+import Table from '../../TableComponent';
 import type { Action, FilterState, TableConfig } from '../../types';
 
 interface InertiaTableWrapperProps<T = any> {

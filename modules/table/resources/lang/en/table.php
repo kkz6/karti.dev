@@ -14,10 +14,15 @@ return [
 
     // Search and filters
     'search_placeholder' => 'Search...',
+    'active_filters' => 'Active Filters',
     'no_results_found' => 'No results found',
     'between_values_and' => 'and',
 
     // Row selection
+    'select_all' => 'Select All',
+    'select_row' => 'Select Row',
+    'selected_count' => ':count selected',
+    'clear_selection' => 'Clear Selection',
     'one_row_selected' => '1 row selected',
     'all_rows_selected' => 'All :total rows selected',
     'selected_rows' => ':count of :total rows selected',
@@ -45,6 +50,15 @@ return [
 
     // Loading states
     'loading_placeholder' => 'Loading...',
+
+    // Empty states
+    'empty_title' => 'No Data Found',
+    'empty_message' => 'There are no records to display.',
+
+    // Table states
+    'actions' => 'Actions',
+    'yes' => 'Yes',
+    'no' => 'No',
 
     // Filter clauses
     'clause_equals' => 'equals',

@@ -1,8 +1,8 @@
 import { getActionForItem, getClickableColumn, visitUrl } from './urlHelpers'
-import { setClauseSymbols } from './clauses.ts'
-import { setIconResolver } from './iconResolver.ts'
-import { useActions } from './actions.ts'
-import { useTable } from './table.js'
-import Table from './Table.jsx'
+import { setClauseSymbols } from './clauses'
+import { setIconResolver } from './iconResolver'
+import { useActions } from './actions'
+import { useTable } from './table'
+import Table from './TableComponent'
 
 export { getClickableColumn, setClauseSymbols, setIconResolver, Table, useActions, useTable, visitUrl, getActionForItem }

@@ -1,7 +1,7 @@
 import { Button } from '@shared/components/ui/button';
 import { InboxIcon } from 'lucide-react';
 import DynamicIcon from './DynamicIcon';
-import type { Action, EmptyStateProps, UrlConfig } from './types';
+import type { Action, EmptyStateProps } from './types';
 import { visitUrl } from './urlHelpers';
 
 export default function EmptyState({
@@ -26,8 +26,8 @@ export default function EmptyState({
             {icon !== false && (
                 <div className="it-empty-state-icon-wrapper mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-white shadow-sm dark:bg-zinc-800">
                     <DynamicIcon
-                        resolver={icon === true ? () => InboxIcon : iconResolver}
-                        icon={icon === true ? 'InboxIcon' : icon}
+                        resolver={icon === true ? ((() => InboxIcon) as any) : (iconResolver as any)}
+                        icon={icon === true ? 'InboxIcon' : (icon as string)}
                         context={null}
                         className="size-6 text-gray-500 dark:text-gray-400"
                     />
@@ -53,8 +53,8 @@ export default function EmptyState({
                                 {action.icon && iconResolver && (
                                     <DynamicIcon
                                         className="it-empty-state-action-button-icon me-2 size-4"
-                                        resolver={iconResolver}
-                                        icon={action.icon}
+                                        resolver={iconResolver as any}
+                                        icon={action.icon as string}
                                         context={null}
                                     />
                                 )}
@@ -72,8 +72,8 @@ export default function EmptyState({
                                 {action.icon && iconResolver && (
                                     <DynamicIcon
                                         className="it-empty-state-action-button-icon me-2 size-4"
-                                        resolver={iconResolver}
-                                        icon={action.icon}
+                                        resolver={iconResolver as any}
+                                        icon={action.icon as string}
                                         context={null}
                                     />
                                 )}

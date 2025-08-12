@@ -1,5 +1,5 @@
 import { LucideIcon } from 'lucide-react';
-import { TableAction } from './actions';
+import { TableAction, TableExport } from './actions';
 import { ActionItem } from './url';
 
 // Re-export URL types
@@ -66,30 +66,18 @@ export interface TableColumn {
     [key: string]: any;
 }
 
-export interface TableResource<T = any> {
+// This interface is moved to the bottom to avoid conflicts
+
+export interface TableConfig<T = any> extends TableResource {
     results?: {
         total: number;
         data: T[];
         per_page?: number;
         current_page?: number;
         last_page?: number;
+        last_page_url?: string;
     };
-    state: {
-        search?: string;
-        filters: Record<string, FilterState>;
-        sort?: {
-            column: string;
-            direction: 'asc' | 'desc';
-        };
-        page?: number;
-        perPage?: number;
-    };
-    columns: TableColumn[];
-    actions?: Action[];
-    [key: string]: any;
 }
-
-export interface TableConfig<T = any> extends TableResource<T> {}
 
 // Dynamic Icon Types (removed duplicate - using definition below)
 
@@ -342,4 +330,112 @@ export interface RowActionsProps {
     onSuccess?: ((action: TableAction, keys: (string | number)[]) => void) | null;
     onError?: ((action: TableAction, keys: (string | number)[], error: any) => void) | null;
     onHandle?: ((action: TableAction, keys: (string | number)[], onFinish?: () => void) => void) | null;
+}
+
+// Pagination Types
+export interface PaginationMeta {
+    current_page: number;
+    from: number;
+    last_page: number;
+    on_first_page: boolean;
+    on_last_page: boolean;
+    per_page: number;
+    to: number;
+    total: number;
+}
+
+export interface TablePaginationProps {
+    meta: PaginationMeta;
+    options: number[];
+    perPage: number;
+    type?: 'full' | 'simple';
+    onClick: (page: number) => void;
+    onChange: (perPage: number) => void;
+}
+
+// Table Hook Types
+export interface TableResource {
+    name: string;
+    state: TableState;
+    columns: TableColumn[];
+    filters: FilterDefinition[];
+    actions?: TableAction[];
+    exports?: TableExport[];
+    results?: {
+        total: number;
+        data: any[];
+        per_page?: number;
+        current_page?: number;
+        last_page?: number;
+        last_page_url?: string;
+        links?: { url: string | null; label: string; active: boolean }[];
+    };
+    defaultSort: string;
+    defaultPerPage: number;
+    perPageOptions?: number[];
+    keyAttribute?: string;
+    paginationType: 'full' | 'simple' | 'cursor';
+    debounceTime: number;
+    scrollPositionAfterPageChange: 'preserve' | 'topOfTable' | string;
+    reloadProps: string[];
+    hasBulkActions: boolean;
+    hasExports: boolean;
+    hasExportsThatLimitsToSelectedRows: boolean;
+    hasRowActions: boolean;
+}
+
+export interface TableState {
+    search: string | null;
+    sort: string | null;
+    perPage: number;
+    page?: number;
+    cursor?: string | null;
+    filters: Record<string, FilterState>;
+    columns: Record<string, boolean>;
+    sticky: string[];
+}
+
+export interface UseTableReturn {
+    addFilter: (filter: FilterDefinition) => void;
+    hasBulkActions: boolean;
+    hasExports: boolean;
+    hasFilters: boolean;
+    hasSelectableRows: boolean;
+    hasStickyColumns: boolean;
+    isNavigating: boolean;
+    isSortedByColumn: (column: TableColumn) => 'asc' | 'desc' | false;
+    makeSticky: (column: TableColumn) => void;
+    removeFilter: (column: TableColumn) => void;
+    setFilter: (filter: FilterDefinition, clause: string, value: any) => void;
+    setPerPage: (perPage: number) => void;
+    setSearch: (search: string) => void;
+    setSort: (sort: string | null) => void;
+    sortByColumn: (column: TableColumn) => void;
+    state: TableState;
+    toggleColumn: (column: TableColumn) => void;
+    undoSticky: (column: TableColumn) => void;
+    visitPaginationUrl: (url: string, scrollToTopOfTable?: () => void) => void;
+    visitTableUrl: (url: string, optionsOrPreserveScroll?: boolean | Record<string, any>) => void;
+}
+
+// Table Component Types
+export interface TableProps {
+    resource: TableResource;
+    iconResolver?: ((icon: string) => React.ComponentType<any>) | null;
+    loading?: React.ReactNode | null;
+    topbar?: React.ReactNode | null;
+    filters?: React.ReactNode | null;
+    table?: React.ReactNode | null;
+    thead?: React.ReactNode | null;
+    tbody?: React.ReactNode | null;
+    footer?: React.ReactNode | null;
+    emptyState?: React.ReactNode | null;
+    header?: Record<string, any>;
+    cell?: Record<string, any>;
+    onRowClick?: ((item: any) => void) | null;
+    onActionSuccess?: ((action: any, keys: any[]) => void) | null;
+    onActionError?: ((action: any, keys: any[], error: any) => void) | null;
+    onCustomAction?: ((action: any, keys: any[], onFinish?: () => void) => void) | null;
+    image?: Record<string, any>;
+    imageFallback?: Record<string, any>;
 }

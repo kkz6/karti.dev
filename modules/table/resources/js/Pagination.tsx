@@ -1,5 +1,3 @@
-import { useLang } from '@shared/hooks/use-lang'
-import { cn } from '@shared/lib/utils'
 import {
     Pagination,
     PaginationContent,
@@ -8,21 +6,37 @@ import {
     PaginationLink,
     PaginationNext,
     PaginationPrevious,
-} from '@shared/components/ui/pagination'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@shared/components/ui/select'
-import { useMemo } from 'react'
+} from '@shared/components/ui/pagination';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components/ui/select';
+import { useLang } from '@shared/hooks/use-lang';
+import { cn } from '@shared/lib/utils';
+import { useMemo } from 'react';
 
-export default function TablePagination({ meta, options, perPage, type = 'full', onClick, onChange }) {
+interface PaginationMeta {
+    current_page: number;
+    last_page: number;
+    from: number;
+    to: number;
+    per_page: number;
+    total: number;
+    on_first_page: boolean;
+    on_last_page: boolean;
+}
+
+interface TablePaginationProps {
+    meta: PaginationMeta;
+    options: number[];
+    perPage: number;
+    type?: 'full' | 'simple';
+    onClick: (page: number) => void;
+    onChange: (perPage: number) => void;
+}
+
+export default function TablePagination({ meta, options, perPage, type = 'full', onClick, onChange }: TablePaginationProps) {
     const { t } = useLang();
 
     const translatedString = useMemo(() => {
-        let params = {
+        let params: Record<string, any> = {
             current_page: meta.current_page,
             current: meta.current_page,
             from: meta.from,
@@ -31,7 +45,7 @@ export default function TablePagination({ meta, options, perPage, type = 'full',
             per_page: meta.per_page,
             to: meta.to,
             type: type,
-        }
+        };
 
         if (type === 'full') {
             params = {
@@ -39,18 +53,18 @@ export default function TablePagination({ meta, options, perPage, type = 'full',
                 last: meta.last_page,
                 last_page: meta.last_page,
                 total: meta.total,
-            }
+            };
         }
 
-        return t(type === 'full' ? 'table::table.current_page_of_last' : 'table::table.current_page', params)
-    }, [meta, type, t])
+        return t(type === 'full' ? 'table::table.current_page_of_last' : 'table::table.current_page', params);
+    }, [meta, type, t]);
 
     // Generate page numbers to show
-    const generatePageNumbers = () => {
+    const generatePageNumbers = (): (number | string)[] => {
         const current = meta.current_page;
         const total = meta.last_page;
         const delta = 2; // Pages to show on each side of current page
-        const pages = [];
+        const pages: (number | string)[] = [];
 
         // Always show first page
         pages.push(1);
@@ -89,9 +103,7 @@ export default function TablePagination({ meta, options, perPage, type = 'full',
             {/* Page info and navigation */}
             <div className="flex items-center gap-4">
                 {/* Page info */}
-                <p className="text-sm text-muted-foreground whitespace-nowrap">
-                    {translatedString}
-                </p>
+                <p className="text-muted-foreground text-sm whitespace-nowrap">{translatedString}</p>
 
                 {/* Pagination */}
                 {meta.last_page > 1 && (
@@ -107,9 +119,7 @@ export default function TablePagination({ meta, options, perPage, type = 'full',
                                             onClick(meta.current_page - 1);
                                         }
                                     }}
-                                    className={cn(
-                                        meta.on_first_page && "pointer-events-none opacity-50"
-                                    )}
+                                    className={cn(meta.on_first_page && 'pointer-events-none opacity-50')}
                                 />
                             </PaginationItem>
 
@@ -123,7 +133,7 @@ export default function TablePagination({ meta, options, perPage, type = 'full',
                                             href="#"
                                             onClick={(e) => {
                                                 e.preventDefault();
-                                                onClick(page);
+                                                onClick(page as number);
                                             }}
                                             isActive={page === meta.current_page}
                                         >
@@ -143,9 +153,7 @@ export default function TablePagination({ meta, options, perPage, type = 'full',
                                             onClick(meta.current_page + 1);
                                         }
                                     }}
-                                    className={cn(
-                                        meta.on_last_page && "pointer-events-none opacity-50"
-                                    )}
+                                    className={cn(meta.on_last_page && 'pointer-events-none opacity-50')}
                                 />
                             </PaginationItem>
                         </PaginationContent>
@@ -154,21 +162,15 @@ export default function TablePagination({ meta, options, perPage, type = 'full',
             </div>
 
             {/* Rows per page */}
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex flex-shrink-0 items-center gap-2">
                 <p className="text-sm font-medium whitespace-nowrap">{t('table::table.rows_per_page')}</p>
-                <Select
-                    value={perPage.toString()}
-                    onValueChange={(value) => onChange(parseInt(value))}
-                >
+                <Select value={perPage.toString()} onValueChange={(value) => onChange(parseInt(value))}>
                     <SelectTrigger className="it-pagination-per-page-select h-8 w-auto min-w-[70px]">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                         {options.map((option) => (
-                            <SelectItem
-                                key={option}
-                                value={option.toString()}
-                            >
+                            <SelectItem key={option} value={option.toString()}>
                                 {option}
                             </SelectItem>
                         ))}
@@ -176,5 +178,5 @@ export default function TablePagination({ meta, options, perPage, type = 'full',
                 </Select>
             </div>
         </div>
-    )
+    );
 }

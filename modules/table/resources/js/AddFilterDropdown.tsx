@@ -27,12 +27,17 @@ export default function AddFilterDropdown({ filters, state, onAdd }: AddFilterDr
             <DropdownMenuContent className="it-add-filter-dropdown it-dropdown-items w-max min-w-24">
                 <DropdownMenuLabel className="it-dropdown-header">{t('table::table.add_filter_header')}</DropdownMenuLabel>
                 <DropdownMenuSeparator className="it-dropdown-separator" />
-                {filters.map((filter, key) => (
-                    <DropdownMenuItem key={key} disabled={state[filter.attribute].enabled} onClick={() => onAdd(filter)} className="it-dropdown-item">
-                        {!state[filter.attribute].enabled && <Plus className="me-2 size-3.5" />}
-                        <span>{filter.label}</span>
-                    </DropdownMenuItem>
-                ))}
+                {filters.map((filter, key) => {
+                    const filterState = state[filter.attribute];
+                    const isEnabled = filterState?.enabled || false;
+
+                    return (
+                        <DropdownMenuItem key={key} disabled={isEnabled} onClick={() => onAdd(filter)} className="it-dropdown-item">
+                            {!isEnabled && <Plus className="me-2 size-3.5" />}
+                            <span>{filter.label}</span>
+                        </DropdownMenuItem>
+                    );
+                })}
             </DropdownMenuContent>
         </DropdownMenu>
     );

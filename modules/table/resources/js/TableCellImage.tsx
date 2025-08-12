@@ -47,11 +47,7 @@ export default function TableCellImage({
                             })}
                         >
                             {images.map((imageUrl, index) => {
-                                const Component = data?.icon ? DynamicIcon : 'img';
-                                const props = {
-                                    ...(data?.icon
-                                        ? { icon: data.icon, resolver: iconResolver as any }
-                                        : { src: imageUrl, loading: 'lazy' as const }),
+                                const commonProps = {
                                     alt: data?.alt,
                                     title: data?.title,
                                     width: data?.width,
@@ -70,7 +66,11 @@ export default function TableCellImage({
                                     ),
                                 };
 
-                                return <Component key={index} {...props} />;
+                                return data?.icon ? (
+                                    <DynamicIcon key={index} icon={data.icon} resolver={iconResolver as any} {...commonProps} />
+                                ) : (
+                                    <img key={index} src={imageUrl || ''} loading="lazy" {...commonProps} />
+                                );
                             })}
                             {data?.remaining && (
                                 <div className="flex items-center justify-center ps-2 text-xs font-medium text-gray-500">

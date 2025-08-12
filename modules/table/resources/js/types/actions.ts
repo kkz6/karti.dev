@@ -68,11 +68,19 @@ export interface ExportErrorResult {
 // Hook return type
 export interface UseActionsReturn {
     allItemsAreSelected: boolean;
+    hasActions: boolean;
+    hasSelectedItems: boolean;
+    isAllSelected: boolean;
     isPerformingAction: boolean;
+    isSelected: (item: any) => boolean;
     performAction: (action: TableAction, keys?: (string | number)[] | null) => Promise<ActionSuccessResult | CustomActionResult>;
     performAsyncExport: (tableExport: TableExport) => Promise<ExportSuccessResult>;
+    removeSelection: () => void;
+    selectAll: (checked: boolean) => void;
     selectedItems: (string | number)[];
+    setSelected: (items: (string | number)[]) => void;
     toggleItem: (id: string | number | '*') => void;
+    toggleSelection: (item: any) => void;
 }
 
 // Actions component types
