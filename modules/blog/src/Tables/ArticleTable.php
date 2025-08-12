@@ -1,17 +1,17 @@
 <?php
 
-namespace {{ namespace }};
+namespace Modules\Blog\Tables;
 
-use {{ namespacedModel }};
-use Modules\Table\Table;
+use Modules\Blog\Models\Article;
 use Modules\Table\Action;
 use Modules\Table\Columns;
 use Modules\Table\Export;
 use Modules\Table\Filters;
+use Modules\Table\Table;
 
-class {{ class }} extends Table
+class ArticleTable extends Table
 {
-    protected ?string $resource = {{ model }}::class;
+    protected ?string $resource = Article::class;
 
     public function columns(): array
     {

@@ -2,15 +2,15 @@ import { trans } from './translations.js'
 import Dropdown from './Dropdown'
 import DropdownItem from './DropdownItem'
 import DropdownSeparator from './DropdownSeparator'
-import { ArrowDownIcon, ArrowUpIcon, ChevronUpDownIcon, EyeSlashIcon, LockClosedIcon, LockOpenIcon } from '@heroicons/react/24/outline'
+import { ArrowDown, ArrowUp, ChevronsUpDown, EyeOff, Lock, Unlock } from 'lucide-react';
 import { clsx } from 'clsx'
 
 const ButtonIcon = ({ sort, className = 'size-4 ms-2' }) => {
     if (!sort) {
-        return <ChevronUpDownIcon className={className} />
+        return <ChevronsUpDown className={className} />
     }
 
-    return sort === 'asc' ? <ArrowUpIcon className={className} /> : <ArrowDownIcon className={className} />
+    return sort === 'asc' ? <ArrowUp className={className} /> : <ArrowDown className={className} />
 }
 
 export default function TableHeaderDropdown({ column, sort, sticky, onToggle, onSort, onStick, onUnstick }) {
@@ -32,7 +32,7 @@ export default function TableHeaderDropdown({ column, sort, sticky, onToggle, on
                             },
                         )}
                     >
-                        {sticky && <LockClosedIcon className="me-2 size-4" />}
+                        {sticky && <Lock className="me-2 size-4" />}
                         <span className={column.headerClass}>{column.header}</span>
                         <ButtonIcon
                             sort={sort}
@@ -47,12 +47,12 @@ export default function TableHeaderDropdown({ column, sort, sticky, onToggle, on
                                 <DropdownItem
                                     title={trans('sort_asc')}
                                     onClick={() => onSort(column.attribute)}
-                                    icon={<ArrowUpIcon />}
+                                    icon={<ArrowUp />}
                                 />
                                 <DropdownItem
                                     title={trans('sort_desc')}
                                     onClick={() => onSort(`-${column.attribute}`)}
-                                    icon={<ArrowDownIcon />}
+                                    icon={<ArrowDown />}
                                 />
                             </>
                         )}
@@ -62,7 +62,7 @@ export default function TableHeaderDropdown({ column, sort, sticky, onToggle, on
                             <DropdownItem
                                 title={trans('stick')}
                                 onClick={() => onStick(column)}
-                                icon={<LockClosedIcon />}
+                                icon={<Lock />}
                             />
                         )}
 
@@ -70,7 +70,7 @@ export default function TableHeaderDropdown({ column, sort, sticky, onToggle, on
                             <DropdownItem
                                 title={trans('unstick')}
                                 onClick={() => onUnstick(column)}
-                                icon={<LockOpenIcon />}
+                                icon={<Unlock />}
                             />
                         )}
 
@@ -78,7 +78,7 @@ export default function TableHeaderDropdown({ column, sort, sticky, onToggle, on
                             <DropdownItem
                                 title={trans('hide_column')}
                                 onClick={() => onToggle(column)}
-                                icon={<EyeSlashIcon />}
+                                icon={<EyeOff />}
                             />
                         )}
                     </>

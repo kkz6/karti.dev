@@ -5,7 +5,7 @@ import TextInput from './TextInput'
 import Popover from './Popover'
 import Select from './Select'
 import { getSymbolForClause } from './clauses'
-import { FunnelIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { Filter as FilterIcon, Search, X } from 'lucide-react';
 
 const Filter = ({ filter, value, onChange, onRemove }) => {
     const inputRef = useRef(null)
@@ -94,7 +94,7 @@ const Filter = ({ filter, value, onChange, onRemove }) => {
                             className="ms-2 h-full py-1 pe-2 text-gray-500 transition-colors hover:text-red-500"
                             onClick={onRemove}
                         >
-                            <XMarkIcon className="size-4" />
+                            <X className="size-4" />
                         </button>
                     </div>
                 ),
@@ -103,7 +103,7 @@ const Filter = ({ filter, value, onChange, onRemove }) => {
                         {filter.clauses.length > 1 && (
                             <div className="flex items-center px-2">
                                 <div className="me-2 w-5">
-                                    <FunnelIcon className="size-5" />
+                                    <FilterIcon className="size-5" />
                                 </div>
                                 <Select
                                     ref={clauseSelectRef}
@@ -125,7 +125,7 @@ const Filter = ({ filter, value, onChange, onRemove }) => {
                         {filter.type !== 'boolean' && value.clause !== 'is_set' && value.clause !== 'is_not_set' && (
                             <div className="flex items-center px-2">
                                 <div className="me-2 w-5">
-                                    <MagnifyingGlassIcon className="size-5" />
+                                    <Search className="size-5" />
                                 </div>
                                 <div
                                     ref={inputRef}

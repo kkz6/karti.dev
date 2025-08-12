@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Cog8ToothIcon, ListBulletIcon, WrenchIcon } from '@heroicons/react/24/outline'
+import { Settings, List, Wrench } from 'lucide-react';
 
 import { trans } from './translations.js'
 import Actions from './Actions.jsx'
@@ -50,7 +50,7 @@ export default function ActionsDropdown({
                         trigger: () => (
                             <DropdownButton
                                 title={trans('actions_button')}
-                                icon={<WrenchIcon />}
+                                icon={<Wrench />}
                             />
                         ),
                         content: () => (
@@ -69,7 +69,7 @@ export default function ActionsDropdown({
                                                 {...(tableExport.asDownload
                                                     ? { href: makeExportUrl(tableExport) }
                                                     : { onClick: () => asyncExport(tableExport) })}
-                                                icon={<ListBulletIcon />}
+                                                icon={<List />}
                                             />
                                         ))}
                                     </div>
@@ -98,7 +98,7 @@ export default function ActionsDropdown({
                                                                 context={action}
                                                             />
                                                         ) : (
-                                                            <Cog8ToothIcon />
+                                                            <Settings />
                                                         )
                                                     }
                                                 />

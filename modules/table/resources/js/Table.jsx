@@ -3,7 +3,7 @@ import { getClickableColumn, useActions, useTable, visitUrl } from './inertiauiT
 import { resolveIcon } from './iconResolver.js'
 import { trans } from './translations.js'
 import { useEffect, useRef } from 'react'
-import { useRtl } from './uiHelpers.js'
+// App is always LTR, so we don't need RTL logic
 import { useStickyColumns, useStickyHeader } from './useStickyTable'
 
 import ActionsDropdown from './ActionsDropdown'
@@ -107,7 +107,8 @@ const Table = ({
         tableContainerRef.current.scrollLeft = 0
     }
 
-    const isRtl = useRtl()
+    // App is always LTR
+    const isRtl = false;
 
     const verticalLineClasses = [
         "after:content-['']",

@@ -4,7 +4,7 @@ import DropdownButton from './DropdownButton'
 import DropdownHeader from './DropdownHeader'
 import DropdownItem from './DropdownItem'
 import DropdownSeparator from './DropdownSeparator'
-import { CheckIcon, EyeIcon } from '@heroicons/react/24/outline'
+import { Check, Eye } from 'lucide-react';
 
 export default function ToggleColumnDropdown({ columns, state, onToggle }) {
     return (
@@ -13,7 +13,7 @@ export default function ToggleColumnDropdown({ columns, state, onToggle }) {
                 trigger: () => (
                     <DropdownButton
                         title={trans('columns_button')}
-                        icon={<EyeIcon />}
+                        icon={<Eye />}
                     />
                 ),
                 content: () => (
@@ -30,7 +30,7 @@ export default function ToggleColumnDropdown({ columns, state, onToggle }) {
                                         hideIcon={!state[column.attribute]}
                                         disabled={!column.toggleable}
                                         onClick={() => onToggle(column)}
-                                        icon={<CheckIcon />}
+                                        icon={<Check />}
                                     />
                                 ),
                         )}

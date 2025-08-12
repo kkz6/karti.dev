@@ -1,7 +1,7 @@
 import { trans } from './translations.js'
 import Button from './Button'
 import Select from './Select'
-import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
+import { ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMemo } from 'react'
 
 export default function Pagination({ meta, options, perPage, type = 'full', onClick, onChange }) {
@@ -57,7 +57,7 @@ export default function Pagination({ meta, options, perPage, type = 'full', onCl
                         className="it-pagination-first-page-button"
                         onClick={() => onClick(meta.first_page_url)}
                     >
-                        <ChevronDoubleLeftIcon className="size-4" />
+                        <ChevronsLeft className="size-4" />
                     </Button>
                     <Button
                         disabled={!meta.prev_page_url}
@@ -65,7 +65,7 @@ export default function Pagination({ meta, options, perPage, type = 'full', onCl
                         className="it-pagination-previous-page-button"
                         onClick={() => onClick(meta.prev_page_url)}
                     >
-                        <ChevronLeftIcon className="size-4" />
+                        <ChevronLeft className="size-4" />
                     </Button>
                     <Button
                         disabled={!meta.next_page_url}
@@ -73,7 +73,7 @@ export default function Pagination({ meta, options, perPage, type = 'full', onCl
                         className="it-pagination-next-page-button"
                         onClick={() => onClick(meta.next_page_url)}
                     >
-                        <ChevronRightIcon className="size-4" />
+                        <ChevronRight className="size-4" />
                     </Button>
                     {type === 'full' && (
                         <Button
@@ -82,7 +82,7 @@ export default function Pagination({ meta, options, perPage, type = 'full', onCl
                             className="it-pagination-last-page-button"
                             onClick={() => onClick(meta.last_page_url)}
                         >
-                            <ChevronDoubleRightIcon className="size-4" />
+                            <ChevronsRight className="size-4" />
                         </Button>
                     )}
                 </div>

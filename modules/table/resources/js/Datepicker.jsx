@@ -3,7 +3,11 @@ import 'react-day-picker/dist/style.css'
 import './Datepicker.css'
 import { clsx } from 'clsx'
 import { useState, useEffect } from 'react'
-import { prefersDarkMode } from './uiHelpers'
+// Simple dark mode detection
+const prefersDarkMode = () => {
+    if (typeof window === 'undefined') return false;
+    return document.documentElement.classList.contains('dark');
+};
 
 export default function Datepicker({ value, onChange, range, className = '' }) {
     function selectedFromValue() {
@@ -39,16 +43,19 @@ export default function Datepicker({ value, onChange, range, className = '' }) {
         return date ? `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}` : ''
     }
 
-    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
     const [isDarkMode, setIsDarkMode] = useState(prefersDarkMode())
 
     useEffect(() => {
         const updateDarkMode = () => setIsDarkMode(prefersDarkMode())
-        darkModeMediaQuery.addEventListener('change', updateDarkMode)
 
-        return () => {
-            darkModeMediaQuery.removeEventListener('change', updateDarkMode)
-        }
+        // Listen for changes to the HTML element's class list (which is how the shared appearance system works)
+        const observer = new MutationObserver(updateDarkMode)
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class']
+        })
+
+        return () => observer.disconnect()
     }, [])
 
     return (

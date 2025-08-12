@@ -25,6 +25,8 @@ export default defineConfig({
             '@auth': resolve(__dirname, './modules/auth/resources/js'),
             '@frontend': resolve(__dirname, './modules/frontend/resources/js'),
             '@pages': resolve(__dirname, './modules/pages/resources/js'),
+            '@table': resolve(__dirname, './modules/table/resources/js'),
+            '@table/types': resolve(__dirname, './modules/table/resources/js/types'),
         },
     },
 });

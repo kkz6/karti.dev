@@ -1,4 +1,4 @@
-import { EllipsisHorizontalIcon } from '@heroicons/react/24/outline'
+import { MoreHorizontal } from 'lucide-react';
 import { useCallback, useMemo } from 'react'
 import clsx from 'clsx'
 
@@ -114,7 +114,7 @@ export default function RowActions({ item, actions, performAction, iconResolver,
                     <Dropdown className="it-row-actions-dropdown inline-flex">
                         {{
                             trigger: (open) => (
-                                <EllipsisHorizontalIcon
+                                <MoreHorizontal
                                     className={clsx({
                                         'size-6 rounded p-0.5 transition-colors dark:text-zinc-300 dark:hover:bg-zinc-800': true,
                                         'bg-gray-200/75 dark:bg-zinc-800': open,

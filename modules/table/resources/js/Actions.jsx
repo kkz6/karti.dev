@@ -2,10 +2,9 @@ import { useState } from 'react'
 import ConfirmActionDialog from './ConfirmActionDialog'
 import FailedActionDialog from './FailedActionDialog'
 import { visitUrl, visitModal } from './urlHelpers'
-import { useModalStack } from '@inertiaui/modal-react'
 import ConfirmDialog from './ConfirmDialog'
 import { trans } from './translations.js'
-import { EllipsisHorizontalIcon } from '@heroicons/react/24/outline'
+import { MoreHorizontal } from 'lucide-react';
 
 export default function Actions({
     actions,
@@ -51,21 +50,14 @@ export default function Actions({
 
     const [actionFailed, setActionFailed] = useState(false)
 
-    let modalStack = null
-
-    try {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        modalStack = useModalStack()
-    } catch (e) {
-        // Ignore
-    }
-
     const perform = (action) => {
         if (action.isLink) {
             const actionKey = actions.findIndex((a) => a === action)
             const url = item._actions[actionKey]
 
-            url.modal ? visitModal(url, modalStack.visitModal) : visitUrl(url)
+            // For modal URLs, we'll treat them as regular navigation for now
+            // In the future, this could open a shadcn dialog instead
+            visitUrl(url)
             return
         }
 
@@ -103,8 +95,8 @@ export default function Actions({
                 show={asyncExportDialogIsOpen}
                 title={asyncExportContext?.dialogTitle ?? ''}
                 message={asyncExportContext?.dialogMessage ?? ''}
-                icon="EllipsisHorizontalIcon"
-                iconResolver={() => EllipsisHorizontalIcon}
+                icon="MoreHorizontal"
+                iconResolver={() => MoreHorizontal}
                 confirmButton={trans('export_processing_dialog_button')}
                 onConfirm={() => setAsyncExportDialogIsOpen(false)}
             />

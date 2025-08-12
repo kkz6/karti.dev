@@ -4,7 +4,7 @@ import DropdownButton from './DropdownButton'
 import DropdownHeader from './DropdownHeader'
 import DropdownItem from './DropdownItem'
 import DropdownSeparator from './DropdownSeparator'
-import { FunnelIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { Filter, Plus } from 'lucide-react';
 
 export default function AddFilterDropdown({ filters, state, onAdd }) {
     return (
@@ -13,7 +13,7 @@ export default function AddFilterDropdown({ filters, state, onAdd }) {
                 trigger: () => (
                     <DropdownButton
                         title={trans('filters_button')}
-                        icon={<FunnelIcon />}
+                        icon={<Filter />}
                     />
                 ),
                 content: () => (
@@ -27,7 +27,7 @@ export default function AddFilterDropdown({ filters, state, onAdd }) {
                                 disabled={state[filter.attribute].enabled}
                                 hideIcon={state[filter.attribute].enabled}
                                 onClick={() => onAdd(filter)}
-                                icon={<PlusIcon />}
+                                icon={<Plus />}
                             />
                         ))}
                     </>
