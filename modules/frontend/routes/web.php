@@ -13,7 +13,8 @@ Route::middleware(['web'])->group(function () {
     Route::get('/projects', [PortfolioController::class, 'projects'])->name('projects');
     Route::get('/speaking', [PortfolioController::class, 'speaking'])->name('speaking');
     Route::get('/uses', [PortfolioController::class, 'uses'])->name('uses');
-    Route::get('/photography', [FrontendController::class, 'photography'])->name('photography');
-    Route::get('/photography/{slug}', [FrontendController::class, 'photographyShow'])->name('photography.show');
+    Route::get('/photography', [PortfolioController::class, 'photography'])->name('photography');
+    Route::get('/photography/{slug}', [PortfolioController::class, 'showPhotoCollection'])->name('photography.show');
+    Route::get('/contact', [PortfolioController::class, 'contact'])->name('contact');
     Route::post('/thank-you', [PortfolioController::class, 'thankYou'])->name('thank-you');
 });

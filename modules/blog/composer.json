@@ -1,0 +1,24 @@
+{
+	"name": "modules/blog",
+	"description": "",
+	"type": "library",
+	"version": "1.0",
+	"license": "proprietary",
+	"require": {},
+	"autoload": {
+		"psr-4": {
+			"Modules\\Blog\\": "src/",
+			"Modules\\Blog\\Tests\\": "tests/",
+			"Modules\\Blog\\Database\\Factories\\": "database/factories/",
+			"Modules\\Blog\\Database\\Seeders\\": "database/seeders/"
+		}
+	},
+	"minimum-stability": "stable",
+	"extra": {
+		"laravel": {
+			"providers": [
+				"Modules\\Blog\\Providers\\BlogServiceProvider"
+			]
+		}
+	}
+}

@@ -42,7 +42,7 @@ function NavItem({ href, children }: { href: string; children: React.ReactNode }
 function DesktopNavigation(props: React.ComponentPropsWithoutRef<'nav'>) {
   return (
     <nav {...props}>
-      <ul className="flex rounded-full bg-white/90 px-3 text-sm font-medium text-zinc-800 shadow-lg shadow-zinc-800/5 ring-1 ring-zinc-900/5 backdrop-blur dark:bg-zinc-800/90 dark:text-zinc-200 dark:ring-white/10">
+      <ul className="flex rounded-full bg-white/90 px-3 text-sm font-medium text-zinc-800 shadow-lg shadow-zinc-800/5 ring-1 ring-zinc-900/5 backdrop-blur-sm dark:bg-zinc-800/90 dark:text-zinc-200 dark:ring-white/10">
         {navigation.map((item) => (
           <NavItem key={item.href} href={item.href}>
             {item.name}
@@ -133,18 +133,19 @@ export function Header() {
       const scrollY = downDelay - window.scrollY
 
       let scale = (scrollY * (fromScale - toScale)) / downDelay + toScale
-      scale = clamp(scale, toScale, fromScale)
+      scale = clamp(scale, fromScale, toScale)
 
       let x = (scrollY * (fromX - toX)) / downDelay + toX
-      x = clamp(x, toX, fromX)
+      x = clamp(x, fromX, toX)
 
       setProperty(
         '--avatar-image-transform',
         `translate3d(${x}rem, 0, 0) scale(${scale})`
       )
 
+      // Align border transform with image transform for perfect positioning
       const borderScale = 1 / (toScale / scale)
-      const borderX = (-toX + x) * borderScale
+      const borderX = x * borderScale
       const borderTransform = `translate3d(${borderX}rem, 0, 0) scale(${borderScale})`
 
       setProperty('--avatar-border-transform', borderTransform)
@@ -198,7 +199,7 @@ export function Header() {
               >
                 <div className="relative">
                   <AvatarContainer
-                    className="absolute left-0 top-3 origin-left transition-opacity"
+                    className="absolute top-3 left-3 origin-left transition-opacity"
                     style={{
                       opacity: 'var(--avatar-border-opacity, 0)',
                       transform: 'var(--avatar-border-transform)',
@@ -238,8 +239,12 @@ export function Header() {
                 )}
               </div>
               <div className="flex flex-1 justify-end md:justify-center">
-                <MobileNavigation className="pointer-events-auto md:hidden" />
-                <DesktopNavigation className="pointer-events-auto hidden md:block" />
+                <div className="block md:hidden">
+                  <MobileNavigation className="pointer-events-auto" />
+                </div>
+                <div className="hidden md:block">
+                  <DesktopNavigation className="pointer-events-auto" />
+                </div>
               </div>
               <div className="flex justify-end md:flex-1">
                 <div className="pointer-events-auto">

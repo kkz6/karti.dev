@@ -1,0 +1,24 @@
+{
+	"name": "modules/photography",
+	"description": "",
+	"type": "library",
+	"version": "1.0",
+	"license": "proprietary",
+	"require": {},
+	"autoload": {
+		"psr-4": {
+			"Modules\\Photography\\": "src/",
+			"Modules\\Photography\\Tests\\": "tests/",
+			"Modules\\Photography\\Database\\Factories\\": "database/factories/",
+			"Modules\\Photography\\Database\\Seeders\\": "database/seeders/"
+		}
+	},
+	"minimum-stability": "stable",
+	"extra": {
+		"laravel": {
+			"providers": [
+				"Modules\\Photography\\Providers\\PhotographyServiceProvider"
+			]
+		}
+	}
+}
