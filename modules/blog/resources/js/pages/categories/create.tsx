@@ -12,8 +12,8 @@ import { FormEventHandler } from 'react';
 export default function Create() {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Articles', href: route('admin.blog.index') },
-        { title: 'Categories', href: route('admin.blog.categories.index') },
-        { title: 'Create Category', href: route('admin.blog.categories.create') },
+        { title: 'Categories', href: route('admin.categories.index') },
+        { title: 'Create Category', href: route('admin.categories.create') },
     ];
 
     const { data, setData, post, processing, errors } = useForm({
@@ -43,7 +43,7 @@ export default function Create() {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post(route('admin.blog.categories.store'));
+        post(route('admin.categories.store'));
     };
 
     return (
@@ -54,7 +54,7 @@ export default function Create() {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                         <Button variant="ghost" size="sm" asChild>
-                            <Link href={route('admin.blog.categories.index')}>
+                            <Link href={route('admin.categories.index')}>
                                 <ArrowLeft className="mr-2 h-4 w-4" />
                                 Back to Categories
                             </Link>
@@ -161,7 +161,7 @@ export default function Create() {
                                         {processing ? 'Creating...' : 'Create Category'}
                                     </Button>
                                     <Button type="button" variant="outline" asChild className="w-full">
-                                        <Link href={route('admin.blog.categories.index')}>Cancel</Link>
+                                        <Link href={route('admin.categories.index')}>Cancel</Link>
                                     </Button>
                                 </CardContent>
                             </Card>

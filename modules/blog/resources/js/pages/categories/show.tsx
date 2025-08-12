@@ -62,7 +62,7 @@ export default function Show({ category }: { category: Category }) {
                     </div>
                     <div className="flex items-center space-x-2">
                         <Button asChild>
-                            <Link href={route('admin.blog.categories.edit', category.id)}>
+                            <Link href={route('admin.categories.edit', category.id)}>
                                 <Edit className="mr-2 h-4 w-4" />
                                 Edit Category
                             </Link>
@@ -208,7 +208,7 @@ export default function Show({ category }: { category: Category }) {
                             </CardHeader>
                             <CardContent className="space-y-2">
                                 <Button variant="outline" size="sm" asChild className="w-full justify-start">
-                                    <Link href={route('admin.blog.categories.edit', category.id)}>
+                                    <Link href={route('admin.categories.edit', category.id)}>
                                         <Edit className="mr-2 h-4 w-4" />
                                         Edit Category
                                     </Link>

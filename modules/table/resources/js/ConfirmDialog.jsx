@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import { Transition, TransitionChild } from '@headlessui/react'
-import Button from './Button'
+import { Button } from '@shared/components/ui/button'
 import DynamicIcon from './DynamicIcon'
 import { clsx } from 'clsx'
 
@@ -86,6 +86,7 @@ export default function ConfirmDialog({
                             <div className="mt-4 grid grid-cols-2 gap-4 border-t border-gray-200 p-6 dark:border-zinc-700">
                                 {cancelButton !== false ? (
                                     <Button
+                                        variant="outline"
                                         className="justify-center"
                                         onClick={onCancel}
                                     >
@@ -94,8 +95,7 @@ export default function ConfirmDialog({
                                 ) : null}
                                 <Button
                                     className={clsx('justify-center', cancelButton === false ? 'col-span-2' : 'col-span-1')}
-                                    variant={variant === 'default' ? 'info' : variant}
-                                    customVariantClass={customVariantClass}
+                                    variant={variant === 'danger' ? 'destructive' : 'default'}
                                     onClick={onConfirm}
                                 >
                                     {confirmButton}

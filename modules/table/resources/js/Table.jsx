@@ -8,8 +8,8 @@ import { useStickyColumns, useStickyHeader } from './useStickyTable'
 
 import ActionsDropdown from './ActionsDropdown'
 import AddFilterDropdown from './AddFilterDropdown'
-import Badge from './Badge'
-import Checkbox from './Checkbox'
+import { Badge } from '@shared/components/ui/badge'
+import { Checkbox } from '@shared/components/ui/checkbox'
 import DynamicIcon from './DynamicIcon'
 import EmptyState from './EmptyState'
 import Filter from './Filter'
@@ -18,7 +18,7 @@ import Pagination from './Pagination'
 import RowActions from './RowActions'
 import TableCellImage from './TableCellImage'
 import TableHeaderDropdown from './TableHeaderDropdown'
-import TextInput from './TextInput'
+import { Input } from '@shared/components/ui/input'
 import ToggleColumnDropdown from './ToggleColumnDropdown'
 
 const Table = ({
@@ -157,9 +157,9 @@ const Table = ({
                         : (resource.hasBulkActions || resource.hasSearch || resource.hasExports || resource.hasFilters || resource.hasToggleableColumns) && (
                               <div className="it-topbar flex flex-col justify-between md:flex-row md:items-center md:space-x-4 rtl:md:space-x-reverse">
                                   {resource.hasSearch && (
-                                      <TextInput
+                                      <Input
                                           value={state.search ?? ''}
-                                          onChange={setSearch}
+                                          onChange={(e) => setSearch(e.target.value)}
                                           className="w-full md:max-w-md"
                                           autoFocus={resource.autofocus === 'search'}
                                           placeholder={trans('search_placeholder')}
@@ -247,10 +247,9 @@ const Table = ({
                                                         })}
                                                     >
                                                         <Checkbox
-                                                            value="*"
                                                             checked={allItemsAreSelected}
                                                             className="it-toggle-all-checkbox"
-                                                            onChange={() => toggleItem('*')}
+                                                            onCheckedChange={() => toggleItem('*')}
                                                         />
                                                     </th>
                                                 )}
@@ -352,12 +351,11 @@ const Table = ({
                                                         >
                                                             <Checkbox
                                                                 disabled={!item._is_selectable || allItemsAreSelected}
-                                                                value={item._primary_key}
                                                                 checked={
                                                                     selectedItems.includes(item._primary_key) || (item._is_selectable && allItemsAreSelected)
                                                                 }
                                                                 className="it-toggle-item-checkbox"
-                                                                onChange={() => toggleItem(item._primary_key)}
+                                                                onCheckedChange={() => toggleItem(item._primary_key)}
                                                             />
                                                         </td>
                                                     )}
@@ -451,9 +449,27 @@ const Table = ({
                                                                                 />
                                                                             ) : column.type === 'badge' ? (
                                                                                 <Badge
-                                                                                    data={item[column.attribute]}
-                                                                                    iconResolver={iconResolver ?? resolveIcon}
-                                                                                />
+                                                                                    variant={
+                                                                                        item[column.attribute]?.variant === 'danger' ? 'destructive' :
+                                                                                        item[column.attribute]?.variant === 'info' ? 'default' :
+                                                                                        item[column.attribute]?.variant === 'success' ? 'secondary' :
+                                                                                        item[column.attribute]?.variant === 'warning' ? 'outline' :
+                                                                                        'outline'
+                                                                                    }
+                                                                                    className="it-badge gap-1"
+                                                                                    data-style={item[column.attribute]?.variant}
+                                                                                    data-variant={item[column.attribute]?.variant}
+                                                                                >
+                                                                                    {item[column.attribute]?.icon && (
+                                                                                        <DynamicIcon
+                                                                                            resolver={iconResolver ?? resolveIcon}
+                                                                                            icon={item[column.attribute].icon}
+                                                                                            context={item[column.attribute]}
+                                                                                            className="it-badge-icon size-3"
+                                                                                        />
+                                                                                    )}
+                                                                                    <span>{item[column.attribute]?.value}</span>
+                                                                                </Badge>
                                                                             ) : column.type === 'boolean' &&
                                                                               ((item[column.attribute] === true && column.trueIcon) ||
                                                                                   (item[column.attribute] === false && column.falseIcon)) ? (

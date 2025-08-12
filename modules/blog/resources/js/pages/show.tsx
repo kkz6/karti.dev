@@ -54,7 +54,7 @@ interface Article {
 export default function Show({ article }: { article: Article }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Blog Management', href: route('admin.blog.index') },
-        { title: article.title, href: route('admin.blog.show', article.id) },
+        // { title: article.title, href: route('admin.blog.show', article.id) },
     ];
 
     const formatDate = (date: string) => {
@@ -97,10 +97,10 @@ export default function Show({ article }: { article: Article }) {
                             </a>
                         </Button>
                         <Button asChild>
-                            <a href={route('admin.blog.edit', article.id)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit Article
-                            </a>
+                            {/*<a href={route('admin.blog.edit', article.id)}>*/}
+                            {/*    <Edit className="mr-2 h-4 w-4" />*/}
+                            {/*    Edit Article*/}
+                            {/*</a>*/}
                         </Button>
                     </div>
                 </div>

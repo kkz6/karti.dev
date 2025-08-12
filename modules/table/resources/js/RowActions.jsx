@@ -4,7 +4,7 @@ import clsx from 'clsx'
 
 import { getActionForItem } from './urlHelpers'
 import Actions from './Actions.jsx'
-import Button from './Button'
+import { Button } from '@shared/components/ui/button'
 import Dropdown from './Dropdown'
 import DropdownItem from './DropdownItem'
 import DynamicIcon from './DynamicIcon'
@@ -54,6 +54,36 @@ export default function RowActions({ item, actions, performAction, iconResolver,
                 if (actionItem.bindings.disabled) {
                     actionItem.bindings.className += ' cursor-not-allowed opacity-50'
                 }
+            }
+
+            // Convert custom button props to shadcn variants
+            if (actionItem.componentType === 'button-component') {
+                // Convert size prop
+                if (actionItem.bindings.small) {
+                    actionItem.bindings.size = 'sm'
+                    delete actionItem.bindings.small
+                }
+
+                // Convert variant props
+                if (actionItem.bindings.primary) {
+                    actionItem.bindings.variant = 'default'
+                    delete actionItem.bindings.primary
+                } else if (actionItem.bindings.danger) {
+                    actionItem.bindings.variant = 'destructive'
+                    delete actionItem.bindings.danger
+                } else if (actionItem.bindings.variant === 'info') {
+                    actionItem.bindings.variant = 'default'
+                } else if (actionItem.bindings.variant === 'success') {
+                    actionItem.bindings.variant = 'default'
+                } else if (actionItem.bindings.variant === 'warning') {
+                    actionItem.bindings.variant = 'default'
+                } else if (!actionItem.bindings.variant) {
+                    actionItem.bindings.variant = 'outline'
+                }
+
+                // Remove custom props that don't exist in shadcn
+                delete actionItem.bindings.customVariantClass
+                delete actionItem.bindings.sr
             }
 
             if (asDropdown) {

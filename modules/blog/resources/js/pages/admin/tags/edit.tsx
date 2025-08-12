@@ -9,66 +9,60 @@ import { type BreadcrumbItem } from '@shared/types';
 import { ArrowLeft, Save, Trash2 } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
-interface Category {
+const defaultColors = ['#64748b', '#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e'];
+
+interface Tag {
     id: number;
     name: string;
     slug: string;
     description?: string;
-    meta_title?: string;
-    meta_description?: string;
+    color?: string;
 }
 
-export default function Edit({ category }: { category: Category }) {
+export default function Edit({ tag }: { tag: Tag }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Articles', href: route('admin.blog.index') },
-        { title: 'Categories', href: route('admin.categories.index') },
-        { title: category.name, href: route('admin.categories.show', category.id) },
-        { title: 'Edit', href: route('admin.categories.edit', category.id) },
+        { title: 'Tags', href: route('admin.blog.tags.index') },
+        { title: tag.name, href: route('admin.blog.tags.show', tag.id) },
+        { title: 'Edit', href: route('admin.blog.tags.edit', tag.id) },
     ];
 
     const { data, setData, put, processing, errors } = useForm({
-        name: category.name || '',
-        slug: category.slug || '',
-        description: category.description || '',
-        meta_title: category.meta_title || '',
-        meta_description: category.meta_description || '',
+        name: tag.name || '',
+        slug: tag.slug || '',
+        description: tag.description || '',
+        color: tag.color || '#64748b',
     });
-
-    const generateSlug = (text: string) => {
-        return text
-            .toLowerCase()
-            .replace(/[^a-z0-9 -]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-')
-            .trim();
-    };
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        put(route('admin.blog.categories.update', category.id));
+        put(route('admin.blog.tags.update', tag.id));
     };
 
     const handleDelete = () => {
-        if (confirm(`Are you sure you want to delete "${category.name}"?`)) {
+        if (confirm(`Are you sure you want to delete "${tag.name}"?`)) {
             // TODO: Implement delete functionality using router.delete
-            console.log('Delete category:', category.id);
+            console.log('Delete tag:', tag.id);
         }
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Edit Category: ${category.name}`} />
+            <Head title={`Edit Tag: ${tag.name}`} />
             <div className="flex h-full flex-col space-y-6 p-8 pt-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                         <Button variant="ghost" size="sm" asChild>
-                            <Link href={route('admin.blog.categories.show', category.id)}>
+                            <Link href={route('admin.blog.tags.show', tag.id)}>
                                 <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back to Category
+                                Back to Tag
                             </Link>
                         </Button>
-                        <h1 className="text-3xl font-bold tracking-tight">Edit Category</h1>
+                        <div className="flex items-center space-x-2">
+                            <div className="h-6 w-6 rounded-full border" style={{ backgroundColor: tag.color || '#64748b' }} />
+                            <h1 className="text-3xl font-bold tracking-tight">Edit Tag</h1>
+                        </div>
                     </div>
                 </div>
 
@@ -79,7 +73,7 @@ export default function Edit({ category }: { category: Category }) {
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Basic Information</CardTitle>
-                                    <CardDescription>Update the basic details for the category</CardDescription>
+                                    <CardDescription>Update the basic details for the tag</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div>
@@ -88,7 +82,7 @@ export default function Edit({ category }: { category: Category }) {
                                             id="name"
                                             value={data.name}
                                             onChange={(e) => setData('name', e.target.value)}
-                                            placeholder="Enter category name"
+                                            placeholder="Enter tag name"
                                             className={errors.name ? 'border-red-500' : ''}
                                         />
                                         {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
@@ -100,7 +94,7 @@ export default function Edit({ category }: { category: Category }) {
                                             id="slug"
                                             value={data.slug}
                                             onChange={(e) => setData('slug', e.target.value)}
-                                            placeholder="category-slug"
+                                            placeholder="tag-slug"
                                             className={errors.slug ? 'border-red-500' : ''}
                                         />
                                         {errors.slug && <p className="mt-1 text-sm text-red-500">{errors.slug}</p>}
@@ -113,45 +107,39 @@ export default function Edit({ category }: { category: Category }) {
                                             id="description"
                                             value={data.description}
                                             onChange={(e) => setData('description', e.target.value)}
-                                            placeholder="Describe this category..."
+                                            placeholder="Describe this tag..."
                                             rows={3}
                                             className={errors.description ? 'border-red-500' : ''}
                                         />
                                         {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
                                     </div>
-                                </CardContent>
-                            </Card>
-
-                            {/* SEO Settings */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>SEO Settings</CardTitle>
-                                    <CardDescription>Optimize this category for search engines</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div>
-                                        <Label htmlFor="meta_title">Meta Title</Label>
-                                        <Input
-                                            id="meta_title"
-                                            value={data.meta_title}
-                                            onChange={(e) => setData('meta_title', e.target.value)}
-                                            placeholder="SEO title for this category"
-                                            className={errors.meta_title ? 'border-red-500' : ''}
-                                        />
-                                        {errors.meta_title && <p className="mt-1 text-sm text-red-500">{errors.meta_title}</p>}
-                                    </div>
 
                                     <div>
-                                        <Label htmlFor="meta_description">Meta Description</Label>
-                                        <Textarea
-                                            id="meta_description"
-                                            value={data.meta_description}
-                                            onChange={(e) => setData('meta_description', e.target.value)}
-                                            placeholder="SEO description for this category..."
-                                            rows={3}
-                                            className={errors.meta_description ? 'border-red-500' : ''}
-                                        />
-                                        {errors.meta_description && <p className="mt-1 text-sm text-red-500">{errors.meta_description}</p>}
+                                        <Label htmlFor="color">Color</Label>
+                                        <div className="space-y-3">
+                                            <Input
+                                                id="color"
+                                                type="color"
+                                                value={data.color}
+                                                onChange={(e) => setData('color', e.target.value)}
+                                                className={`h-12 w-20 ${errors.color ? 'border-red-500' : ''}`}
+                                            />
+                                            <div className="flex flex-wrap gap-2">
+                                                {defaultColors.map((color) => (
+                                                    <button
+                                                        key={color}
+                                                        type="button"
+                                                        onClick={() => setData('color', color)}
+                                                        className={`h-8 w-8 rounded border-2 transition-all ${
+                                                            data.color === color ? 'scale-110 border-gray-800' : 'border-gray-300'
+                                                        }`}
+                                                        style={{ backgroundColor: color }}
+                                                        title={color}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                        {errors.color && <p className="mt-1 text-sm text-red-500">{errors.color}</p>}
                                     </div>
                                 </CardContent>
                             </Card>
@@ -159,6 +147,20 @@ export default function Edit({ category }: { category: Category }) {
 
                         {/* Sidebar */}
                         <div className="space-y-6">
+                            {/* Preview */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Preview</CardTitle>
+                                    <CardDescription>How this tag will appear</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="bg-muted/50 flex items-center space-x-2 rounded-lg border p-3">
+                                        <div className="h-3 w-3 rounded-full" style={{ backgroundColor: data.color }} />
+                                        <span className="font-medium">{data.name || 'Tag Name'}</span>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
                             {/* Actions */}
                             <Card>
                                 <CardHeader>
@@ -167,10 +169,10 @@ export default function Edit({ category }: { category: Category }) {
                                 <CardContent className="space-y-4">
                                     <Button type="submit" disabled={processing} className="w-full">
                                         <Save className="mr-2 h-4 w-4" />
-                                        {processing ? 'Updating...' : 'Update Category'}
+                                        {processing ? 'Updating...' : 'Update Tag'}
                                     </Button>
                                     <Button type="button" variant="outline" asChild className="w-full">
-                                        <Link href={route('admin.blog.categories.show', category.id)}>Cancel</Link>
+                                        <Link href={route('admin.blog.tags.show', tag.id)}>Cancel</Link>
                                     </Button>
                                 </CardContent>
                             </Card>
@@ -184,10 +186,10 @@ export default function Edit({ category }: { category: Category }) {
                                 <CardContent>
                                     <Button type="button" variant="destructive" size="sm" onClick={handleDelete} className="w-full">
                                         <Trash2 className="mr-2 h-4 w-4" />
-                                        Delete Category
+                                        Delete Tag
                                     </Button>
                                     <p className="text-muted-foreground mt-2 text-xs">
-                                        This action cannot be undone. Articles in this category will be unassigned.
+                                        This action cannot be undone. The tag will be removed from all articles.
                                     </p>
                                 </CardContent>
                             </Card>

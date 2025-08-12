@@ -20,7 +20,7 @@ export default function Index({ categories }: { categories: Category[] }) {
     const { props } = usePage<SharedData>();
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Articles', href: route('admin.blog.index') },
-        { title: 'Categories', href: route('admin.blog.categories.index') },
+        { title: 'Categories', href: route('admin.categories.index') },
     ];
 
     const handleDelete = (category: Category) => {
@@ -41,7 +41,7 @@ export default function Index({ categories }: { categories: Category[] }) {
                     </div>
                     <div className="flex items-center space-x-2">
                         <Button asChild>
-                            <Link href={route('admin.blog.categories.create')}>
+                            <Link href={route('admin.categories.create')}>
                                 <Plus className="mr-2 h-4 w-4" />
                                 Create Category
                             </Link>
@@ -68,7 +68,7 @@ export default function Index({ categories }: { categories: Category[] }) {
                                     <p className="text-muted-foreground text-xs">Created {new Date(category.created_at).toLocaleDateString()}</p>
                                     <div className="flex items-center space-x-1">
                                         <Button size="sm" variant="ghost" asChild>
-                                            <Link href={route('admin.blog.categories.edit', category.id)}>
+                                            <Link href={route('admin.categories.edit', category.id)}>
                                                 <Edit className="h-3 w-3" />
                                             </Link>
                                         </Button>
@@ -94,7 +94,7 @@ export default function Index({ categories }: { categories: Category[] }) {
                             <h3 className="mt-4 text-lg font-medium">No categories found</h3>
                             <p className="text-muted-foreground mt-2 text-sm">Get started by creating your first category.</p>
                             <Button asChild className="mt-4">
-                                <Link href={route('admin.blog.categories.create')}>
+                                <Link href={route('admin.categories.create')}>
                                     <Plus className="mr-2 h-4 w-4" />
                                     Create Category
                                 </Link>

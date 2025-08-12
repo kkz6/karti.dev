@@ -20,7 +20,7 @@ class AdminTagController extends BaseController
             ->orderBy('name')
             ->get();
 
-        return Inertia::render('blog::tags/index', [
+        return Inertia::render('blog::admin/tags/index', [
             'tags' => $tags,
         ]);
     }
@@ -30,7 +30,7 @@ class AdminTagController extends BaseController
      */
     public function create(): Response
     {
-        return Inertia::render('blog::tags/create');
+        return Inertia::render('blog::admin/tags/create');
     }
 
     /**
@@ -61,7 +61,7 @@ class AdminTagController extends BaseController
             $query->with('user', 'category')->latest()->take(10);
         }]);
 
-        return Inertia::render('blog::tags/show', [
+        return Inertia::render('blog::admin/tags/show', [
             'tag' => $tag,
         ]);
     }
@@ -71,7 +71,7 @@ class AdminTagController extends BaseController
      */
     public function edit(Tag $tag): Response
     {
-        return Inertia::render('blog::tags/edit', [
+        return Inertia::render('blog::admin/tags/edit', [
             'tag' => $tag,
         ]);
     }

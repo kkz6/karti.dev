@@ -83,8 +83,8 @@ class AdminCategoryController extends BaseController
     public function update(Request $request, Category $category): RedirectResponse
     {
         $validated = $request->validate([
-            'name'             => 'required|string|max:255|unique:categories,name,'.$category->id,
-            'slug'             => 'required|string|max:255|unique:categories,slug,'.$category->id,
+            'name'             => 'required|string|max:255|unique:categories,name,' . $category->id,
+            'slug'             => 'required|string|max:255|unique:categories,slug,' . $category->id,
             'description'      => 'nullable|string|max:500',
             'meta_title'       => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
@@ -93,7 +93,7 @@ class AdminCategoryController extends BaseController
         $category->update($validated);
 
         return redirect()
-            ->route('admin.blog.categories.index')
+            ->route('admin.categories.index')
             ->with('success', 'Category updated successfully.');
     }
 
@@ -105,14 +105,14 @@ class AdminCategoryController extends BaseController
         // Check if category has articles
         if ($category->articles()->exists()) {
             return redirect()
-                ->route('admin.blog.categories.index')
+                ->route('admin.categories.index')
                 ->with('error', 'Cannot delete category with existing articles.');
         }
 
         $category->delete();
 
         return redirect()
-            ->route('admin.blog.categories.index')
+            ->route('admin.categories.index')
             ->with('success', 'Category deleted successfully.');
     }
 }

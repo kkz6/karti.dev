@@ -16,14 +16,19 @@ class Articles extends Table
     public function columns(): array
     {
         return [
-            //
+            Columns\TextColumn::make('id', 'ID', toggleable: false),
+            Columns\TextColumn::make('title', 'Title', toggleable: false),
+            Columns\TextColumn::make('slug', 'Slug', toggleable: false),
+            Columns\TextColumn::make('status', 'Status', toggleable: false),
+            Columns\TextColumn::make('created_at', 'Created At', toggleable: false),
+            Columns\TextColumn::make('updated_at', 'Updated At', toggleable: false),
         ];
     }
 
     public function filters(): array
     {
         return [
-            //
+            Filters\TextFilter::make('id', 'ID'),
         ];
     }
 

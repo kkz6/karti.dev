@@ -1,9 +1,9 @@
 import { useRef, useEffect } from 'react'
 import { trans } from './translations.js'
 import Datepicker from './Datepicker'
-import TextInput from './TextInput'
+import { Input } from '@shared/components/ui/input'
 import Popover from './Popover'
-import Select from './Select'
+import { cn } from '@shared/lib/utils'
 import { getSymbolForClause } from './clauses'
 import { Filter as FilterIcon, Search, X } from 'lucide-react';
 
@@ -105,11 +105,14 @@ const Filter = ({ filter, value, onChange, onRemove }) => {
                                 <div className="me-2 w-5">
                                     <FilterIcon className="size-5" />
                                 </div>
-                                <Select
+                                <select
                                     ref={clauseSelectRef}
                                     value={value.clause}
-                                    onChange={setFilterClause}
-                                    className="it-filter-clause-select-input w-full"
+                                    onChange={(e) => setFilterClause(e.target.value)}
+                                    className={cn(
+                                        "it-filter-clause-select-input w-full",
+                                        "border-input bg-background text-foreground flex h-9 items-center justify-between rounded-md border px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
+                                    )}
                                 >
                                     {filter.clauses.map((clause) => (
                                         <option
@@ -119,7 +122,7 @@ const Filter = ({ filter, value, onChange, onRemove }) => {
                                             {trans(`clause_${clause}`)}
                                         </option>
                                     ))}
-                                </Select>
+                                </select>
                             </div>
                         )}
                         {filter.type !== 'boolean' && value.clause !== 'is_set' && value.clause !== 'is_not_set' && (
@@ -133,32 +136,42 @@ const Filter = ({ filter, value, onChange, onRemove }) => {
                                 >
                                     {filter.type === 'numeric' && (value.clause === 'between' || value.clause === 'not_between') ? (
                                         <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                                            <TextInput
+                                            <Input
                                                 value={value.value?.[0] ?? ''}
-                                                onChange={(newValue) => setFilterValue([newValue, value.value?.[1]])}
+                                                onChange={(e) => setFilterValue([e.target.value, value.value?.[1]])}
                                                 type="number"
                                                 className="w-28"
                                             />
                                             <span className="text-sm text-gray-500 dark:text-zinc-500">{trans('between_values_and')}</span>
-                                            <TextInput
+                                            <Input
                                                 value={value.value?.[1] ?? ''}
-                                                onChange={(newValue) => setFilterValue([value.value?.[0], newValue])}
+                                                onChange={(e) => setFilterValue([value.value?.[0], e.target.value])}
                                                 type="number"
                                                 className="w-28"
                                             />
                                         </div>
                                     ) : filter.type === 'text' || filter.type === 'numeric' ? (
-                                        <TextInput
+                                        <Input
                                             value={value.value ?? ''}
-                                            onChange={setFilterValue}
+                                            onChange={(e) => setFilterValue(e.target.value)}
                                             type={filter.type === 'text' ? 'text' : 'number'}
                                             className="w-full"
                                         />
                                     ) : filter.type === 'set' ? (
-                                        <Select
+                                        <select
                                             value={value.value}
-                                            onChange={setFilterValue}
-                                            className="w-full"
+                                            onChange={(e) => {
+                                                if (value.clause === 'in' || value.clause === 'not_in' || filter.multiple) {
+                                                    const selectedValues = Array.from(e.target.selectedOptions, (option) => option.value)
+                                                    setFilterValue(selectedValues)
+                                                } else {
+                                                    setFilterValue(e.target.value)
+                                                }
+                                            }}
+                                            className={cn(
+                                                "w-full",
+                                                "border-input bg-background text-foreground flex h-9 items-center justify-between rounded-md border px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
+                                            )}
                                             multiple={value.clause === 'in' || value.clause === 'not_in' || filter.multiple}
                                         >
                                             {filter.options.map((option) => (
@@ -169,10 +182,10 @@ const Filter = ({ filter, value, onChange, onRemove }) => {
                                                     {option.label}
                                                 </option>
                                             ))}
-                                        </Select>
+                                        </select>
                                     ) : filter.type === 'date' ? (
                                         <div className="relative">
-                                            <TextInput
+                                            <Input
                                                 value={presentableValue() ?? ''}
                                                 readOnly={true}
                                                 className="w-full"
