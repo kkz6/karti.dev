@@ -1,7 +1,6 @@
 import { List, Settings, Wrench } from 'lucide-react';
 import { useMemo } from 'react';
 
-// @ts-ignore - shared module types not available
 import { Button } from '@shared/components/ui/button';
 import {
     DropdownMenu,
@@ -12,8 +11,8 @@ import {
     DropdownMenuTrigger,
 } from '@shared/components/ui/dropdown-menu';
 import { useLang } from '@shared/hooks/use-lang';
-import Actions from './Actions.tsx';
-import DynamicIcon from './DynamicIcon.tsx';
+import DynamicIcon from './DynamicIcon';
+import TableActions from './TableActions';
 import type { ActionsDropdownProps, TableExport } from './types/actions';
 
 export default function ActionsDropdown({
@@ -41,7 +40,7 @@ export default function ActionsDropdown({
     }
 
     return (
-        <Actions
+        <TableActions
             actions={actions}
             iconResolver={iconResolver}
             keys={selectedItems}
@@ -121,6 +120,6 @@ export default function ActionsDropdown({
                     </DropdownMenuContent>
                 </DropdownMenu>
             )}
-        </Actions>
+        </TableActions>
     );
 }

@@ -1,6 +1,6 @@
 import { Button } from '@shared/components/ui/button';
 import { InboxIcon } from 'lucide-react';
-import DynamicIcon from './DynamicIcon.tsx';
+import DynamicIcon from './DynamicIcon';
 import type { Action, EmptyStateProps, UrlConfig } from './types';
 import { visitUrl } from './urlHelpers';
 
@@ -13,8 +13,8 @@ export default function EmptyState({
     dataAttributes = {},
 }: EmptyStateProps) {
     function handleAction(url: Action['url']): void {
-        if (url) {
-            visitUrl(url as UrlConfig);
+        if (url && typeof url === 'object') {
+            visitUrl(url.url);
         }
     }
 

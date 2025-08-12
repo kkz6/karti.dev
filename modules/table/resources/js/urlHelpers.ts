@@ -1,5 +1,4 @@
 import { router } from '@inertiajs/react';
-import type { Action } from './types';
 import type {
     ActionItem,
     GetActionForItemFunction,
@@ -69,19 +68,26 @@ export const getClickableColumn: GetClickableColumnFunction = (column, item) => 
     return null;
 };
 
-export const getActionForItem: GetActionForItemFunction = (actions, item) => {
-    // Get the appropriate action for an item
-    if (!actions || !Array.isArray(actions)) return null;
+export const getActionForItem: GetActionForItemFunction = (actionData, action) => {
+    // Handle different action data formats from backend
+    if (!actionData) return null;
 
-    return (
-        actions.find((action: Action | ActionItem) => {
-            // Simple action matching logic
-            if ('when' in action && action.when && typeof action.when === 'function') {
-                return action.when(item);
-            }
-            return true;
-        }) ||
-        actions[0] ||
-        null
-    );
+    // If actionData is a string (URL), create a basic ActionItem
+    if (typeof actionData === 'string') {
+        return {
+            id: 'link',
+            label: '',
+            type: 'link',
+            bindings: { href: actionData },
+            isVisible: true,
+            componentType: 'a',
+        } as ActionItem;
+    }
+
+    // If actionData is already an ActionItem, return it
+    if (typeof actionData === 'object' && actionData !== null) {
+        return actionData as ActionItem;
+    }
+
+    return null;
 };

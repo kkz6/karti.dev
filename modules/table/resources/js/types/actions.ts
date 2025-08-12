@@ -1,15 +1,31 @@
 // Action-specific types for table operations
-import type { Action } from './index';
 
-// Extended action interface for table operations
-export interface TableAction extends Omit<Action, 'url'> {
-    url: string;
+// Extended action interface for table operations (matches backend Action.php)
+export interface TableAction {
+    label: string;
+    icon?: string;
+    url?: string;
     authorized: boolean;
-    isCustom?: boolean;
-    limitToSelectedRows?: boolean;
-    confirmationRequired?: boolean;
-    isLink?: boolean;
-    asBulkAction?: boolean;
+    isCustom: boolean;
+    isLink: boolean;
+    isAction: boolean;
+    type: 'button' | 'link';
+    variant: 'danger' | 'default' | 'info' | 'success' | 'warning';
+    buttonClass?: string | null;
+    linkClass?: string | null;
+    style: string;
+    asRowAction: boolean;
+    asBulkAction: boolean;
+    confirmationRequired: boolean;
+    confirmationTitle?: string;
+    confirmationMessage?: string;
+    confirmationConfirmButton?: string;
+    confirmationCancelButton?: string;
+    showLabel: boolean;
+    asDownload: boolean;
+    dataAttributes?: Record<string, any> | null;
+    meta?: Record<string, any> | null;
+    id?: string | number | null;
 }
 
 // Export-specific interface

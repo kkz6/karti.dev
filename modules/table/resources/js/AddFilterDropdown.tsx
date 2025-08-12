@@ -10,7 +10,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@shared/components/ui/dropdown-menu';
-// @ts-ignore - shared module types not available
 import { useLang } from '@shared/hooks/use-lang';
 import type { AddFilterDropdownProps } from './types';
 

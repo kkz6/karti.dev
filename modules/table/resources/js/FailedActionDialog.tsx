@@ -1,8 +1,11 @@
-import ConfirmDialog from './ConfirmDialog'
-import { useLang } from '@shared/hooks/use-lang'
+import { useLang } from '@shared/hooks/use-lang';
+import React from 'react';
+import ConfirmDialog from './ConfirmDialog';
+import type { FailedActionDialogProps } from './types';
 
-export default function FailedActionDialog({ show, onConfirm }) {
+export default function FailedActionDialog({ show, onConfirm }: FailedActionDialogProps): React.ReactElement {
     const { t } = useLang();
+
     return (
         <ConfirmDialog
             show={show}
@@ -14,5 +17,5 @@ export default function FailedActionDialog({ show, onConfirm }) {
             onConfirm={onConfirm}
             onCancel={() => {}} // No-op for failed dialog
         />
-    )
+    );
 }

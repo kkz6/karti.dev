@@ -1,4 +1,6 @@
 import { LucideIcon } from 'lucide-react';
+import { TableAction } from './actions';
+import { ActionItem } from './url';
 
 // Re-export URL types
 export * from './url';
@@ -49,11 +51,16 @@ export interface FilterState {
 export interface TableColumn {
     attribute: string;
     label: string;
+    header?: string;
+    headerClass?: string;
     sortable?: boolean;
     searchable?: boolean;
     clickable?: boolean;
     hidden?: boolean;
     sticky?: boolean;
+    toggleable?: boolean;
+    stickable?: boolean;
+    alignment?: 'left' | 'center' | 'right';
     width?: string | number;
     className?: string;
     [key: string]: any;
@@ -84,13 +91,7 @@ export interface TableResource<T = any> {
 
 export interface TableConfig<T = any> extends TableResource<T> {}
 
-// Dynamic Icon Types
-export interface DynamicIconProps {
-    icon: string | LucideIcon;
-    resolver?: ((iconName: string) => LucideIcon | string | null) | null;
-    context?: any;
-    className?: string;
-}
+// Dynamic Icon Types (removed duplicate - using definition below)
 
 // Pagination Types
 export interface PaginationLink {
@@ -115,13 +116,7 @@ export interface FilterOption {
     value: any;
 }
 
-export interface FilterProps {
-    column: TableColumn;
-    state: FilterState;
-    options?: FilterOption[];
-    onChange: (value: any, clause?: string) => void;
-    onRemove: () => void;
-}
+// FilterProps is now defined below with the updated Filter types
 
 // Dynamic Icon Types
 export interface DynamicIconProps {
@@ -201,4 +196,150 @@ export type ClauseSymbols = Record<ClauseType, string>;
 export interface ClauseHelpers {
     getSymbolForClause: (clause: ClauseType | string) => string;
     setClauseSymbols: (symbols: Partial<ClauseSymbols>) => void;
+}
+
+// Dialog Types
+export interface ConfirmDialogProps {
+    title: string;
+    message: string;
+    confirmButton: string;
+    cancelButton?: string | false;
+    show: boolean;
+    danger?: boolean;
+    variant?: 'danger' | 'info' | null;
+    customVariantClass?: string;
+    onCancel?: (() => void) | null;
+    onConfirm?: (() => void) | null;
+    icon?: string | null;
+    iconResolver?: ((icon: string, context?: any) => React.ComponentType<any> | null) | null;
+}
+
+export interface ConfirmActionDialogProps {
+    show: boolean;
+    action?: {
+        confirmationTitle?: string;
+        confirmationMessage?: string;
+        confirmationCancelButton?: string;
+        confirmationConfirmButton?: string;
+        icon?: string;
+        variant?: 'danger' | 'info';
+        buttonClass?: string;
+    };
+    onConfirm?: (() => void) | null;
+    onCancel?: (() => void) | null;
+    iconResolver?: ((icon: string, context?: any) => React.ComponentType<any> | null) | null;
+}
+
+export interface FailedActionDialogProps {
+    show: boolean;
+    onConfirm: () => void;
+}
+
+// Filter Types - updated FilterOption
+export interface FilterOptionExtended {
+    label: string;
+    value: string | number;
+}
+
+export interface FilterValue {
+    enabled: boolean;
+    clause: string;
+    value?: any;
+    new?: boolean;
+}
+
+export interface FilterDefinitionExtended {
+    attribute: string;
+    label: string;
+    type: 'text' | 'numeric' | 'date' | 'boolean' | 'set';
+    clauses: string[];
+    options?: FilterOptionExtended[];
+    multiple?: boolean;
+}
+
+export interface FilterProps {
+    filter: FilterDefinitionExtended;
+    value: FilterValue;
+    onChange: (value: FilterValue) => void;
+    onRemove: () => void;
+}
+
+// Loading Spinner Types
+export interface LoadingSpinnerProps {
+    size?: 'sm' | 'md' | 'lg';
+    className?: string;
+}
+
+// Table Header Dropdown Types
+export interface TableHeaderDropdownProps {
+    column: TableColumn;
+    sort?: string | false;
+    sticky: boolean;
+    onToggle: (column: TableColumn) => void;
+    onSort: (sortString: string) => void;
+    onStick: (column: TableColumn) => void;
+    onUnstick: (column: TableColumn) => void;
+}
+
+export interface ButtonIconProps {
+    sort?: string | false;
+    className?: string;
+}
+
+// Toggle Column Dropdown Types
+export interface ToggleColumnDropdownProps {
+    columns: TableColumn[];
+    state: Record<string, boolean>;
+    onToggle: (column: TableColumn) => void;
+}
+
+// Sticky Table Types
+export interface StickyTableHook {
+    add: () => void;
+    remove: () => void;
+}
+
+export type GetElementFunction = () => HTMLElement | null;
+
+// Table Cell Image Types
+export interface TableCellImageData {
+    icon?: string;
+    url?: string | string[];
+    alt?: string;
+    title?: string;
+    width?: number | string;
+    height?: number | string;
+    size?: 'small' | 'medium' | 'large' | 'extra-large';
+    rounded?: boolean;
+    position?: 'start' | 'end';
+    remaining?: number;
+    class?: string;
+}
+
+export interface TableCellImageProps {
+    data?: TableCellImageData | null;
+    iconResolver?: ((icon: string) => React.ComponentType<any>) | null;
+    renderDefaultSlot?: boolean;
+    children?: React.ReactNode;
+    fallback?: (() => React.ReactNode) | null;
+    image?: (() => React.ReactNode) | null;
+}
+
+// Row Actions Types - ActionItem is defined in types/url.ts
+
+export interface TableRowItem {
+    _primary_key: string | number;
+    _actions?: (string | ActionItem | null)[];
+    [key: string]: any;
+}
+
+export interface RowActionsProps {
+    item: TableRowItem;
+    actions: TableAction[];
+    performAction: (action: TableAction, keys?: (string | number)[] | null) => Promise<any>;
+    iconResolver: ((icon: string) => React.ComponentType<any>) | null;
+    asDropdown?: boolean;
+    onSuccess?: ((action: TableAction, keys: (string | number)[]) => void) | null;
+    onError?: ((action: TableAction, keys: (string | number)[], error: any) => void) | null;
+    onHandle?: ((action: TableAction, keys: (string | number)[], onFinish?: () => void) => void) | null;
 }

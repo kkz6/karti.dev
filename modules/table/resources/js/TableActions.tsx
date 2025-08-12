@@ -1,7 +1,6 @@
-import { useState } from 'react';
-// @ts-ignore - shared module types not available
 import { useLang } from '@shared/hooks/use-lang';
 import { MoreHorizontal } from 'lucide-react';
+import { useState } from 'react';
 import ConfirmActionDialog from './ConfirmActionDialog';
 import ConfirmDialog from './ConfirmDialog';
 import FailedActionDialog from './FailedActionDialog';
@@ -111,7 +110,7 @@ export default function Actions({
 
             <ConfirmActionDialog
                 show={confirmDialogIsOpen}
-                action={confirmContext?.action}
+                action={confirmContext?.action as any}
                 iconResolver={iconResolver}
                 onCancel={() => setConfirmDialogIsOpen(false)}
                 onConfirm={() => confirmContext && perform(confirmContext.action)}

@@ -1,13 +1,20 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useCallback, useRef } from 'react';
+import type { GetElementFunction, StickyTableHook } from './types';
+
+// Extended HTMLElement interface to support custom cleanup functions
+interface ExtendedHTMLElement extends HTMLElement {
+    _stickyColumnsCleanup?: () => void;
+    _stickyHeaderCleanup?: () => void;
+}
 
 // React hooks for sticky table functionality
-export const useStickyColumns = (getTableContainer) => {
-    const isActiveRef = useRef(false);
+export const useStickyColumns = (getTableContainer: GetElementFunction): StickyTableHook => {
+    const isActiveRef = useRef<boolean>(false);
 
-    const add = useCallback(() => {
+    const add = useCallback((): void => {
         if (isActiveRef.current) return;
 
-        const tableContainer = typeof getTableContainer === 'function' ? getTableContainer() : null;
+        const tableContainer = getTableContainer() as ExtendedHTMLElement | null;
         if (!tableContainer) return;
 
         isActiveRef.current = true;
@@ -16,7 +23,7 @@ export const useStickyColumns = (getTableContainer) => {
         tableContainer.setAttribute('data-scroll-x', '');
 
         // Set up scroll listener for sticky column effects
-        const handleScroll = () => {
+        const handleScroll = (): void => {
             if (tableContainer.scrollLeft > 0) {
                 tableContainer.setAttribute('data-scroll-x', '');
             } else {
@@ -27,16 +34,16 @@ export const useStickyColumns = (getTableContainer) => {
         tableContainer.addEventListener('scroll', handleScroll);
 
         // Store cleanup function
-        tableContainer._stickyColumnsCleanup = () => {
+        tableContainer._stickyColumnsCleanup = (): void => {
             tableContainer.removeEventListener('scroll', handleScroll);
             tableContainer.removeAttribute('data-scroll-x');
         };
     }, [getTableContainer]);
 
-    const remove = useCallback(() => {
+    const remove = useCallback((): void => {
         if (!isActiveRef.current) return;
 
-        const tableContainer = typeof getTableContainer === 'function' ? getTableContainer() : null;
+        const tableContainer = getTableContainer() as ExtendedHTMLElement | null;
         if (!tableContainer) return;
 
         isActiveRef.current = false;
@@ -51,21 +58,21 @@ export const useStickyColumns = (getTableContainer) => {
     return { add, remove };
 };
 
-export const useStickyHeader = (getTableContainer, getHeaderElement) => {
-    const isActiveRef = useRef(false);
+export const useStickyHeader = (getTableContainer: GetElementFunction, getHeaderElement: GetElementFunction): StickyTableHook => {
+    const isActiveRef = useRef<boolean>(false);
 
-    const add = useCallback(() => {
+    const add = useCallback((): void => {
         if (isActiveRef.current) return;
 
-        const tableContainer = typeof getTableContainer === 'function' ? getTableContainer() : null;
-        const headerElement = typeof getHeaderElement === 'function' ? getHeaderElement() : null;
+        const tableContainer = getTableContainer() as ExtendedHTMLElement | null;
+        const headerElement = getHeaderElement();
 
         if (!tableContainer || !headerElement) return;
 
         isActiveRef.current = true;
 
         // Set up scroll listener for sticky header effects
-        const handleScroll = () => {
+        const handleScroll = (): void => {
             const rect = tableContainer.getBoundingClientRect();
             const headerRect = headerElement.getBoundingClientRect();
 
@@ -79,8 +86,8 @@ export const useStickyHeader = (getTableContainer, getHeaderElement) => {
         };
 
         // Check if we're scrolling
-        let scrollTimeout;
-        const handleScrollStart = () => {
+        let scrollTimeout: NodeJS.Timeout;
+        const handleScrollStart = (): void => {
             tableContainer.setAttribute('data-is-scrolling-y', '');
             clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(() => {
@@ -88,7 +95,7 @@ export const useStickyHeader = (getTableContainer, getHeaderElement) => {
             }, 150);
         };
 
-        const scrollHandler = () => {
+        const scrollHandler = (): void => {
             handleScroll();
             handleScrollStart();
         };
@@ -97,7 +104,7 @@ export const useStickyHeader = (getTableContainer, getHeaderElement) => {
         tableContainer.addEventListener('scroll', scrollHandler);
 
         // Store cleanup function
-        tableContainer._stickyHeaderCleanup = () => {
+        tableContainer._stickyHeaderCleanup = (): void => {
             window.removeEventListener('scroll', scrollHandler);
             tableContainer.removeEventListener('scroll', scrollHandler);
             tableContainer.removeAttribute('data-scroll-y');
@@ -107,10 +114,10 @@ export const useStickyHeader = (getTableContainer, getHeaderElement) => {
         };
     }, [getTableContainer, getHeaderElement]);
 
-    const remove = useCallback(() => {
+    const remove = useCallback((): void => {
         if (!isActiveRef.current) return;
 
-        const tableContainer = typeof getTableContainer === 'function' ? getTableContainer() : null;
+        const tableContainer = getTableContainer() as ExtendedHTMLElement | null;
         if (!tableContainer) return;
 
         isActiveRef.current = false;

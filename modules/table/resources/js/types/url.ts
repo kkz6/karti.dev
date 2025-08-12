@@ -39,12 +39,14 @@ export interface TableItem {
     [key: string]: any;
 }
 
-// Action item for matching
+// Action item for matching - extended from base Action
 export interface ActionItem extends Action {
     componentType?: string;
     bindings?: Record<string, any>;
-    type?: string;
+    type?: 'button' | 'link';
     isVisible?: boolean;
+    asDownload?: boolean;
+    when?: (item: any) => boolean;
 }
 
 // URL helper function types
@@ -52,4 +54,4 @@ export type VisitUrlFunction = (url: string | null | undefined) => void;
 export type VisitModalFunction = (url: string | null | undefined, modalCallback?: ModalCallback) => void;
 export type ReplaceUrlFunction = (url: string | null | undefined) => void;
 export type GetClickableColumnFunction = (column: ClickableColumn | null, item: TableItem | null) => string | null;
-export type GetActionForItemFunction = (actions: (Action | ActionItem)[] | null, item: any) => ActionItem | Action | null;
+export type GetActionForItemFunction = (actionData: string | ActionItem | null, action: any) => ActionItem | null;

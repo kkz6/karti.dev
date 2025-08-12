@@ -21,8 +21,8 @@ class Articles extends Table
             Columns\TextColumn::make('title', 'Title', toggleable: false)->searchable(),
             Columns\TextColumn::make('slug', 'Slug', toggleable: false)->sortable(),
             Columns\TextColumn::make('status', 'Status', toggleable: false),
-            Columns\TextColumn::make('created_at', 'Created At', toggleable: false),
-            Columns\TextColumn::make('updated_at', 'Updated At', toggleable: false),
+            Columns\DateColumn::make('created_at', 'Created At', toggleable: false),
+            Columns\DateColumn::make('updated_at', 'Updated At', toggleable: false),
             Columns\ActionColumn::new(),
         ];
     }
