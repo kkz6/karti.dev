@@ -3,10 +3,10 @@ import { useCallback, useMemo } from 'react'
 import clsx from 'clsx'
 
 import { getActionForItem } from './urlHelpers'
-import Actions from './Actions.jsx'
+import Actions from './Actions.tsx'
 import { Button } from '@shared/components/ui/button'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@shared/components/ui/dropdown-menu'
-import DynamicIcon from './DynamicIcon'
+import DynamicIcon from './DynamicIcon.tsx'
 
 export default function RowActions({ item, actions, performAction, iconResolver, asDropdown = false, onSuccess = null, onError = null, onHandle = null }) {
     const componentType = useCallback(

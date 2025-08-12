@@ -7,12 +7,18 @@ export interface TableAction extends Omit<Action, 'url'> {
     authorized: boolean;
     isCustom?: boolean;
     limitToSelectedRows?: boolean;
+    confirmationRequired?: boolean;
+    isLink?: boolean;
+    asBulkAction?: boolean;
 }
 
 // Export-specific interface
 export interface TableExport {
     url: string;
+    label: string;
     limitToSelectedRows?: boolean;
+    asDownload?: boolean;
+    dataAttributes?: Record<string, any>;
     [key: string]: any;
 }
 
@@ -51,6 +57,33 @@ export interface UseActionsReturn {
     performAsyncExport: (tableExport: TableExport) => Promise<ExportSuccessResult>;
     selectedItems: (string | number)[];
     toggleItem: (id: string | number | '*') => void;
+}
+
+// Actions component types
+export interface ActionsProps {
+    actions: TableAction[];
+    keys: (string | number)[];
+    performAction: (action: TableAction, keys?: (string | number)[] | null) => Promise<ActionSuccessResult | CustomActionResult>;
+    performAsyncExport?: ((tableExport: TableExport) => Promise<ExportSuccessResult>) | null;
+    item?: any;
+    iconResolver: (icon: string) => React.ComponentType<any>;
+    onSuccess?: ((action: TableAction, keys: (string | number)[]) => void) | null;
+    onError?: ((action: TableAction, keys: (string | number)[], error: any) => void) | null;
+    onHandle?: ((action: TableAction, keys: (string | number)[], onFinish: () => void) => void) | null;
+    children: (context: { handle: (action: TableAction) => void; asyncExport: (tableExport: TableExport) => void }) => React.ReactNode;
+}
+
+// ActionsDropdown component types
+export interface ActionsDropdownProps {
+    actions: TableAction[];
+    exports: TableExport[];
+    selectedItems: (string | number)[];
+    performAction: (action: TableAction, keys?: (string | number)[] | null) => Promise<ActionSuccessResult | CustomActionResult>;
+    performAsyncExport: (tableExport: TableExport) => Promise<ExportSuccessResult>;
+    iconResolver: (icon: string) => React.ComponentType<any>;
+    onSuccess?: ((action: TableAction, keys: (string | number)[]) => void) | null;
+    onError?: ((action: TableAction, keys: (string | number)[], error: any) => void) | null;
+    onHandle?: ((action: TableAction, keys: (string | number)[], onFinish: () => void) => void) | null;
 }
 
 // Action types for different operations

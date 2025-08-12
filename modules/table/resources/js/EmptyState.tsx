@@ -1,6 +1,6 @@
 import { Button } from '@shared/components/ui/button';
 import { InboxIcon } from 'lucide-react';
-import DynamicIcon from './DynamicIcon';
+import DynamicIcon from './DynamicIcon.tsx';
 import type { Action, EmptyStateProps, UrlConfig } from './types';
 import { visitUrl } from './urlHelpers';
 

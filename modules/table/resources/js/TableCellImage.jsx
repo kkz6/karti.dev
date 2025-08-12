@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import clsx from 'clsx'
-import DynamicIcon from './DynamicIcon'
+import DynamicIcon from './DynamicIcon.tsx'
 
 export default function TableCellImage({ data, iconResolver, renderDefaultSlot, children, fallback, image }) {
     const images = useMemo(() => {

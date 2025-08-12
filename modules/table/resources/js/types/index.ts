@@ -122,3 +122,83 @@ export interface FilterProps {
     onChange: (value: any, clause?: string) => void;
     onRemove: () => void;
 }
+
+// Dynamic Icon Types
+export interface DynamicIconProps {
+    icon: string | null | undefined;
+    resolver: ((icon: string, context?: any) => React.ComponentType<any> | null) | null;
+    context?: any;
+    className?: string;
+}
+
+// Icon Resolver Types
+export type IconComponent = React.ComponentType<any>;
+export type IconResolver = (iconName: string, context?: any) => IconComponent | null;
+export type IconInput = string | IconComponent | null | undefined;
+
+// Filter Dropdown Types
+export interface FilterDefinition {
+    attribute: string;
+    label: string;
+    type?: string;
+    options?: FilterOption[];
+    [key: string]: any;
+}
+
+export interface AddFilterDropdownProps {
+    filters: FilterDefinition[];
+    state: Record<string, FilterState>;
+    onAdd: (filter: FilterDefinition) => void;
+}
+
+// Clause Types
+export type ClauseType =
+    // Basic equality
+    | 'equals'
+    | 'not_equals'
+    // Text operations
+    | 'contains'
+    | 'not_contains'
+    | 'starts_with'
+    | 'not_starts_with'
+    | 'ends_with'
+    | 'not_ends_with'
+    // Numeric comparisons
+    | 'greater_than'
+    | 'greater_than_or_equal'
+    | 'less_than'
+    | 'less_than_or_equal'
+    | 'between'
+    | 'not_between'
+    // Set operations
+    | 'in'
+    | 'not_in'
+    // Null checks
+    | 'is_null'
+    | 'is_not_null'
+    | 'is_set'
+    | 'is_not_set'
+    // Boolean
+    | 'is_true'
+    | 'is_false'
+    // Date operations
+    | 'before'
+    | 'equal_or_before'
+    | 'after'
+    | 'equal_or_after'
+    // Legacy mappings
+    | '='
+    | '!='
+    | '>'
+    | '>='
+    | '<'
+    | '<='
+    | 'like'
+    | 'not_like';
+
+export type ClauseSymbols = Record<ClauseType, string>;
+
+export interface ClauseHelpers {
+    getSymbolForClause: (clause: ClauseType | string) => string;
+    setClauseSymbols: (symbols: Partial<ClauseSymbols>) => void;
+}

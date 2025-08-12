@@ -86,33 +86,10 @@ export default function TablePagination({ meta, options, perPage, type = 'full',
 
     return (
         <div className="it-pagination flex w-full flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            {/* Rows per page */}
-            <div className="flex items-center gap-2">
-                <p className="text-sm font-medium">{t('table::table.rows_per_page')}</p>
-                <Select
-                    value={perPage.toString()}
-                    onValueChange={(value) => onChange(parseInt(value))}
-                >
-                    <SelectTrigger className="it-pagination-per-page-select h-8 w-auto min-w-[70px]">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {options.map((option) => (
-                            <SelectItem
-                                key={option}
-                                value={option.toString()}
-                            >
-                                {option}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
-
             {/* Page info and navigation */}
             <div className="flex items-center gap-4">
                 {/* Page info */}
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground whitespace-nowrap">
                     {translatedString}
                 </p>
 
@@ -174,6 +151,29 @@ export default function TablePagination({ meta, options, perPage, type = 'full',
                         </PaginationContent>
                     </Pagination>
                 )}
+            </div>
+
+            {/* Rows per page */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+                <p className="text-sm font-medium whitespace-nowrap">{t('table::table.rows_per_page')}</p>
+                <Select
+                    value={perPage.toString()}
+                    onValueChange={(value) => onChange(parseInt(value))}
+                >
+                    <SelectTrigger className="it-pagination-per-page-select h-8 w-auto min-w-[70px]">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {options.map((option) => (
+                            <SelectItem
+                                key={option}
+                                value={option.toString()}
+                            >
+                                {option}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
         </div>
     )

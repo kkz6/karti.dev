@@ -1,17 +1,26 @@
-import { useLang } from '@shared/hooks/use-lang'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel } from '@shared/components/ui/dropdown-menu'
-import { Button } from '@shared/components/ui/button'
 import { Filter, Plus } from 'lucide-react';
+import React from 'react';
 
-export default function AddFilterDropdown({ filters, state, onAdd }) {
+import { Button } from '@shared/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@shared/components/ui/dropdown-menu';
+// @ts-ignore - shared module types not available
+import { useLang } from '@shared/hooks/use-lang';
+import type { AddFilterDropdownProps } from './types';
+
+export default function AddFilterDropdown({ filters, state, onAdd }: AddFilterDropdownProps): React.ReactElement {
     const { t } = useLang();
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button
-                    variant="outline"
-                    className="it-dropdown-button w-full justify-start"
-                >
+                <Button variant="outline" className="it-dropdown-button w-full justify-start">
                     <Filter className="me-2 size-4" />
                     <span>{t('table::table.filters_button')}</span>
                 </Button>
@@ -20,17 +29,12 @@ export default function AddFilterDropdown({ filters, state, onAdd }) {
                 <DropdownMenuLabel className="it-dropdown-header">{t('table::table.add_filter_header')}</DropdownMenuLabel>
                 <DropdownMenuSeparator className="it-dropdown-separator" />
                 {filters.map((filter, key) => (
-                    <DropdownMenuItem
-                        key={key}
-                        disabled={state[filter.attribute].enabled}
-                        onClick={() => onAdd(filter)}
-                        className="it-dropdown-item"
-                    >
+                    <DropdownMenuItem key={key} disabled={state[filter.attribute].enabled} onClick={() => onAdd(filter)} className="it-dropdown-item">
                         {!state[filter.attribute].enabled && <Plus className="me-2 size-3.5" />}
                         <span>{filter.label}</span>
                     </DropdownMenuItem>
                 ))}
             </DropdownMenuContent>
         </DropdownMenu>
-    )
+    );
 }

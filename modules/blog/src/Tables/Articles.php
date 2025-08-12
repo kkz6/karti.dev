@@ -19,7 +19,7 @@ class Articles extends Table
         return [
             Columns\TextColumn::make('id', 'ID', toggleable: false)->url(fn(Article $article) => '/blog/articles/' . $article->id . '/edit'),
             Columns\TextColumn::make('title', 'Title', toggleable: false)->searchable(),
-            Columns\TextColumn::make('slug', 'Slug', toggleable: false),
+            Columns\TextColumn::make('slug', 'Slug', toggleable: false)->sortable(),
             Columns\TextColumn::make('status', 'Status', toggleable: false),
             Columns\TextColumn::make('created_at', 'Created At', toggleable: false),
             Columns\TextColumn::make('updated_at', 'Updated At', toggleable: false),
@@ -41,7 +41,7 @@ class Articles extends Table
             Action::make(
                 label: 'Delete',
                 handle: fn(Article $article) => $article->delete(),
-            )->confirm(),
+            )->confirm()->asBulkAction(),
         ];
     }
 

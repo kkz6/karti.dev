@@ -1,11 +1,20 @@
-import { useMemo } from 'react'
-import { Settings, List, Wrench } from 'lucide-react';
+import { List, Settings, Wrench } from 'lucide-react';
+import { useMemo } from 'react';
 
-import { useLang } from '@shared/hooks/use-lang'
-import Actions from './Actions.jsx'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel } from '@shared/components/ui/dropdown-menu'
-import { Button } from '@shared/components/ui/button'
-import DynamicIcon from './DynamicIcon'
+// @ts-ignore - shared module types not available
+import { Button } from '@shared/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@shared/components/ui/dropdown-menu';
+import { useLang } from '@shared/hooks/use-lang';
+import Actions from './Actions.tsx';
+import DynamicIcon from './DynamicIcon.tsx';
+import type { ActionsDropdownProps, TableExport } from './types/actions';
 
 export default function ActionsDropdown({
     actions,
@@ -17,18 +26,18 @@ export default function ActionsDropdown({
     onSuccess = null,
     onError = null,
     onHandle = null,
-}) {
+}: ActionsDropdownProps) {
     const { t } = useLang();
-    const hasBulkActions = useMemo(() => actions.filter((action) => action.asBulkAction).length > 0, [actions])
-    const hasExports = useMemo(() => exports.length > 0, [exports])
-    const hasSelectedItems = useMemo(() => selectedItems.length > 0, [selectedItems])
+    const hasBulkActions = useMemo(() => actions.filter((action) => action.asBulkAction).length > 0, [actions]);
+    const hasExports = useMemo(() => exports.length > 0, [exports]);
+    const hasSelectedItems = useMemo(() => selectedItems.length > 0, [selectedItems]);
 
-    function makeExportUrl(tableExport) {
+    function makeExportUrl(tableExport: TableExport): string {
         if (!tableExport.limitToSelectedRows) {
-            return tableExport.url
+            return tableExport.url;
         }
 
-        return `${tableExport.url}&keys=${selectedItems.join(',')}`
+        return `${tableExport.url}&keys=${selectedItems.join(',')}`;
     }
 
     return (
@@ -45,10 +54,7 @@ export default function ActionsDropdown({
             {({ handle, asyncExport }) => (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button
-                            variant="outline"
-                            className="it-dropdown-button w-full justify-start"
-                        >
+                        <Button variant="outline" className="it-dropdown-button w-full justify-start">
                             <Wrench className="me-2 size-4" />
                             <span>{t('table::table.actions_button')}</span>
                         </Button>
@@ -66,11 +72,7 @@ export default function ActionsDropdown({
                                         {...(tableExport.dataAttributes || {})}
                                     >
                                         {tableExport.asDownload ? (
-                                            <a
-                                                href={makeExportUrl(tableExport)}
-                                                download
-                                                className="flex items-center"
-                                            >
+                                            <a href={makeExportUrl(tableExport)} download className="flex items-center">
                                                 <List className="me-2 size-3.5" />
                                                 <span>{tableExport.label}</span>
                                             </a>
@@ -120,5 +122,5 @@ export default function ActionsDropdown({
                 </DropdownMenu>
             )}
         </Actions>
-    )
+    );
 }

@@ -9,7 +9,7 @@ import {
     AlertDialogAction,
     AlertDialogCancel,
 } from '@shared/components/ui/alert-dialog'
-import DynamicIcon from './DynamicIcon'
+import DynamicIcon from './DynamicIcon.tsx'
 
 export default function ConfirmDialog({
     title,

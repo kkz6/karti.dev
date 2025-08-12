@@ -12,7 +12,7 @@ import {
     SelectValue,
 } from '@shared/components/ui/select'
 import { cn } from '@shared/lib/utils'
-import { getSymbolForClause } from './clauses'
+import { getSymbolForClause } from './clauses.ts'
 import { Filter as FilterIcon, Search, X, CalendarIcon } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 

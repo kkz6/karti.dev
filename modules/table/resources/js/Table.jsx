@@ -1,16 +1,17 @@
 import { clsx } from 'clsx'
 import { getClickableColumn, useActions, useTable, visitUrl } from './inertiauiTable'
-import { resolveIcon } from './iconResolver.js'
+import { resolveIcon } from './iconResolver.ts'
 import { useLang } from '@shared/hooks/use-lang'
 import { useEffect, useRef } from 'react'
 // App is always LTR, so we don't need RTL logic
 import { useStickyColumns, useStickyHeader } from './useStickyTable'
 
-import ActionsDropdown from './ActionsDropdown'
-import AddFilterDropdown from './AddFilterDropdown'
+import ActionsDropdown from './ActionsDropdown.tsx'
+import AddFilterDropdown from './AddFilterDropdown.tsx'
 import { Badge } from '@shared/components/ui/badge'
 import { Checkbox } from '@shared/components/ui/checkbox'
-import DynamicIcon from './DynamicIcon'
+import { Table as ShadcnTable, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@shared/components/ui/table'
+import DynamicIcon from './DynamicIcon.tsx'
 import EmptyState from './EmptyState'
 import Filter from './Filter'
 import LoadingSpinner from './LoadingSpinner'
@@ -230,17 +231,17 @@ const Table = ({
                                 ref={tableContainerRef}
                                 className="group/table relative w-full overflow-x-auto overflow-y-hidden rounded-md bg-white dark:bg-zinc-900"
                             >
-                                <table className="it-table w-full caption-bottom text-left transition-opacity dark:text-zinc-300">
+                                <ShadcnTable className="it-table w-full caption-bottom text-left transition-opacity dark:text-zinc-300">
                                     {thead ? (
                                         thead({ table: tableInstance, actions })
                                     ) : resource.results.data.length ? (
-                                        <thead
+                                        <TableHeader
                                             ref={theadRef}
                                             className="it-table-head relative z-20 opacity-100 transition !duration-100 ease-out group-data-[scroll-y]/table:translate-y-[var(--header-offset)] group-data-[is-scrolling-y]/table:group-data-[scroll-y]/table:opacity-0 group-data-[scroll-y]/table:shadow-lg"
                                         >
-                                            <tr className="group border-b border-gray-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
+                                            <TableRow className="group border-b border-gray-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
                                                 {hasSelectableRows && (
-                                                    <th
+                                                    <TableHead
                                                         data-column="_checkbox"
                                                         className={clsx('w-8 px-2 align-middle group-hover:bg-gray-100/50 dark:group-hover:bg-zinc-900/50', {
                                                             'left-0 z-10 bg-white/90 group-data-[scroll-x]/table:sticky rtl:right-0 dark:bg-zinc-900/90':
@@ -252,13 +253,13 @@ const Table = ({
                                                             className="it-toggle-all-checkbox"
                                                             onCheckedChange={() => toggleItem('*')}
                                                         />
-                                                    </th>
+                                                    </TableHead>
                                                 )}
 
                                                 {resource.columns
                                                     .filter((column) => state.columns[column.attribute])
                                                     .map((column) => (
-                                                        <th
+                                                        <TableHead
                                                             key={column.attribute}
                                                             data-column={column.attribute}
                                                             className={clsx(
@@ -280,7 +281,7 @@ const Table = ({
                                                         >
                                                             <div
                                                                 className={clsx('flex items-center', {
-                                                                    'justify-start': column.alignment === 'left',
+                                                                    'justify-start': column.alignment === 'left' || !column.alignment,
                                                                     'justify-center': column.alignment === 'center',
                                                                     'justify-end': column.alignment === 'right',
                                                                 })}
@@ -308,27 +309,27 @@ const Table = ({
                                                                     </div>
                                                                 )}
                                                             </div>
-                                                        </th>
+                                                        </TableHead>
                                                     ))}
-                                            </tr>
-                                        </thead>
+                                            </TableRow>
+                                        </TableHeader>
                                     ) : null}
 
                                     {tbody ? (
                                         tbody({ table: tableInstance, actions })
                                     ) : (
-                                        <tbody className="it-table-body [&_tr:last-child]:border-0">
+                                        <TableBody className="it-table-body [&_tr:last-child]:border-0">
                                             {!resource.results.data.length ? (
-                                                <tr>
-                                                    <td>
+                                                <TableRow>
+                                                    <TableCell>
                                                         <p className="p-8 text-center font-medium text-gray-900 dark:text-zinc-200">
                                                             {t('table::table.no_results_found')}
                                                         </p>
-                                                    </td>
-                                                </tr>
+                                                    </TableCell>
+                                                </TableRow>
                                             ) : null}
                                             {resource.results.data.map((item, itemIndex) => (
-                                                <tr
+                                                <TableRow
                                                     key={hasSelectableRows ? item._primary_key : itemIndex}
                                                     className={clsx('group border-b border-gray-200 dark:border-zinc-700', {
                                                         'bg-gray-100 dark:bg-zinc-800':
@@ -340,7 +341,7 @@ const Table = ({
                                                     }}
                                                 >
                                                     {hasSelectableRows && (
-                                                        <td
+                                                        <TableCell
                                                             data-column="_checkbox"
                                                             className={clsx(
                                                                 'w-8 px-2 align-middle transition-colors duration-150 group-hover:bg-gray-50/90 group-data-[state=selected]:bg-gray-100/90 group-hover:dark:bg-zinc-950/90 group-data-[state=selected]:dark:bg-zinc-800/90',
@@ -358,13 +359,13 @@ const Table = ({
                                                                 className="it-toggle-item-checkbox"
                                                                 onCheckedChange={() => toggleItem(item._primary_key)}
                                                             />
-                                                        </td>
+                                                        </TableCell>
                                                     )}
 
                                                     {resource.columns
                                                         .filter((column) => state.columns[column.attribute])
                                                         .map((column) => (
-                                                            <td
+                                                            <TableCell
                                                                 key={column.attribute}
                                                                 data-column={column.attribute}
                                                                 className={clsx(
@@ -520,13 +521,13 @@ const Table = ({
                                                                         </TableCellImage>
                                                                     )}
                                                                 </div>
-                                                            </td>
+                                                            </TableCell>
                                                         ))}
-                                                </tr>
+                                                </TableRow>
                                             ))}
-                                        </tbody>
+                                        </TableBody>
                                     )}
-                                </table>
+                                </ShadcnTable>
                             </div>
                         </div>
                     )}
@@ -536,23 +537,21 @@ const Table = ({
                         ? footer({ table: tableInstance, actions })
                         : (hasSelectableRows || resource.pagination) && (
                               <div
-                                  className={clsx('flex flex-col justify-between px-2 text-sm md:flex-row md:items-center dark:text-zinc-300', {
-                                      'md:justify-end': !hasSelectableRows,
+                                  className={clsx('flex flex-col gap-4 text-sm md:flex-row md:items-center md:justify-between dark:text-zinc-300', {
+                                      'md:justify-end': !hasSelectableRows || selectedItems.length === 0,
                                   })}
                               >
-                                  {hasSelectableRows && (
-                                      <div className="mb-1 flex-1 font-medium md:mb-0 md:w-auto">
+                                  {hasSelectableRows && selectedItems.length > 0 && (
+                                      <div className="flex-shrink-0 font-medium">
                                           {allItemsAreSelected && resource.results.total === 1 ? (
-                                              <p>{t('table::table.one_row_selected')}</p>
+                                              <p className="whitespace-nowrap">{t('table::table.one_row_selected')}</p>
                                           ) : allItemsAreSelected ? (
-                                              <p>{t('table::table.all_rows_selected', { total: resource.results.total })}</p>
+                                              <p className="whitespace-nowrap">{t('table::table.all_rows_selected', { total: resource.results.total })}</p>
                                           ) : selectedItems.length === 1 ? (
-                                              <p>{t('table::table.one_row_selected')}</p>
+                                              <p className="whitespace-nowrap">{t('table::table.one_row_selected')}</p>
                                           ) : selectedItems.length > 0 ? (
-                                              <p>{t('table::table.selected_rows', { count: selectedItems.length, total: resource.results.total })}</p>
-                                          ) : (
-                                              <p>{t('table::table.no_rows_selected')}</p>
-                                          )}
+                                              <p className="whitespace-nowrap">{t('table::table.selected_rows', { count: selectedItems.length, total: resource.results.total })}</p>
+                                          ) : null}
                                       </div>
                                   )}
 
