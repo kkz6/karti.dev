@@ -39,7 +39,7 @@ class AdminBlogController extends BaseController
         $categories = Category::all(['id', 'name', 'slug']);
         $tags = Tag::all(['id', 'name', 'slug']);
 
-        return Inertia::render('blog::admin/create', [
+        return Inertia::render('blog::create', [
             'categories' => $categories,
             'tags' => $tags,
         ]);
@@ -89,7 +89,7 @@ class AdminBlogController extends BaseController
     {
         $article->load(['category', 'tags', 'user', 'comments.user']);
 
-        return Inertia::render('blog::admin/show', [
+        return Inertia::render('blog::show', [
             'article' => $article,
         ]);
     }
@@ -103,7 +103,7 @@ class AdminBlogController extends BaseController
         $categories = Category::all(['id', 'name', 'slug']);
         $tags = Tag::all(['id', 'name', 'slug']);
 
-        return Inertia::render('blog::admin/edit', [
+        return Inertia::render('blog::edit', [
             'article' => $article,
             'categories' => $categories,
             'tags' => $tags,
