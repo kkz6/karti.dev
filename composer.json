@@ -1,11 +1,8 @@
 {
-    "name": "gigcodes/laravel-modular-starter-kit",
+    "name": "kkz6/karti.dev",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": [
-        "laravel",
-        "framework"
-    ],
+    "description": "Karti.dev",
+    "keywords": [],
     "license": "MIT",
     "require": {
         "php": "^8.2",
