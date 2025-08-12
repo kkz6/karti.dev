@@ -1,27 +1,49 @@
-import { clsx } from 'clsx'
-import { getClickableColumn, useActions, useTable, visitUrl } from './inertiauiTable'
-import { resolveIcon } from './iconResolver'
-import { useLang } from '@shared/hooks/use-lang'
-import { useEffect, useRef } from 'react'
-import { useStickyColumns, useStickyHeader } from './useStickyTable'
+import { useLang } from '@shared/hooks/use-lang';
+import { clsx } from 'clsx';
+import React, { useEffect, useRef } from 'react';
+import { resolveIcon } from './iconResolver';
+import { getClickableColumn, useActions, useTable, visitUrl } from './inertiauiTable';
+import { TableColumn, TableResource } from './types';
+import { useStickyColumns, useStickyHeader } from './useStickyTable';
 
-import ActionsDropdown from './ActionsDropdown'
-import AddFilterDropdown from './AddFilterDropdown'
-import { Badge } from '@shared/components/ui/badge'
-import { Checkbox } from '@shared/components/ui/checkbox'
-import { Table as ShadcnTable, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@shared/components/ui/table'
-import DynamicIcon from './DynamicIcon'
-import EmptyState from './EmptyState'
-import Filter from './Filter'
-import LoadingSpinner from './LoadingSpinner'
-import Pagination from './Pagination'
-import RowActions from './RowActions'
-import TableCellImage from './TableCellImage'
-import TableHeaderDropdown from './TableHeaderDropdown'
-import { Input } from '@shared/components/ui/input'
-import ToggleColumnDropdown from './ToggleColumnDropdown'
+import { Badge } from '@shared/components/ui/badge';
+import { Checkbox } from '@shared/components/ui/checkbox';
+import { Input } from '@shared/components/ui/input';
+import { Table as ShadcnTable, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/components/ui/table';
+import ActionsDropdown from './ActionsDropdown';
+import AddFilterDropdown from './AddFilterDropdown';
+import DynamicIcon from './DynamicIcon';
+import EmptyState from './EmptyState';
+import Filter from './Filter';
+import LoadingSpinner from './LoadingSpinner';
+import Pagination from './Pagination';
+import RowActions from './RowActions';
+import TableCellImage from './TableCellImage';
+import TableHeaderDropdown from './TableHeaderDropdown';
+import ToggleColumnDropdown from './ToggleColumnDropdown';
 
-const Table = ({
+interface TableProps {
+    resource: TableResource;
+    iconResolver?: ((icon: string) => React.ComponentType<any>) | null;
+    loading?: ((props: any) => React.ReactNode) | null;
+    topbar?: ((props: any) => React.ReactNode) | null;
+    filters?: ((props: any) => React.ReactNode) | null;
+    table?: ((props: any) => React.ReactNode) | null;
+    thead?: ((props: any) => React.ReactNode) | null;
+    tbody?: ((props: any) => React.ReactNode) | null;
+    footer?: ((props: any) => React.ReactNode) | null;
+    emptyState?: ((props: any) => React.ReactNode) | null;
+    header?: Record<string, (props: any) => React.ReactNode>;
+    cell?: Record<string, (props: any) => React.ReactNode>;
+    onRowClick?: ((item: any, column: TableColumn) => void) | null;
+    onActionSuccess?: ((result: any) => void) | null;
+    onActionError?: ((error: any) => void) | null;
+    onCustomAction?: ((action: any, item?: any) => void) | null;
+    image?: Record<string, (props: any) => React.ReactNode>;
+    imageFallback?: Record<string, (props: any) => React.ReactNode>;
+}
+
+const Table: React.FC<TableProps> = ({
     resource,
     iconResolver = null,
     loading = null,
@@ -42,7 +64,7 @@ const Table = ({
     imageFallback = {},
 }) => {
     const { t } = useLang();
-    const tableInstance = useTable(resource)
+    const tableInstance = useTable(resource);
 
     const {
         addFilter,
@@ -61,51 +83,55 @@ const Table = ({
         toggleColumn,
         undoSticky,
         visitPaginationUrl,
-    } = tableInstance
+    } = tableInstance;
 
-    const actions = useActions()
-    const { performAction, performAsyncExport, toggleItem, isPerformingAction, allItemsAreSelected, selectedItems } = actions
+    const actions = useActions();
+    const { performAction, performAsyncExport, toggleItem, isPerformingAction, allItemsAreSelected, selectedItems } = actions;
 
-    const tableWrapperRef = useRef(null)
-    const tableContainerRef = useRef(null)
-    const theadRef = useRef(null)
+    const tableWrapperRef = useRef<HTMLDivElement>(null);
+    const tableContainerRef = useRef<HTMLDivElement>(null);
+    const theadRef = useRef<HTMLTableSectionElement>(null);
 
     function scrollToTopOfTable() {
-        window.scrollTo({
-            top: tableWrapperRef.current.offsetTop - 16,
-            // instant to match Inertia's behavior
-            behavior: 'instant',
-        })
+        if (tableWrapperRef.current) {
+            window.scrollTo({
+                top: tableWrapperRef.current.offsetTop - 16,
+                // instant to match Inertia's behavior
+                behavior: 'instant',
+            });
+        }
     }
 
     // Sticky Table Header
     const stickyHeader = useStickyHeader(
         () => tableContainerRef.current,
         () => theadRef.current,
-    )
+    );
 
     // Sticky Columns
-    const stickyColumns = useStickyColumns(() => tableContainerRef.current)
+    const stickyColumns = useStickyColumns(() => tableContainerRef.current);
 
     useEffect(() => {
         if (!tableContainerRef.current) {
-            return
+            return;
         }
 
-        stickyColumns.add()
-        const cleanup = [stickyColumns.remove]
+        stickyColumns.add();
+        const cleanup = [stickyColumns.remove];
 
         if (resource.stickyHeader) {
-            stickyHeader.add()
-            cleanup.push(stickyHeader.remove)
+            stickyHeader.add();
+            cleanup.push(stickyHeader.remove);
         }
 
-        return () => cleanup.forEach((callback) => callback())
-    }, [])
+        return () => cleanup.forEach((callback) => callback());
+    }, []);
 
-    function unstick(column) {
-        undoSticky(column)
-        tableContainerRef.current.scrollLeft = 0
+    function unstick(column: TableColumn) {
+        undoSticky(column);
+        if (tableContainerRef.current) {
+            tableContainerRef.current.scrollLeft = 0;
+        }
     }
 
     // App is always LTR
@@ -126,24 +152,17 @@ const Table = ({
         'after:duration-300',
         'after:opacity-0',
         'group-data-[scroll-x]/table:after:opacity-100',
-    ].join(' ')
+    ].join(' ');
 
     return (
-        <div
-            ref={tableWrapperRef}
-            className="it-wrapper relative"
-            {...(isPerformingAction ? { inert: '' } : {})}
-        >
+        <div ref={tableWrapperRef} className="it-wrapper relative" {...(isPerformingAction ? { inert: true } : {})}>
             {isPerformingAction && (loading ? loading({ table: tableInstance, actions }) : <LoadingSpinner />)}
 
             {resource.emptyState && (resource.emptyState !== true || emptyState) ? (
                 emptyState ? (
                     emptyState({ table: tableInstance })
                 ) : (
-                    <EmptyState
-                        {...{ ...resource.emptyState, meta: undefined }}
-                        iconResolver={iconResolver ?? resolveIcon}
-                    />
+                    <EmptyState {...{ ...resource.emptyState, meta: undefined }} iconResolver={iconResolver ?? resolveIcon} />
                 )
             ) : (
                 <fieldset
@@ -155,7 +174,11 @@ const Table = ({
                     {/* Search and Actions */}
                     {topbar
                         ? topbar({ table: tableInstance, actions })
-                        : (resource.hasBulkActions || resource.hasSearch || resource.hasExports || resource.hasFilters || resource.hasToggleableColumns) && (
+                        : (resource.hasBulkActions ||
+                              resource.hasSearch ||
+                              resource.hasExports ||
+                              resource.hasFilters ||
+                              resource.hasToggleableColumns) && (
                               <div className="it-topbar flex flex-col justify-between md:flex-row md:items-center md:space-x-4 rtl:md:space-x-reverse">
                                   {resource.hasSearch && (
                                       <Input
@@ -170,8 +193,8 @@ const Table = ({
                                   <div className="mt-4 flex gap-4 md:mt-0">
                                       {(resource.hasBulkActions || resource.hasExports) && (
                                           <ActionsDropdown
-                                              actions={resource.actions}
-                                              exports={resource.exports}
+                                              actions={resource.actions || []}
+                                              exports={resource.exports || []}
                                               selectedItems={selectedItems}
                                               performAction={performAction}
                                               performAsyncExport={performAsyncExport}
@@ -183,19 +206,11 @@ const Table = ({
                                       )}
 
                                       {resource.hasFilters && (
-                                          <AddFilterDropdown
-                                              state={state.filters}
-                                              filters={resource.filters}
-                                              onAdd={addFilter}
-                                          />
+                                          <AddFilterDropdown state={state.filters} filters={resource.filters} onAdd={addFilter} />
                                       )}
 
                                       {resource.hasToggleableColumns && (
-                                          <ToggleColumnDropdown
-                                              state={state.columns}
-                                              columns={resource.columns}
-                                              onToggle={toggleColumn}
-                                          />
+                                          <ToggleColumnDropdown state={state.columns} columns={resource.columns} onToggle={toggleColumn} />
                                       )}
                                   </div>
                               </div>
@@ -205,14 +220,14 @@ const Table = ({
                     {filters
                         ? filters({ table: tableInstance, actions })
                         : hasFilters && (
-                              <div className="it-filters flex flex-wrap items-center space-x-2 space-y-2 md:space-x-4 md:space-y-0  rtl:space-x-reverse">
+                              <div className="it-filters flex flex-wrap items-center space-y-2 space-x-2 md:space-y-0 md:space-x-4 rtl:space-x-reverse">
                                   {Object.entries(resource.filters).map(
-                                      ([key, filter]) =>
+                                      ([key, filter]: [string, any]) =>
                                           state.filters[filter.attribute].enabled && (
                                               <Filter
                                                   key={key}
                                                   value={state.filters[filter.attribute]}
-                                                  onChange={(newState) => setFilter(filter, newState.clause, newState.value)}
+                                                  onChange={(newState: any) => setFilter(filter, newState.clause, newState.value)}
                                                   filter={filter}
                                                   onRemove={() => removeFilter(filter)}
                                               />
@@ -236,16 +251,19 @@ const Table = ({
                                     ) : resource.results.data.length ? (
                                         <TableHeader
                                             ref={theadRef}
-                                            className="it-table-head relative z-20 opacity-100 transition !duration-100 ease-out group-data-[scroll-y]/table:translate-y-[var(--header-offset)] group-data-[is-scrolling-y]/table:group-data-[scroll-y]/table:opacity-0 group-data-[scroll-y]/table:shadow-lg"
+                                            className="it-table-head relative z-20 opacity-100 transition !duration-100 ease-out group-data-[scroll-y]/table:translate-y-[var(--header-offset)] group-data-[scroll-y]/table:shadow-lg group-data-[is-scrolling-y]/table:group-data-[scroll-y]/table:opacity-0"
                                         >
                                             <TableRow className="group border-b border-gray-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
                                                 {hasSelectableRows && (
                                                     <TableHead
                                                         data-column="_checkbox"
-                                                        className={clsx('w-8 px-2 align-middle group-hover:bg-gray-100/50 dark:group-hover:bg-zinc-900/50', {
-                                                            'left-0 z-10 bg-white/90 group-data-[scroll-x]/table:sticky rtl:right-0 dark:bg-zinc-900/90':
-                                                                hasStickyColumns,
-                                                        })}
+                                                        className={clsx(
+                                                            'w-8 px-2 align-middle group-hover:bg-gray-100/50 dark:group-hover:bg-zinc-900/50',
+                                                            {
+                                                                'left-0 z-10 bg-white/90 group-data-[scroll-x]/table:sticky rtl:right-0 dark:bg-zinc-900/90':
+                                                                    hasStickyColumns,
+                                                            },
+                                                        )}
                                                     >
                                                         <Checkbox
                                                             checked={allItemsAreSelected}
@@ -262,7 +280,7 @@ const Table = ({
                                                             key={column.attribute}
                                                             data-column={column.attribute}
                                                             className={clsx(
-                                                                'h-10 px-2 align-middle text-sm font-medium text-gray-500 first:ps-4 group-hover:bg-gray-100/50 dark:text-zinc-400 dark:group-hover:bg-zinc-900/50',
+                                                                'h-10 px-2 align-middle text-sm font-medium text-gray-500 group-hover:bg-gray-100/50 first:ps-4 dark:text-zinc-400 dark:group-hover:bg-zinc-900/50',
                                                                 {
                                                                     'last:pe-4': column.attribute != '_actions',
                                                                     'z-10 bg-white/90 group-data-[scroll-x]/table:sticky dark:bg-zinc-900/90':
@@ -353,7 +371,8 @@ const Table = ({
                                                             <Checkbox
                                                                 disabled={!item._is_selectable || allItemsAreSelected}
                                                                 checked={
-                                                                    selectedItems.includes(item._primary_key) || (item._is_selectable && allItemsAreSelected)
+                                                                    selectedItems.includes(item._primary_key) ||
+                                                                    (item._is_selectable && allItemsAreSelected)
                                                                 }
                                                                 className="it-toggle-item-checkbox"
                                                                 onCheckedChange={() => toggleItem(item._primary_key)}
@@ -368,9 +387,10 @@ const Table = ({
                                                                 key={column.attribute}
                                                                 data-column={column.attribute}
                                                                 className={clsx(
-                                                                    'whitespace-pre p-2 align-middle transition-colors duration-150 first:ps-4 group-hover:bg-gray-50/90 group-data-[state=selected]:bg-gray-100/90 dark:text-zinc-300 group-hover:dark:bg-zinc-950/90 group-data-[state=selected]:dark:bg-zinc-800/90',
+                                                                    'p-2 align-middle whitespace-pre transition-colors duration-150 group-hover:bg-gray-50/90 group-data-[state=selected]:bg-gray-100/90 first:ps-4 dark:text-zinc-300 group-hover:dark:bg-zinc-950/90 group-data-[state=selected]:dark:bg-zinc-800/90',
                                                                     {
-                                                                        'cursor-pointer': onRowClick || getClickableColumn(column, item) || item._row_url,
+                                                                        'cursor-pointer hover:text-blue-600 hover:underline dark:hover:text-blue-400':
+                                                                            onRowClick || getClickableColumn(column, item) || item._row_url,
                                                                         'last:pe-4': column.attribute != '_actions',
                                                                         'z-10 bg-white/90 group-data-[scroll-x]/table:sticky dark:bg-zinc-900/90':
                                                                             state.sticky.includes(column.attribute),
@@ -463,11 +483,15 @@ const Table = ({
                                                                             ) : column.type === 'badge' ? (
                                                                                 <Badge
                                                                                     variant={
-                                                                                        item[column.attribute]?.variant === 'danger' ? 'destructive' :
-                                                                                        item[column.attribute]?.variant === 'info' ? 'default' :
-                                                                                        item[column.attribute]?.variant === 'success' ? 'secondary' :
-                                                                                        item[column.attribute]?.variant === 'warning' ? 'outline' :
-                                                                                        'outline'
+                                                                                        item[column.attribute]?.variant === 'danger'
+                                                                                            ? 'destructive'
+                                                                                            : item[column.attribute]?.variant === 'info'
+                                                                                              ? 'default'
+                                                                                              : item[column.attribute]?.variant === 'success'
+                                                                                                ? 'secondary'
+                                                                                                : item[column.attribute]?.variant === 'warning'
+                                                                                                  ? 'outline'
+                                                                                                  : 'outline'
                                                                                     }
                                                                                     className="it-badge gap-1"
                                                                                     data-style={item[column.attribute]?.variant}
@@ -500,7 +524,13 @@ const Table = ({
                                                                                         'line-clamp-[--line-clamp]': !!column.truncate,
                                                                                         [column.cellClass]: !!column.cellClass,
                                                                                     })}
-                                                                                    style={column.truncate ? { '--line-clamp': column.truncate } : {}}
+                                                                                    style={
+                                                                                        column.truncate
+                                                                                            ? ({
+                                                                                                  '--line-clamp': column.truncate,
+                                                                                              } as React.CSSProperties)
+                                                                                            : {}
+                                                                                    }
                                                                                 >
                                                                                     {item[column.attribute].map((value, index) => (
                                                                                         <li key={index}>{value}</li>
@@ -512,7 +542,13 @@ const Table = ({
                                                                                         'line-clamp-[--line-clamp]': !!column.truncate,
                                                                                         [column.cellClass]: !!column.cellClass,
                                                                                     })}
-                                                                                    style={column.truncate ? { '--line-clamp': column.truncate } : {}}
+                                                                                    style={
+                                                                                        column.truncate
+                                                                                            ? ({
+                                                                                                  '--line-clamp': column.truncate,
+                                                                                              } as React.CSSProperties)
+                                                                                            : {}
+                                                                                    }
                                                                                 >
                                                                                     {item[column.attribute]}
                                                                                 </span>
@@ -545,11 +581,15 @@ const Table = ({
                                           {allItemsAreSelected && resource.results.total === 1 ? (
                                               <p className="whitespace-nowrap">{t('table::table.one_row_selected')}</p>
                                           ) : allItemsAreSelected ? (
-                                              <p className="whitespace-nowrap">{t('table::table.all_rows_selected', { total: resource.results.total })}</p>
+                                              <p className="whitespace-nowrap">
+                                                  {t('table::table.all_rows_selected', { total: resource.results.total })}
+                                              </p>
                                           ) : selectedItems.length === 1 ? (
                                               <p className="whitespace-nowrap">{t('table::table.one_row_selected')}</p>
                                           ) : selectedItems.length > 0 ? (
-                                              <p className="whitespace-nowrap">{t('table::table.selected_rows', { count: selectedItems.length, total: resource.results.total })}</p>
+                                              <p className="whitespace-nowrap">
+                                                  {t('table::table.selected_rows', { count: selectedItems.length, total: resource.results.total })}
+                                              </p>
                                           ) : null}
                                       </div>
                                   )}
@@ -560,7 +600,7 @@ const Table = ({
                                           type={resource.paginationType}
                                           options={resource.perPageOptions}
                                           perPage={state.perPage}
-                                          onClick={(event) => visitPaginationUrl(event, scrollToTopOfTable)}
+                                          onClick={(event: string) => visitPaginationUrl(event, scrollToTopOfTable)}
                                           onChange={setPerPage}
                                       />
                                   )}
@@ -569,7 +609,7 @@ const Table = ({
                 </fieldset>
             )}
         </div>
-    )
-}
+    );
+};
 
-export default Table
+export default Table;

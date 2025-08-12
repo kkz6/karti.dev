@@ -382,6 +382,14 @@ export interface TableResource {
     hasExports: boolean;
     hasExportsThatLimitsToSelectedRows: boolean;
     hasRowActions: boolean;
+    // Additional properties for UI features
+    stickyHeader?: boolean;
+    emptyState?: any;
+    hasSearch?: boolean;
+    hasFilters?: boolean;
+    hasToggleableColumns?: boolean;
+    autofocus?: string;
+    pagination?: boolean;
 }
 
 export interface TableState {
