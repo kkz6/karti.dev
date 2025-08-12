@@ -44,62 +44,46 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
-            'ziggy' => fn (): array => [
+            'ziggy' => fn(): array => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
             'sidebarOpen'  => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'translations' => function () {
-                $locale   = app()->getLocale();
-                $cacheKey = "translations.{$locale}";
+                $translations = collect();
+                $locale       = app()->getLocale();
 
-                $cacheDuration = app()->environment('production') ? 86400 : 300;
+                // Get main app translations
+                $appLangPath = base_path('lang/' . $locale);
+                if (File::exists($appLangPath)) {
+                    $translations = $translations->merge(
+                        collect(File::allFiles($appLangPath))
+                            ->flatMap(fn($file) => Arr::dot(
+                                File::getRequire($file->getRealPath()),
+                                $file->getBasename('.' . $file->getExtension()) . '.'
+                            ))
+                    );
+                }
 
-                return cache()->remember($cacheKey, $cacheDuration, function () use ($locale) {
-                    $translations = [];
-
-                    $routeName    = request()->route()?->getName() ?? '';
-                    $routeParts   = explode('::', $routeName);
-                    $activeModule = count($routeParts) > 1 ? $routeParts[0] : null;
-
-                    $essentialFiles = ['validation', 'pagination', 'auth'];
-                    $appLangPath    = base_path("lang/{$locale}");
-
-                    if (File::exists($appLangPath)) {
-                        foreach ($essentialFiles as $file) {
-                            $filePath = "{$appLangPath}/{$file}.php";
-                            if (File::exists($filePath)) {
-                                $content = require $filePath;
-                                if (is_array($content)) {
-                                    $translations = array_merge(
-                                        $translations,
-                                        Arr::dot($content, "{$file}.")
-                                    );
-                                }
-                            }
-                        }
-                    }
-
-                    if ($activeModule) {
-                        $moduleLangPath = base_path("modules/{$activeModule}/resources/lang/{$locale}");
+                // Get module translations
+                $modulesPath = base_path('modules');
+                if (File::exists($modulesPath)) {
+                    $modules = collect(File::directories($modulesPath));
+                    foreach ($modules as $module) {
+                        $moduleLangPath = $module . '/resources/lang/' . $locale;
                         if (File::exists($moduleLangPath)) {
-                            foreach (File::files($moduleLangPath) as $file) {
-                                if ($file->getExtension() === 'php') {
-                                    $content = require $file->getRealPath();
-                                    if (is_array($content)) {
-                                        $group        = $file->getBasename('.'.$file->getExtension());
-                                        $translations = array_merge(
-                                            $translations,
-                                            Arr::dot($content, "{$activeModule}.{$group}.")
-                                        );
-                                    }
-                                }
-                            }
+                            $translations = $translations->merge(
+                                collect(File::allFiles($moduleLangPath))
+                                    ->flatMap(fn($file) => Arr::dot(
+                                        File::getRequire($file->getRealPath()),
+                                        basename($module) . '.' . $file->getBasename('.' . $file->getExtension()) . '.'
+                                    ))
+                            );
                         }
                     }
+                }
 
-                    return $translations;
-                });
+                return $translations;
             },
         ];
     }

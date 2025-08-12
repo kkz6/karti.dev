@@ -1,13 +1,16 @@
 import { useRef, useEffect, useState } from 'react'
-import { trans } from './translations.js'
-import Datepicker from './Datepicker'
+import { useLang } from '@shared/hooks/use-lang'
 import { Input } from '@shared/components/ui/input'
+import { Button } from '@shared/components/ui/button'
+import { Calendar } from '@shared/components/ui/calendar'
 import { Popover, PopoverTrigger, PopoverContent } from '@shared/components/ui/popover'
 import { cn } from '@shared/lib/utils'
 import { getSymbolForClause } from './clauses'
-import { Filter as FilterIcon, Search, X } from 'lucide-react';
+import { Filter as FilterIcon, Search, X, CalendarIcon } from 'lucide-react'
+import { format, parseISO } from 'date-fns'
 
 const Filter = ({ filter, value, onChange, onRemove }) => {
+    const { t } = useLang();
     const inputRef = useRef(null)
     const [isOpen, setIsOpen] = useState(false)
     const clauseSelectRef = useRef(null)
@@ -119,7 +122,7 @@ const Filter = ({ filter, value, onChange, onRemove }) => {
                                 onChange={(e) => setFilterClause(e.target.value)}
                                 className={cn(
                                     "it-filter-clause-select-input w-full",
-                                    "border-input bg-background text-foreground flex h-9 items-center justify-between rounded-md border px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
+                                    "border-input bg-background text-foreground flex h-8 items-center justify-between rounded-md border px-3 py-1.5 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
                                 )}
                             >
                                 {filter.clauses.map((clause) => (
@@ -127,7 +130,7 @@ const Filter = ({ filter, value, onChange, onRemove }) => {
                                         key={clause}
                                         value={clause}
                                     >
-                                        {trans(`clause_${clause}`)}
+                                        {t(`table::table.clause_${clause}`)}
                                     </option>
                                 ))}
                             </select>
@@ -150,7 +153,7 @@ const Filter = ({ filter, value, onChange, onRemove }) => {
                                             type="number"
                                             className="w-28"
                                         />
-                                        <span className="text-sm text-gray-500 dark:text-zinc-500">{trans('between_values_and')}</span>
+                                        <span className="text-sm text-gray-500 dark:text-zinc-500">{t('table::table.between_values_and')}</span>
                                         <Input
                                             value={value.value?.[1] ?? ''}
                                             onChange={(e) => setFilterValue([value.value?.[0], e.target.value])}
@@ -178,7 +181,7 @@ const Filter = ({ filter, value, onChange, onRemove }) => {
                                         }}
                                         className={cn(
                                             "w-full",
-                                            "border-input bg-background text-foreground flex h-9 items-center justify-between rounded-md border px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
+                                            "border-input bg-background text-foreground flex h-8 items-center justify-between rounded-md border px-3 py-1.5 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
                                         )}
                                         multiple={value.clause === 'in' || value.clause === 'not_in' || filter.multiple}
                                     >
@@ -191,21 +194,63 @@ const Filter = ({ filter, value, onChange, onRemove }) => {
                                             </option>
                                         ))}
                                     </select>
-                                ) : filter.type === 'date' ? (
-                                    <div className="relative">
-                                        <Input
-                                            value={presentableValue() ?? ''}
-                                            readOnly={true}
-                                            className="w-full"
-                                        />
-                                        <Datepicker
-                                            className="absolute left-0 top-12 z-10 rounded-md shadow-lg ring-1 ring-black/5 dark:bg-zinc-900 dark:shadow-zinc-800/50 dark:ring-zinc-700"
-                                            range={value.clause === 'between' || value.clause === 'not_between'}
-                                            value={value.value}
-                                            onChange={(newValue) => setFilterValue(newValue)}
-                                        />
-                                    </div>
-                                ) : null}
+                                                                    ) : filter.type === 'date' ? (
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    className={cn(
+                                                        "w-full justify-start text-left font-normal",
+                                                        !value.value && "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {value.value ? (
+                                                        (value.clause === 'between' || value.clause === 'not_between') && Array.isArray(value.value) ? (
+                                                            value.value.length === 2 ?
+                                                                `${format(parseISO(value.value[0]), 'PPP')} - ${format(parseISO(value.value[1]), 'PPP')}` :
+                                                                'Pick dates'
+                                                        ) : (
+                                                            format(parseISO(value.value), 'PPP')
+                                                        )
+                                                    ) : (
+                                                        'Pick a date'
+                                                    )}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode={(value.clause === 'between' || value.clause === 'not_between') ? 'range' : 'single'}
+                                                    selected={
+                                                        value.value ? (
+                                                            (value.clause === 'between' || value.clause === 'not_between') && Array.isArray(value.value) ?
+                                                                value.value.length === 2 ? {
+                                                                    from: parseISO(value.value[0]),
+                                                                    to: parseISO(value.value[1])
+                                                                } : undefined :
+                                                                parseISO(value.value)
+                                                        ) : undefined
+                                                    }
+                                                    onSelect={(date) => {
+                                                        if (value.clause === 'between' || value.clause === 'not_between') {
+                                                            if (date?.from && date?.to) {
+                                                                setFilterValue([
+                                                                    format(date.from, 'yyyy-MM-dd'),
+                                                                    format(date.to, 'yyyy-MM-dd')
+                                                                ])
+                                                            }
+                                                        } else if (date) {
+                                                            setFilterValue(format(date, 'yyyy-MM-dd'))
+                                                        }
+                                                    }}
+                                                    disabled={(date) =>
+                                                        date > new Date() || date < new Date('1900-01-01')
+                                                    }
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    ) : null}
                             </div>
                         </div>
                     )}

@@ -1,7 +1,7 @@
 import { clsx } from 'clsx'
 import { getClickableColumn, useActions, useTable, visitUrl } from './inertiauiTable'
 import { resolveIcon } from './iconResolver.js'
-import { trans } from './translations.js'
+import { useLang } from '@shared/hooks/use-lang'
 import { useEffect, useRef } from 'react'
 // App is always LTR, so we don't need RTL logic
 import { useStickyColumns, useStickyHeader } from './useStickyTable'
@@ -41,6 +41,7 @@ const Table = ({
     image = {},
     imageFallback = {},
 }) => {
+    const { t } = useLang();
     const tableInstance = useTable(resource)
 
     const {
@@ -162,7 +163,7 @@ const Table = ({
                                           onChange={(e) => setSearch(e.target.value)}
                                           className="w-full md:max-w-md"
                                           autoFocus={resource.autofocus === 'search'}
-                                          placeholder={trans('search_placeholder')}
+                                          placeholder={t('table::table.search_placeholder')}
                                       />
                                   )}
 
@@ -321,7 +322,7 @@ const Table = ({
                                                 <tr>
                                                     <td>
                                                         <p className="p-8 text-center font-medium text-gray-900 dark:text-zinc-200">
-                                                            {trans('no_results_found')}
+                                                            {t('table::table.no_results_found')}
                                                         </p>
                                                     </td>
                                                 </tr>
@@ -369,7 +370,7 @@ const Table = ({
                                                                 className={clsx(
                                                                     'whitespace-pre p-2 align-middle transition-colors duration-150 first:ps-4 group-hover:bg-gray-50/90 group-data-[state=selected]:bg-gray-100/90 dark:text-zinc-300 group-hover:dark:bg-zinc-950/90 group-data-[state=selected]:dark:bg-zinc-800/90',
                                                                     {
-                                                                        'cursor-pointer': onRowClick || getClickableColumn(column, item),
+                                                                        'cursor-pointer': onRowClick || getClickableColumn(column, item) || item._row_url,
                                                                         'last:pe-4': column.attribute != '_actions',
                                                                         'z-10 bg-white/90 group-data-[scroll-x]/table:sticky dark:bg-zinc-900/90':
                                                                             state.sticky.includes(column.attribute),
@@ -383,10 +384,22 @@ const Table = ({
                                                                           }
                                                                         : {}
                                                                 }
-                                                                onClick={() =>
-                                                                    column.attribute != '_actions' &&
-                                                                    (onRowClick ? onRowClick(item, column) : visitUrl(getClickableColumn(column, item)))
-                                                                }
+                                                                onClick={() => {
+                                                                    if (column.attribute === '_actions') {
+                                                                        return; // Don't handle click for actions column
+                                                                    }
+
+                                                                    if (onRowClick) {
+                                                                        onRowClick(item, column);
+                                                                    } else {
+                                                                        const url = getClickableColumn(column, item);
+                                                                        if (url) {
+                                                                            visitUrl(url);
+                                                                        } else if (item._row_url) {
+                                                                            visitUrl(item._row_url);
+                                                                        }
+                                                                    }
+                                                                }}
                                                             >
                                                                 <div
                                                                     className={clsx('flex items-center', {
@@ -530,15 +543,15 @@ const Table = ({
                                   {hasSelectableRows && (
                                       <div className="mb-1 flex-1 font-medium md:mb-0 md:w-auto">
                                           {allItemsAreSelected && resource.results.total === 1 ? (
-                                              <p>{trans('one_row_selected')}</p>
+                                              <p>{t('table::table.one_row_selected')}</p>
                                           ) : allItemsAreSelected ? (
-                                              <p>{trans('all_rows_selected', { total: resource.results.total })}</p>
+                                              <p>{t('table::table.all_rows_selected', { total: resource.results.total })}</p>
                                           ) : selectedItems.length === 1 ? (
-                                              <p>{trans('one_row_selected')}</p>
+                                              <p>{t('table::table.one_row_selected')}</p>
                                           ) : selectedItems.length > 0 ? (
-                                              <p>{trans('selected_rows', { count: selectedItems.length, total: resource.results.total })}</p>
+                                              <p>{t('table::table.selected_rows', { count: selectedItems.length, total: resource.results.total })}</p>
                                           ) : (
-                                              <p>{trans('no_rows_selected')}</p>
+                                              <p>{t('table::table.no_rows_selected')}</p>
                                           )}
                                       </div>
                                   )}

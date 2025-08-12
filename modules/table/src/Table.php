@@ -18,6 +18,7 @@ use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\Tappable;
 use Modules\Table\Columns\Column;
 use Modules\Table\Filters\Filter;
+use Modules\Table\Url;
 use Maatwebsite\Excel\Excel;
 use RuntimeException;
 use TypeError;
@@ -431,7 +432,7 @@ abstract class Table implements Arrayable
         );
 
         return $table
-            ->unless($pagination, fn (AnonymousTable $table): Table => $table->withoutPagination())
+            ->unless($pagination, fn(AnonymousTable $table): Table => $table->withoutPagination())
             ->defaultSort($defaultSort)
             ->as($name)
             ->debounceTime($debounceTime)
@@ -501,7 +502,7 @@ abstract class Table implements Arrayable
     {
         return $this->cachedFilters ??= collect($this->filters())
             ->values()
-            ->each(fn (Filter $filter): Filter => $filter->setTable($this))
+            ->each(fn(Filter $filter): Filter => $filter->setTable($this))
             ->all();
     }
 
@@ -531,7 +532,7 @@ abstract class Table implements Arrayable
     public function getColumnByAttribute(string $attribute): ?Column
     {
         return collect($this->buildColumns())
-            ->first(static fn (Column $column): bool => $column->getAttribute() === $attribute);
+            ->first(static fn(Column $column): bool => $column->getAttribute() === $attribute);
     }
 
     /**
@@ -572,8 +573,8 @@ abstract class Table implements Arrayable
     public function search(): array
     {
         return collect($this->buildColumns())
-            ->filter(fn (Column $column): bool => $column->isSearchable())
-            ->map(fn (Column $column): string => $column->getAttribute())
+            ->filter(fn(Column $column): bool => $column->isSearchable())
+            ->map(fn(Column $column): string => $column->getAttribute())
             ->merge(Arr::wrap($this->search))
             ->unique()
             ->values()
@@ -593,7 +594,7 @@ abstract class Table implements Arrayable
      */
     public function hasBulkActions(): bool
     {
-        return collect($this->actions())->contains(fn (Action $action): bool => $action->isBulkActionable());
+        return collect($this->actions())->contains(fn(Action $action): bool => $action->isBulkActionable());
     }
 
     /**
@@ -601,7 +602,7 @@ abstract class Table implements Arrayable
      */
     public function hasExportsThatLimitsToSelectedRows(): bool
     {
-        return collect($this->exports())->contains(fn (Export $export): bool => $export->shouldLimitToSelectedRows());
+        return collect($this->exports())->contains(fn(Export $export): bool => $export->shouldLimitToSelectedRows());
     }
 
     /**
@@ -611,7 +612,7 @@ abstract class Table implements Arrayable
     {
         return tap(
             array_values($this->actions())[$id] ?? null,
-            fn (?Action $action): ?\InertiaUI\Table\Action => $action?->setIndex($id)->setTable($this)
+            fn(?Action $action): ?\InertiaUI\Table\Action => $action?->setIndex($id)->setTable($this)
         );
     }
 
@@ -622,7 +623,7 @@ abstract class Table implements Arrayable
     {
         return collect($this->actions())
             ->values()
-            ->each(fn (Action $action, $id): Action => $action->setIndex($id)->setTable($this))
+            ->each(fn(Action $action, $id): Action => $action->setIndex($id)->setTable($this))
             ->toArray();
     }
 
@@ -633,7 +634,7 @@ abstract class Table implements Arrayable
     {
         return tap(
             array_values($this->exports())[$id] ?? null,
-            fn (?Export $export): ?\InertiaUI\Table\Export => $export?->setIndex($id)->setTable($this)
+            fn(?Export $export): ?\InertiaUI\Table\Export => $export?->setIndex($id)->setTable($this)
         );
     }
 
@@ -652,7 +653,7 @@ abstract class Table implements Arrayable
                 }
             })
             ->values()
-            ->each(fn (Export $export, $id): Export => $export->setIndex($id)->setTable($this))
+            ->each(fn(Export $export, $id): Export => $export->setIndex($id)->setTable($this))
             ->toArray();
     }
 
@@ -832,19 +833,19 @@ abstract class Table implements Arrayable
             'debounceTime' => $this->getDebounceTime(),
             'reloadProps' => $this->getReloadProps(),
             'hasActions' => count($actions) > 0,
-            'hasBulkActions' => collect($actions)->contains(fn (array $action): bool => $action['asBulkAction']),
+            'hasBulkActions' => collect($actions)->contains(fn(array $action): bool => $action['asBulkAction']),
             'hasExports' => $exports !== [],
-            'hasExportsThatLimitsToSelectedRows' => collect($exports)->contains(fn (array $export): bool => $export['limitToSelectedRows']),
+            'hasExportsThatLimitsToSelectedRows' => collect($exports)->contains(fn(array $export): bool => $export['limitToSelectedRows']),
             'hasFilters' => count($filters) > 0,
             'hasSearch' => $search !== [] || $queryBuilder->hasCustomSearch(),
-            'hasToggleableColumns' => collect($columns)->contains(fn (array $column): bool => $column['toggleable']),
+            'hasToggleableColumns' => collect($columns)->contains(fn(array $column): bool => $column['toggleable']),
             'scrollPositionAfterPageChange' => $this->getScrollPositionAfterPageChange()->value,
             'autofocus' => $this->getAutofocus()->value,
             'emptyState' => $this->resolveEmptyState($paginator, $tableRequest),
             'stickyHeader' => $this->getStickyHeader(),
             'views' => $this->buildViews()?->toArray(),
             'inDefaultState' => $tableRequest->inDefaultState(),
-        ], fn () => $this->flushStateCache());
+        ], fn() => $this->flushStateCache());
     }
 
     /**

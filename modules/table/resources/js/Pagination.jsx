@@ -1,10 +1,11 @@
-import { trans } from './translations.js'
+import { useLang } from '@shared/hooks/use-lang'
 import { Button } from '@shared/components/ui/button'
 import { cn } from '@shared/lib/utils'
 import { ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMemo } from 'react'
 
 export default function Pagination({ meta, options, perPage, type = 'full', onClick, onChange }) {
+    const { t } = useLang();
     const translatedString = useMemo(() => {
         let params = {
             current_page: meta.current_page,
@@ -26,18 +27,18 @@ export default function Pagination({ meta, options, perPage, type = 'full', onCl
             }
         }
 
-        return trans(type === 'full' ? 'current_page_of_last' : 'current_page', params)
+        return t(type === 'full' ? 'table::table.current_page_of_last' : 'table::table.current_page', params)
     }, [meta, type])
 
     return (
         <div className="it-pagination flex w-full justify-between space-x-6 md:w-auto md:items-center lg:space-x-8 rtl:space-x-reverse">
             <div className="flex flex-col md:flex-row md:items-center">
-                <p className="mb-1 font-medium md:mb-0 md:me-2">{trans('rows_per_page')}</p>
+                <p className="mb-1 font-medium md:mb-0 md:me-2">{t('table::table.rows_per_page')}</p>
                 <select
                     value={perPage}
                     className={cn(
                         "it-pagination-per-page-select",
-                        "border-input bg-background text-foreground flex h-9 w-full items-center justify-between rounded-md border px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
+                        "border-input bg-background text-foreground flex h-8 w-full items-center justify-between rounded-md border px-3 py-1.5 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
                     )}
                     onChange={(e) => onChange(e.target.value)}
                 >

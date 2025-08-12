@@ -1,4 +1,4 @@
-import { trans } from './translations.js'
+import { useLang } from '@shared/hooks/use-lang'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@shared/components/ui/dropdown-menu'
 import { ArrowDown, ArrowUp, ChevronsUpDown, EyeOff, Lock, Unlock } from 'lucide-react';
 import { clsx } from 'clsx'
@@ -12,6 +12,7 @@ const ButtonIcon = ({ sort, className = 'size-4 ms-2' }) => {
 }
 
 export default function TableHeaderDropdown({ column, sort, sticky, onToggle, onSort, onStick, onUnstick }) {
+    const { t } = useLang();
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -45,14 +46,14 @@ export default function TableHeaderDropdown({ column, sort, sticky, onToggle, on
                             className="it-dropdown-item"
                         >
                             <ArrowUp className="me-2 size-3.5" />
-                            <span>{trans('sort_asc')}</span>
+                            <span>{t('table::table.sort_asc')}</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
                             onClick={() => onSort(`-${column.attribute}`)}
                             className="it-dropdown-item"
                         >
                             <ArrowDown className="me-2 size-3.5" />
-                            <span>{trans('sort_desc')}</span>
+                            <span>{t('table::table.sort_desc')}</span>
                         </DropdownMenuItem>
                     </>
                 )}
@@ -64,7 +65,7 @@ export default function TableHeaderDropdown({ column, sort, sticky, onToggle, on
                         className="it-dropdown-item"
                     >
                         <Lock className="me-2 size-3.5" />
-                        <span>{trans('stick')}</span>
+                        <span>{t('table::table.stick')}</span>
                     </DropdownMenuItem>
                 )}
 
@@ -74,7 +75,7 @@ export default function TableHeaderDropdown({ column, sort, sticky, onToggle, on
                         className="it-dropdown-item"
                     >
                         <Unlock className="me-2 size-3.5" />
-                        <span>{trans('unstick')}</span>
+                        <span>{t('table::table.unstick')}</span>
                     </DropdownMenuItem>
                 )}
 
@@ -84,7 +85,7 @@ export default function TableHeaderDropdown({ column, sort, sticky, onToggle, on
                         className="it-dropdown-item"
                     >
                         <EyeOff className="me-2 size-3.5" />
-                        <span>{trans('hide_column')}</span>
+                        <span>{t('table::table.hide_column')}</span>
                     </DropdownMenuItem>
                 )}
             </DropdownMenuContent>

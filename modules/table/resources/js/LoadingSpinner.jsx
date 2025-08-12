@@ -1,6 +1,7 @@
-import { trans } from './translations.js'
+import { useLang } from '@shared/hooks/use-lang'
 
 export default function LoadingSpinner() {
+    const { t } = useLang();
     return (
         <div
             role="status"
@@ -22,7 +23,7 @@ export default function LoadingSpinner() {
                     fill="currentFill"
                 />
             </svg>
-            <span className="sr-only">{trans('loading_placeholder')}</span>
+            <span className="sr-only">{t('table::table.loading_placeholder')}</span>
         </div>
     )
 }

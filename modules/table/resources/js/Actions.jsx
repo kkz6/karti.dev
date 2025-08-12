@@ -3,7 +3,7 @@ import ConfirmActionDialog from './ConfirmActionDialog'
 import FailedActionDialog from './FailedActionDialog'
 import { visitUrl, visitModal } from './urlHelpers'
 import ConfirmDialog from './ConfirmDialog'
-import { trans } from './translations.js'
+import { useLang } from '@shared/hooks/use-lang'
 import { MoreHorizontal } from 'lucide-react';
 
 export default function Actions({
@@ -18,6 +18,7 @@ export default function Actions({
     onHandle = null,
     children,
 }) {
+    const { t } = useLang();
     const [asyncExportDialogIsOpen, setAsyncExportDialogIsOpen] = useState(false)
     const [asyncExportContext, setAsyncExportContext] = useState(null)
 
@@ -97,7 +98,7 @@ export default function Actions({
                 message={asyncExportContext?.dialogMessage ?? ''}
                 icon="MoreHorizontal"
                 iconResolver={() => MoreHorizontal}
-                confirmButton={trans('export_processing_dialog_button')}
+                confirmButton={t('table::table.export_processing_dialog_button')}
                 onConfirm={() => setAsyncExportDialogIsOpen(false)}
             />
         </>

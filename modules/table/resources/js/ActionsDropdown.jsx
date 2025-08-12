@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Settings, List, Wrench } from 'lucide-react';
 
-import { trans } from './translations.js'
+import { useLang } from '@shared/hooks/use-lang'
 import Actions from './Actions.jsx'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel } from '@shared/components/ui/dropdown-menu'
 import { Button } from '@shared/components/ui/button'
@@ -18,6 +18,7 @@ export default function ActionsDropdown({
     onError = null,
     onHandle = null,
 }) {
+    const { t } = useLang();
     const hasBulkActions = useMemo(() => actions.filter((action) => action.asBulkAction).length > 0, [actions])
     const hasExports = useMemo(() => exports.length > 0, [exports])
     const hasSelectedItems = useMemo(() => selectedItems.length > 0, [selectedItems])
@@ -45,17 +46,17 @@ export default function ActionsDropdown({
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button
-                            variant="ghost"
+                            variant="outline"
                             className="it-dropdown-button w-full justify-start"
                         >
                             <Wrench className="me-2 size-4" />
-                            <span>{trans('actions_button')}</span>
+                            <span>{t('table::table.actions_button')}</span>
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="it-actions-dropdown it-dropdown-items w-max min-w-24">
                         {hasExports && (
                             <>
-                                <DropdownMenuLabel className="it-dropdown-header">{trans('exports_header')}</DropdownMenuLabel>
+                                <DropdownMenuLabel className="it-dropdown-header">{t('table::table.exports_header')}</DropdownMenuLabel>
                                 <DropdownMenuSeparator className="it-dropdown-separator" />
                                 {exports.map((tableExport, key) => (
                                     <DropdownMenuItem
@@ -88,7 +89,7 @@ export default function ActionsDropdown({
 
                         {hasBulkActions && (
                             <>
-                                <DropdownMenuLabel className="it-dropdown-header">{trans('bulk_actions_header')}</DropdownMenuLabel>
+                                <DropdownMenuLabel className="it-dropdown-header">{t('table::table.bulk_actions_header')}</DropdownMenuLabel>
                                 <DropdownMenuSeparator className="it-dropdown-separator" />
                                 {actions.map((action, key) =>
                                     action.asBulkAction ? (

@@ -8,6 +8,7 @@ use Modules\Table\Action;
 use Modules\Table\Columns;
 use Modules\Table\Export;
 use Modules\Table\Filters;
+use Modules\Table\Url;
 
 class Articles extends Table
 {
@@ -16,8 +17,8 @@ class Articles extends Table
     public function columns(): array
     {
         return [
-            Columns\TextColumn::make('id', 'ID', toggleable: false),
-            Columns\TextColumn::make('title', 'Title', toggleable: false),
+            Columns\TextColumn::make('id', 'ID', toggleable: false)->url(fn(Article $article) => '/blog/articles/' . $article->id . '/edit'),
+            Columns\TextColumn::make('title', 'Title', toggleable: false)->searchable(),
             Columns\TextColumn::make('slug', 'Slug', toggleable: false),
             Columns\TextColumn::make('status', 'Status', toggleable: false),
             Columns\TextColumn::make('created_at', 'Created At', toggleable: false),
@@ -30,6 +31,7 @@ class Articles extends Table
     {
         return [
             Filters\TextFilter::make('id', 'ID'),
+            Filters\DateFilter::make('created_at'),
         ];
     }
 

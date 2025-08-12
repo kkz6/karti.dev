@@ -1,5 +1,8 @@
 import { LucideIcon } from 'lucide-react';
 
+// Re-export URL types
+export * from './url';
+
 // URL and Navigation Types
 export interface UrlConfig {
     url: string;
