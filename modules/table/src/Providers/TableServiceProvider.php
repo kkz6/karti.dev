@@ -22,18 +22,6 @@ class TableServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if ($this->app->runningInConsole()) {
-            $publishesMigrationsMethod = method_exists($this, 'publishesMigrations')
-                ? 'publishesMigrations'
-                : 'publishes';
-
-            $this->{$publishesMigrationsMethod}([
-                __DIR__.'/../../database/migrations' => database_path('migrations'),
-            ], 'inertia-table-migrations');
-
-            $this->commands(TableMakeCommand::class);
-        }
-
         $this->app->afterResolving(Table::class, static function (Table $table, Application $app): void {
             $table->setRequest($app['request']);
         });

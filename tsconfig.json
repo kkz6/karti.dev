@@ -112,7 +112,8 @@
             "@/*": ["./resources/js/*"],
             "ziggy-js": ["./vendor/tightenco/ziggy"],
             "@shared/*": ["./modules/shared/resources/js/*"],
-            "@auth/*": ["./modules/auth/resources/js/*"]
+            "@auth/*": ["./modules/auth/resources/js/*"],
+            "@frontend/*": ["./modules/frontend/resources/js/*"]
         },
         "jsx": "react-jsx"
     },

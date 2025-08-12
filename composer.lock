@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "75939ea3603236782ea1ef4e783684a5",
+    "content-hash": "a0342ccabcc1868b2f1bb1c9b64c191d",
     "packages": [
         {
             "name": "amphp/amp",
@@ -3993,38 +3993,6 @@
             "time": "2024-11-28T04:54:44+00:00"
         },
         {
-            "name": "modules/admin",
-            "version": "1.0",
-            "dist": {
-                "type": "path",
-                "url": "modules/admin",
-                "reference": "e9b9a1d31a3f9771281a0c311c76c08b95464424"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Modules\\Admin\\Providers\\AdminServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Modules\\Admin\\": "src/",
-                    "Modules\\Admin\\Tests\\": "tests/",
-                    "Modules\\Admin\\Database\\Factories\\": "database/factories/",
-                    "Modules\\Admin\\Database\\Seeders\\": "database/seeders/"
-                }
-            },
-            "license": [
-                "proprietary"
-            ],
-            "transport-options": {
-                "symlink": true,
-                "relative": true
-            }
-        },
-        {
             "name": "modules/auth",
             "version": "1.0",
             "dist": {
@@ -4115,6 +4083,38 @@
                     "Modules\\Frontend\\Tests\\": "tests/",
                     "Modules\\Frontend\\Database\\Factories\\": "database/factories/",
                     "Modules\\Frontend\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "modules/pages",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "modules/pages",
+                "reference": "c7fc9f7e24bccc18b078d971a163e06857cbc4f7"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Modules\\Pages\\Providers\\PagesServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Modules\\Pages\\": "src/",
+                    "Modules\\Pages\\Tests\\": "tests/",
+                    "Modules\\Pages\\Database\\Factories\\": "database/factories/",
+                    "Modules\\Pages\\Database\\Seeders\\": "database/seeders/"
                 }
             },
             "license": [
@@ -4294,7 +4294,11 @@
             "dist": {
                 "type": "path",
                 "url": "modules/table",
-                "reference": "661103cffa047f0967e72a25e36f6b4533be20dd"
+                "reference": "3c14cde6196fb0dfc016a50f67945a66c90d0353"
+            },
+            "suggest": {
+                "kirschbaum-development/eloquent-power-joins": "To order tables by related models. (3.5 or ^4.0)",
+                "maatwebsite/excel": "To export tables to CSV, Excel, etc. (^3.1)"
             },
             "type": "library",
             "extra": {
@@ -4315,6 +4319,7 @@
             "license": [
                 "proprietary"
             ],
+            "description": "InertiaUI Table Module",
             "transport-options": {
                 "symlink": true,
                 "relative": true

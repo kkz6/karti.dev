@@ -23,7 +23,7 @@ class ActionController
         return $request->boolean('json')
             ? response()->json([
                 'target_url' => $targetUrl = $response->getTargetUrl(), // Backwards compatibility
-                'targetUrl' => $targetUrl,
+                'targetUrl'  => $targetUrl,
             ])
             : $response;
     }

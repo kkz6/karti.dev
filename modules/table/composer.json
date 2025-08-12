@@ -4,9 +4,7 @@
 	"type": "library",
 	"version": "1.0",
 	"license": "proprietary",
-	"require": {
-		"php": "^8.2",
-	},
+	"require": {},
 	"suggest": {
 		"kirschbaum-development/eloquent-power-joins": "To order tables by related models. (3.5 or ^4.0)",
 		"maatwebsite/excel": "To export tables to CSV, Excel, etc. (^3.1)"
