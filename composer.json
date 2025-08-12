@@ -19,6 +19,7 @@
         "modules/profile": "*",
         "modules/settings": "*",
         "modules/shared": "*",
+        "modules/table": "*",
         "modules/tools": "*",
         "spatie/laravel-data": "^4.17",
         "spatie/laravel-permission": "^6.21",

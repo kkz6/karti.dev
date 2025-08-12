@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "61e8189903b10641013e5c6b1f430712",
+    "content-hash": "75939ea3603236782ea1ef4e783684a5",
     "packages": [
         {
             "name": "amphp/amp",
@@ -4279,6 +4279,38 @@
                 "files": [
                     "src/helpers.php"
                 ]
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "modules/table",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "modules/table",
+                "reference": "661103cffa047f0967e72a25e36f6b4533be20dd"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Modules\\Table\\Providers\\TableServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Modules\\Table\\": "src/",
+                    "Modules\\Table\\Tests\\": "tests/",
+                    "Modules\\Table\\Database\\Factories\\": "database/factories/",
+                    "Modules\\Table\\Database\\Seeders\\": "database/seeders/"
+                }
             },
             "license": [
                 "proprietary"
