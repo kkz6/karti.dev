@@ -22,6 +22,7 @@ class Articles extends Table
             Columns\TextColumn::make('status', 'Status', toggleable: false),
             Columns\TextColumn::make('created_at', 'Created At', toggleable: false),
             Columns\TextColumn::make('updated_at', 'Updated At', toggleable: false),
+            Columns\ActionColumn::new(),
         ];
     }
 
@@ -35,7 +36,10 @@ class Articles extends Table
     public function actions(): array
     {
         return [
-            //
+            Action::make(
+                label: 'Delete',
+                handle: fn(Article $article) => $article->delete(),
+            )->confirm(),
         ];
     }
 

@@ -1,7 +1,5 @@
 import { trans } from './translations.js'
-import Dropdown from './Dropdown'
-import DropdownItem from './DropdownItem'
-import DropdownSeparator from './DropdownSeparator'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@shared/components/ui/dropdown-menu'
 import { ArrowDown, ArrowUp, ChevronsUpDown, EyeOff, Lock, Unlock } from 'lucide-react';
 import { clsx } from 'clsx'
 
@@ -15,75 +13,81 @@ const ButtonIcon = ({ sort, className = 'size-4 ms-2' }) => {
 
 export default function TableHeaderDropdown({ column, sort, sticky, onToggle, onSort, onStick, onUnstick }) {
     return (
-        <Dropdown
-            placement={column.alignment === 'right' ? 'bottom end' : 'bottom start'}
-            className="it-table-column-dropdown"
-        >
-            {{
-                trigger: ({ open }) => (
-                    <div
-                        className={clsx(
-                            'inline-flex h-8 items-center justify-center whitespace-nowrap rounded-md px-3 font-semibold transition-colors',
-                            'hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-1',
-                            'dark:hover:bg-zinc-800 dark:focus-visible:ring-zinc-500',
-                            {
-                                'bg-gray-100 dark:bg-zinc-800': open,
-                                'bg-gray-50 ring-1 ring-gray-300 dark:bg-zinc-800 dark:ring-zinc-500': sort,
-                            },
-                        )}
-                    >
-                        {sticky && <Lock className="me-2 size-4" />}
-                        <span className={column.headerClass}>{column.header}</span>
-                        <ButtonIcon
-                            sort={sort}
-                            className="ms-2 size-4"
-                        />
-                    </div>
-                ),
-                content: () => (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <button
+                    className={clsx(
+                        'it-table-column-dropdown inline-flex h-8 items-center justify-center whitespace-nowrap rounded-md px-3 font-semibold transition-colors',
+                        'hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-1',
+                        'dark:hover:bg-zinc-800 dark:focus-visible:ring-zinc-500',
+                        'data-[state=open]:bg-gray-100 dark:data-[state=open]:bg-zinc-800',
+                        {
+                            'bg-gray-50 ring-1 ring-gray-300 dark:bg-zinc-800 dark:ring-zinc-500': sort,
+                        },
+                    )}
+                >
+                    {sticky && <Lock className="me-2 size-4" />}
+                    <span className={column.headerClass}>{column.header}</span>
+                    <ButtonIcon
+                        sort={sort}
+                        className="ms-2 size-4"
+                    />
+                </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+                className="it-dropdown-items w-max min-w-24"
+                align={column.alignment === 'right' ? 'end' : 'start'}
+            >
+                {column.sortable && (
                     <>
-                        {column.sortable && (
-                            <>
-                                <DropdownItem
-                                    title={trans('sort_asc')}
-                                    onClick={() => onSort(column.attribute)}
-                                    icon={<ArrowUp />}
-                                />
-                                <DropdownItem
-                                    title={trans('sort_desc')}
-                                    onClick={() => onSort(`-${column.attribute}`)}
-                                    icon={<ArrowDown />}
-                                />
-                            </>
-                        )}
-                        {column.sortable && (column.toggleable || column.stickable) && <DropdownSeparator />}
-
-                        {column.stickable && !sticky && (
-                            <DropdownItem
-                                title={trans('stick')}
-                                onClick={() => onStick(column)}
-                                icon={<Lock />}
-                            />
-                        )}
-
-                        {column.stickable && sticky && (
-                            <DropdownItem
-                                title={trans('unstick')}
-                                onClick={() => onUnstick(column)}
-                                icon={<Unlock />}
-                            />
-                        )}
-
-                        {column.toggleable && (
-                            <DropdownItem
-                                title={trans('hide_column')}
-                                onClick={() => onToggle(column)}
-                                icon={<EyeOff />}
-                            />
-                        )}
+                        <DropdownMenuItem
+                            onClick={() => onSort(column.attribute)}
+                            className="it-dropdown-item"
+                        >
+                            <ArrowUp className="me-2 size-3.5" />
+                            <span>{trans('sort_asc')}</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            onClick={() => onSort(`-${column.attribute}`)}
+                            className="it-dropdown-item"
+                        >
+                            <ArrowDown className="me-2 size-3.5" />
+                            <span>{trans('sort_desc')}</span>
+                        </DropdownMenuItem>
                     </>
-                ),
-            }}
-        </Dropdown>
+                )}
+                {column.sortable && (column.toggleable || column.stickable) && <DropdownMenuSeparator className="it-dropdown-separator" />}
+
+                {column.stickable && !sticky && (
+                    <DropdownMenuItem
+                        onClick={() => onStick(column)}
+                        className="it-dropdown-item"
+                    >
+                        <Lock className="me-2 size-3.5" />
+                        <span>{trans('stick')}</span>
+                    </DropdownMenuItem>
+                )}
+
+                {column.stickable && sticky && (
+                    <DropdownMenuItem
+                        onClick={() => onUnstick(column)}
+                        className="it-dropdown-item"
+                    >
+                        <Unlock className="me-2 size-3.5" />
+                        <span>{trans('unstick')}</span>
+                    </DropdownMenuItem>
+                )}
+
+                {column.toggleable && (
+                    <DropdownMenuItem
+                        onClick={() => onToggle(column)}
+                        className="it-dropdown-item"
+                    >
+                        <EyeOff className="me-2 size-3.5" />
+                        <span>{trans('hide_column')}</span>
+                    </DropdownMenuItem>
+                )}
+            </DropdownMenuContent>
+        </DropdownMenu>
     )
 }

@@ -3,11 +3,8 @@ import { Settings, List, Wrench } from 'lucide-react';
 
 import { trans } from './translations.js'
 import Actions from './Actions.jsx'
-import Dropdown from './Dropdown'
-import DropdownButton from './DropdownButton'
-import DropdownHeader from './DropdownHeader'
-import DropdownItem from './DropdownItem'
-import DropdownSeparator from './DropdownSeparator'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel } from '@shared/components/ui/dropdown-menu'
+import { Button } from '@shared/components/ui/button'
 import DynamicIcon from './DynamicIcon'
 
 export default function ActionsDropdown({
@@ -45,71 +42,81 @@ export default function ActionsDropdown({
             onSuccess={onSuccess}
         >
             {({ handle, asyncExport }) => (
-                <Dropdown className="it-actions-dropdown">
-                    {{
-                        trigger: () => (
-                            <DropdownButton
-                                title={trans('actions_button')}
-                                icon={<Wrench />}
-                            />
-                        ),
-                        content: () => (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            className="it-dropdown-button w-full justify-start"
+                        >
+                            <Wrench className="me-2 size-4" />
+                            <span>{trans('actions_button')}</span>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="it-actions-dropdown it-dropdown-items w-max min-w-24">
+                        {hasExports && (
                             <>
-                                {hasExports && (
-                                    <div>
-                                        <DropdownHeader>{trans('exports_header')}</DropdownHeader>
-                                        <DropdownSeparator />
-                                        {exports.map((tableExport, key) => (
-                                            <DropdownItem
-                                                key={key}
-                                                title={tableExport.label}
-                                                as={tableExport.asDownload ? 'a' : 'button'}
-                                                download={tableExport.asDownload ? 'download' : null}
-                                                {...(tableExport.dataAttributes || {})}
-                                                {...(tableExport.asDownload
-                                                    ? { href: makeExportUrl(tableExport) }
-                                                    : { onClick: () => asyncExport(tableExport) })}
-                                                icon={<List />}
-                                            />
-                                        ))}
-                                    </div>
-                                )}
-
-                                {hasBulkActions && hasExports && <DropdownSeparator />}
-
-                                {hasBulkActions && (
-                                    <div>
-                                        <DropdownHeader>{trans('bulk_actions_header')}</DropdownHeader>
-                                        <DropdownSeparator />
-                                        {actions.map((action, key) =>
-                                            action.asBulkAction ? (
-                                                <DropdownItem
-                                                    key={key}
-                                                    title={action.label}
-                                                    disabled={!hasSelectedItems || !action.authorized}
-                                                    onClick={() => handle(action)}
-                                                    {...(action.dataAttributes || {})}
-                                                    icon={
-                                                        action.icon ? (
-                                                            <DynamicIcon
-                                                                className="it-actions-dropdown-icon"
-                                                                resolver={iconResolver}
-                                                                icon={action.icon}
-                                                                context={action}
-                                                            />
-                                                        ) : (
-                                                            <Settings />
-                                                        )
-                                                    }
-                                                />
-                                            ) : null,
+                                <DropdownMenuLabel className="it-dropdown-header">{trans('exports_header')}</DropdownMenuLabel>
+                                <DropdownMenuSeparator className="it-dropdown-separator" />
+                                {exports.map((tableExport, key) => (
+                                    <DropdownMenuItem
+                                        key={key}
+                                        asChild={tableExport.asDownload}
+                                        className="it-dropdown-item"
+                                        {...(tableExport.dataAttributes || {})}
+                                    >
+                                        {tableExport.asDownload ? (
+                                            <a
+                                                href={makeExportUrl(tableExport)}
+                                                download
+                                                className="flex items-center"
+                                            >
+                                                <List className="me-2 size-3.5" />
+                                                <span>{tableExport.label}</span>
+                                            </a>
+                                        ) : (
+                                            <div onClick={() => asyncExport(tableExport)} className="flex items-center">
+                                                <List className="me-2 size-3.5" />
+                                                <span>{tableExport.label}</span>
+                                            </div>
                                         )}
-                                    </div>
+                                    </DropdownMenuItem>
+                                ))}
+                            </>
+                        )}
+
+                        {hasBulkActions && hasExports && <DropdownMenuSeparator className="it-dropdown-separator" />}
+
+                        {hasBulkActions && (
+                            <>
+                                <DropdownMenuLabel className="it-dropdown-header">{trans('bulk_actions_header')}</DropdownMenuLabel>
+                                <DropdownMenuSeparator className="it-dropdown-separator" />
+                                {actions.map((action, key) =>
+                                    action.asBulkAction ? (
+                                        <DropdownMenuItem
+                                            key={key}
+                                            disabled={!hasSelectedItems || !action.authorized}
+                                            onClick={() => handle(action)}
+                                            className="it-dropdown-item"
+                                            {...(action.dataAttributes || {})}
+                                        >
+                                            {action.icon ? (
+                                                <DynamicIcon
+                                                    className="it-actions-dropdown-icon me-2 size-3.5"
+                                                    resolver={iconResolver}
+                                                    icon={action.icon}
+                                                    context={action}
+                                                />
+                                            ) : (
+                                                <Settings className="me-2 size-3.5" />
+                                            )}
+                                            <span>{action.label}</span>
+                                        </DropdownMenuItem>
+                                    ) : null,
                                 )}
                             </>
-                        ),
-                    }}
-                </Dropdown>
+                        )}
+                    </DropdownMenuContent>
+                </DropdownMenu>
             )}
         </Actions>
     )

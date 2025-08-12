@@ -11,6 +11,7 @@ export default function FailedActionDialog({ show, onConfirm }) {
             confirmButton={trans('action_failed_dialog_button')}
             variant="danger"
             onConfirm={onConfirm}
+            onCancel={() => {}} // No-op for failed dialog
         />
     )
 }

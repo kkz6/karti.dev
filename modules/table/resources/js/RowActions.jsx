@@ -5,59 +5,87 @@ import clsx from 'clsx'
 import { getActionForItem } from './urlHelpers'
 import Actions from './Actions.jsx'
 import { Button } from '@shared/components/ui/button'
-import Dropdown from './Dropdown'
-import DropdownItem from './DropdownItem'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@shared/components/ui/dropdown-menu'
 import DynamicIcon from './DynamicIcon'
 
 export default function RowActions({ item, actions, performAction, iconResolver, asDropdown = false, onSuccess = null, onError = null, onHandle = null }) {
     const componentType = useCallback(
         (action, key) => {
-            const actionItem = getActionForItem(action, item._actions[key])
+            // Check if we have action data for this item
+            if (!item._actions || !item._actions[key]) {
+                // Fallback based on action type
+                return action.type === 'link' ? 'a' : Button
+            }
 
-            if (actionItem.componentType === 'button-component') {
+            const actionItem = getActionForItem(item._actions[key], action)
+
+            if (actionItem?.componentType === 'button-component') {
                 return asDropdown ? 'button' : Button
             }
 
-            return actionItem.componentType
+            // Return the component type or default to 'a' for links, 'button' for others
+            return actionItem?.componentType || (actionItem?.type === 'link' ? 'a' : Button)
         },
         [item],
     )
 
     const actionIsVisible = useCallback(
         (action, key) => {
-            return getActionForItem(action, item._actions[key]).isVisible
+            // Check if we have action data for this item
+            if (!item._actions || !item._actions[key]) {
+                return true // Default to visible
+            }
+
+            return getActionForItem(item._actions[key], action)?.isVisible ?? true
         },
         [item],
     )
 
     const componentBindings = useCallback(
         (action, key, handle) => {
-            const actionItem = getActionForItem(action, item._actions[key])
+            // Check if we have action data for this item
+            if (!item._actions || !item._actions[key]) {
+                // Return basic bindings for the action
+                return {
+                    onClick: () => handle(action),
+                    disabled: !action.authorized
+                }
+            }
+
+            const actionItem = getActionForItem(item._actions[key], action)
+
+            if (!actionItem) {
+                return {
+                    onClick: () => handle(action),
+                    disabled: !action.authorized
+                }
+            }
 
             if (actionItem.componentType != 'button-component') {
                 actionItem.bindings.class = actionItem.linkClass || getClassesForLinkVariant(actionItem.variant).join(' ')
             }
 
-            if (actionItem.bindings.class) {
+            if (actionItem.bindings?.class) {
                 actionItem.bindings.className = actionItem.bindings.class
                 delete actionItem.bindings.class
             }
 
             if (!actionItem.asDownload) {
+                actionItem.bindings = actionItem.bindings || {}
                 actionItem.bindings.onClick = () => handle(action)
             }
 
             if (actionItem.type === 'link') {
-                actionItem.bindings.className = actionItem.bindings.className || ''
+                actionItem.bindings.className = actionItem.bindings?.className || ''
                 actionItem.bindings.className += asDropdown ? '' : ' it-row-actions-link flex flex-row items-center'
 
-                if (actionItem.bindings.disabled) {
+                if (actionItem.bindings?.disabled) {
                     actionItem.bindings.className += ' cursor-not-allowed opacity-50'
                 }
             }
 
             // Convert custom button props to shadcn variants
-            if (actionItem.componentType === 'button-component') {
+            if (actionItem.componentType === 'button-component' && actionItem.bindings) {
                 // Convert size prop
                 if (actionItem.bindings.small) {
                     actionItem.bindings.size = 'sm'
@@ -86,13 +114,13 @@ export default function RowActions({ item, actions, performAction, iconResolver,
                 delete actionItem.bindings.sr
             }
 
-            if (asDropdown) {
+            if (asDropdown && actionItem.bindings) {
                 delete actionItem.bindings.primary
                 delete actionItem.bindings.danger
                 delete actionItem.bindings.small
             }
 
-            return actionItem.bindings
+            return actionItem.bindings || {}
         },
         [item],
     )
@@ -141,45 +169,49 @@ export default function RowActions({ item, actions, performAction, iconResolver,
         >
             {({ handle }) =>
                 asDropdown ? (
-                    <Dropdown className="it-row-actions-dropdown inline-flex">
-                        {{
-                            trigger: (open) => (
-                                <MoreHorizontal
-                                    className={clsx({
-                                        'size-6 rounded p-0.5 transition-colors dark:text-zinc-300 dark:hover:bg-zinc-800': true,
-                                        'bg-gray-200/75 dark:bg-zinc-800': open,
-                                    })}
-                                />
-                            ),
-                            content: () =>
-                                actions.map((action, key) =>
-                                    actionIsVisible(action, key) ? (
-                                        <DropdownItem
-                                            as={componentType(action, key)}
-                                            key={key}
-                                            title={action.label}
-                                            disabled={!action.authorized}
-                                            {...componentBindings(action, key, handle)}
-                                            icon={
-                                                hasVisibleActionsWithIcons ? (
-                                                    <DynamicIcon
-                                                        className="it-row-actions-dropdown-icon"
-                                                        resolver={iconResolver}
-                                                        icon={action.icon}
-                                                        context={action}
-                                                    />
-                                                ) : null
-                                            }
-                                        />
-                                    ) : null,
-                                ),
-                        }}
-                    </Dropdown>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button
+                                className={clsx(
+                                    'it-row-actions-dropdown inline-flex size-6 rounded p-0.5 transition-colors dark:text-zinc-300 dark:hover:bg-zinc-800 hover:bg-gray-200/75 data-[state=open]:bg-gray-200/75 dark:data-[state=open]:bg-zinc-800'
+                                )}
+                                aria-label="Actions"
+                            >
+                                <MoreHorizontal className="size-4" />
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="it-dropdown-items w-max min-w-24">
+                            {actions.map((action, key) =>
+                                actionIsVisible(action, key) ? (
+                                    <DropdownMenuItem
+                                        key={key}
+                                        disabled={!action.authorized}
+                                        onClick={() => handle(action)}
+                                        className="it-dropdown-item"
+                                    >
+                                        {hasVisibleActionsWithIcons && action.icon && (
+                                            <DynamicIcon
+                                                className="it-row-actions-dropdown-icon me-2 size-3.5"
+                                                resolver={iconResolver}
+                                                icon={action.icon}
+                                                context={action}
+                                            />
+                                        )}
+                                        <span>{action.label}</span>
+                                    </DropdownMenuItem>
+                                ) : null,
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 ) : (
                     <div className="it-row-actions flex items-center space-x-2 text-sm font-medium rtl:space-x-reverse">
                         {actions.map((action, key) => {
                             const Component = componentType(action, key)
-                            return action.asRowAction && actionIsVisible(action, key) ? (
+                            // Safety check to ensure Component is never undefined
+                            if (!Component || action.asRowAction === false || !actionIsVisible(action, key)) {
+                                return null
+                            }
+                            return (
                                 <Component
                                     key={key}
                                     title={action.label}
@@ -195,7 +227,7 @@ export default function RowActions({ item, actions, performAction, iconResolver,
                                     )}
                                     {action.showLabel && <span className={action.icon ? 'ms-1' : ''}>{action.label}</span>}
                                 </Component>
-                            ) : null
+                            )
                         })}
                     </div>
                 )
