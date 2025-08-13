@@ -3,12 +3,10 @@
 namespace Modules\Blog\Tables;
 
 use Modules\Blog\Models\Article;
-use Modules\Table\Table;
 use Modules\Table\Action;
 use Modules\Table\Columns;
-use Modules\Table\Export;
 use Modules\Table\Filters;
-use Modules\Table\Url;
+use Modules\Table\Table;
 
 class Articles extends Table
 {
@@ -17,7 +15,7 @@ class Articles extends Table
     public function columns(): array
     {
         return [
-            Columns\TextColumn::make('id', 'ID', toggleable: true)->url(fn(Article $article) => '/blog/articles/' . $article->id . '/edit'),
+            Columns\TextColumn::make('id', 'ID')->url(fn (Article $article) => '/blog/articles/'.$article->id.'/edit'),
             Columns\TextColumn::make('title', 'Title', toggleable: false)->searchable(),
             Columns\TextColumn::make('slug', 'Slug', toggleable: false)->sortable(),
             Columns\TextColumn::make('status', 'Status', toggleable: false),
@@ -40,7 +38,7 @@ class Articles extends Table
         return [
             Action::make(
                 label: 'Delete',
-                handle: fn(Article $article) => $article->delete(),
+                handle: fn (Article $article) => $article->delete(),
             )->confirm()->asBulkAction(),
         ];
     }
