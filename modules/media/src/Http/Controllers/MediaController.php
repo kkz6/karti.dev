@@ -95,54 +95,25 @@ class MediaController extends BaseController
                 'locked_list' => '/admin/media/locked',
             ],
             'translations' => [
-                'upload'         => 'Upload',
-                'new_folder'     => 'New Folder',
-                'delete'         => 'Delete',
-                'rename'         => 'Rename',
-                'move'           => 'Move',
-                'edit'           => 'Edit',
-                'search'         => 'Search files...',
-                'no_files_found' => 'No files found',
-                'bulk_select'    => 'Bulk Select',
-                'cancel'         => 'Cancel',
-                'download'       => 'Download',
-                'show_info'      => 'Show Info',
-                'hide_info'      => 'Hide Info',
+                'upload'                     => 'Upload',
+                'new_folder'                 => 'New Folder',
+                'delete'                     => 'Delete',
+                'rename'                     => 'Rename',
+                'move'                       => 'Move',
+                'edit'                       => 'Edit',
+                'search'                     => 'Search files...',
+                'no_files_found'             => 'No files found',
+                'bulk_select'                => 'Bulk Select',
+                'cancel'                     => 'Cancel',
+                'download'                   => 'Download',
+                'show_info'                  => 'Show Info',
+                'hide_info'                  => 'Hide Info',
+                'folder_name'                => 'Folder Name',
+                'folder_name_placeholder'    => 'Enter folder name...',
+                'create'                     => 'Create',
+                'no_val'                     => 'Please provide a value',
+                'create_success'             => 'Successfully created',
             ],
         ]);
-    }
-
-    /**
-     * Create a folder on disk with the given name
-     *
-     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
-     *
-     * @throws MediaManagerException
-     */
-    public function create(Request $request)
-    {
-        $disk = $this->manager->verifyDisk($request->disk);
-        $path = $request->path;
-
-        if (Storage::disk($disk)->exists($path)) {
-            throw MediaManagerException::directoryAlreadyExists($disk, $path);
-        }
-
-        Storage::disk($disk)->makeDirectory($path);
-        $this->invalidateFolderCache($path);
-
-        return response([
-            'success' => true,
-            'path'    => $path,
-        ]);
-    }
-
-    private function invalidateFolderCache($path)
-    {
-        $key = explode('/', $path);
-        array_pop($key);
-        $key = trim('root.'.implode('.', $key), "\.");
-
-        Cache::forget("media.manager.folders.{$key}");
     }
 }

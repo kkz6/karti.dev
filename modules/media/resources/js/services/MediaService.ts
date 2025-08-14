@@ -93,20 +93,23 @@ export class MediaService {
      */
     async getFiles(params: MediaListParams = {}): Promise<MediaApiResponse> {
         try {
-            const queryParams = new URLSearchParams();
+            const requestData: any = {};
             
-            if (params.disk) {
-                queryParams.append('disk', params.disk);
-            }
             if (params.path) {
-                queryParams.append('path', params.path);
+                requestData.path = params.path;
             }
+            if (params.disk) {
+                requestData.disk = params.disk;
+            }
+            
+            // Add pagination as query parameter if needed
+            const queryParams = new URLSearchParams();
             if (params.page) {
                 queryParams.append('page', params.page.toString());
             }
 
             const url = `${this.baseUrl}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-            const response: AxiosResponse<MediaApiResponse> = await axios.get(url);
+            const response: AxiosResponse<MediaApiResponse> = await axios.post(url, requestData);
 
             return response.data;
         } catch (error) {
@@ -164,11 +167,12 @@ export class MediaService {
     /**
      * Create a new folder
      */
-    async createFolder(name: string, path: string = '', disk: string = 'public'): Promise<any> {
+    async createFolder(folderName: string, currentPath: string = '/', disk: string = 'public'): Promise<any> {
         try {
-            const response = await axios.post(`${this.baseUrl}/folder`, {
-                name,
-                path,
+            const fullPath = `${currentPath.replace(/\/$/, '')}/${folderName}`.replace(/^\/+/, '');
+            
+            const response = await axios.post(`${this.baseUrl}/create`, {
+                path: fullPath,
                 disk,
             });
 
