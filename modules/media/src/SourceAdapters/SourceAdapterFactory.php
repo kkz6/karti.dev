@@ -1,0 +1,127 @@
+<?php
+
+namespace Modules\Media\SourceAdapters;
+
+use Modules\Media\Exceptions\MediaUpload\ConfigurationException;
+use Modules\Media\Interfaces\SourceAdapterInterface;
+
+/**
+ * Source Adapter Factory.
+ *
+ * Generates SourceAdapter instances for different sources
+ */
+class SourceAdapterFactory
+{
+    /**
+     * Map of which adapters to use for a given source class.
+     * @var class-string<SourceAdapterInterface>[]
+     */
+    private array $classAdapters = [];
+
+    /**
+     * Map of which adapters to use for a given string pattern.
+     * @var class-string<SourceAdapterInterface>[]
+     */
+    private array $patternAdapters = [];
+
+    /**
+     * Create a Source Adapter for the provided source.
+     * @param  object|string|resource $source
+     * @return SourceAdapterInterface
+     * @throws ConfigurationException If the provided source does not match any of the mapped classes or patterns
+     */
+    public function create($source): SourceAdapterInterface
+    {
+        $adapter = null;
+
+        if ($source instanceof SourceAdapterInterface) {
+            return $source;
+        } elseif (is_object($source)) {
+            $adapter = $this->adaptClass($source);
+        } elseif (is_resource($source)) {
+            $adapter = StreamResourceAdapter::class;
+        } elseif (is_string($source)) {
+            $adapter = $this->adaptString($source);
+        }
+
+        if ($adapter) {
+            return new $adapter($source);
+        }
+
+        throw ConfigurationException::unrecognizedSource($source);
+    }
+
+    /**
+     * Specify the FQCN of a SourceAdapter class to use when the source inherits from a given class.
+     * @param class-string<SourceAdapterInterface> $adapterClass
+     * @param string $sourceClass
+     * @return void
+     *
+     * @throws ConfigurationException
+     */
+    public function setAdapterForClass(string $adapterClass, string $sourceClass): void
+    {
+        $this->validateAdapterClass($adapterClass);
+        $this->classAdapters[$sourceClass] = $adapterClass;
+    }
+
+    /**
+     * Specify the FQCN of a SourceAdapter class to use when the source is a string matching the given pattern.
+     * @param class-string<SourceAdapterInterface> $adapterClass
+     * @param string $sourcePattern
+     * @return void
+     *
+     * @throws ConfigurationException
+     */
+    public function setAdapterForPattern(string $adapterClass, string $sourcePattern): void
+    {
+        $this->validateAdapterClass($adapterClass);
+        $this->patternAdapters[$sourcePattern] = $adapterClass;
+    }
+
+    /**
+     * Choose an adapter class for the class of the provided object.
+     * @param  object $source
+     * @return class-string<SourceAdapterInterface>|null
+     */
+    private function adaptClass(object $source): ?string
+    {
+        foreach ($this->classAdapters as $class => $adapter) {
+            if ($source instanceof $class) {
+                return $adapter;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Choose an adapter class for the provided string.
+     * @param  string $source
+     * @return class-string<SourceAdapterInterface>|null
+     */
+    private function adaptString(string $source): ?string
+    {
+        foreach ($this->patternAdapters as $pattern => $adapter) {
+            $pattern = '/' . str_replace('/', '\\/', $pattern) . '/i';
+            if (preg_match($pattern, $source)) {
+                return $adapter;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Verify that the provided class implements the SourceAdapter interface.
+     * @param  class-string<SourceAdapterInterface> $class
+     * @throws ConfigurationException If class is not valid
+     * @return void
+     */
+    private function validateAdapterClass(string $class): void
+    {
+        if (!is_a($class, SourceAdapterInterface::class, true)) {
+            throw ConfigurationException::cannotSetAdapter($class);
+        }
+    }
+}
