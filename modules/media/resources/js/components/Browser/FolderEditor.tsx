@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Button } from '@shared/components/ui/button';
 import { Input } from '@shared/components/ui/input';
 import { Label } from '@shared/components/ui/label';
@@ -63,82 +64,52 @@ export const FolderEditor: React.FC<FolderEditorProps> = ({
     try {
       if (create) {
         // Create folder
-        const response = await fetch('/api/media/folders', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
-            'X-Requested-With': 'XMLHttpRequest',
-          },
-          body: JSON.stringify({
-            ...form,
-            path: typeof path === 'string' ? path : path?.path,
-            container: container,
-            parent_id: parentUuid
-          }),
+        const response = await axios.post('/api/media/folder', {
+          ...form,
+          path: typeof path === 'string' ? path : path?.path,
+          container: container,
+          parent_id: parentUuid
         });
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          if (response.status === 422) {
-            setErrors([errorData.message || 'Validation error']);
-          } else {
-            setErrors(['Unable to create folder']);
-          }
-          setSaving(false);
-          return;
-        }
-
-        const data = await response.json();
         // Show success toast
         const event = new CustomEvent('toast', { 
           detail: { type: 'success', message: 'Folder created successfully' }
         });
         window.dispatchEvent(event);
         
-        onCreated?.(data);
+        onCreated?.(response.data);
       } else {
         // Update folder
         const folderToUpdate = path as MediaFolder;
-        const response = await fetch(`/api/media/folders/${folderToUpdate.uuid}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
-            'X-Requested-With': 'XMLHttpRequest',
-          },
-          body: JSON.stringify({
-            ...form,
-            path: folderToUpdate.path,
-            container: container,
-            parent_id: parentUuid
-          }),
+        const response = await axios.patch(`/api/media/folder/${folderToUpdate.uuid}/edit`, {
+          ...form,
+          path: folderToUpdate.path,
+          container: container,
+          parent_id: parentUuid
         });
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          if (response.status === 422) {
-            setErrors([errorData.message || 'Validation error']);
-          } else {
-            setErrors(['Unable to update folder']);
-          }
-          setSaving(false);
-          return;
-        }
-
-        const data = await response.json();
         // Show success toast
         const event = new CustomEvent('toast', { 
           detail: { type: 'success', message: 'Folder updated successfully' }
         });
         window.dispatchEvent(event);
         
-        onUpdated?.(data);
+        onUpdated?.(response.data);
       }
 
       handleClose();
-    } catch (error) {
-      setErrors(['Network error occurred']);
+    } catch (error: any) {
+      let errorMessage = 'Network error occurred';
+      
+      if (error.response) {
+        if (error.response.status === 422) {
+          errorMessage = error.response.data?.message || 'Validation error';
+        } else {
+          errorMessage = create ? 'Unable to create folder' : 'Unable to update folder';
+        }
+      }
+      
+      setErrors([errorMessage]);
       setSaving(false);
     }
   };

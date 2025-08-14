@@ -1,4 +1,5 @@
 import React, { useRef, useCallback, useState, useEffect } from 'react';
+import axios from 'axios';
 import { MediaUpload } from '../types/media';
 
 interface UploaderProps {
@@ -73,22 +74,29 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(({
     formData.append('extension', file.name.split('.').pop() || '');
 
     try {
-      const response = await fetch('/api/media/upload', {
-        method: 'POST',
-        body: formData,
+      const response = await axios.post('/api/media/upload', formData, {
         headers: {
-          'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
-          'X-Requested-With': 'XMLHttpRequest',
+          'Content-Type': 'multipart/form-data',
         },
-        // TODO: Add progress tracking
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploads(prev => {
+              const updated = prev.map(u => 
+                u.id === uuid ? { ...u, progress } : u
+              );
+              onUpdated?.(updated);
+              return updated;
+            });
+          }
+        },
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
+      if (response.status === 201) {
+        if (response.data.success) {
           setUploads(prev => {
             const updated = prev.filter(u => u.id !== uuid);
-            onUploadComplete?.(data.item, updated);
+            onUploadComplete?.(response.data.item, updated);
             onUpdated?.(updated);
             return updated;
           });
@@ -105,32 +113,35 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(({
           });
         }
       } else {
-        const errorData = await response.json();
         setUploads(prev => {
           const updated = prev.map(u => 
             u.id === uuid 
-              ? { 
-                  ...u, 
-                  status: 'error' as const, 
-                  error: response.status === 413 
-                    ? 'File size is too large' 
-                    : errorData?.message || 'Upload failed'
-                }
+              ? { ...u, status: 'error' as const, error: 'Upload failed' }
               : u
           );
-          onError?.(response.status === 413 ? 'File size is too large' : errorData?.message || 'Upload failed');
+          onError?.('Upload failed');
           onUpdated?.(updated);
           return updated;
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      let errorMessage = 'Network error';
+      
+      if (error.response) {
+        if (error.response.status === 413) {
+          errorMessage = 'File size is too large';
+        } else {
+          errorMessage = error.response.data?.message || 'Upload failed';
+        }
+      }
+
       setUploads(prev => {
         const updated = prev.map(u => 
           u.id === uuid 
-            ? { ...u, status: 'error' as const, error: 'Network error' }
+            ? { ...u, status: 'error' as const, error: errorMessage }
             : u
         );
-        onError?.('Network error');
+        onError?.(errorMessage);
         onUpdated?.(updated);
         return updated;
       });

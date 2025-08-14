@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Button } from '@shared/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@shared/components/ui/dialog';
 import { Alert, AlertDescription } from '@shared/components/ui/alert';
@@ -34,7 +35,7 @@ export const AssetMover: React.FC<AssetMoverProps> = ({
   };
 
   useEffect(() => {
-    setSelectedFolder(folder);
+    setSelectedFolder(folder || null);
   }, [folder]);
 
   useEffect(() => {
@@ -50,30 +51,18 @@ export const AssetMover: React.FC<AssetMoverProps> = ({
     setErrors(null);
 
     try {
-      const response = await fetch('/assets/move', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-        body: JSON.stringify({
-          assets,
-          folder: selectedFolder,
-          container,
-        }),
+      await axios.post('/api/media/move', {
+        assets,
+        folder: selectedFolder,
+        container,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to move assets');
-      }
 
       onSaved(selectedFolder!);
       handleCancel();
-    } catch (error) {
+    } catch (error: any) {
       setSaving(false);
-      setErrors([error instanceof Error ? error.message : 'An error occurred']);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to move assets';
+      setErrors([errorMessage]);
     }
   };
 

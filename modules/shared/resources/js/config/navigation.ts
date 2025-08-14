@@ -45,7 +45,7 @@ export const mainNavItems: NavItem[] = [
     },
     {
         title: 'Media Manager',
-        href: route('admin.media-manager'),
+        href: route('media-manager'),
         icon: FolderOpen,
     },
     {

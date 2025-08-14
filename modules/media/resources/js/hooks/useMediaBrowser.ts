@@ -21,35 +21,33 @@ interface MediaServices {
   deleteFilesService: (params: { ids: string[] }) => Promise<void>;
 }
 
-// Default service implementation using MediaService
+import axios from 'axios';
+
+// Default service implementation using axios API calls
 export const createDefaultServices = (): MediaServices => ({
   browseContainer: async () => {
-    // Mock implementation - replace with actual API call
-    return { data: { items: [] } };
+    const response = await axios.get(route('media.index'));
+    return response.data;
   },
+
   loadFilesService: async (params: MediaLoadParams) => {
-    // Mock implementation - replace with actual API call
-    return { 
-      data: { 
-        data: { 
-          assets: [], 
-          folders: [], 
-          folder: null as any, 
-          pagination: {} as any 
-        }, 
-        pagination: { meta: { current_page: 1, last_page: 1, per_page: 20, total: 0 }, links: {} } as any 
-      } 
-    };
+    const response = await axios.get('/api/media/get-files', { params });
+    return response.data;
   },
+
   searchFilesService: async (params: MediaSearchParams) => {
-    // Mock implementation - replace with actual API call
-    return { data: { assets: [], folders: [] } };
+    const response = await axios.get('/api/media/search', { params });
+    return response.data;
   },
+
   moveFilesService: async (params: MediaMoveParams) => {
-    // Mock implementation - replace with actual API call
+    const response = await axios.post('/api/media/move', params);
+    return response.data;
   },
+
   deleteFilesService: async (params: { ids: string[] }) => {
-    // Mock implementation - replace with actual API call
+    const response = await axios.delete('/api/media/delete', { data: params });
+    return response.data;
   },
 });
 
@@ -94,7 +92,13 @@ export function useMediaBrowser(
       }, {} as Record<string, MediaContainer>);
       
       setContainers(containersData);
-      setContainer(initialContainer ? containersData[initialContainer] : null);
+      
+      // Set initial container - either the specified one or the first available
+      const targetContainer = initialContainer 
+        ? containersData[initialContainer] 
+        : Object.values(containersData)[0] || null;
+      
+      setContainer(targetContainer);
       setLoadingContainers(false);
     } catch (error) {
       console.error('Error loading containers:', error);
@@ -274,10 +278,10 @@ export function useMediaBrowser(
   }, [loadContainers]);
 
   useEffect(() => {
-    if (container && initializedAssets) {
+    if (container) {
       loadAssets();
     }
-  }, [container, path, selectedPage, sort, sortOrder, pathUuid]);
+  }, [container, path, selectedPage, sort, sortOrder, pathUuid, loadAssets]);
 
   useEffect(() => {
     if (searchTerm.length >= 3) {
