@@ -42,7 +42,7 @@ class RelationOnAnotherConnection
         Clause $clause,
         mixed $value
     ): self {
-        $column = Str::afterLast($relationship, '.');
+        $column       = Str::afterLast($relationship, '.');
         $relationship = Str::beforeLast($relationship, '.');
 
         return new self($resource, $relationship, $column, $applier, $clause, $value);
@@ -53,10 +53,10 @@ class RelationOnAnotherConnection
         $query ??= $this->resource;
 
         match (true) {
-            $this->relation instanceof BelongsTo => $this->handleBelongsTo($query),
-            $this->relation instanceof HasOneOrMany => $this->handleHasOneOrMany($query),
+            $this->relation instanceof BelongsTo     => $this->handleBelongsTo($query),
+            $this->relation instanceof HasOneOrMany  => $this->handleHasOneOrMany($query),
             $this->relation instanceof BelongsToMany => $this->handleBelongsToMany($query),
-            default => throw UnsupportedRelationTypeException::new(),
+            default                                  => throw UnsupportedRelationTypeException::new(),
         };
     }
 

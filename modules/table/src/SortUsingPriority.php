@@ -32,10 +32,10 @@ class SortUsingPriority
         $connection = $builder->getConnection();
 
         match ($connection->getDriverName()) {
-            'mysql' => $this->handleMysqlConnection($builder, $direction),
-            'pgsql' => $this->handlePostgresConnection($builder, $direction),
+            'mysql'  => $this->handleMysqlConnection($builder, $direction),
+            'pgsql'  => $this->handlePostgresConnection($builder, $direction),
             'sqlite' => $this->handleSqliteConnection($builder, $direction),
-            default => throw new InvalidArgumentException('Unsupported database driver'),
+            default  => throw new InvalidArgumentException('Unsupported database driver'),
         };
     }
 

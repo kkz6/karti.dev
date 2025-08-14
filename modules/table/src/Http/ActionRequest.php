@@ -17,10 +17,10 @@ class ActionRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'table' => $this->route('table'),
-            'name' => $this->route('name'),
+            'table'  => $this->route('table'),
+            'name'   => $this->route('name'),
             'action' => $this->route('action'),
-            'state' => $this->route('state'),
+            'state'  => $this->route('state'),
         ]);
     }
 
@@ -38,11 +38,11 @@ class ActionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'table' => ['required', 'string', new Base64EncodedTableClassRule],
-            'name' => ['required', 'string', 'min:1', 'max:255'],
+            'table'  => ['required', 'string', new Base64EncodedTableClassRule],
+            'name'   => ['required', 'string', 'min:1', 'max:255'],
             'action' => ['required', 'integer', 'min:0', 'max:100'],
-            'keys' => ['required', 'array', 'min:1'],
-            'state' => ['nullable', 'string'],
+            'keys'   => ['required', 'array', 'min:1'],
+            'state'  => ['nullable', 'string'],
         ];
     }
 

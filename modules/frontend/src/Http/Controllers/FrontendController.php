@@ -2,9 +2,9 @@
 
 namespace Modules\Frontend\Http\Controllers;
 
-use Modules\Shared\Http\Controllers\BaseController;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Shared\Http\Controllers\BaseController;
 
 class FrontendController extends BaseController
 {
@@ -31,7 +31,7 @@ class FrontendController extends BaseController
     public function article(string $slug): Response
     {
         return Inertia::render('frontend::article', [
-            'slug' => $slug
+            'slug' => $slug,
         ]);
     }
 
@@ -70,17 +70,17 @@ class FrontendController extends BaseController
         // Fetch collection data based on slug
         // For now, return with default data
         $collection = [
-            'slug' => $slug,
-            'title' => ucfirst(str_replace('-', ' ', $slug)),
+            'slug'        => $slug,
+            'title'       => ucfirst(str_replace('-', ' ', $slug)),
             'description' => 'A collection of photographs exploring themes and moments.',
-            'date' => '2024-01-15',
-            'location' => 'Various Locations',
-            'camera' => 'Canon EOS R5',
-            'photos' => []
+            'date'        => '2024-01-15',
+            'location'    => 'Various Locations',
+            'camera'      => 'Canon EOS R5',
+            'photos'      => [],
         ];
-        
+
         return Inertia::render('frontend::photography/show', [
-            'collection' => $collection
+            'collection' => $collection,
         ]);
     }
 

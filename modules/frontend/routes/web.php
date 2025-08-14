@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Frontend\Http\Controllers\PortfolioController;
-use Modules\Frontend\Http\Controllers\FrontendController;
 
 Route::middleware(['web'])->group(function () {
     // Main routes matching Spotlight theme

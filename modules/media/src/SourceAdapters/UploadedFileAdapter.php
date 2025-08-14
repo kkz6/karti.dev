@@ -19,11 +19,10 @@ class UploadedFileAdapter implements SourceAdapterInterface
 
     /**
      * Constructor.
-     * @param UploadedFile $source
      */
     public function __construct(UploadedFile $source)
     {
-        if (!$source->isValid()) {
+        if (! $source->isValid()) {
             throw ConfigurationException::invalidSource(
                 "Uploaded file is not valid: {$source->getErrorMessage()}"
             );
@@ -78,7 +77,6 @@ class UploadedFileAdapter implements SourceAdapterInterface
 
     /**
      * {@inheritdoc}
-     * @param string $algo
      */
     public function hash(string $algo = 'md5'): string
     {

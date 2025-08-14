@@ -81,7 +81,7 @@ class QueryBuilder
      */
     public function applyEagerLoading(Builder $query): void
     {
-        $sortedColumn = $this->tableRequest->sortedColumn();
+        $sortedColumn  = $this->tableRequest->sortedColumn();
         $sortDirection = $this->tableRequest->sortDirection()?->value ?? 'asc';
 
         collect($this->table->buildColumns())
@@ -139,7 +139,7 @@ class QueryBuilder
                         continue;
                     }
 
-                    $relationName = Str::beforeLast($column, '.');
+                    $relationName   = Str::beforeLast($column, '.');
                     $relationColumn = Str::afterLast($column, '.');
 
                     if (! static::isRelatedThroughAnotherConnection($nestedWhere->getModel(), $relationName)) {
@@ -268,8 +268,8 @@ class QueryBuilder
             ->mapWithKeys(static fn (Column $column): array => [$column->getAttribute() => $column->resolveUrl($model)])
             ->filter();
 
-        $hasActions = $this->table->hasActions();
-        $hasBulkActions = $this->table->hasBulkActions();
+        $hasActions                         = $this->table->hasActions();
+        $hasBulkActions                     = $this->table->hasBulkActions();
         $hasExportsThatLimitsToSelectedRows = $this->table->hasExportsThatLimitsToSelectedRows();
 
         $data = $columns
@@ -279,7 +279,7 @@ class QueryBuilder
                 if ($column instanceof ActionColumn) {
                     $actionUrls = collect($this->table->actions())
                         ->map(function (Action $action) use ($model): string|array|null {
-                            $isHidden = $action->isHidden($model);
+                            $isHidden   = $action->isHidden($model);
                             $isDisabled = $action->isDisabled($model);
 
                             if (! $isHidden && ! $isDisabled) {

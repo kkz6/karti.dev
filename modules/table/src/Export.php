@@ -49,8 +49,8 @@ class Export implements Arrayable
     protected static ?string $defaultQueueDisk = null;
 
     /**
-     * @param  (Closure(Table, Export, Request, Builder): mixed)|null  $using
-     * @param  Closure(PendingDispatch): mixed|null  $withQueuedJob
+     * @param (Closure(Table, Export, Request, Builder): mixed)|null $using
+     * @param Closure(PendingDispatch): mixed|null                   $withQueuedJob
      */
     public function __construct(
         public string $label,
@@ -192,7 +192,7 @@ class Export implements Arrayable
         string $title = 'Export',
         string $message = 'Your export is being processed.'
     ): self {
-        $this->dialogTitle = $title;
+        $this->dialogTitle   = $title;
         $this->dialogMessage = $message;
 
         return $this->asDownload(false);
@@ -233,7 +233,7 @@ class Export implements Arrayable
     /**
      * Indicate that the export should be queued.
      *
-     * @param  (callable(PendingDispatch): mixed)|(Closure(PendingDispatch): mixed)|null  $withQueuedJob
+     * @param (callable(PendingDispatch): mixed)|(Closure(PendingDispatch): mixed)|null $withQueuedJob
      */
     public function queue(
         ?string $filename = null,
@@ -245,10 +245,10 @@ class Export implements Arrayable
     ): self {
         $this->filename = $filename ?? $this->filename;
 
-        $this->queue = true;
-        $this->queueName = $queue instanceof BackedEnum ? $queue->value : $queue;
-        $this->queueDisk = $disk instanceof BackedEnum ? $disk->value : $disk;
-        $this->dialogTitle = $title;
+        $this->queue         = true;
+        $this->queueName     = $queue instanceof BackedEnum ? $queue->value : $queue;
+        $this->queueDisk     = $disk instanceof BackedEnum ? $disk->value : $disk;
+        $this->dialogTitle   = $title;
         $this->dialogMessage = $message;
 
         return $withQueuedJob ? $this->withQueuedJob($withQueuedJob) : $this;
@@ -282,7 +282,7 @@ class Export implements Arrayable
 
         if (! $this->hasUsingCallback() && ! empty($job->chained)) {
             $job->afterBuiltInExporter = $job->chained;
-            $job->chained = [];
+            $job->chained              = [];
         }
 
         return [$job, $pendingDispatch];
@@ -291,8 +291,8 @@ class Export implements Arrayable
     /**
      * Create a new Export instance.
      *
-     * @param  (callable(PendingDispatch): mixed)|(Closure(PendingDispatch): mixed)|null  $withQueuedJob
-     * @param  (callable(Table, Export, Request, Builder): mixed)|(Closure(Table, Export, Request, Builder): mixed)|null  $using
+     * @param (callable(PendingDispatch): mixed)|(Closure(PendingDispatch): mixed)|null                                 $withQueuedJob
+     * @param (callable(Table, Export, Request, Builder): mixed)|(Closure(Table, Export, Request, Builder): mixed)|null $using
      */
     public static function make(
         string $label = 'Excel Export',
@@ -318,7 +318,7 @@ class Export implements Arrayable
             ? fn () => redirect()->to($redirect)
             : Helpers::asClosure($redirect);
 
-        $using = Helpers::asClosure($using);
+        $using         = Helpers::asClosure($using);
         $withQueuedJob = Helpers::asClosure($withQueuedJob);
 
         return new static(
@@ -346,7 +346,7 @@ class Export implements Arrayable
     /**
      * Set the closure that should be used to export the data.
      *
-     * @param  (callable(Table, Export, Request, Builder): mixed)|(Closure(Table, Export, Request, Builder): mixed)  $using
+     * @param (callable(Table, Export, Request, Builder): mixed)|(Closure(Table, Export, Request, Builder): mixed) $using
      */
     public function using(Closure|callable $using): self
     {
@@ -431,13 +431,13 @@ class Export implements Arrayable
         }
 
         return [
-            'label' => $this->getLabel(),
-            'authorized' => $this->isAuthorized(),
-            'dataAttributes' => $this->buildDataAttributes(),
-            'meta' => $this->meta,
+            'label'               => $this->getLabel(),
+            'authorized'          => $this->isAuthorized(),
+            'dataAttributes'      => $this->buildDataAttributes(),
+            'meta'                => $this->meta,
             'limitToSelectedRows' => $this->shouldLimitToSelectedRows(),
-            'asDownload' => $this->queue ? false : $this->asDownload,
-            'url' => $this->getExportUrl(),
+            'asDownload'          => $this->queue ? false : $this->asDownload,
+            'url'                 => $this->getExportUrl(),
         ];
     }
 

@@ -5,7 +5,6 @@ namespace Modules\Media\SourceAdapters;
 use GuzzleHttp\Psr7\Utils;
 use Modules\Media\Exceptions\MediaUpload\ConfigurationException;
 
-
 /**
  * Local Path Adapter.
  *
@@ -18,7 +17,7 @@ class LocalPathAdapter extends StreamAdapter
     public function __construct(string $source)
     {
         $this->filePath = $source;
-        if (!is_file($source) || !is_readable($source)) {
+        if (! is_file($source) || ! is_readable($source)) {
             throw ConfigurationException::invalidSource(
                 "File not found {$source}"
             );

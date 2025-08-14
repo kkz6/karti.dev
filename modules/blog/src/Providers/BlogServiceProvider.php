@@ -21,12 +21,12 @@ class BlogServiceProvider extends ServiceProvider
     protected function registerRoutes(): void
     {
         Route::middleware(['web'])
-            ->group(__DIR__ . '/../../routes/blog-routes.php');
+            ->group(__DIR__.'/../../routes/blog-routes.php');
     }
 
     protected function registerResources(): void
     {
-        $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'blog');
-        $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
+        $this->loadViewsFrom(__DIR__.'/../../resources/views', 'blog');
+        $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
     }
 }

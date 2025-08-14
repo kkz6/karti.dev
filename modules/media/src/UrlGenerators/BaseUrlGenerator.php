@@ -3,6 +3,8 @@
 namespace Modules\Media\UrlGenerators;
 
 use Illuminate\Contracts\Config\Repository as Config;
+use Modules\Media\Interfaces\UrlGeneratorInterface;
+use Modules\Media\Models\Media;
 
 abstract class BaseUrlGenerator implements UrlGeneratorInterface
 {
@@ -15,7 +17,6 @@ abstract class BaseUrlGenerator implements UrlGeneratorInterface
 
     /**
      * Constructor.
-     * @param \Illuminate\Contracts\Config\Repository $config
      */
     public function __construct(Config $config)
     {
@@ -24,7 +25,6 @@ abstract class BaseUrlGenerator implements UrlGeneratorInterface
 
     /**
      * Set the media being operated on.
-     * @param \Plank\Mediable\Media $media
      */
     public function setMedia(Media $media): void
     {
@@ -41,9 +41,8 @@ abstract class BaseUrlGenerator implements UrlGeneratorInterface
 
     /**
      * Get a config value for the current disk.
-     * @param  string $key
-     * @param  mixed $default
-     * @return mixed
+     *
+     * @param mixed $default
      */
     protected function getDiskConfig(string $key, $default = null): mixed
     {

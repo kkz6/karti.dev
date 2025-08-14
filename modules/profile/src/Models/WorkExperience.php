@@ -25,15 +25,15 @@ class WorkExperience extends Model
 
     protected $casts = [
         'start_date' => 'date',
-        'end_date' => 'date',
-        'current' => 'boolean',
+        'end_date'   => 'date',
+        'current'    => 'boolean',
         'sort_order' => 'integer',
-        'featured' => 'boolean',
+        'featured'   => 'boolean',
     ];
 
     protected $attributes = [
-        'current' => false,
-        'featured' => false,
+        'current'    => false,
+        'featured'   => false,
         'sort_order' => 0,
     ];
 
@@ -55,8 +55,8 @@ class WorkExperience extends Model
     public function getDurationAttribute(): string
     {
         $start = $this->start_date->format('M Y');
-        $end = $this->current ? 'Present' : $this->end_date->format('M Y');
-        
+        $end   = $this->current ? 'Present' : $this->end_date->format('M Y');
+
         return "{$start} - {$end}";
     }
 }

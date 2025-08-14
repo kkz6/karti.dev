@@ -2,8 +2,8 @@
 
 namespace Modules\Blog\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,13 +21,13 @@ class AdminBlogController extends BaseController
     public function index(Request $request): Response
     {
         $categories = Category::all(['id', 'name', 'slug']);
-        $tags = Tag::all(['id', 'name', 'slug']);
+        $tags       = Tag::all(['id', 'name', 'slug']);
 
         return Inertia::render('blog::index', [
-            'articles' => Articles::make(),
+            'articles'   => Articles::make(),
             'categories' => $categories,
-            'tags' => $tags,
-            'filters' => $request->only(['search', 'category', 'status']),
+            'tags'       => $tags,
+            'filters'    => $request->only(['search', 'category', 'status']),
         ]);
     }
 
@@ -37,11 +37,11 @@ class AdminBlogController extends BaseController
     public function create(): Response
     {
         $categories = Category::all(['id', 'name', 'slug']);
-        $tags = Tag::all(['id', 'name', 'slug']);
+        $tags       = Tag::all(['id', 'name', 'slug']);
 
         return Inertia::render('blog::create', [
             'categories' => $categories,
-            'tags' => $tags,
+            'tags'       => $tags,
         ]);
     }
 
@@ -51,29 +51,29 @@ class AdminBlogController extends BaseController
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:articles,slug',
-            'content' => 'required|string',
-            'excerpt' => 'nullable|string|max:500',
-            'category_id' => 'required|exists:categories,id',
-            'tags' => 'nullable|array',
-            'tags.*' => 'exists:tags,id',
-            'status' => 'required|in:draft,published,archived',
-            'featured_image' => 'nullable|string',
-            'meta_title' => 'nullable|string|max:255',
+            'title'            => 'required|string|max:255',
+            'slug'             => 'required|string|max:255|unique:articles,slug',
+            'content'          => 'required|string',
+            'excerpt'          => 'nullable|string|max:500',
+            'category_id'      => 'required|exists:categories,id',
+            'tags'             => 'nullable|array',
+            'tags.*'           => 'exists:tags,id',
+            'status'           => 'required|in:draft,published,archived',
+            'featured_image'   => 'nullable|string',
+            'meta_title'       => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
-            'published_at' => 'nullable|date',
+            'published_at'     => 'nullable|date',
         ]);
 
         $article = Article::create([
             ...$validated,
-            'user_id' => Auth::id(),
+            'user_id'      => Auth::id(),
             'published_at' => $validated['status'] === 'published'
                 ? ($validated['published_at'] ?? now())
                 : null,
         ]);
 
-        if (!empty($validated['tags'])) {
+        if (! empty($validated['tags'])) {
             $article->tags()->sync($validated['tags']);
         }
 
@@ -101,12 +101,12 @@ class AdminBlogController extends BaseController
     {
         $article->load(['category', 'tags']);
         $categories = Category::all(['id', 'name', 'slug']);
-        $tags = Tag::all(['id', 'name', 'slug']);
+        $tags       = Tag::all(['id', 'name', 'slug']);
 
         return Inertia::render('blog::edit', [
-            'article' => $article,
+            'article'    => $article,
             'categories' => $categories,
-            'tags' => $tags,
+            'tags'       => $tags,
         ]);
     }
 
@@ -116,18 +116,18 @@ class AdminBlogController extends BaseController
     public function update(Request $request, Article $article): RedirectResponse
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:articles,slug,' . $article->id,
-            'content' => 'required|string',
-            'excerpt' => 'nullable|string|max:500',
-            'category_id' => 'required|exists:categories,id',
-            'tags' => 'nullable|array',
-            'tags.*' => 'exists:tags,id',
-            'status' => 'required|in:draft,published,archived',
-            'featured_image' => 'nullable|string',
-            'meta_title' => 'nullable|string|max:255',
+            'title'            => 'required|string|max:255',
+            'slug'             => 'required|string|max:255|unique:articles,slug,'.$article->id,
+            'content'          => 'required|string',
+            'excerpt'          => 'nullable|string|max:500',
+            'category_id'      => 'required|exists:categories,id',
+            'tags'             => 'nullable|array',
+            'tags.*'           => 'exists:tags,id',
+            'status'           => 'required|in:draft,published,archived',
+            'featured_image'   => 'nullable|string',
+            'meta_title'       => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
-            'published_at' => 'nullable|date',
+            'published_at'     => 'nullable|date',
         ]);
 
         $article->update([
@@ -167,8 +167,8 @@ class AdminBlogController extends BaseController
     {
         $validated = $request->validate([
             'action' => 'required|in:delete,publish,draft,archive',
-            'ids' => 'required|array|min:1',
-            'ids.*' => 'exists:articles,id',
+            'ids'    => 'required|array|min:1',
+            'ids.*'  => 'exists:articles,id',
         ]);
 
         $articles = Article::whereIn('id', $validated['ids']);
@@ -185,7 +185,7 @@ class AdminBlogController extends BaseController
 
             case 'publish':
                 $articles->update([
-                    'status' => 'published',
+                    'status'       => 'published',
                     'published_at' => now(),
                 ]);
                 $message = 'Articles published successfully.';
@@ -193,7 +193,7 @@ class AdminBlogController extends BaseController
 
             case 'draft':
                 $articles->update([
-                    'status' => 'draft',
+                    'status'       => 'draft',
                     'published_at' => null,
                 ]);
                 $message = 'Articles moved to draft successfully.';

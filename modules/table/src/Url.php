@@ -159,8 +159,8 @@ class Url implements Arrayable
 
         $modal = match (true) {
             $modal instanceof ModalConfig => ['config' => $modal->toArray()],
-            $modal instanceof ModalVisit => $modal->toArray(),
-            default => $modal,
+            $modal instanceof ModalVisit  => $modal->toArray(),
+            default                       => $modal,
         };
 
         if (is_array($modal)) {
@@ -193,14 +193,14 @@ class Url implements Arrayable
     public function toArray(): array
     {
         return [
-            'url' => $this->url,
+            'url'            => $this->url,
             'preserveScroll' => $this->preserveScroll,
-            'preserveState' => $this->preserveState,
-            'openInNewTab' => $this->openInNewTab,
-            'asDownload' => $this->asDownload,
-            'disabled' => $this->disabled,
-            'hidden' => $this->hidden,
-            'modal' => $this->modal,
+            'preserveState'  => $this->preserveState,
+            'openInNewTab'   => $this->openInNewTab,
+            'asDownload'     => $this->asDownload,
+            'disabled'       => $this->disabled,
+            'hidden'         => $this->hidden,
+            'modal'          => $this->modal,
         ];
     }
 }

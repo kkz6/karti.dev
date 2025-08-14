@@ -17,11 +17,11 @@ class ExportRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'table' => $this->route('table'),
-            'name' => $this->route('name'),
+            'table'  => $this->route('table'),
+            'name'   => $this->route('name'),
             'export' => $this->route('export'),
-            'state' => $this->route('state'),
-            'keys' => collect(explode(',', $this->query('keys', '')))
+            'state'  => $this->route('state'),
+            'keys'   => collect(explode(',', $this->query('keys', '')))
                 ->filter()
                 ->values()
                 ->all(),
@@ -42,11 +42,11 @@ class ExportRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'table' => ['required', 'string', new Base64EncodedTableClassRule],
-            'name' => ['required', 'string', 'min:1', 'max:255'],
+            'table'  => ['required', 'string', new Base64EncodedTableClassRule],
+            'name'   => ['required', 'string', 'min:1', 'max:255'],
             'export' => ['required', 'integer', 'min:0'],
-            'state' => ['nullable', 'string'],
-            'keys' => ['nullable', 'array', 'min:0'],
+            'state'  => ['nullable', 'string'],
+            'keys'   => ['nullable', 'array', 'min:0'],
         ];
     }
 

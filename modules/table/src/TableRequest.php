@@ -264,9 +264,9 @@ class TableRequest implements Arrayable
             'columns' => $this->columns(),
             'filters' => collect($this->filters())->toArray(),
             'perPage' => $this->perPage(),
-            'search' => $this->search(),
-            'sort' => $this->sort(),
-            'sticky' => $this->stickyColumns(),
+            'search'  => $this->search(),
+            'sort'    => $this->sort(),
+            'sticky'  => $this->stickyColumns(),
         ];
     }
 
@@ -277,18 +277,18 @@ class TableRequest implements Arrayable
     {
         return collect([
             'columns' => $this->query('columns') ? array_keys(array_filter($this->columns())) : null,
-            'cursor' => $this->cursor(),
+            'cursor'  => $this->cursor(),
             'filters' => collect($this->filters())
                 ->filter->enabled
                 ->map(fn (FilterRequest $filterRequest): array => [
                     'clause' => $filterRequest->clause->value,
-                    'value' => $filterRequest->value,
+                    'value'  => $filterRequest->value,
                 ])
                 ->toArray(),
             'perPage' => $this->perPage(),
-            'search' => $this->search(),
-            'sort' => $this->sort(),
-            'sticky' => $this->stickyColumns(),
+            'search'  => $this->search(),
+            'sort'    => $this->sort(),
+            'sticky'  => $this->stickyColumns(),
         ])
             ->reject(fn ($value) => blank($value))
             ->toArray();

@@ -3,7 +3,9 @@
 namespace Modules\Blog\Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Modules\Blog\Models\{Article, Category, Tag, Comment};
+use Modules\Blog\Models\Article;
+use Modules\Blog\Models\Category;
+use Modules\Blog\Models\Tag;
 
 class BlogSeeder extends Seeder
 {
@@ -11,10 +13,10 @@ class BlogSeeder extends Seeder
     {
         // Categories
         $categories = $this->createCategories();
-        
+
         // Tags
         $tags = $this->createTags();
-        
+
         // Articles
         $this->createArticles($categories, $tags);
     }
@@ -32,7 +34,7 @@ class BlogSeeder extends Seeder
         $categories = [];
         foreach ($categoriesData as $index => $categoryData) {
             $categoryData['sort_order'] = $index;
-            $categories[] = Category::create($categoryData);
+            $categories[]               = Category::create($categoryData);
         }
 
         return $categories;
@@ -62,40 +64,40 @@ class BlogSeeder extends Seeder
     {
         $articlesData = [
             [
-                'title' => 'Crafting a design system for a multiplanetary future',
-                'slug' => 'crafting-a-design-system-for-a-multiplanetary-future',
-                'content' => '<p>Most companies try to stay ahead of the curve when it comes to visual design, but for Planetaria we needed to create a brand that would still inspire us 100 years from now when humanity has spread across our entire solar system.</p><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit...</p>',
-                'excerpt' => 'Most companies try to stay ahead of the curve when it comes to visual design, but for Planetaria we needed to create a brand that would still inspire us 100 years from now when humanity has spread across our entire solar system.',
-                'status' => 'published',
-                'published_at' => now()->subDays(5),
-                'author_name' => 'Spencer Sharp',
+                'title'                => 'Crafting a design system for a multiplanetary future',
+                'slug'                 => 'crafting-a-design-system-for-a-multiplanetary-future',
+                'content'              => '<p>Most companies try to stay ahead of the curve when it comes to visual design, but for Planetaria we needed to create a brand that would still inspire us 100 years from now when humanity has spread across our entire solar system.</p><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit...</p>',
+                'excerpt'              => 'Most companies try to stay ahead of the curve when it comes to visual design, but for Planetaria we needed to create a brand that would still inspire us 100 years from now when humanity has spread across our entire solar system.',
+                'status'               => 'published',
+                'published_at'         => now()->subDays(5),
+                'author_name'          => 'Spencer Sharp',
                 'reading_time_minutes' => 8,
             ],
             [
-                'title' => 'Introducing Animaginary: High performance web animations',
-                'slug' => 'introducing-animaginary',
-                'content' => '<p>When you\'re building a website for a company as ambitious as Planetaria, you need to make an impression. I wanted people to visit our website and see animations that looked more realistic than reality itself.</p>',
-                'excerpt' => 'When you\'re building a website for a company as ambitious as Planetaria, you need to make an impression.',
-                'status' => 'published',
-                'published_at' => now()->subDays(8),
-                'author_name' => 'Spencer Sharp',
+                'title'                => 'Introducing Animaginary: High performance web animations',
+                'slug'                 => 'introducing-animaginary',
+                'content'              => '<p>When you\'re building a website for a company as ambitious as Planetaria, you need to make an impression. I wanted people to visit our website and see animations that looked more realistic than reality itself.</p>',
+                'excerpt'              => 'When you\'re building a website for a company as ambitious as Planetaria, you need to make an impression.',
+                'status'               => 'published',
+                'published_at'         => now()->subDays(8),
+                'author_name'          => 'Spencer Sharp',
                 'reading_time_minutes' => 12,
             ],
             [
-                'title' => 'Rewriting the cosmOS kernel in Rust',
-                'slug' => 'rewriting-the-cosmos-kernel-in-rust',
-                'content' => '<p>When we released the first version of cosmOS last year, it was written in Go. Go is a wonderful programming language, but it\'s been a while since I\'ve seen an article on the front page of Hacker News about rewriting some important tool in Go and I see articles on there about rewriting things in Rust every single week.</p>',
-                'excerpt' => 'When we released the first version of cosmOS last year, it was written in Go.',
-                'status' => 'published',
-                'published_at' => now()->subDays(15),
-                'author_name' => 'Spencer Sharp',
+                'title'                => 'Rewriting the cosmOS kernel in Rust',
+                'slug'                 => 'rewriting-the-cosmos-kernel-in-rust',
+                'content'              => '<p>When we released the first version of cosmOS last year, it was written in Go. Go is a wonderful programming language, but it\'s been a while since I\'ve seen an article on the front page of Hacker News about rewriting some important tool in Go and I see articles on there about rewriting things in Rust every single week.</p>',
+                'excerpt'              => 'When we released the first version of cosmOS last year, it was written in Go.',
+                'status'               => 'published',
+                'published_at'         => now()->subDays(15),
+                'author_name'          => 'Spencer Sharp',
                 'reading_time_minutes' => 15,
             ],
         ];
 
         foreach ($articlesData as $articleData) {
             $article = Article::create($articleData);
-            
+
             // Attach random categories and tags
             $article->categories()->attach($categories[array_rand($categories)]->id);
             $article->tags()->attach($tags[array_rand($tags)]->id);

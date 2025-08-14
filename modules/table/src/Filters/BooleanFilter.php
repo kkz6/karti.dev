@@ -16,9 +16,9 @@ class BooleanFilter extends Filter
         $column = $resource->qualifyColumn($attribute);
 
         match ($clause) {
-            Clause::IsTrue => $resource->where($column, true),
+            Clause::IsTrue  => $resource->where($column, true),
             Clause::IsFalse => $resource->where($column, false),
-            default => throw UnsupportedClauseException::for($clause),
+            default         => throw UnsupportedClauseException::for($clause),
         };
     }
 
@@ -27,7 +27,7 @@ class BooleanFilter extends Filter
      */
     public function default(mixed $value, ?Clause $clause = null): static
     {
-        $this->defaultValue = null;
+        $this->defaultValue  = null;
         $this->defaultClause = $value ? Clause::IsTrue : Clause::IsFalse;
 
         return $this;

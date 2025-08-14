@@ -16,19 +16,19 @@ class TextFilter extends Filter
     {
         $column = $resource->qualifyColumn($attribute);
 
-        $likeOperator = QueryBuilder::getWhereLikeOperator($resource);
+        $likeOperator    = QueryBuilder::getWhereLikeOperator($resource);
         $notLikeOperator = 'NOT '.$likeOperator;
 
         match ($clause) {
-            Clause::Contains => $resource->where($column, $likeOperator, sprintf('%%%s%%', $value)),
-            Clause::NotContains => $resource->where($column, $notLikeOperator, sprintf('%%%s%%', $value)),
-            Clause::Equals => $resource->where($column, $value),
-            Clause::NotEquals => $resource->where($column, '!=', $value),
-            Clause::StartsWith => $resource->where($column, $likeOperator, $value.'%'),
-            Clause::EndsWith => $resource->where($column, $likeOperator, '%'.$value),
+            Clause::Contains      => $resource->where($column, $likeOperator, sprintf('%%%s%%', $value)),
+            Clause::NotContains   => $resource->where($column, $notLikeOperator, sprintf('%%%s%%', $value)),
+            Clause::Equals        => $resource->where($column, $value),
+            Clause::NotEquals     => $resource->where($column, '!=', $value),
+            Clause::StartsWith    => $resource->where($column, $likeOperator, $value.'%'),
+            Clause::EndsWith      => $resource->where($column, $likeOperator, '%'.$value),
             Clause::NotStartsWith => $resource->where($column, $notLikeOperator, $value.'%'),
-            Clause::NotEndsWith => $resource->where($column, $notLikeOperator, '%'.$value),
-            default => throw UnsupportedClauseException::for($clause),
+            Clause::NotEndsWith   => $resource->where($column, $notLikeOperator, '%'.$value),
+            default               => throw UnsupportedClauseException::for($clause),
         };
     }
 

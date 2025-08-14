@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\Traits\Tappable;
+use Kirschbaum\PowerJoins\EloquentJoins;
 use Modules\Table\HasMeta;
 use Modules\Table\Helpers;
 use Modules\Table\Html;
@@ -23,7 +24,6 @@ use Modules\Table\SortDirection;
 use Modules\Table\SortUsingPriority;
 use Modules\Table\Table;
 use Modules\Table\Url;
-use Kirschbaum\PowerJoins\EloquentJoins;
 use RuntimeException;
 use UnitEnum;
 
@@ -513,8 +513,8 @@ abstract class Column implements Arrayable
         if (is_array($this->mapAs)) {
             $key = match (true) {
                 $value instanceof BackedEnum => $value->value,
-                $value instanceof UnitEnum => $value->name,
-                default => $value,
+                $value instanceof UnitEnum   => $value->name,
+                default                      => $value,
             };
 
             return $key === null ? null : Arr::get($this->mapAs, $key);
@@ -664,18 +664,18 @@ abstract class Column implements Arrayable
                 ->snake()
                 ->replace('_', '-')
                 ->value(),
-            'header' => $this->getHeader(),
-            'attribute' => $this->getAttribute(),
-            'sortable' => $this->isSortable(),
-            'toggleable' => $this->isToggleable(),
-            'alignment' => $this->alignment->value,
+            'header'           => $this->getHeader(),
+            'attribute'        => $this->getAttribute(),
+            'sortable'         => $this->isSortable(),
+            'toggleable'       => $this->isToggleable(),
+            'alignment'        => $this->alignment->value,
             'visibleByDefault' => $this->isVisible(),
-            'meta' => $this->meta,
-            'wrap' => $this->wrap,
-            'truncate' => $this->truncate,
-            'headerClass' => $this->headerClass,
-            'cellClass' => $this->cellClass,
-            'stickable' => $this->isStickable(),
+            'meta'             => $this->meta,
+            'wrap'             => $this->wrap,
+            'truncate'         => $this->truncate,
+            'headerClass'      => $this->headerClass,
+            'cellClass'        => $this->cellClass,
+            'stickable'        => $this->isStickable(),
         ];
     }
 }

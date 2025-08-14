@@ -1,7 +1,7 @@
 <?php
 
-use Modules\Frontend\Http\Controllers\FrontendController;
 use Illuminate\Support\Facades\Route;
+use Modules\Frontend\Http\Controllers\FrontendController;
 
 Route::get('/', [FrontendController::class, 'home'])->name('home');
 Route::get('/articles', [FrontendController::class, 'articles'])->name('articles');

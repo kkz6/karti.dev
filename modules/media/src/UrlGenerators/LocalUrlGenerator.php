@@ -3,10 +3,9 @@
 namespace Modules\Media\UrlGenerators;
 
 use Illuminate\Contracts\Config\Repository as Config;
-use Illuminate\Filesystem\FilesystemManager;
 use Illuminate\Contracts\Filesystem\Cloud;
+use Illuminate\Filesystem\FilesystemManager;
 use Modules\Media\Exceptions\MediaUrlException;
-
 
 class LocalUrlGenerator extends BaseUrlGenerator
 {
@@ -14,8 +13,6 @@ class LocalUrlGenerator extends BaseUrlGenerator
 
     /**
      * Constructor.
-     * @param Config $config
-     * @param FilesystemManager $filesystem
      */
     public function __construct(Config $config, FilesystemManager $filesystem)
     {
@@ -34,12 +31,14 @@ class LocalUrlGenerator extends BaseUrlGenerator
 
     /**
      * {@inheritdoc}
+     *
      * @throws MediaUrlException If media's disk is not publicly accessible
      */
     public function getUrl(): string
     {
         /** @var Cloud $filesystem */
         $filesystem = $this->filesystem->disk($this->media->disk);
+
         return $filesystem->url($this->media->getDiskPath());
     }
 
@@ -48,7 +47,7 @@ class LocalUrlGenerator extends BaseUrlGenerator
      */
     public function getAbsolutePath(): string
     {
-        return $this->getDiskConfig('root') . DIRECTORY_SEPARATOR . $this->media->getDiskPath();
+        return $this->getDiskConfig('root').DIRECTORY_SEPARATOR.$this->media->getDiskPath();
     }
 
     private function isInWebroot(): bool

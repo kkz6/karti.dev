@@ -17,7 +17,7 @@ class StoreViewRequest extends FormRequest
     {
         $this->merge([
             'table' => $this->route('table'),
-            'name' => $this->route('name'),
+            'name'  => $this->route('name'),
             'state' => $this->route('state'),
         ]);
     }
@@ -29,7 +29,7 @@ class StoreViewRequest extends FormRequest
     {
         return [
             'table' => ['required', 'string', new Base64EncodedTableClassRule],
-            'name' => ['required', 'string', 'min:1', 'max:255'],
+            'name'  => ['required', 'string', 'min:1', 'max:255'],
             'state' => ['nullable', 'string'],
             //
             'title' => ['required', 'string', 'min:1', 'max:255'],

@@ -18,7 +18,7 @@ class FileAdapter extends StreamAdapter
     public function __construct(File $source)
     {
         $this->file = $source;
-        $path = $source->getRealPath();
+        $path       = $source->getRealPath();
         if ($path === false) {
             throw ConfigurationException::invalidSource(
                 "File not found {$source->getPathname()}"

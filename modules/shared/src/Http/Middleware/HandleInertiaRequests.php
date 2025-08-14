@@ -44,7 +44,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
-            'ziggy' => fn(): array => [
+            'ziggy' => fn (): array => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
@@ -54,13 +54,13 @@ class HandleInertiaRequests extends Middleware
                 $locale       = app()->getLocale();
 
                 // Get main app translations
-                $appLangPath = base_path('lang/' . $locale);
+                $appLangPath = base_path('lang/'.$locale);
                 if (File::exists($appLangPath)) {
                     $translations = $translations->merge(
                         collect(File::allFiles($appLangPath))
-                            ->flatMap(fn($file) => Arr::dot(
+                            ->flatMap(fn ($file) => Arr::dot(
                                 File::getRequire($file->getRealPath()),
-                                $file->getBasename('.' . $file->getExtension()) . '.'
+                                $file->getBasename('.'.$file->getExtension()).'.'
                             ))
                     );
                 }
@@ -70,13 +70,13 @@ class HandleInertiaRequests extends Middleware
                 if (File::exists($modulesPath)) {
                     $modules = collect(File::directories($modulesPath));
                     foreach ($modules as $module) {
-                        $moduleLangPath = $module . '/resources/lang/' . $locale;
+                        $moduleLangPath = $module.'/resources/lang/'.$locale;
                         if (File::exists($moduleLangPath)) {
                             $translations = $translations->merge(
                                 collect(File::allFiles($moduleLangPath))
-                                    ->flatMap(fn($file) => Arr::dot(
+                                    ->flatMap(fn ($file) => Arr::dot(
                                         File::getRequire($file->getRealPath()),
-                                        basename($module) . '.' . $file->getBasename('.' . $file->getExtension()) . '.'
+                                        basename($module).'.'.$file->getBasename('.'.$file->getExtension()).'.'
                                     ))
                             );
                         }

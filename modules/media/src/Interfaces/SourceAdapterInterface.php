@@ -13,12 +13,14 @@ interface SourceAdapterInterface
 {
     /**
      * Get the name of the file.
+     *
      * @return string|null Returns null if the file name cannot be determined.
      */
     public function filename(): ?string;
 
     /**
      * Get the extension of the file.
+     *
      * @return string|null Returns null if the extension cannot be determined.
      */
     public function extension(): ?string;
@@ -31,6 +33,7 @@ interface SourceAdapterInterface
     /**
      * Get the MIME type of the file as provided by the client.
      * This is not guaranteed to be accurate.
+     *
      * @return string|null Returns null if no client MIME type is available.
      */
     public function clientMimeType(): ?string;
@@ -48,7 +51,6 @@ interface SourceAdapterInterface
 
     /**
      * Retrieve the md5 hash of the file.
-     * @param string $algo
      */
     public function hash(string $algo = 'md5'): string;
 }

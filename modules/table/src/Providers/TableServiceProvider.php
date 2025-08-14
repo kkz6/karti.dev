@@ -13,7 +13,6 @@ use Modules\Table\Http\ActionController;
 use Modules\Table\Http\ExportController;
 use Modules\Table\Http\ViewController;
 use Modules\Table\Table;
-use Modules\Table\TableMakeCommand;
 
 class TableServiceProvider extends ServiceProvider
 {

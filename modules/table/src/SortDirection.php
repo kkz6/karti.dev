@@ -6,6 +6,6 @@ namespace Modules\Table;
 
 enum SortDirection: string
 {
-    case Ascending = 'asc';
+    case Ascending  = 'asc';
     case Descending = 'desc';
 }

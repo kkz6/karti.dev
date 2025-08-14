@@ -12,17 +12,17 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $table_name
  * @property string $title
  * @property string $state_payload
- * @property array $request_payload
+ * @property array  $request_payload
  */
 class TableView extends Model
 {
     protected static $unguarded = true;
 
     protected $casts = [
-        'table_class' => 'string',
-        'table_name' => 'string',
-        'title' => 'string',
-        'state_payload' => 'string',
+        'table_class'     => 'string',
+        'table_name'      => 'string',
+        'title'           => 'string',
+        'state_payload'   => 'string',
         'request_payload' => 'json',
     ];
 

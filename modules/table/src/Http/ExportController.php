@@ -29,9 +29,9 @@ class ExportController
     public function toResponse(Export $export): mixed
     {
         return match (true) {
-            $export->queue => $this->toQueuedResponse($export),
+            $export->queue                    => $this->toQueuedResponse($export),
             $export->using instanceof Closure => $this->toCustomUsingResponse($export),
-            default => $export->makeExporter(),
+            default                           => $export->makeExporter(),
         };
     }
 
@@ -74,9 +74,9 @@ class ExportController
     private function toDialogResponse(Export $export, ?RedirectResponse $redirect = null): JsonResponse
     {
         return response()->json([
-            'dialogTitle' => blank($export->dialogTitle) ? null : $export->dialogTitle,
+            'dialogTitle'   => blank($export->dialogTitle) ? null : $export->dialogTitle,
             'dialogMessage' => blank($export->dialogMessage) ? null : $export->dialogMessage,
-            'targetUrl' => $redirect?->getTargetUrl(),
+            'targetUrl'     => $redirect?->getTargetUrl(),
         ]);
     }
 }

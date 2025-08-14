@@ -69,7 +69,7 @@ class ExportJob implements ShouldQueue
 
         if ($this->afterBuiltInExporter !== []) {
             /** @var QueueExport $job */
-            $job = $this->getJobFromPendingDispatch($pendingDispatch);
+            $job          = $this->getJobFromPendingDispatch($pendingDispatch);
             $job->chained = [
                 ...$job->chained,
                 ...$this->afterBuiltInExporter,

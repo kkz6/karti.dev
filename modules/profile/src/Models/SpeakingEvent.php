@@ -28,14 +28,14 @@ class SpeakingEvent extends Model
 
     protected $casts = [
         'event_date' => 'datetime',
-        'featured' => 'boolean',
+        'featured'   => 'boolean',
         'sort_order' => 'integer',
     ];
 
     protected $attributes = [
-        'type' => 'conference',
-        'status' => 'upcoming',
-        'featured' => false,
+        'type'       => 'conference',
+        'status'     => 'upcoming',
+        'featured'   => false,
         'sort_order' => 0,
     ];
 

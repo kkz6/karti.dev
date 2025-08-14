@@ -4,8 +4,8 @@ namespace Modules\Portfolio\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Blog\Models\Category;
 
 class Project extends Model
@@ -31,15 +31,15 @@ class Project extends Model
     ];
 
     protected $casts = [
-        'featured' => 'boolean',
+        'featured'   => 'boolean',
         'sort_order' => 'integer',
         'start_date' => 'date',
-        'end_date' => 'date',
+        'end_date'   => 'date',
     ];
 
     protected $attributes = [
-        'status' => 'active',
-        'featured' => false,
+        'status'     => 'active',
+        'featured'   => false,
         'sort_order' => 0,
     ];
 

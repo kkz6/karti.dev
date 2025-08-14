@@ -2,18 +2,22 @@
 
 namespace Modules\Media\UrlGenerators;
 
+use Modules\Media\Exceptions\MediaUrlException;
+use Modules\Media\Interfaces\UrlGeneratorInterface;
+use Modules\Media\Models\Media;
+
 class UrlGeneratorFactory
 {
     /**
      * map of UrlGenerator classes to use for different filesystem drivers.
+     *
      * @var string[]
      */
     protected array $driver_generators = [];
 
     /**
      * Get a UrlGenerator instance for a media.
-     * @param  Media $media
-     * @return UrlGeneratorInterface
+     *
      * @throws MediaUrlException If no generator class has been assigned for the media's disk's driver
      */
     public function create(Media $media): UrlGeneratorInterface
@@ -33,9 +37,6 @@ class UrlGeneratorFactory
 
     /**
      * Set a generator subclass to use for media on a disk with a particular driver.
-     * @param string $class
-     * @param string $driver
-     * @return void
      *
      * @throws MediaUrlException
      */
@@ -47,22 +48,18 @@ class UrlGeneratorFactory
 
     /**
      * Verify that a class name is a valid generator.
-     * @param  string $class
-     * @return void
      *
      * @throws MediaUrlException If class does not exist or does not implement `UrlGenerator`
      */
     protected function validateGeneratorClass(string $class): void
     {
-        if (!class_exists($class) || !is_subclass_of($class, UrlGeneratorInterface::class)) {
+        if (! class_exists($class) || ! is_subclass_of($class, UrlGeneratorInterface::class)) {
             throw MediaUrlException::invalidGenerator($class);
         }
     }
 
     /**
      * Get the driver used by a specified disk.
-     * @param  string $disk
-     * @return string
      */
     protected function getDriverForDisk(string $disk): string
     {
@@ -70,6 +67,7 @@ class UrlGeneratorFactory
         if ($driver === 'scoped') {
             return $this->getDriverForDisk(config("filesystems.disks.{$disk}.disk"));
         }
+
         return $driver;
     }
 }

@@ -1,5 +1,16 @@
 <?php
 
+use Modules\Media\Models\Media;
+use Modules\Media\SourceAdapters\DataUrlAdapter;
+use Modules\Media\SourceAdapters\FileAdapter;
+use Modules\Media\SourceAdapters\LocalPathAdapter;
+use Modules\Media\SourceAdapters\RemoteUrlAdapter;
+use Modules\Media\SourceAdapters\StreamAdapter;
+use Modules\Media\SourceAdapters\UploadedFileAdapter;
+use Modules\Media\Support\MediaUploader;
+use Modules\Media\UrlGenerators\LocalUrlGenerator;
+use Modules\Media\UrlGenerators\S3UrlGenerator;
+
 return [
     /*
      * The database connection name to use
@@ -11,9 +22,8 @@ return [
     /*
      * FQCN of the model to use for media
      *
-     * Should extend `Plank\Mediable\Media`
      */
-    'model' => Plank\Mediable\Media::class,
+    'model' => Media::class,
 
     /*
      * Name to be used for mediables joining table
@@ -48,7 +58,7 @@ return [
      * * `'replace'` : the old file and media model is deleted
      * * `'error'`: an Exception is thrown
      */
-    'on_duplicate' => Plank\Mediable\MediaUploader::ON_DUPLICATE_INCREMENT,
+    'on_duplicate' => MediaUploader::ON_DUPLICATE_INCREMENT,
 
     /*
      * Reject files unless both their mime and extension are recognized and both match a single aggregate type
@@ -89,7 +99,7 @@ return [
      * that should be recognized for the type
      */
     'aggregate_types' => [
-        Plank\Mediable\Media::TYPE_IMAGE => [
+        Media::TYPE_IMAGE => [
             'mime_types' => [
                 'image/jpeg',
                 'image/png',
@@ -102,32 +112,32 @@ return [
                 'png',
                 'gif',
                 'heic',
-            ]
+            ],
         ],
-        Plank\Mediable\Media::TYPE_IMAGE_VECTOR => [
+        Media::TYPE_IMAGE_VECTOR => [
             'mime_types' => [
                 'image/svg+xml',
             ],
             'extensions' => [
                 'svg',
-            ]
+            ],
         ],
-        Plank\Mediable\Media::TYPE_PDF => [
+        Media::TYPE_PDF => [
             'mime_types' => [
                 'application/pdf',
             ],
             'extensions' => [
                 'pdf',
-            ]
+            ],
         ],
-        Plank\Mediable\Media::TYPE_AUDIO => [
+        Media::TYPE_AUDIO => [
             'mime_types' => [
                 'audio/aac',
                 'audio/ogg',
                 'audio/mpeg',
                 'audio/mp3',
                 'audio/mpeg',
-                'audio/wav'
+                'audio/wav',
             ],
             'extensions' => [
                 'aac',
@@ -135,24 +145,24 @@ return [
                 'oga',
                 'mp3',
                 'wav',
-            ]
+            ],
         ],
-        Plank\Mediable\Media::TYPE_VIDEO => [
+        Media::TYPE_VIDEO => [
             'mime_types' => [
                 'video/mp4',
                 'video/mpeg',
                 'video/ogg',
-                'video/webm'
+                'video/webm',
             ],
             'extensions' => [
                 'mp4',
                 'm4v',
                 'mov',
                 'ogv',
-                'webm'
-            ]
+                'webm',
+            ],
         ],
-        Plank\Mediable\Media::TYPE_ARCHIVE => [
+        Media::TYPE_ARCHIVE => [
             'mime_types' => [
                 'application/zip',
                 'application/x-compressed-zip',
@@ -160,9 +170,9 @@ return [
             ],
             'extensions' => [
                 'zip',
-            ]
+            ],
         ],
-        Plank\Mediable\Media::TYPE_DOCUMENT => [
+        Media::TYPE_DOCUMENT => [
             'mime_types' => [
                 'text/plain',
                 'application/plain',
@@ -170,7 +180,7 @@ return [
                 'text/json',
                 'application/json',
                 'application/msword',
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             ],
             'extensions' => [
                 'doc',
@@ -179,9 +189,9 @@ return [
                 'text',
                 'xml',
                 'json',
-            ]
+            ],
         ],
-        Plank\Mediable\Media::TYPE_SPREADSHEET => [
+        Media::TYPE_SPREADSHEET => [
             'mime_types' => [
                 'application/vnd.ms-excel',
                 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -189,21 +199,19 @@ return [
             'extensions' => [
                 'xls',
                 'xlsx',
-            ]
+            ],
         ],
-        Plank\Mediable\Media::TYPE_PRESENTATION => [
-            'mime_types' =>
-                [
-                    'application/vnd.ms-powerpoint',
-                    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                    'application/vnd.openxmlformats-officedocument.presentationml.slideshow'
-                ],
-            'extensions' =>
-                [
-                    'ppt',
-                    'pptx',
-                    'ppsx',
-                ]
+        Media::TYPE_PRESENTATION => [
+            'mime_types' => [
+                'application/vnd.ms-powerpoint',
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
+            ],
+            'extensions' => [
+                'ppt',
+                'pptx',
+                'ppsx',
+            ],
         ],
     ],
 
@@ -214,15 +222,15 @@ return [
      */
     'source_adapters' => [
         'class' => [
-            Symfony\Component\HttpFoundation\File\UploadedFile::class => Plank\Mediable\SourceAdapters\UploadedFileAdapter::class,
-            Symfony\Component\HttpFoundation\File\File::class => Plank\Mediable\SourceAdapters\FileAdapter::class,
-            Psr\Http\Message\StreamInterface::class => Plank\Mediable\SourceAdapters\StreamAdapter::class,
+            Symfony\Component\HttpFoundation\File\UploadedFile::class => UploadedFileAdapter::class,
+            Symfony\Component\HttpFoundation\File\File::class         => FileAdapter::class,
+            Psr\Http\Message\StreamInterface::class                   => StreamAdapter::class,
         ],
         'pattern' => [
-            '^https?://' => Plank\Mediable\SourceAdapters\RemoteUrlAdapter::class,
-            '^/' => Plank\Mediable\SourceAdapters\LocalPathAdapter::class,
-            '^[a-zA-Z]:\\\\' => Plank\Mediable\SourceAdapters\LocalPathAdapter::class,
-            '^data:/?/?[^,]*,' => Plank\Mediable\SourceAdapters\DataUrlAdapter::class,
+            '^https?://'       => RemoteUrlAdapter::class,
+            '^/'               => LocalPathAdapter::class,
+            '^[a-zA-Z]:\\\\'   => LocalPathAdapter::class,
+            '^data:/?/?[^,]*,' => DataUrlAdapter::class,
         ],
     ],
 
@@ -231,8 +239,8 @@ return [
      *
      */
     'url_generators' => [
-        'local' => Plank\Mediable\UrlGenerators\LocalUrlGenerator::class,
-        's3' => Plank\Mediable\UrlGenerators\S3UrlGenerator::class,
+        'local' => LocalUrlGenerator::class,
+        's3'    => S3UrlGenerator::class,
     ],
 
     /**
@@ -303,5 +311,5 @@ return [
                 '-a tune=ssim',
             ],
         ],
-    ]
+    ],
 ];

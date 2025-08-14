@@ -4,8 +4,8 @@ namespace Modules\Photography\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Photo extends Model
 {
@@ -26,10 +26,10 @@ class Photo extends Model
 
     protected $casts = [
         'sort_order' => 'integer',
-        'width' => 'integer',
-        'height' => 'integer',
-        'file_size' => 'integer',
-        'exif_data' => 'array',
+        'width'      => 'integer',
+        'height'     => 'integer',
+        'file_size'  => 'integer',
+        'exif_data'  => 'array',
     ];
 
     protected $attributes = [

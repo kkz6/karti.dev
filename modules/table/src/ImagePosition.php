@@ -7,5 +7,5 @@ namespace Modules\Table;
 enum ImagePosition: string
 {
     case Start = 'start';
-    case End = 'end';
+    case End   = 'end';
 }

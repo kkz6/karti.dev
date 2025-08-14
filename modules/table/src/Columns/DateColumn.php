@@ -90,7 +90,7 @@ class DateColumn extends Column
             return null;
         }
 
-        $date = Carbon::parse($value);
+        $date   = Carbon::parse($value);
         $format = $this->getFormat();
 
         return $this->shouldTranslate() ? $date->translatedFormat($format) : $date->format($format);

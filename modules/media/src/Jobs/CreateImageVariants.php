@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-
+use Modules\Media\Exceptions\ImageManipulationException;
+use Modules\Media\Models\Media;
 
 class CreateImageVariants implements ShouldQueue
 {
@@ -18,30 +19,30 @@ class CreateImageVariants implements ShouldQueue
      * @var string[]
      */
     private array $variantNames;
+
     /**
      * @var Collection<Media>
      */
     private Collection $models;
 
-    /**
-     * @var bool
-     */
     private bool $forceRecreate;
 
     /**
      * CreateImageVariants constructor.
+     *
      * @param Media|Collection|Media[] $models
-     * @param string|string[] $variantNames
+     * @param string|string[]          $variantNames
+     *
      * @throws ImageManipulationException
      */
     public function __construct($models, $variantNames, bool $forceRecreate = false)
     {
-        $models = $this->collect($models);
+        $models       = $this->collect($models);
         $variantNames = (array) $variantNames;
         $this->validate($models, $variantNames);
 
-        $this->variantNames = $variantNames;
-        $this->models = $models;
+        $this->variantNames  = $variantNames;
+        $this->models        = $models;
         $this->forceRecreate = $forceRecreate;
     }
 
@@ -76,7 +77,7 @@ class CreateImageVariants implements ShouldQueue
 
     /**
      * @param Collection<Media> $models
-     * @param array $variantNames
+     *
      * @throws ImageManipulationException
      */
     private function validate(Collection $models, array $variantNames): void
@@ -95,9 +96,6 @@ class CreateImageVariants implements ShouldQueue
         return app(ImageManipulator::class);
     }
 
-    /**
-     * @return bool
-     */
     public function getForceRecreate(): bool
     {
         return $this->forceRecreate;
@@ -105,13 +103,13 @@ class CreateImageVariants implements ShouldQueue
 
     /**
      * @param Media|Collection|Media[] $models
-     * @return Collection
      */
     private function collect($models): Collection
     {
         if ($models instanceof Media) {
             $models = [$models];
         }
+
         return new Collection($models);
     }
 }

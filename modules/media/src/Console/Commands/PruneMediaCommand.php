@@ -3,11 +3,14 @@
 namespace Modules\Media\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Filesystem\FilesystemManager;
+use Modules\Media\Models\Media;
 
 class PruneMediaCommand extends Command
 {
     /**
      * {@inheritdoc}
+     *
      * @var string
      */
     protected $signature = 'media:prune {disk : the name of the filesystem disk.}
@@ -16,6 +19,7 @@ class PruneMediaCommand extends Command
 
     /**
      * {@inheritdoc}
+     *
      * @var string
      */
     protected $description = 'Delete media records that do not correspond to a file on disk';
@@ -30,15 +34,13 @@ class PruneMediaCommand extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return void
      */
     public function handle(): void
     {
-        $disk = $this->argument('disk');
+        $disk      = $this->argument('disk');
         $directory = $this->option('directory') ?: '';
-        $recursive = !$this->option('non-recursive');
-        $counter = 0;
+        $recursive = ! $this->option('non-recursive');
+        $counter   = 0;
 
         $records = $this->makeModel()
             ->newQuery()
@@ -46,9 +48,9 @@ class PruneMediaCommand extends Command
             ->get();
 
         foreach ($records as $media) {
-            if (!$media->fileExists()) {
+            if (! $media->fileExists()) {
                 $media->delete();
-                ++$counter;
+                $counter++;
                 $this->info("Pruned record for file {$media->getDiskPath()}", 'v');
             }
         }
@@ -58,7 +60,6 @@ class PruneMediaCommand extends Command
 
     /**
      * Generate an instance of the `Media` class.
-     * @return Media
      */
     private function makeModel(): Media
     {

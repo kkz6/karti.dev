@@ -20,7 +20,7 @@ class Html
         return collect($dataAttributes)
             ->mapWithKeys(function ($value, $key): array {
                 if (is_numeric($key)) {
-                    $key = $value;
+                    $key   = $value;
                     $value = '';
                 }
 

@@ -2,14 +2,24 @@
 
 namespace Modules\Media\Support;
 
+use Modules\Media\Exceptions\MediaUpload\ConfigurationException;
+use Spatie\ImageOptimizer\Optimizer;
+use Spatie\ImageOptimizer\OptimizerChain;
+
 class ImageManipulation
 {
     public const FORMAT_BMP = 'bmp';
+
     public const FORMAT_GIF = 'gif';
+
     public const FORMAT_HEIC = 'heic';
+
     public const FORMAT_JPG = 'jpg';
+
     public const FORMAT_PNG = 'png';
+
     public const FORMAT_TIFF = 'tif';
+
     public const FORMAT_WEBP = 'webp';
 
     public const VALID_IMAGE_FORMATS = [
@@ -22,16 +32,17 @@ class ImageManipulation
     ];
 
     public const MIME_TYPE_MAP = [
-        self::FORMAT_BMP => 'image/bmp',
-        self::FORMAT_GIF => 'image/gif',
+        self::FORMAT_BMP  => 'image/bmp',
+        self::FORMAT_GIF  => 'image/gif',
         self::FORMAT_HEIC => 'image/heic',
-        self::FORMAT_JPG => 'image/jpeg',
-        self::FORMAT_PNG => 'image/png',
+        self::FORMAT_JPG  => 'image/jpeg',
+        self::FORMAT_PNG  => 'image/png',
         self::FORMAT_TIFF => 'image/tiff',
-        self::FORMAT_WEBP => 'image/webp'
+        self::FORMAT_WEBP => 'image/webp',
     ];
 
     public const ON_DUPLICATE_INCREMENT = 'increment';
+
     public const ON_DUPLICATE_ERROR = 'error';
 
     /** @var callable */
@@ -51,7 +62,6 @@ class ImageManipulation
 
     private string $onDuplicateBehaviour = self::ON_DUPLICATE_INCREMENT;
 
-    /** @var string|null */
     private ?string $visibility = null;
 
     /** @var callable|null */
@@ -64,7 +74,7 @@ class ImageManipulation
 
     public function __construct(callable $callback)
     {
-        $this->callback = $callback;
+        $this->callback       = $callback;
         $this->shouldOptimize = config('mediable.image_optimization.enabled', true);
         $this->setOptimizers(config('mediable.image_optimization.optimizers', []));
     }
@@ -74,24 +84,17 @@ class ImageManipulation
         return new self($callback);
     }
 
-    /**
-     * @return callable
-     */
     public function getCallback(): callable
     {
         return $this->callback;
     }
 
-    /**
-     * @return int
-     */
     public function getOutputQuality(): int
     {
         return $this->outputQuality;
     }
 
     /**
-     * @param int $outputQuality
      * @return $this
      */
     public function setOutputQuality(int $outputQuality): self
@@ -101,16 +104,12 @@ class ImageManipulation
         return $this;
     }
 
-    /**
-     * @return string|null
-     */
     public function getOutputFormat(): ?string
     {
         return $this->outputFormat;
     }
 
     /**
-     * @param string|null $outputFormat
      * @return $this
      */
     public function setOutputFormat(?string $outputFormat): self
@@ -187,9 +186,6 @@ class ImageManipulation
         return $this;
     }
 
-    /**
-     * @return callable
-     */
     public function getBeforeSave(): ?callable
     {
         return $this->beforeSave;
@@ -198,8 +194,6 @@ class ImageManipulation
     /**
      * Set the filesystem disk and relative directory where the file will be saved.
      *
-     * @param  string $disk
-     * @param  string $directory
      *
      * @return $this
      */
@@ -211,13 +205,12 @@ class ImageManipulation
     /**
      * Set the filesystem disk on which the file will be saved.
      *
-     * @param string $disk
      *
      * @return $this
      */
     public function toDisk(string $disk): self
     {
-        if (!array_key_exists($disk, config('filesystems.disks', []))) {
+        if (! array_key_exists($disk, config('filesystems.disks', []))) {
             throw ConfigurationException::diskNotFound($disk);
         }
         $this->disk = $disk;
@@ -225,9 +218,6 @@ class ImageManipulation
         return $this;
     }
 
-    /**
-     * @return string|null
-     */
     public function getDisk(): ?string
     {
         return $this->disk;
@@ -235,7 +225,7 @@ class ImageManipulation
 
     /**
      * Set the directory relative to the filesystem disk at which the file will be saved.
-     * @param string $directory
+     *
      * @return $this
      */
     public function toDirectory(string $directory): self
@@ -245,9 +235,6 @@ class ImageManipulation
         return $this;
     }
 
-    /**
-     * @return string|null
-     */
     public function getDirectory(): ?string
     {
         return $this->directory;
@@ -255,12 +242,12 @@ class ImageManipulation
 
     /**
      * Specify the filename to copy to the file to.
-     * @param string $filename
+     *
      * @return $this
      */
     public function useFilename(string $filename): self
     {
-        $this->filename = File::sanitizeFilename($filename);
+        $this->filename         = File::sanitizeFilename($filename);
         $this->hashFilenameAlgo = null;
 
         return $this;
@@ -268,23 +255,25 @@ class ImageManipulation
 
     /**
      * Indicates to the uploader to generate a filename using the file's MD5 hash.
+     *
      * @return $this
      */
     public function useHashForFilename(string $algo = 'md5'): self
     {
         $this->hashFilenameAlgo = $algo;
-        $this->filename = null;
+        $this->filename         = null;
 
         return $this;
     }
 
     /**
      * Restore the default behaviour of using the source file's filename.
+     *
      * @return $this
      */
     public function useOriginalFilename(): self
     {
-        $this->filename = null;
+        $this->filename         = null;
         $this->hashFilenameAlgo = null;
 
         return $this;
@@ -311,6 +300,7 @@ class ImageManipulation
     public function onDuplicateIncrement(): self
     {
         $this->onDuplicateBehaviour = self::ON_DUPLICATE_INCREMENT;
+
         return $this;
     }
 
@@ -320,12 +310,10 @@ class ImageManipulation
     public function onDuplicateError(): self
     {
         $this->onDuplicateBehaviour = self::ON_DUPLICATE_ERROR;
+
         return $this;
     }
 
-    /**
-     * @return string
-     */
     public function getOnDuplicateBehaviour(): string
     {
         return $this->onDuplicateBehaviour;
@@ -334,24 +322,28 @@ class ImageManipulation
     public function makePrivate(): self
     {
         $this->visibility = 'private';
+
         return $this;
     }
 
     public function makePublic(): self
     {
         $this->visibility = 'public';
+
         return $this;
     }
 
     public function matchOriginalVisibility(): self
     {
         $this->visibility = 'match';
+
         return $this;
     }
 
     public function setVisibility(?string $visibility): self
     {
         $this->visibility = $visibility;
+
         return $this;
     }
 
@@ -361,7 +353,6 @@ class ImageManipulation
     }
 
     /**
-     * @param callable $beforeSave
      * @return $this
      */
     public function beforeSave(callable $beforeSave): self
@@ -373,6 +364,7 @@ class ImageManipulation
 
     /**
      * Disable image optimization.
+     *
      * @return $this
      */
     public function noOptimization(): self
@@ -384,11 +376,14 @@ class ImageManipulation
 
     /**
      * Enable image optimization.
+     *
      * @param array<class-string<Optimizer>,string[]> $customOptimizers Override default optimizers.
-     *     The array keys should be the fully qualified class names of the optimizers to use.
-     *     The array values should be arrays of command line arguments to pass to the optimizer.
-     *     DO NOT PASS UNTRUSTED USER INPUT AS COMMAND LINE ARGUMENTS
+     *                                                                  The array keys should be the fully qualified class names of the optimizers to use.
+     *                                                                  The array values should be arrays of command line arguments to pass to the optimizer.
+     *                                                                  DO NOT PASS UNTRUSTED USER INPUT AS COMMAND LINE ARGUMENTS
+     *
      * @return $this
+     *
      * @throws ConfigurationException
      */
     public function optimize(?array $customOptimizers = null): self
@@ -403,23 +398,24 @@ class ImageManipulation
 
     public function shouldOptimize(): bool
     {
-        return $this->shouldOptimize && !empty($this->optimizers);
+        return $this->shouldOptimize && ! empty($this->optimizers);
     }
 
     public function getOptimizerChain(): OptimizerChain
     {
-        $chain = new OptimizerChain();
+        $chain = new OptimizerChain;
         foreach ($this->optimizers as $optimizerClass => $args) {
             $optimizer = new $optimizerClass($args);
             $chain->addOptimizer($optimizer);
         }
+
         return $chain;
     }
 
     private function setOptimizers(array $customOptimizers): void
     {
         foreach ($customOptimizers as $optimizerClass => $args) {
-            if (!is_a($optimizerClass, Optimizer::class, true)) {
+            if (! is_a($optimizerClass, Optimizer::class, true)) {
                 throw ConfigurationException::invalidOptimizer($optimizerClass);
             }
         }

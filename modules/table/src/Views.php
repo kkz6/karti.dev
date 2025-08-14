@@ -289,7 +289,7 @@ class Views implements Arrayable
      */
     protected function scopedQuery(): Builder
     {
-        $table = $this->getTable();
+        $table      = $this->getTable();
         $attributes = $this->getAttributes();
 
         return $this->query()
@@ -314,10 +314,10 @@ class Views implements Arrayable
 
         return $this->query()->updateOrCreate([
             ...$this->getAttributes(),
-            'user_id' => $this->getUserKey(),
-            'table_class' => $table::class,
-            'table_name' => $tableName,
-            'title' => $viewTitle,
+            'user_id'       => $this->getUserKey(),
+            'table_class'   => $table::class,
+            'table_name'    => $tableName,
+            'title'         => $viewTitle,
             'state_payload' => $table->getSerializedConstructorParamsState(),
         ], [
             'request_payload' => $params,
@@ -365,9 +365,9 @@ class Views implements Arrayable
             ->orderByTitle()
             ->get()
             ->map(fn (Model $view): array => [
-                'id' => $key = $view->getKey(),
-                'title' => $view->title,
-                'state' => TableRequest::forQueryParams($this->getTable(), $view->request_payload)->toArray(),
+                'id'        => $key = $view->getKey(),
+                'title'     => $view->title,
+                'state'     => TableRequest::forQueryParams($this->getTable(), $view->request_payload)->toArray(),
                 'deleteUrl' => $this->getDeleteUrl($key),
             ])
             ->all();
@@ -379,8 +379,8 @@ class Views implements Arrayable
     public function toArray(): array
     {
         return [
-            'data' => $this->getData(),
-            'query' => $this->getTable()->getTableRequest()->getQueryParamsForView(),
+            'data'     => $this->getData(),
+            'query'    => $this->getTable()->getTableRequest()->getQueryParamsForView(),
             'storeUrl' => $this->getStoreUrl(),
         ];
     }

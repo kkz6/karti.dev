@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Modules\Media\Exceptions\MediaUpload;
@@ -55,6 +56,6 @@ class ConfigurationException extends MediaUploadException
 
     public static function interventionImageNotConfigured(): self
     {
-        return new self("Before variants can be created, the intervention/image package must be configured in the Laravel container.");
+        return new self('Before variants can be created, the intervention/image package must be configured in the Laravel container.');
     }
 }

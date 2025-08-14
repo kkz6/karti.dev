@@ -16,15 +16,15 @@ class NumericFilter extends Filter
         $column = $resource->qualifyColumn($attribute);
 
         match ($clause) {
-            Clause::GreaterThan => $resource->where($column, '>', $value),
+            Clause::GreaterThan        => $resource->where($column, '>', $value),
             Clause::GreaterThanOrEqual => $resource->where($column, '>=', $value),
-            Clause::LessThan => $resource->where($column, '<', $value),
-            Clause::LessThanOrEqual => $resource->where($column, '<=', $value),
-            Clause::Equals => $resource->where($column, $value),
-            Clause::NotEquals => $resource->where($column, '!=', $value),
-            Clause::Between => $resource->whereBetween($column, $value),
-            Clause::NotBetween => $resource->whereNotBetween($column, $value),
-            default => throw UnsupportedClauseException::for($clause),
+            Clause::LessThan           => $resource->where($column, '<', $value),
+            Clause::LessThanOrEqual    => $resource->where($column, '<=', $value),
+            Clause::Equals             => $resource->where($column, $value),
+            Clause::NotEquals          => $resource->where($column, '!=', $value),
+            Clause::Between            => $resource->whereBetween($column, $value),
+            Clause::NotBetween         => $resource->whereNotBetween($column, $value),
+            default                    => throw UnsupportedClauseException::for($clause),
         };
     }
 

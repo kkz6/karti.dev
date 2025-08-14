@@ -194,7 +194,7 @@ class BooleanColumn extends Column
     public function toArray(): array
     {
         return array_merge(parent::toArray(), [
-            'trueIcon' => $this->getTrueIcon(),
+            'trueIcon'  => $this->getTrueIcon(),
             'falseIcon' => $this->getFalseIcon(),
         ]);
     }

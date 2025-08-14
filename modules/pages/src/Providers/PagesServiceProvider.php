@@ -2,8 +2,8 @@
 
 namespace Modules\Pages\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\ServiceProvider;
 
 class PagesServiceProvider extends ServiceProvider
 {
@@ -21,15 +21,15 @@ class PagesServiceProvider extends ServiceProvider
     protected function registerRoutes(): void
     {
         Route::middleware(['web'])
-            ->group(__DIR__ . '/../../routes/pages-routes.php');
+            ->group(__DIR__.'/../../routes/pages-routes.php');
     }
 
     protected function registerResources(): void
     {
         // Register views
-        $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'pages');
+        $this->loadViewsFrom(__DIR__.'/../../resources/views', 'pages');
 
         // Register migrations
-        $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
     }
 }

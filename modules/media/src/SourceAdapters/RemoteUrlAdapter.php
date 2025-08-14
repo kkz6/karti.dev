@@ -19,7 +19,7 @@ class RemoteUrlAdapter extends StreamAdapter
         $this->url = $source;
         try {
             $resource = Utils::tryFopen($source, 'rb');
-            $stream = Utils::streamFor($resource);
+            $stream   = Utils::streamFor($resource);
         } catch (\RuntimeException $e) {
             throw ConfigurationException::invalidSource(
                 "Failed to connect to URL: {$e->getMessage()}",

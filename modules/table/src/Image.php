@@ -113,7 +113,7 @@ class Image implements Arrayable
         $this->size = $size;
 
         if ($size !== ImageSize::Custom) {
-            $this->width = null;
+            $this->width  = null;
             $this->height = null;
         }
 
@@ -170,11 +170,11 @@ class Image implements Arrayable
     public function dimensions(?int $width = null, ?int $height = null): static
     {
         // Update dimensions if provided
-        $this->width = $width ?? $this->width;
+        $this->width  = $width ?? $this->width;
         $this->height = $height ?? $this->height;
 
         if (func_num_args() === 2 && is_null($width) && is_null($height)) {
-            $this->width = null;
+            $this->width  = null;
             $this->height = null;
         }
 
@@ -250,24 +250,24 @@ class Image implements Arrayable
     public function toArray(): array
     {
         $remaining = null;
-        $url = $this->url;
+        $url       = $this->url;
 
         if (is_array($url) && ! is_null($this->limit)) {
             $remaining = count($url) > $this->limit ? count($url) - $this->limit : null;
-            $url = array_slice($url, 0, $this->limit);
+            $url       = array_slice($url, 0, $this->limit);
         }
 
         return array_filter([
-            'url' => $url,
-            'icon' => $this->icon,
-            'position' => $this->position->value,
-            'size' => $this->size->value,
-            'rounded' => $this->rounded,
-            'width' => $this->width,
-            'height' => $this->height,
-            'class' => $this->class,
-            'alt' => $this->alt,
-            'title' => $this->title,
+            'url'       => $url,
+            'icon'      => $this->icon,
+            'position'  => $this->position->value,
+            'size'      => $this->size->value,
+            'rounded'   => $this->rounded,
+            'width'     => $this->width,
+            'height'    => $this->height,
+            'class'     => $this->class,
+            'alt'       => $this->alt,
+            'title'     => $this->title,
             'remaining' => $remaining,
         ], fn ($value): bool => ! is_null($value));
     }

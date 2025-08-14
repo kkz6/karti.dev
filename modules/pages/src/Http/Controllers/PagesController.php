@@ -2,9 +2,9 @@
 
 namespace Modules\Pages\Http\Controllers;
 
-use Modules\Shared\Http\Controllers\BaseController;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Shared\Http\Controllers\BaseController;
 
 class PagesController extends BaseController
 {

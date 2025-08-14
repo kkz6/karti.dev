@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Modules\Media\Exceptions;
@@ -22,7 +23,7 @@ class ImageManipulationException extends \Exception
     public static function unknownOutputFormat(): self
     {
         return new self(
-            "Unable to determine valid output format for file."
+            'Unable to determine valid output format for file.'
         );
     }
 

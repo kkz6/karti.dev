@@ -17,7 +17,7 @@ class EmptyState implements Arrayable
     use Tappable;
 
     /**
-     * @param  array<int, EmptyStateAction>  $actions
+     * @param array<int, EmptyStateAction> $actions
      */
     public function __construct(
         public string $title,
@@ -110,12 +110,12 @@ class EmptyState implements Arrayable
     public function toArray(): array
     {
         return [
-            'title' => $this->title,
-            'message' => $this->message,
-            'icon' => $this->icon,
-            'actions' => collect($this->actions)->toArray(),
+            'title'          => $this->title,
+            'message'        => $this->message,
+            'icon'           => $this->icon,
+            'actions'        => collect($this->actions)->toArray(),
             'dataAttributes' => $this->buildDataAttributes(),
-            'meta' => $this->meta,
+            'meta'           => $this->meta,
         ];
     }
 }

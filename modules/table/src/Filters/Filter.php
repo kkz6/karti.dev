@@ -140,7 +140,7 @@ abstract class Filter implements Arrayable
      */
     public function default(mixed $value, ?Clause $clause = null): static
     {
-        $this->defaultValue = $value;
+        $this->defaultValue  = $value;
         $this->defaultClause = $clause;
 
         return $this;
@@ -327,10 +327,10 @@ abstract class Filter implements Arrayable
                 ->snake()
                 ->replace('_', '-')
                 ->value(),
-            'attribute' => $this->attribute,
-            'label' => $this->label,
-            'clauses' => $this->clauses,
-            'meta' => $this->meta,
+            'attribute'       => $this->attribute,
+            'label'           => $this->label,
+            'clauses'         => $this->clauses,
+            'meta'            => $this->meta,
             'hasDefaultValue' => $this->hasDefaultValue(),
         ];
     }

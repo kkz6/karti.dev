@@ -71,10 +71,10 @@ class OptionsFromRelation
         $relation = $this->getRelation();
 
         return $this->pluckColumn = match (true) {
-            $relation instanceof BelongsTo => $relation->getOwnerKeyName(),
-            $relation instanceof HasOneOrMany => $relation->getLocalKeyName(),
+            $relation instanceof BelongsTo     => $relation->getOwnerKeyName(),
+            $relation instanceof HasOneOrMany  => $relation->getLocalKeyName(),
             $relation instanceof BelongsToMany => $relation->getRelatedKeyName(),
-            default => throw UnsupportedRelationTypeException::new(),
+            default                            => throw UnsupportedRelationTypeException::new(),
         };
     }
 

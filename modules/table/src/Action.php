@@ -349,11 +349,11 @@ class Action implements Arrayable
         string $confirmButton = 'Yes',
         string $cancelButton = 'Cancel',
     ): self {
-        $this->confirmationRequired = true;
-        $this->confirmationTitle = $title;
-        $this->confirmationMessage = $message;
+        $this->confirmationRequired      = true;
+        $this->confirmationTitle         = $title;
+        $this->confirmationMessage       = $message;
         $this->confirmationConfirmButton = $confirmButton;
-        $this->confirmationCancelButton = $cancelButton;
+        $this->confirmationCancelButton  = $cancelButton;
 
         return $this;
     }
@@ -558,32 +558,32 @@ class Action implements Arrayable
     public function toArray(): array
     {
         return [
-            'style' => $this->style->value,
-            'label' => $this->label,
-            'isAction' => $this->isAction(),
-            'isCustom' => $this->isCustom(),
-            'isLink' => $this->isLink(),
-            'asDownload' => $this->asDownload,
-            'asRowAction' => $this->asRowAction,
-            'asBulkAction' => $this->isBulkActionable(),
+            'style'                => $this->style->value,
+            'label'                => $this->label,
+            'isAction'             => $this->isAction(),
+            'isCustom'             => $this->isCustom(),
+            'isLink'               => $this->isLink(),
+            'asDownload'           => $this->asDownload,
+            'asRowAction'          => $this->asRowAction,
+            'asBulkAction'         => $this->isBulkActionable(),
             'confirmationRequired' => $this->confirmationRequired,
-            'authorized' => $this->isAuthorized(),
-            'url' => $this->isAction() ? $this->getActionUrl() : null,
+            'authorized'           => $this->isAuthorized(),
+            'url'                  => $this->isAction() ? $this->getActionUrl() : null,
             ...$this->confirmationRequired ? [
-                'confirmationTitle' => $this->confirmationTitle,
-                'confirmationMessage' => $this->confirmationMessage,
+                'confirmationTitle'         => $this->confirmationTitle,
+                'confirmationMessage'       => $this->confirmationMessage,
                 'confirmationConfirmButton' => $this->confirmationConfirmButton,
-                'confirmationCancelButton' => $this->confirmationCancelButton,
+                'confirmationCancelButton'  => $this->confirmationCancelButton,
             ] : [],
-            'icon' => $this->icon,
-            'showLabel' => $this->showLabel,
+            'icon'           => $this->icon,
+            'showLabel'      => $this->showLabel,
             'dataAttributes' => $this->buildDataAttributes(),
-            'meta' => $this->meta,
-            'id' => $this->id,
-            'variant' => $this->variant->value,
-            'type' => $this->type->value,
-            'buttonClass' => $this->buttonClass,
-            'linkClass' => $this->linkClass,
+            'meta'           => $this->meta,
+            'id'             => $this->id,
+            'variant'        => $this->variant->value,
+            'type'           => $this->type->value,
+            'buttonClass'    => $this->buttonClass,
+            'linkClass'      => $this->linkClass,
         ];
     }
 
@@ -602,7 +602,7 @@ class Action implements Arrayable
             // When all keys are selected, we apply the request filters to the query,
             // otherwise we simply scope the query by the primary key(s).
             $allItemsAreSelected = count($keys) === 1 && Arr::first($keys) === '*';
-            $multipleItems = $allItemsAreSelected || count($keys) > 1;
+            $multipleItems       = $allItemsAreSelected || count($keys) > 1;
 
             // Protect against multiple items when the action is not Bulk Actionable...
             if ($multipleItems && ! $this->isBulkActionable()) {

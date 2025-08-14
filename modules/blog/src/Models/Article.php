@@ -4,10 +4,10 @@ namespace Modules\Blog\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Article extends Model
 {
@@ -31,7 +31,7 @@ class Article extends Model
     ];
 
     protected $casts = [
-        'published_at' => 'datetime',
+        'published_at'         => 'datetime',
         'reading_time_minutes' => 'integer',
     ];
 
@@ -86,6 +86,6 @@ class Article extends Model
             return $value;
         }
 
-        return substr(strip_tags($this->content), 0, 160) . '...';
+        return substr(strip_tags($this->content), 0, 160).'...';
     }
 }

@@ -73,13 +73,13 @@ class EmptyStateAction implements Arrayable
     public function toArray(): array
     {
         return [
-            'label' => $this->label,
-            'url' => $this->resolveUrl()->toArray(),
-            'variant' => $this->variant->value,
-            'buttonClass' => $this->buttonClass,
-            'icon' => $this->icon,
+            'label'          => $this->label,
+            'url'            => $this->resolveUrl()->toArray(),
+            'variant'        => $this->variant->value,
+            'buttonClass'    => $this->buttonClass,
+            'icon'           => $this->icon,
             'dataAttributes' => $this->buildDataAttributes(),
-            'meta' => $this->meta,
+            'meta'           => $this->meta,
         ];
     }
 }

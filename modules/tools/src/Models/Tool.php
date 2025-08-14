@@ -4,8 +4,8 @@ namespace Modules\Tools\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Tool extends Model
 {
@@ -25,12 +25,12 @@ class Tool extends Model
 
     protected $casts = [
         'sort_order' => 'integer',
-        'featured' => 'boolean',
+        'featured'   => 'boolean',
     ];
 
     protected $attributes = [
-        'status' => 'active',
-        'featured' => false,
+        'status'     => 'active',
+        'featured'   => false,
         'sort_order' => 0,
     ];
 

@@ -6,7 +6,7 @@ namespace Modules\Table;
 
 enum ScrollPosition: string
 {
-    case TopOfPage = 'topOfPage';
+    case TopOfPage  = 'topOfPage';
     case TopOfTable = 'topOfTable';
-    case Preserve = 'preserve';
+    case Preserve   = 'preserve';
 }

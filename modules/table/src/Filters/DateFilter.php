@@ -23,15 +23,15 @@ class DateFilter extends Filter
         $column = $resource->qualifyColumn($attribute);
 
         match ($clause) {
-            Clause::Before => $resource->whereDate($column, '<', $value),
-            Clause::After => $resource->whereDate($column, '>', $value),
+            Clause::Before        => $resource->whereDate($column, '<', $value),
+            Clause::After         => $resource->whereDate($column, '>', $value),
             Clause::EqualOrBefore => $resource->whereDate($column, '<=', $value),
-            Clause::EqualOrAfter => $resource->whereDate($column, '>=', $value),
-            Clause::Equals => $resource->whereDate($column, $value),
-            Clause::NotEquals => $resource->whereDate($column, '!=', $value),
-            Clause::Between => $resource->whereBetween($column, $value),
-            Clause::NotBetween => $resource->whereNotBetween($column, $value),
-            default => throw UnsupportedClauseException::for($clause),
+            Clause::EqualOrAfter  => $resource->whereDate($column, '>=', $value),
+            Clause::Equals        => $resource->whereDate($column, $value),
+            Clause::NotEquals     => $resource->whereDate($column, '!=', $value),
+            Clause::Between       => $resource->whereBetween($column, $value),
+            Clause::NotBetween    => $resource->whereNotBetween($column, $value),
+            default               => throw UnsupportedClauseException::for($clause),
         };
     }
 

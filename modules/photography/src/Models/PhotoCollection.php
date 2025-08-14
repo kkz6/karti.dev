@@ -4,9 +4,9 @@ namespace Modules\Photography\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Blog\Models\Category;
 
 class PhotoCollection extends Model
@@ -27,14 +27,14 @@ class PhotoCollection extends Model
     ];
 
     protected $casts = [
-        'featured' => 'boolean',
-        'sort_order' => 'integer',
+        'featured'     => 'boolean',
+        'sort_order'   => 'integer',
         'published_at' => 'datetime',
     ];
 
     protected $attributes = [
-        'status' => 'draft',
-        'featured' => false,
+        'status'     => 'draft',
+        'featured'   => false,
         'sort_order' => 0,
     ];
 
@@ -51,7 +51,7 @@ class PhotoCollection extends Model
     public function scopePublished($query)
     {
         return $query->where('status', 'published')
-                    ->where('published_at', '<=', now());
+            ->where('published_at', '<=', now());
     }
 
     public function scopeFeatured($query)

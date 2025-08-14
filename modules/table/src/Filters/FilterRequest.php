@@ -59,8 +59,8 @@ class FilterRequest implements Arrayable
     {
         return [
             'enabled' => $this->enabled,
-            'value' => $this->value,
-            'clause' => $this->clause->value,
+            'value'   => $this->value,
+            'clause'  => $this->clause->value,
         ];
     }
 }

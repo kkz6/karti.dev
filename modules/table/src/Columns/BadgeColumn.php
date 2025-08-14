@@ -28,10 +28,10 @@ class BadgeColumn extends Column
     public function mapForTable(mixed $value, Table $table, mixed $source = null): mixed
     {
         return [
-            'icon' => $this->resolveIcon($value, $source),
+            'icon'    => $this->resolveIcon($value, $source),
             'variant' => $variant = $this->resolveVariant($value, $source),
-            'style' => $variant, // Backward compatibility
-            'value' => parent::mapForTable($value, $table, $source),
+            'style'   => $variant, // Backward compatibility
+            'value'   => parent::mapForTable($value, $table, $source),
         ];
     }
 

@@ -8,7 +8,6 @@ use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
-use Modules\Table\Columns\Column;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -17,6 +16,7 @@ use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use Modules\Table\Columns\Column;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
@@ -152,7 +152,7 @@ class Exporter implements FromQuery, Responsable, ShouldAutoSize, WithColumnForm
     {
         $highest = $sheet->getHighestRowAndColumn();
 
-        $highestRow = $highest['row'];
+        $highestRow    = $highest['row'];
         $highestColumn = $highest['column'];
 
         $sheet->setAutoFilter(sprintf('A1:%s1', $highestColumn));
@@ -165,7 +165,7 @@ class Exporter implements FromQuery, Responsable, ShouldAutoSize, WithColumnForm
             }
 
             $sheetColumn = Coordinate::stringFromColumnIndex($key + 1);
-            $coordinate = sprintf('%s2:%s%s', $sheetColumn, $sheetColumn, $highestRow);
+            $coordinate  = sprintf('%s2:%s%s', $sheetColumn, $sheetColumn, $highestRow);
 
             if (is_array($exportStyling)) {
                 return [$coordinate => $exportStyling];

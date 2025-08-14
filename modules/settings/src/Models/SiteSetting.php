@@ -20,12 +20,12 @@ class SiteSetting extends Model
 
     protected $casts = [
         'is_public' => 'boolean',
-        'value' => 'json',
+        'value'     => 'json',
     ];
 
     protected $attributes = [
         'is_public' => false,
-        'type' => 'string',
+        'type'      => 'string',
     ];
 
     public function scopePublic($query)
@@ -46,8 +46,8 @@ class SiteSetting extends Model
     public static function getValue(string $key, $default = null)
     {
         $setting = static::where('key', $key)->first();
-        
-        if (!$setting) {
+
+        if (! $setting) {
             return $default;
         }
 
@@ -55,7 +55,7 @@ class SiteSetting extends Model
         return match ($setting->type) {
             'boolean' => (bool) $setting->value,
             'integer' => (int) $setting->value,
-            'float' => (float) $setting->value,
+            'float'   => (float) $setting->value,
             'array', 'json' => is_array($setting->value) ? $setting->value : json_decode($setting->value, true),
             default => $setting->value,
         };
@@ -67,7 +67,7 @@ class SiteSetting extends Model
             ['key' => $key],
             [
                 'value' => $value,
-                'type' => $type,
+                'type'  => $type,
                 'group' => $group,
             ]
         );

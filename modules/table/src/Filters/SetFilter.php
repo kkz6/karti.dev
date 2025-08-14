@@ -107,11 +107,11 @@ class SetFilter extends Filter
         $column = $resource->qualifyColumn($attribute);
 
         match ($clause) {
-            Clause::Equals => $resource->where($column, $value),
+            Clause::Equals    => $resource->where($column, $value),
             Clause::NotEquals => $resource->where($column, '!=', $value),
-            Clause::In => $resource->whereIn($column, $value),
-            Clause::NotIn => $resource->whereNotIn($column, $value),
-            default => throw UnsupportedClauseException::for($clause),
+            Clause::In        => $resource->whereIn($column, $value),
+            Clause::NotIn     => $resource->whereNotIn($column, $value),
+            default           => throw UnsupportedClauseException::for($clause),
         };
     }
 
@@ -204,7 +204,7 @@ class SetFilter extends Filter
     public function toArray(): array
     {
         return array_merge(parent::toArray(), [
-            'options' => $this->getOptions(),
+            'options'  => $this->getOptions(),
             'multiple' => $this->isMultiple(),
         ]);
     }

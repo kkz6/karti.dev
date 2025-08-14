@@ -22,19 +22,19 @@ class SocialLink extends Model
     ];
 
     protected $casts = [
-        'sort_order' => 'integer',
-        'is_active' => 'boolean',
+        'sort_order'     => 'integer',
+        'is_active'      => 'boolean',
         'show_in_header' => 'boolean',
         'show_in_footer' => 'boolean',
-        'show_in_about' => 'boolean',
+        'show_in_about'  => 'boolean',
     ];
 
     protected $attributes = [
-        'is_active' => true,
+        'is_active'      => true,
         'show_in_header' => true,
         'show_in_footer' => true,
-        'show_in_about' => true,
-        'sort_order' => 0,
+        'show_in_about'  => true,
+        'sort_order'     => 0,
     ];
 
     public function scopeActive($query)

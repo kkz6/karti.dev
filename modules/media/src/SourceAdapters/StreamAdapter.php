@@ -17,9 +17,13 @@ class StreamAdapter implements SourceAdapterInterface
     const BUFFER_SIZE = 2048;
 
     private const TYPE_MEMORY = 'php';
+
     private const TYPE_DATA_URL = 'rfc2397';
+
     private const TYPE_HTTP = 'http';
+
     private const TYPE_FILE = 'plainfile';
+
     private const TYPE_FTP = 'ftp';
 
     protected StreamInterface $source;
@@ -28,7 +32,6 @@ class StreamAdapter implements SourceAdapterInterface
 
     /**
      * The contents of the stream.
-     * @var string
      */
     protected string $contents;
 
@@ -41,22 +44,21 @@ class StreamAdapter implements SourceAdapterInterface
 
     /**
      * Constructor.
-     * @param StreamInterface $source
      */
     public function __construct(StreamInterface $source)
     {
-        if (!$source->isReadable()) {
+        if (! $source->isReadable()) {
             throw ConfigurationException::invalidSource('Stream must be readable');
         }
 
         $this->source = $this->originalSource = $source;
-        if (!$this->source->isSeekable()) {
+        if (! $this->source->isSeekable()) {
             $this->source = new CachingStream($this->source);
         }
 
         if ($this->getStreamType() === self::TYPE_HTTP) {
             $code = $this->getHttpResponseCode();
-            if (!$code || $code < 200 || $code >= 300) {
+            if (! $code || $code < 200 || $code >= 300) {
                 throw ConfigurationException::unrecognizedSource(
                     "Failed to fetch URL, received HTTP status code $code"
                 );
@@ -83,9 +85,10 @@ class StreamAdapter implements SourceAdapterInterface
     public function filename(): ?string
     {
         $path = $this->path();
-        if (!$path) {
+        if (! $path) {
             return null;
         }
+
         return pathinfo(
             parse_url($this->path(), PHP_URL_PATH) ?? '',
             PATHINFO_FILENAME
@@ -115,7 +118,7 @@ class StreamAdapter implements SourceAdapterInterface
      */
     public function mimeType(): string
     {
-        if (!isset($this->mimeType)) {
+        if (! isset($this->mimeType)) {
             $this->scanFile();
         }
 
@@ -150,11 +153,11 @@ class StreamAdapter implements SourceAdapterInterface
     {
         $size = $this->source->getSize();
 
-        if (!is_null($size)) {
+        if (! is_null($size)) {
             return $size;
         }
 
-        if (!isset($this->size)) {
+        if (! isset($this->size)) {
             $this->scanFile();
         }
 
@@ -163,13 +166,13 @@ class StreamAdapter implements SourceAdapterInterface
 
     /**
      * {@inheritdoc}
-     * @param string $algo
      */
     public function hash(string $algo = 'md5'): string
     {
-        if (!isset($this->hash[$algo])) {
+        if (! isset($this->hash[$algo])) {
             $this->scanFile($algo);
         }
+
         return $this->hash[$algo];
     }
 
@@ -205,10 +208,10 @@ class StreamAdapter implements SourceAdapterInterface
             return null;
         }
         $headers = $this->originalSource->getMetadata('wrapper_data');
-        if (!empty($headers)
+        if (! empty($headers)
             && preg_match('/HTTP\/\d+\.\d+\s+(\d+)/i', $headers[0], $matches)
         ) {
-            return (int)$matches[1];
+            return (int) $matches[1];
         }
 
         return null;
@@ -219,11 +222,11 @@ class StreamAdapter implements SourceAdapterInterface
         $this->size = 0;
         $this->source->rewind();
         try {
-            $hash = hash_init($hashAlgorithm);
+            $hash  = hash_init($hashAlgorithm);
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            while (!$this->source->eof()) {
+            while (! $this->source->eof()) {
                 $buffer = $this->source->read(self::BUFFER_SIZE);
-                if (!isset($this->mimeType)) {
+                if (! isset($this->mimeType)) {
                     $this->mimeType = finfo_buffer($finfo, $buffer);
                 }
                 hash_update($hash, $buffer);
@@ -232,7 +235,7 @@ class StreamAdapter implements SourceAdapterInterface
             $this->hash[$hashAlgorithm] = hash_final($hash);
             $this->source->rewind();
         } finally {
-            if (!empty($finfo)) {
+            if (! empty($finfo)) {
                 finfo_close($finfo);
             }
         }

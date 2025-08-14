@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Modules\Media\Exceptions;
@@ -22,4 +23,3 @@ class MediaUrlException extends Exception
         return new self("Temporary URLs are not supported for files on disk '{$disk}'");
     }
 }
-

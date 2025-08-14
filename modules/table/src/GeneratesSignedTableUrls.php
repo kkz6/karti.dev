@@ -18,7 +18,7 @@ trait GeneratesSignedTableUrls
         return URL::signedRoute($name, [
             ...$parameters,
             'table' => base64_encode($table::class),
-            'name' => $table->getName(),
+            'name'  => $table->getName(),
             ...(blank($state) ? [] : ['state' => $state]),
         ]);
     }

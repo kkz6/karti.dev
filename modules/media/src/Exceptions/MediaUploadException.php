@@ -6,7 +6,4 @@ namespace Modules\Media\Exceptions;
 
 use Exception;
 
-class MediaUploadException extends Exception
-{
-}
-
+class MediaUploadException extends Exception {}

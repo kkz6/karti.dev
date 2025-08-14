@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Modules\Media\Support;
@@ -25,19 +26,19 @@ class MediaMover
      * Move the file to a new location on disk.
      *
      * Will invoke the `save()` method on the model after the associated file has been moved to prevent synchronization errors
-     * @param  Media $media
-     * @param  string $directory directory relative to disk root
-     * @param  string $filename filename. Do not include extension
-     * @return void
+     *
+     * @param string $directory directory relative to disk root
+     * @param string $filename  filename. Do not include extension
+     *
      * @throws MediaMoveException If attempting to change the file extension or a file with the same name already exists at the destination
      */
     public function move(Media $media, string $directory, ?string $filename = null): void
     {
         $storage = $this->filesystem->disk($media->disk);
 
-        $filename = $this->cleanFilename($media, $filename);
-        $directory = File::sanitizePath($directory);
-        $targetPath = $directory . '/' . $filename . '.' . $media->extension;
+        $filename   = $this->cleanFilename($media, $filename);
+        $directory  = File::sanitizePath($directory);
+        $targetPath = $directory.'/'.$filename.'.'.$media->extension;
 
         if ($storage->exists($targetPath)) {
             throw MediaMoveException::destinationExists($targetPath);
@@ -45,7 +46,7 @@ class MediaMover
 
         $storage->move($media->getDiskPath(), $targetPath);
 
-        $media->filename = $filename;
+        $media->filename  = $filename;
         $media->directory = $directory;
         $media->save();
     }
@@ -54,12 +55,12 @@ class MediaMover
      * Move the file to a new location on another disk.
      *
      * Will invoke the `save()` method on the model after the associated file has been moved to prevent synchronization errors
-     * @param  Media $media
-     * @param  string $disk the disk to move the file to
-     * @param  string $directory directory relative to disk root
-     * @param  string $filename filename. Do not include extension
-     * @param  array $options additional options to pass to the disk driver when uploading the file
-     * @return void
+     *
+     * @param string $disk      the disk to move the file to
+     * @param string $directory directory relative to disk root
+     * @param string $filename  filename. Do not include extension
+     * @param array  $options   additional options to pass to the disk driver when uploading the file
+     *
      * @throws MediaMoveException If attempting to change the file extension or a file with the same name already exists at the destination
      */
     public function moveToDisk(
@@ -71,22 +72,23 @@ class MediaMover
     ): void {
         if ($media->disk === $disk) {
             $this->move($media, $directory, $filename);
+
             return;
         }
 
         $currentStorage = $this->filesystem->disk($media->disk);
-        $targetStorage = $this->filesystem->disk($disk);
+        $targetStorage  = $this->filesystem->disk($disk);
 
-        $filename = $this->cleanFilename($media, $filename);
-        $directory = File::sanitizePath($directory);
-        $targetPath = $directory . '/' . $filename . '.' . $media->extension;
+        $filename   = $this->cleanFilename($media, $filename);
+        $directory  = File::sanitizePath($directory);
+        $targetPath = $directory.'/'.$filename.'.'.$media->extension;
 
         if ($targetStorage->exists($targetPath)) {
             throw MediaMoveException::destinationExistsOnDisk($disk, $targetPath);
         }
 
         try {
-            if (!isset($options['visibility'])) {
+            if (! isset($options['visibility'])) {
                 $options['visibility'] = $currentStorage->getVisibility($media->getDiskPath());
             }
 
@@ -96,8 +98,8 @@ class MediaMover
             throw MediaMoveException::fileNotFound($media->disk, $media->getDiskPath(), $e);
         }
 
-        $media->disk = $disk;
-        $media->filename = $filename;
+        $media->disk      = $disk;
+        $media->filename  = $filename;
         $media->directory = $directory;
         $media->save();
     }
@@ -107,21 +109,20 @@ class MediaMover
      *
      * This method creates a new Media object as well as duplicates the associated file on the disk.
      *
-     * @param  Media $media The media to copy from
-     * @param  string $directory directory relative to disk root
-     * @param  string $filename optional filename. Do not include extension
+     * @param Media  $media     The media to copy from
+     * @param string $directory directory relative to disk root
+     * @param string $filename  optional filename. Do not include extension
      *
-     * @return Media
      * @throws MediaMoveException If a file with the same name already exists at the destination or it fails to copy the file
      */
     public function copyTo(Media $media, string $directory, ?string $filename = null): Media
     {
         $storage = $this->filesystem->disk($media->disk);
 
-        $filename = $this->cleanFilename($media, $filename);
+        $filename  = $this->cleanFilename($media, $filename);
         $directory = File::sanitizePath($directory);
 
-        $targetPath = $directory . '/' . $filename . '.' . $media->extension;
+        $targetPath = $directory.'/'.$filename.'.'.$media->extension;
 
         if ($storage->exists($targetPath)) {
             throw MediaMoveException::destinationExists($targetPath);
@@ -135,8 +136,8 @@ class MediaMover
 
         // now we copy the Media object
         /** @var Media $newMedia */
-        $newMedia = $media->replicate();
-        $newMedia->filename = $filename;
+        $newMedia            = $media->replicate();
+        $newMedia->filename  = $filename;
         $newMedia->directory = $directory;
 
         $newMedia->save();
@@ -149,12 +150,11 @@ class MediaMover
      *
      * This method creates a new Media object as well as duplicates the associated file on the disk.
      *
-     * @param  Media $media The media to copy from
-     * @param  string $disk the disk to copy the file to
-     * @param  string $directory directory relative to disk root
-     * @param  string $filename optional filename. Do not include extension
+     * @param Media  $media     The media to copy from
+     * @param string $disk      the disk to copy the file to
+     * @param string $directory directory relative to disk root
+     * @param string $filename  optional filename. Do not include extension
      *
-     * @return Media
      * @throws MediaMoveException If a file with the same name already exists at the destination or it fails to copy the file
      */
     public function copyToDisk(
@@ -169,18 +169,18 @@ class MediaMover
         }
 
         $currentStorage = $this->filesystem->disk($media->disk);
-        $targetStorage = $this->filesystem->disk($disk);
+        $targetStorage  = $this->filesystem->disk($disk);
 
-        $filename = $this->cleanFilename($media, $filename);
-        $directory = File::sanitizePath($directory);
-        $targetPath = $directory . '/' . $filename . '.' . $media->extension;
+        $filename   = $this->cleanFilename($media, $filename);
+        $directory  = File::sanitizePath($directory);
+        $targetPath = $directory.'/'.$filename.'.'.$media->extension;
 
         if ($targetStorage->exists($targetPath)) {
             throw MediaMoveException::destinationExistsOnDisk($disk, $targetPath);
         }
 
         try {
-            if (!isset($options['visibility'])) {
+            if (! isset($options['visibility'])) {
                 $options['visibility'] = $currentStorage->getVisibility($media->getDiskPath());
             }
             $targetStorage->put($targetPath, $currentStorage->readStream($media->getDiskPath()), $options);
@@ -190,9 +190,9 @@ class MediaMover
 
         // now we copy the Media object
         /** @var Media $newMedia */
-        $newMedia = $media->replicate();
-        $newMedia->disk = $disk;
-        $newMedia->filename = $filename;
+        $newMedia            = $media->replicate();
+        $newMedia->disk      = $disk;
+        $newMedia->filename  = $filename;
         $newMedia->directory = $directory;
 
         $newMedia->save();
@@ -213,13 +213,10 @@ class MediaMover
 
     /**
      * Remove the media's extension from a filename.
-     * @param  string $filename
-     * @param  string $extension
-     * @return string
      */
     protected function removeExtensionFromFilename(string $filename, string $extension): string
     {
-        $extension = '.' . $extension;
+        $extension       = '.'.$extension;
         $extensionLength = mb_strlen($filename) - mb_strlen($extension);
         if (mb_strrpos($filename, $extension) === $extensionLength) {
             $filename = mb_substr($filename, 0, $extensionLength);

@@ -7,5 +7,5 @@ namespace Modules\Table;
 enum TableComponent: string
 {
     case Search = 'search';
-    case None = 'none';
+    case None   = 'none';
 }

@@ -2,21 +2,31 @@
 
 namespace Modules\Media\Models;
 
+use Closure;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Query\Builder;
+use Modules\Media\Interfaces\MediableInterface;
+
 /**
  * Collection of Mediable Models.
  *
  * @template TKey of array-key
  * @template TMedia of Model|MediableInterface
+ *
  * @extends Collection<TKey, TMedia>
  */
 class MediableCollection extends Collection
 {
     /**
      * Lazy eager load media attached to items in the collection.
+     *
      * @param string|string[] $tags
-     * If one or more tags are specified, only media attached to those tags will be loaded.
-     * @param bool $matchAll If true, only load media attached to all tags simultaneously
-     * @param bool $withVariants If true, also load the variants and/or originalMedia relation of each Media
+     *                                      If one or more tags are specified, only media attached to those tags will be loaded.
+     * @param bool            $matchAll     If true, only load media attached to all tags simultaneously
+     * @param bool            $withVariants If true, also load the variants and/or originalMedia relation of each Media
+     *
      * @return $this
      */
     public function loadMedia(
@@ -28,7 +38,7 @@ class MediableCollection extends Collection
             return $this;
         }
 
-        $tags = (array)$tags;
+        $tags = (array) $tags;
 
         if (empty($tags)) {
             if ($withVariants) {
@@ -53,7 +63,6 @@ class MediableCollection extends Collection
             return $this->load(['media' => $closure]);
         }
 
-
         return $this->load(
             [
                 'media' => function (MorphToMany $q) use ($tags, $withVariants) {
@@ -62,16 +71,18 @@ class MediableCollection extends Collection
                     if ($withVariants) {
                         $q->with(['originalMedia.variants', 'variants']);
                     }
-                }
+                },
             ]
         );
     }
 
     /**
      * Lazy eager load media attached to items in the collection, as well as their variants.
+     *
      * @param string|string[] $tags
-     * If one or more tags are specified, only media attached to those tags will be loaded.
-     * @param bool $matchAll If true, only load media attached to all tags simultaneously
+     *                                  If one or more tags are specified, only media attached to those tags will be loaded.
+     * @param bool            $matchAll If true, only load media attached to all tags simultaneously
+     *
      * @return $this
      */
     public function loadMediaWithVariants($tags = [], bool $matchAll = false): self
@@ -82,9 +93,11 @@ class MediableCollection extends Collection
     /**
      * Lazy eager load media attached to items in the collection bound all of the provided
      * tags simultaneously.
-     * @param  string|string[] $tags
-     * @param bool $withVariants If true, also load the variants and/or originalMedia relation of each Media
-     * If one or more tags are specified, only media attached to all of those tags will be loaded.
+     *
+     * @param string|string[] $tags
+     * @param bool            $withVariants If true, also load the variants and/or originalMedia relation of each Media
+     *                                      If one or more tags are specified, only media attached to all of those tags will be loaded.
+     *
      * @return $this
      */
     public function loadMediaMatchAll($tags = [], bool $withVariants = false): self
@@ -95,8 +108,10 @@ class MediableCollection extends Collection
     /**
      * Lazy eager load media attached to items in the collection bound all of the provided
      * tags simultaneously, as well as the variants of those media.
-     * @param  string|string[] $tags
-     * If one or more tags are specified, only media attached to all of those tags will be loaded.
+     *
+     * @param string|string[] $tags
+     *                              If one or more tags are specified, only media attached to all of those tags will be loaded.
+     *
      * @return $this
      */
     public function loadMediaWithVariantsMatchAll($tags = []): self
@@ -112,8 +127,8 @@ class MediableCollection extends Collection
 
         /** @var MorphToMany $relation */
         $relation = $this->first()->media();
-        $query = $relation->newPivotStatement();
-        $classes = [];
+        $query    = $relation->newPivotStatement();
+        $classes  = [];
 
         $this->each(
             function (Model $item) use (&$classes) {
@@ -125,10 +140,10 @@ class MediableCollection extends Collection
 
         // delete each item by class
         collect($classes)->each(
-        /**
-         * @param array<int> $ids
-         * @param class-string<Model> $class
-         */
+            /**
+             * @param array<int>          $ids
+             * @param class-string<Model> $class
+             */
             function (array $ids, string $class) use ($query, $relation) {
                 // select pivots matching each item for deletion
                 $query->orWhere(

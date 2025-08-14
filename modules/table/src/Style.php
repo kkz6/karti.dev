@@ -9,9 +9,9 @@ namespace Modules\Table;
  */
 enum Style: string
 {
-    case Danger = 'danger';
+    case Danger  = 'danger';
     case Default = 'default';
-    case Info = 'info';
+    case Info    = 'info';
     case Success = 'success';
     case Warning = 'warning';
 }

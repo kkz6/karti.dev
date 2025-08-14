@@ -24,9 +24,9 @@ return new class extends Migration
             $table->unsignedInteger('size');
             $table->string('variant_name', 255)->nullable();
             $table->foreignIdFor(Media::class, 'original_media_id')
-                    ->nullable()
-                    ->constrained('media')
-                    ->nullOnDelete();
+                ->nullable()
+                ->constrained('media')
+                ->nullOnDelete();
             $table->timestamps();
 
             $table->unique(['disk', 'directory', 'filename', 'extension']);
