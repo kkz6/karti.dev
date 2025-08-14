@@ -19,9 +19,11 @@ class MediaServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            dirname(__DIR__).'/../config/mediable.php',
+            dirname(__DIR__) . '/../config/mediable.php',
             'mediable'
         );
+
+        $this->mergeConfigFrom(dirname(__DIR__) . '/../config/media-manager.php', 'media-manager');
 
         $this->registerSourceAdapterFactory();
         $this->registerImageManipulator();
@@ -116,7 +118,8 @@ class MediaServiceProvider extends ServiceProvider
     private function getInterventionImageManagerConfiguration(Container $app): ?ImageManager
     {
         $imageManager = null;
-        if ($app->has(ImageManager::class)
+        if (
+            $app->has(ImageManager::class)
             || (
                 class_exists(DriverInterface::class) // intervention >= 3.0
                 && $app->has(DriverInterface::class)

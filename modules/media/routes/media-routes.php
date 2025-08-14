@@ -1,11 +1,18 @@
 <?php
 
-// use Modules\Media\Http\Controllers\MediaController;
+use Illuminate\Support\Facades\Route;
+use Modules\Media\Http\Controllers\MediaController;
 
-// Route::get('/media', [MediaController::class, 'index'])->name('media.index');
-// Route::get('/media/create', [MediaController::class, 'create'])->name('media.create');
-// Route::post('/media', [MediaController::class, 'store'])->name('media.store');
-// Route::get('/media/{medium}', [MediaController::class, 'show'])->name('media.show');
-// Route::get('/media/{medium}/edit', [MediaController::class, 'edit'])->name('media.edit');
-// Route::put('/media/{medium}', [MediaController::class, 'update'])->name('media.update');
-// Route::delete('/media/{medium}', [MediaController::class, 'destroy'])->name('media.destroy');
+Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+    // Media Manager
+    Route::get('/media', [MediaController::class, 'index'])->name('media.index');
+
+    // Media API routes
+    Route::prefix('media')->name('media.')->group(function () {
+        Route::get('/files', [MediaController::class, 'getFiles'])->name('files');
+        Route::post('/upload', [MediaController::class, 'upload'])->name('upload');
+        Route::post('/lock', [MediaController::class, 'lock'])->name('lock');
+        Route::post('/visibility', [MediaController::class, 'visibility'])->name('visibility');
+        Route::get('/locked-list', [MediaController::class, 'lockedList'])->name('locked_list');
+    });
+});

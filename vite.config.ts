@@ -26,6 +26,7 @@ export default defineConfig({
             '@frontend': resolve(__dirname, './modules/frontend/resources/js'),
             '@pages': resolve(__dirname, './modules/pages/resources/js'),
             '@table': resolve(__dirname, './modules/table/resources/js'),
+            '@media': resolve(__dirname, './modules/media/resources/js'),
         },
     },
 });
