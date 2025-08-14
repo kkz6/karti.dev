@@ -2,17 +2,16 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Media\Http\Controllers\MediaController;
+use Modules\Media\Http\Controllers\MediaManagerController;
 
-Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['web','auth'])->prefix('admin')->name('admin.')->group(function () {
     // Media Manager
-    Route::get('/media', [MediaController::class, 'index'])->name('media.index');
+    Route::get('media-manager', MediaManagerController::class)->name('media-manager');
 
     // Media API routes
     Route::prefix('media')->name('media.')->group(function () {
-        Route::get('/files', [MediaController::class, 'getFiles'])->name('files');
-        Route::post('/upload', [MediaController::class, 'upload'])->name('upload');
-        Route::post('/lock', [MediaController::class, 'lock'])->name('lock');
-        Route::post('/visibility', [MediaController::class, 'visibility'])->name('visibility');
-        Route::get('/locked-list', [MediaController::class, 'lockedList'])->name('locked_list');
+        Route::get('/', [MediaController::class, 'index'])->name('index');
+        Route::post('create', [MediaController::class, 'create'])->name('create');
+        Route::get('/config', [MediaController::class, 'config'])->name('config');
     });
 });

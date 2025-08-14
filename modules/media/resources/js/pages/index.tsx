@@ -3,33 +3,27 @@ import AppLayout from '@shared/layouts/app-layout';
 
 import { MediaManager } from '@media/components/MediaManager';
 
-interface MediaPageProps {
-    config: {
-        baseUrl: string;
-        hideFilesExt: boolean;
-        mimeTypes: Record<string, string[]>;
-        broadcasting: boolean;
-        gfi: boolean;
-        ratioBar: boolean;
-        previewFilesBeforeUpload: boolean;
-    };
-    routes: {
-        files: string;
-        upload: string;
-        lock: string;
-        visibility: string;
-        locked_list: string;
-    };
-    translations: Record<string, string>;
-}
+export default function MediaIndex() {
+    const breadcrumbs = [
+        { label: 'Dashboard', href: '/dashboard' },
+        { label: 'Media Manager', href: '/media', isCurrentPage: true }
+    ];
 
-export default function MediaIndex({ config, routes, translations }: MediaPageProps) {
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Media Manager" />
 
-            <div className="h-full">
-                <MediaManager config={config} routes={routes} translations={translations} inModal={false} />
+            <div className="flex-1 flex flex-col p-6 overflow-hidden">
+                <div className="mb-6">
+                    <h1 className="text-2xl font-bold tracking-tight">Media Manager</h1>
+                    <p className="text-muted-foreground">
+                        Manage your files and media assets
+                    </p>
+                </div>
+                
+                <div className="flex-1 min-h-0">
+                    <MediaManager />
+                </div>
             </div>
         </AppLayout>
     );
