@@ -13,6 +13,7 @@
         "modules/auth": "*",
         "modules/blog": "*",
         "modules/frontend": "*",
+        "modules/media": "*",
         "modules/pages": "*",
         "modules/photography": "*",
         "modules/portfolio": "*",

@@ -1,0 +1,33 @@
+<?php
+declare(strict_types=1);
+
+namespace Modules\Media\Exceptions;
+
+class ImageManipulationException extends \Exception
+{
+    public static function invalidMediaType(?string $type): self
+    {
+        return new self(
+            "Cannot manipulate media with an aggregate type other than 'image', got '{$type}'."
+        );
+    }
+
+    public static function unknownVariant(string $variantName): self
+    {
+        return new self(
+            "Unknown variant '{$variantName}'."
+        );
+    }
+
+    public static function unknownOutputFormat(): self
+    {
+        return new self(
+            "Unable to determine valid output format for file."
+        );
+    }
+
+    public static function fileExists(string $path): self
+    {
+        return new self("A file already exists at `{$path}`.");
+    }
+}
