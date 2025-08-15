@@ -2,19 +2,14 @@ import { Button } from '@shared/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
 import { TooltipButton } from '@shared/components/ui/tooltip-button';
 import axios from 'axios';
-import { Code, RotateCcw, X } from 'lucide-react';
+import { Code, Loader2, RotateCcw, X } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { MediaAsset } from '../types/media';
 import { FilterPresets } from './FilterPresets';
 import { ImageControls } from './ImageControls';
 import { ImageFilters } from './ImageFilters';
 
-// Import the required libraries
 import 'cropperjs';
-import '../../css/image-editor.css';
-import { FilterOptions, ImageFilterProcessor } from '../utils/imageFilters';
-
-// Import official Cropper.js v2 types and constants
 import type { CropperCanvas, CropperHandle, CropperImage, CropperSelection } from 'cropperjs';
 import {
     ACTION_MOVE,
@@ -28,22 +23,19 @@ import {
     ACTION_RESIZE_WEST,
     ACTION_SELECT,
 } from 'cropperjs';
+import '../../css/image-editor.css';
+import { FilterOptions, ImageFilterProcessor } from '../utils/imageFilters';
 
-// Type aliases for easier usage
 type CropperImageElement = CropperImage;
 type CropperSelectionElement = CropperSelection;
 type CropperCanvasElement = CropperCanvas;
 type CropperHandleElement = CropperHandle;
-
-// Utility functions
 const isIdentityMatrix = (matrix: number[]): boolean => {
-    // Identity matrix: [scaleX=1, skewY=0, skewX=0, scaleY=1, translateX=0, translateY=0]
     return matrix[0] === 1 && matrix[1] === 0 && matrix[2] === 0 && matrix[3] === 1 && matrix[4] === 0 && matrix[5] === 0;
 };
 
 const flipImage = (cropperImage: CropperImage, direction: 'horizontal' | 'vertical'): void => {
     const matrix = cropperImage.$getTransform();
-    // Matrix format: [scaleX, skewY, skewX, scaleY, translateX, translateY]
     if (direction === 'horizontal') {
         cropperImage.$scale(-matrix[0], matrix[3]);
     } else {
@@ -60,6 +52,7 @@ interface ImageEditorProps {
 
 export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose, onSaved }) => {
     const [processing, setProcessing] = useState(false);
+    const [imageLoading, setImageLoading] = useState(false);
     const [hasChanged, setHasChanged] = useState(false);
     const [dragMode, setDragMode] = useState<'move' | 'crop'>('move');
     const [croppedByUser, setCroppedByUser] = useState(false);
@@ -80,50 +73,92 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
         const cropperImage = cropperImageRef.current;
         if (!cropperImage) return;
 
-        // Use v2's built-in center method with contain mode
         cropperImage.$center('contain');
+    }, []);
+
+    const cleanup = useCallback(() => {
+        setProcessing(false);
+        setImageLoading(false);
+        setHasChanged(false);
+        setDragMode('move');
+        setCroppedByUser(false);
+        setShowDiff(false);
+        setDiffDisable(true);
+        setOriginalImageUrl('');
+        setEditedImageUrl('');
+        setCamanFilters({});
+
+        if (filterProcessorRef.current) {
+            filterProcessorRef.current = null;
+        }
+
+        const cropperImage = cropperImageRef.current;
+        const cropperSelection = cropperSelectionRef.current;
+        const cropperHandle = cropperHandleRef.current;
+
+        if (cropperImage) {
+            try {
+                cropperImage.$resetTransform();
+                cropperImage.$image.src = '';
+            } catch (error) {}
+        }
+
+        if (cropperSelection) {
+            try {
+                cropperSelection.$reset();
+                cropperSelection.hidden = true;
+            } catch (error) {}
+        }
+
+        if (cropperHandle) {
+            try {
+                cropperHandle.action = ACTION_MOVE;
+            } catch (error) {}
+        }
     }, []);
 
     const initializeCropper = useCallback(async () => {
         if (!asset) return;
 
-        // Store original image URL for diff comparison
+        setImageLoading(true);
         setOriginalImageUrl(asset.url);
 
-        // Initialize filter processor
         filterProcessorRef.current = new ImageFilterProcessor();
         await filterProcessorRef.current.loadImage(asset.url);
 
-        // Give web components time to initialize before stopping processing
-        setTimeout(() => setProcessing(false), 200);
-    }, [asset]);
+        setTimeout(() => {
+            setProcessing(false);
+            setTimeout(() => {
+                centerImage();
+                setImageLoading(false);
+            }, 100);
+        }, 200);
+    }, [asset, centerImage]);
 
-    // Initialize when dialog opens
     useEffect(() => {
         if (isOpen && asset) {
             setProcessing(true);
             initializeCropper();
+        } else if (!isOpen) {
+            cleanup();
         }
-    }, [isOpen, asset, initializeCropper]);
+    }, [isOpen, asset, initializeCropper, cleanup]);
 
-    // Handle image centering using $ready promise from official API
     useEffect(() => {
         if (!isOpen || !asset || !cropperImageRef.current) return;
 
         const cropperImage = cropperImageRef.current;
 
-        // Use the official $ready method which returns a promise
         cropperImage.$ready().then(() => {
             centerImage();
+            setImageLoading(false);
         });
     }, [isOpen, asset, centerImage]);
 
-    // Handle container resize to re-center image
     useEffect(() => {
         if (!isOpen || !containerRef.current) return;
 
         const resizeObserver = new ResizeObserver(() => {
-            // Re-center image when container size changes
             setTimeout(() => centerImage(), 100);
         });
 
@@ -218,28 +253,23 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
         const cropperHandle = cropperHandleRef.current;
         if (!cropperImage) return;
 
-        // Reset state
         setDragMode('move');
         setHasChanged(false);
         setCroppedByUser(false);
         setCamanFilters({});
 
-        // Reset image transform
         cropperImage.$resetTransform();
         setTimeout(() => centerImage(), 100);
 
-        // Reset selection
         if (cropperSelection) {
             cropperSelection.$reset();
             cropperSelection.hidden = true;
         }
 
-        // Reset handle
         if (cropperHandle) {
             cropperHandle.action = ACTION_MOVE;
         }
 
-        // Reset filters
         if (filterProcessorRef.current) {
             const originalImageUrl = filterProcessorRef.current.reset();
             cropperImage.$image.src = originalImageUrl;
@@ -251,7 +281,6 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
         const cropperImage = cropperImageRef.current;
         if (!cropperSelection || !asset || !cropperImage) return null;
 
-        // Create full image selection if user hasn't cropped
         if (!croppedByUser || cropperSelection.hidden) {
             cropperSelection.hidden = false;
             cropperSelection.x = 0;
@@ -262,7 +291,6 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
 
         const canvas = await cropperSelection.$toCanvas({
             beforeDraw: (context, canvas) => {
-                // Set fill color for transparency support
                 if (asset.mime_type?.includes('png')) {
                     context.clearRect(0, 0, canvas.width, canvas.height);
                 } else {
@@ -304,14 +332,12 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
 
     const toggleDiff = useCallback(async () => {
         if (!showDiff && filterProcessorRef.current) {
-            // Get current edited image URL (with filters applied)
             const currentEditedUrl = filterProcessorRef.current.getDataURL();
             setEditedImageUrl(currentEditedUrl);
         }
         setShowDiff(!showDiff);
     }, [showDiff]);
 
-    // Enable diff when there are changes to show
     useEffect(() => {
         const hasFilters = Object.keys(camanFilters).length > 0;
         const cropperImage = cropperImageRef.current;
@@ -360,7 +386,6 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
 
     const haveFilters = () => Object.keys(camanFilters).length > 0;
 
-    // Event listeners
     useEffect(() => {
         if (!isOpen || !cropperCanvasRef.current) return;
 
@@ -412,17 +437,21 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                 </DialogHeader>
 
                 <div className="image-editor flex min-h-0 flex-col">
-                    {/* Top Toolbar */}
                     <div className="flex items-center justify-between border-b bg-gray-50 px-6 py-2 dark:border-gray-700 dark:bg-gray-800">
                         <div className="flex items-center space-x-2">
-                            <ImageFilters processing={processing} reset={false} applyFilter={applyFilter} camanFilters={camanFilters} />
+                            <ImageFilters
+                                processing={processing || imageLoading}
+                                reset={false}
+                                applyFilter={applyFilter}
+                                camanFilters={camanFilters}
+                            />
                         </div>
 
                         <div className="flex items-center space-x-2">
                             <TooltipButton
                                 variant="outline"
                                 size="sm"
-                                disabled={processing || diffDisable}
+                                disabled={processing || imageLoading || diffDisable}
                                 className={showDiff ? 'bg-blue-100 dark:bg-blue-900' : ''}
                                 onClick={toggleDiff}
                                 tooltip={showDiff ? 'Hide comparison' : 'Show before/after comparison'}
@@ -433,7 +462,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                             <TooltipButton
                                 variant="outline"
                                 size="sm"
-                                disabled={processing || !haveFilters()}
+                                disabled={processing || imageLoading || !haveFilters()}
                                 onClick={resetFilters}
                                 tooltip="Clear all filters"
                             >
@@ -442,26 +471,31 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                         </div>
                     </div>
 
-                    {/* Main Editor Area */}
                     <div className="flex min-h-0 flex-1 overflow-hidden">
-                        {/* Side Controls */}
                         <div className="flex w-16 flex-col items-center space-y-2 border-r bg-gray-50 py-2 dark:border-gray-700 dark:bg-gray-800">
-                            <ImageControls dragMode={dragMode} onOperation={handleOperation} processing={processing} />
+                            <ImageControls dragMode={dragMode} onOperation={handleOperation} processing={processing || imageLoading} />
                         </div>
 
-                        {/* Image Area */}
                         <div ref={containerRef} className="__cropper relative min-h-0 flex-1 bg-gray-100 dark:bg-gray-900">
-                            {processing && (
-                                <div className="__loader">
-                                    <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
+                            {(processing || imageLoading) && (
+                                <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
+                                    <div className="flex flex-col items-center space-y-4 rounded-lg bg-white p-8 shadow-lg dark:bg-gray-800">
+                                        <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+                                        <div className="text-center">
+                                            <div className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                                {imageLoading ? 'Loading Image' : 'Processing'}
+                                            </div>
+                                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                                                {imageLoading ? 'Please wait while the image loads...' : 'Applying changes...'}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
-                            {/* Diff Comparison Overlay */}
                             {showDiff && originalImageUrl && (
                                 <div className="__diff-overlay bg-opacity-95 absolute inset-0 z-10 flex items-center justify-center bg-gray-900">
                                     <div className="__diff-container relative flex h-full max-h-[90%] w-full max-w-[90%] overflow-hidden rounded-lg bg-white shadow-2xl">
-                                        {/* Original Image - Left Half */}
                                         <div className="relative flex w-1/2 items-center justify-center border-r border-gray-300 bg-gray-100">
                                             <img
                                                 src={originalImageUrl}
@@ -474,7 +508,6 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                                             </div>
                                         </div>
 
-                                        {/* Current/Edited Image - Right Half */}
                                         <div className="relative flex w-1/2 items-center justify-center bg-gray-100">
                                             {editedImageUrl ? (
                                                 <img
@@ -491,7 +524,6 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                                             </div>
                                         </div>
 
-                                        {/* Close diff button */}
                                         <button
                                             onClick={() => setShowDiff(false)}
                                             className="bg-opacity-80 hover:bg-opacity-100 absolute top-4 right-4 rounded-full bg-black p-2 text-white transition-all duration-200"
@@ -499,7 +531,6 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                                             <X className="h-5 w-5" />
                                         </button>
 
-                                        {/* Divider line */}
                                         <div className="absolute top-0 left-1/2 h-full w-px -translate-x-px transform bg-gray-300"></div>
                                     </div>
                                 </div>
@@ -510,15 +541,15 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                                 {
                                     ref: cropperCanvasRef,
                                     background: true,
-                                    disabled: processing,
+                                    disabled: processing || imageLoading,
                                     'scale-step': 0.1,
-                                    style: { opacity: processing ? 0 : 1, width: '100%', height: '100%' },
+                                    style: { opacity: processing || imageLoading ? 0 : 1, width: '100%', height: '100%' },
                                 },
                                 [
                                     React.createElement('cropper-image', {
-                                        key: 'image',
+                                        key: `image-${asset.id}`,
                                         ref: cropperImageRef,
-                                        src: asset.url,
+                                        src: isOpen ? asset.url : '',
                                         alt: `Image to edit: ${asset.filename}`,
                                         translatable: true,
                                         rotatable: true,
@@ -571,24 +602,23 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                             )}
                         </div>
 
-                        {/* Presets Panel */}
                         <div className="w-64 border-l bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
-                            <FilterPresets processing={processing} camanFilters={camanFilters} applyFilter={applyFilter} />
+                            <FilterPresets processing={processing || imageLoading} camanFilters={camanFilters} applyFilter={applyFilter} />
                         </div>
                     </div>
 
-                    {/* Bottom Toolbar */}
                     <div className="flex items-center justify-center space-x-2 border-t bg-gray-50 px-6 py-2 dark:border-gray-700 dark:bg-gray-800">
-                        <Button variant="outline" disabled={processing || !hasChanged} onClick={() => handleOperation('reset')}>
+                        <Button variant="outline" disabled={processing || imageLoading || !hasChanged} onClick={() => handleOperation('reset')}>
                             <RotateCcw className="mr-2 h-4 w-4" />
                             Reset
                         </Button>
 
-                        <Button variant="outline" disabled={processing || !croppedByUser} onClick={() => handleOperation('clear')}>
+                        <Button variant="outline" disabled={processing || imageLoading || !croppedByUser} onClick={() => handleOperation('clear')}>
                             Clear
                         </Button>
 
-                        <Button disabled={processing || !hasChanged} onClick={handleSave}>
+                        <Button disabled={processing || imageLoading || !hasChanged} onClick={handleSave}>
+                            {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {processing ? 'Saving...' : 'Apply Changes'}
                         </Button>
                     </div>
