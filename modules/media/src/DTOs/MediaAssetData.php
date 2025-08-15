@@ -145,7 +145,7 @@ class MediaAssetData extends Data
     public function toArray(): array
     {
         return [
-            'id' => $this->id,
+            'id' => (string) $this->id,
             'disk' => $this->disk,
             'directory' => $this->directory,
             'filename' => $this->filename,
@@ -160,6 +160,7 @@ class MediaAssetData extends Data
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'focus' => $this->focus,
+            'container_id' => $this->disk, // Use disk as container_id for now
 
             // Computed properties
             'is_image' => $this->getIsImage(),

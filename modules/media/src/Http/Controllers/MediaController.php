@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Modules\Media\DTOs\MediaAssetData;
 use Modules\Media\Exceptions\MediaManagerException;
+use Modules\Media\Http\Requests\MediaUpdateRequest;
 use Modules\Media\Models\Media;
 use Modules\Media\Support\MediaManager;
 use Modules\Media\Support\MediaUploader;
@@ -67,14 +68,56 @@ class MediaController extends BaseController
     /**
      * Retrieve details about a specific piece of media.
      *
+     * @param mixed $id
+     *
      * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
      */
     public function show($id)
     {
-        $media = $this->model::findOrFail($id);
+        $media     = $this->model::findOrFail($id);
         $mediaData = MediaAssetData::fromModel($media);
 
         return response($mediaData->toArray());
+    }
+
+    /**
+     * Move or rename a specified media entry.
+     */
+    public function update(MediaUpdateRequest $request)
+    {
+        $model = config('media-manager.model');
+        $valid = $request->validated();
+
+        $media = $model::find($valid['id']);
+        $disk  = $this->manager->verifyDisk($valid['disk']);
+        $path  = $this->manager->verifyDirectory($disk, $valid['path'] ?? $media->directory);
+
+        if (! $request->has('path')) {
+            $details = $request->only(['title', 'alt', 'caption', 'credit']);
+            // Can't call fill due to backwards compatibility (fill doesn't trigger mutators)... Use loop instead.
+            foreach ($details as $attribute => $detail) {
+                $media->$attribute = $detail;
+            }
+        }
+
+        if ($path != $media->directory) {
+            $media->move($path, $valid['rename'] ?? null);
+        }
+
+        $media->save();
+
+        return response($media->fresh());
+    }
+
+    /**
+     * Delete media
+     */
+    public function destroy(Request $request)
+    {
+        $model = config('media-manager.model');
+        $id    = $request->id;
+
+        return response($model::destroy($id));
     }
 
     /**
@@ -113,5 +156,21 @@ class MediaController extends BaseController
                 'message' => 'Failed to upload file: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Adjust the size of a specified piece of media, while preserving aspect ratio
+     * Note: Does **not** preserve original image
+     */
+    public function resize(Request $request)
+    {
+        $model = config('media-manager.model');
+        $id    = $request->id;
+        $size  = $request->size;
+        // TODO: add exceptions for this that will detect incorrect function calls
+        $function = $request->function ?? MediaManager::RESIZE_WIDTH;
+
+        $image = $model::findOrFail($id);
+        $this->manager->resize($image, $size, $function);
     }
 }

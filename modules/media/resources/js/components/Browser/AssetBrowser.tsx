@@ -158,6 +158,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
 
     const handleAssetDoubleClicked = useCallback(
         (asset: MediaAsset) => {
+            // Call the external handler if provided
             if (onAssetDoubleClicked) {
                 onAssetDoubleClicked(asset);
             }

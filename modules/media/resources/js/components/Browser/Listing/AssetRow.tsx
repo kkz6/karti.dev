@@ -44,6 +44,14 @@ export const AssetRow: React.FC<AssetRowProps> = ({
         onDoubleClicked(asset);
     };
 
+    const handleSingleClick = () => {
+        if (isSelected) {
+            onDeselected(asset.id);
+        } else {
+            onSelected(asset.id);
+        }
+    };
+
     const handleEdit = () => {
         onEditing(asset.id);
         setDropdownOpen(false);
@@ -87,7 +95,11 @@ export const AssetRow: React.FC<AssetRowProps> = ({
 
             {/* Thumbnail */}
             <td className="p-3">
-                <div className="flex h-8 w-8 cursor-pointer items-center justify-center overflow-hidden rounded" onDoubleClick={handleDoubleClick}>
+                <div
+                    className="flex h-8 w-8 cursor-pointer items-center justify-center overflow-hidden rounded"
+                    onClick={handleSingleClick}
+                    onDoubleClick={handleDoubleClick}
+                >
                     {thumbnailUrl ? (
                         <img src={thumbnailUrl} alt={asset.title} className="h-full w-full object-cover" />
                     ) : (
@@ -98,7 +110,11 @@ export const AssetRow: React.FC<AssetRowProps> = ({
 
             {/* Title */}
             <td className="p-3">
-                <div className="cursor-pointer text-sm font-medium text-gray-900 hover:text-blue-600" onDoubleClick={handleDoubleClick}>
+                <div
+                    className="cursor-pointer text-sm font-medium text-gray-900 hover:text-blue-600"
+                    onClick={handleSingleClick}
+                    onDoubleClick={handleDoubleClick}
+                >
                     {asset.title || asset.filename}
                 </div>
                 <div className="text-xs text-gray-500">{asset.extension.toUpperCase()}</div>

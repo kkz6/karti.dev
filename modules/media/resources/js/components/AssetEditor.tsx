@@ -23,8 +23,6 @@ interface AssetEditorProps {
 
 interface AssetEditorData extends MediaAsset {
     preview?: string;
-    is_audio?: boolean;
-    is_video?: boolean;
     is_previewable?: boolean;
     width?: number;
     height?: number;
