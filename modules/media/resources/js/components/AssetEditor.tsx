@@ -10,6 +10,8 @@ import React, { useEffect, useState } from 'react';
 import { MediaAsset } from '../types/media';
 import { ActionButton } from './ActionButton';
 import { FileIcon } from './FileIcon';
+import { FocalPointEditor } from './FocalPointEditor';
+import { ImageEditor } from './ImageEditor';
 import { LoadingGraphic } from './LoadingGraphic';
 
 interface AssetEditorProps {
@@ -38,6 +40,8 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
     const [title, setTitle] = useState('');
     const [altText, setAltText] = useState('');
     const [focus, setFocus] = useState<string | null>(null);
+    const [showFocalPointEditor, setShowFocalPointEditor] = useState(false);
+    const [showImageEditor, setShowImageEditor] = useState(false);
     const [errors, setErrors] = useState<string[]>([]);
 
     const isImage = asset?.is_image || false;
@@ -280,16 +284,42 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
                             </div>
 
                             {isImage && (
-                                <div>
-                                    <Label htmlFor="altText">Alt Text</Label>
-                                    <Textarea
-                                        id="altText"
-                                        value={altText}
-                                        onChange={(e) => setAltText(e.target.value)}
-                                        placeholder="Alternative text for accessibility"
-                                        rows={3}
-                                    />
-                                </div>
+                                <>
+                                    <div>
+                                        <Label htmlFor="altText">Alt Text</Label>
+                                        <Textarea
+                                            id="altText"
+                                            value={altText}
+                                            onChange={(e) => setAltText(e.target.value)}
+                                            placeholder="Alternative text for accessibility"
+                                            rows={3}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <Label>Focal Point</Label>
+                                        <div className="flex items-center space-x-2">
+                                            <span className="text-sm text-gray-600">
+                                                {focus ? `${focus.replace('-', '%, ')}%` : 'Not set (default: 50%, 50%)'}
+                                            </span>
+                                            <Button type="button" variant="outline" size="sm" onClick={() => setShowFocalPointEditor(true)}>
+                                                Edit Focal Point
+                                            </Button>
+                                        </div>
+                                        <p className="mt-1 text-xs text-gray-500">Set the focal point for image cropping</p>
+                                    </div>
+
+                                    <div>
+                                        <Label>Image Editor</Label>
+                                        <div className="flex items-center space-x-2">
+                                            <span className="text-sm text-gray-600">Edit, crop, rotate and apply filters to your image</span>
+                                            <Button type="button" variant="outline" size="sm" onClick={() => setShowImageEditor(true)}>
+                                                Edit Image
+                                            </Button>
+                                        </div>
+                                        <p className="mt-1 text-xs text-gray-500">Advanced image editing with cropping, filters and effects</p>
+                                    </div>
+                                </>
                             )}
                         </div>
                     </div>
@@ -307,6 +337,34 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
                     )}
                 </DialogFooter>
             </DialogContent>
+
+            {/* Focal Point Editor */}
+            {asset && isImage && (
+                <FocalPointEditor
+                    isOpen={showFocalPointEditor}
+                    image={asset.url}
+                    initialFocus={focus || undefined}
+                    onSelect={(newFocus) => {
+                        setFocus(newFocus);
+                        setShowFocalPointEditor(false);
+                    }}
+                    onClose={() => setShowFocalPointEditor(false)}
+                />
+            )}
+
+            {/* Image Editor */}
+            {asset && isImage && (
+                <ImageEditor
+                    asset={asset}
+                    isOpen={showImageEditor}
+                    onClose={() => setShowImageEditor(false)}
+                    onSaved={(updatedAsset) => {
+                        setAsset(updatedAsset);
+                        setShowImageEditor(false);
+                        if (onSaved) onSaved(updatedAsset);
+                    }}
+                />
+            )}
         </Dialog>
     );
 };
