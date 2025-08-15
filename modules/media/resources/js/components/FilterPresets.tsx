@@ -58,7 +58,7 @@ export const FilterPresets: React.FC<FilterPresetsProps> = ({ processing, camanF
     return (
         <TooltipProvider>
             <div className="space-y-4">
-                <h3 className="text-sm font-medium text-gray-700" style={{ opacity: processing ? 0.5 : 1 }}>
+                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300" style={{ opacity: processing ? 0.5 : 1 }}>
                     Presets
                 </h3>
 
@@ -73,12 +73,14 @@ export const FilterPresets: React.FC<FilterPresetsProps> = ({ processing, camanF
                                             size="sm"
                                             disabled={processing}
                                             className={`h-10 flex-1 font-mono text-xs ${
-                                                isPresetActive(preset.name) ? 'border-blue-300 bg-blue-100 text-blue-700' : ''
+                                                isPresetActive(preset.name)
+                                                    ? 'border-blue-300 bg-blue-100 text-blue-700 dark:border-blue-600 dark:bg-blue-900 dark:text-blue-300'
+                                                    : ''
                                             }`}
                                             onClick={() => applyPreset(preset.name)}
                                         >
                                             {processing ? (
-                                                <div className="h-3 w-3 animate-spin rounded-full border-b-2 border-gray-600"></div>
+                                                <div className="h-3 w-3 animate-spin rounded-full border-b-2 border-gray-600 dark:border-gray-400"></div>
                                             ) : (
                                                 preset.shortName
                                             )}
@@ -93,7 +95,7 @@ export const FilterPresets: React.FC<FilterPresetsProps> = ({ processing, camanF
                     ))}
                 </div>
 
-                <div className="text-xs text-gray-500">Click presets to apply vintage and artistic effects to your image.</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Click presets to apply vintage and artistic effects to your image.</div>
             </div>
         </TooltipProvider>
     );
