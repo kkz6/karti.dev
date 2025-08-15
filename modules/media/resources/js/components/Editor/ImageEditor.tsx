@@ -432,7 +432,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="h-[95vh] !w-[95vw] !max-w-[95vw] grid-rows-[auto_1fr] gap-0 overflow-hidden p-0">
-                <DialogHeader className="border-b px-6 py-3">
+                <DialogHeader className="border-b px-6 py-4">
                     <DialogTitle>Image Editor - {asset.filename}</DialogTitle>
                 </DialogHeader>
 
