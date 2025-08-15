@@ -11,7 +11,7 @@ Route::middleware(['web', 'auth'])->prefix('admin')->group(function () {
 
     // Media API routes
     Route::prefix('media')->name('media.')->group(function () {
-        Route::post('/upload', [MediaController::class, 'upload'])->name('upload');
+        Route::post('/', [MediaController::class, 'create'])->name('create');
         Route::post('{id}', [MediaController::class, 'show'])->name('show');
         Route::patch('{id}', [MediaController::class, 'update'])->name('update');
         Route::delete('{id}', [MediaController::class, 'destroy'])->name('destroy');

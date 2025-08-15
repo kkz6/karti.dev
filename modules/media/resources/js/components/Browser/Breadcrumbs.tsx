@@ -46,7 +46,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ path, folder, folders,
     const pathParts = getPathParts();
 
     return (
-        <div className="breadcrumbs flex items-center border-t bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+        <div className="breadcrumbs flex items-center bg-gray-50 p-4 dark:bg-gray-800">
             {pathParts.map((part, index) => (
                 <React.Fragment key={index}>
                     {index > 0 && <ChevronRight className="mx-0.5 h-4 w-4 text-gray-400" />}

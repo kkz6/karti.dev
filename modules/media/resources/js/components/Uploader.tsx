@@ -1,155 +1,168 @@
-import React, { useRef, useCallback, useState, useEffect } from 'react';
 import axios from 'axios';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { MediaUpload } from '../types/media';
 
 interface UploaderProps {
-  domElement?: HTMLDivElement | null;
-  container?: string | null;
-  path?: string | null;
-  onProgress?: (upload: MediaUpload) => void;
-  onUploadComplete?: (item: any, uploads: MediaUpload[]) => void;
-  onError?: (error: string) => void;
-  onUpdated?: (uploads: MediaUpload[]) => void;
+    domElement?: HTMLDivElement | null;
+    container?: string | null;
+    path?: string | null;
+    onProgress?: (upload: MediaUpload) => void;
+    onUploadComplete?: (item: any, uploads: MediaUpload[]) => void;
+    onError?: (error: string) => void;
+    onUpdated?: (uploads: MediaUpload[]) => void;
 }
 
 export interface UploaderRef {
-  browse: () => void;
-  upload: (file: File) => void;
+    browse: () => void;
+    upload: (file: File) => void;
 }
 
-export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(({
-  domElement = null,
-  container = null,
-  path = null,
-  onProgress,
-  onUploadComplete,
-  onError,
-  onUpdated
-}, ref) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploads, setUploads] = useState<MediaUpload[]>([]);
+export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
+    ({ domElement = null, container = null, path = null, onProgress, onUploadComplete, onError, onUpdated }, ref) => {
+        const fileInputRef = useRef<HTMLInputElement>(null);
+        const [uploads, setUploads] = useState<MediaUpload[]>([]);
 
-  const generateId = (): string => {
-    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c: any) =>
-      (
-        c ^
-        (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
-      ).toString(16)
-    );
-  };
+        const generateId = (): string => {
+            return (1e7 + -1e3 + -4e3 + -8e3 + -1e11)
+                .toString()
+                .replace(/[018]/g, (c: any) => (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16));
+        };
 
-  const browse = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
+        const browse = useCallback(() => {
+            fileInputRef.current?.click();
+        }, []);
 
-  const selectFile = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files && files.length > 0) {
-      Array.from(files).forEach(file => {
-        upload(file);
-      });
-    }
-  }, []);
+        const selectFile = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+            const files = event.target.files;
+            if (files && files.length > 0) {
+                Array.from(files).forEach((file) => {
+                    upload(file);
+                });
+            }
+        }, []);
 
-  const upload = useCallback(async (file: File) => {
-    const uuid = generateId();
-    const newUpload: MediaUpload = {
-      id: uuid,
-      name: file.name,
-      progress: 0,
-      status: 'uploading',
-    };
+        const upload = useCallback(
+            async (file: File) => {
+                const uuid = generateId();
 
-    setUploads(prev => [...prev, newUpload]);
+                // Client-side file size validation (10MB limit)
+                const maxFileSize = 10 * 1024 * 1024; // 10MB in bytes
+                if (file.size > maxFileSize) {
+                    const errorMessage = `File "${file.name}" is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum file size is 10MB.`;
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('collection_name', container || '');
-    formData.append('path', path || '');
-    formData.append('filename', file.name);
-    formData.append('extension', file.name.split('.').pop() || '');
+                    const errorUpload: MediaUpload = {
+                        id: uuid,
+                        name: file.name,
+                        progress: 0,
+                        status: 'error',
+                        error: errorMessage,
+                    };
 
-    try {
-      const response = await axios.post('/admin/media/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        onUploadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            setUploads(prev => prev.map(u => 
-              u.id === uuid ? { ...u, progress } : u
-            ));
-          }
-        },
-      });
+                    // Call onError callback, let parent handle toast notification
+                    onError?.(errorMessage);
+                    return;
+                }
 
-      if (response.status === 200 || response.status === 201) {
-        if (response.data.success) {
-          setUploads(prev => prev.filter(u => u.id !== uuid));
-          onUploadComplete?.(response.data.media, uploads.filter(u => u.id !== uuid));
-        } else {
-          const errorMsg = response.data.message || 'Error on file upload';
-          setUploads(prev => prev.map(u => 
-            u.id === uuid 
-              ? { ...u, status: 'error' as const, error: errorMsg }
-              : u
-          ));
-          onError?.(errorMsg);
-        }
-      } else {
-        setUploads(prev => prev.map(u => 
-          u.id === uuid 
-            ? { ...u, status: 'error' as const, error: 'Upload failed' }
-            : u
-        ));
-        onError?.('Upload failed');
-      }
-    } catch (error: any) {
-      let errorMessage = 'Network error';
-      
-      if (error.response) {
-        if (error.response.status === 413) {
-          errorMessage = 'File size is too large';
-        } else {
-          errorMessage = error.response.data?.message || 'Upload failed';
-        }
-      }
+                const newUpload: MediaUpload = {
+                    id: uuid,
+                    name: file.name,
+                    progress: 0,
+                    status: 'uploading',
+                };
 
-      setUploads(prev => prev.map(u => 
-        u.id === uuid 
-          ? { ...u, status: 'error' as const, error: errorMessage }
-          : u
-      ));
-      onError?.(errorMessage);
-    }
-  }, [container, path, onUploadComplete, onError, onUpdated]);
+                setUploads((prev) => [...prev, newUpload]);
 
-  const uploadFiles = useCallback((files: FileList) => {
-    Array.from(files).forEach(file => {
-      upload(file);
-    });
-  }, [upload]);
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('disk', container || 'public');
+                formData.append('path', path || '');
 
-  // Expose methods via ref
-  React.useImperativeHandle(ref, () => ({
-    browse,
-    upload,
-  }));
+                try {
+                    const response = await axios.post(route('media.create'), formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                        onUploadProgress: (progressEvent) => {
+                            if (progressEvent.total) {
+                                const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                                setUploads((prev) => prev.map((u) => (u.id === uuid ? { ...u, progress } : u)));
+                            }
+                        },
+                    });
 
-  useEffect(() => {
-    onUpdated?.(uploads);
-  }, [uploads, onUpdated]);
+                    if (response.status === 200 || response.status === 201) {
+                        // Backend returns media array directly
+                        const mediaArray = Array.isArray(response.data) ? response.data : [response.data];
+                        const uploadedMedia = mediaArray[0]; // Get first uploaded media
 
-  return (
-    <div className="asset-uploader">
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple
-        className="hidden"
-        onChange={selectFile}
-      />
-    </div>
-  );
-});
+                        setUploads((prev) => prev.filter((u) => u.id !== uuid));
+                        onUploadComplete?.(
+                            uploadedMedia,
+                            uploads.filter((u) => u.id !== uuid),
+                        );
+
+                        // Show success toast
+                        toast.success(`"${file.name}" uploaded successfully`);
+                    } else {
+                        setUploads((prev) => prev.map((u) => (u.id === uuid ? { ...u, status: 'error' as const, error: 'Upload failed' } : u)));
+                        onError?.('Upload failed');
+
+                        // Auto-remove error upload after 5 seconds
+                        setTimeout(() => {
+                            setUploads((prev) => prev.filter((u) => u.id !== uuid));
+                        }, 5000);
+                    }
+                } catch (error: any) {
+                    let errorMessage = 'Network error';
+
+                    if (error.response) {
+                        if (error.response.status === 413) {
+                            errorMessage = 'File size is too large. Please choose a smaller file.';
+                        } else if (error.response.status === 422) {
+                            errorMessage = error.response.data?.message || 'Invalid file type or format';
+                        } else if (error.response.status >= 500) {
+                            errorMessage = 'Server error occurred during upload. Please try again.';
+                        } else {
+                            errorMessage = error.response.data?.message || 'Upload failed';
+                        }
+                    }
+
+                    setUploads((prev) => prev.map((u) => (u.id === uuid ? { ...u, status: 'error' as const, error: errorMessage } : u)));
+                    onError?.(errorMessage);
+
+                    // Auto-remove error upload after 5 seconds
+                    setTimeout(() => {
+                        setUploads((prev) => prev.filter((u) => u.id !== uuid));
+                    }, 5000);
+                }
+            },
+            [container, path, onUploadComplete, onError, onUpdated],
+        );
+
+        const uploadFiles = useCallback(
+            (files: FileList) => {
+                Array.from(files).forEach((file) => {
+                    upload(file);
+                });
+            },
+            [upload],
+        );
+
+        // Expose methods via ref
+        React.useImperativeHandle(ref, () => ({
+            browse,
+            upload,
+        }));
+
+        useEffect(() => {
+            onUpdated?.(uploads);
+        }, [uploads, onUpdated]);
+
+        return (
+            <div className="asset-uploader">
+                <input ref={fileInputRef} type="file" multiple className="hidden" onChange={selectFile} />
+            </div>
+        );
+    },
+);

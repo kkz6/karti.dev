@@ -94,10 +94,8 @@ export class MediaService {
     async getFiles(params: MediaListParams = {}): Promise<MediaApiResponse> {
         try {
             // Build URL with path if provided
-            const path = params.path && params.path !== '/' 
-                ? `/${params.path.replace(/^\//, '')}` 
-                : '';
-            
+            const path = params.path && params.path !== '/' ? `/${params.path.replace(/^\//, '')}` : '';
+
             // Add query parameters
             const queryParams = new URLSearchParams();
             if (params.disk) {
@@ -145,9 +143,24 @@ export class MediaService {
             });
 
             return response.data;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error uploading files:', error);
-            throw new Error(`Failed to upload files: ${error instanceof Error ? error.message : 'Unknown error'}`);
+
+            let errorMessage = 'Failed to upload files';
+
+            if (error.response) {
+                if (error.response.status === 413) {
+                    errorMessage = 'File size is too large. Please choose a smaller file.';
+                } else if (error.response.data?.message) {
+                    errorMessage = error.response.data.message;
+                } else {
+                    errorMessage = `Upload failed (${error.response.status})`;
+                }
+            } else if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+
+            throw new Error(errorMessage);
         }
     }
 
@@ -168,7 +181,7 @@ export class MediaService {
      */
     async deleteFiles(mediaIds: number[]): Promise<void> {
         try {
-            const deletePromises = mediaIds.map(id => this.deleteFile(id));
+            const deletePromises = mediaIds.map((id) => this.deleteFile(id));
             await Promise.all(deletePromises);
         } catch (error) {
             console.error('Error deleting files:', error);
@@ -182,7 +195,7 @@ export class MediaService {
     async createFolder(folderName: string, currentPath: string = '/', disk: string = 'public'): Promise<any> {
         try {
             const fullPath = `${currentPath.replace(/\/$/, '')}/${folderName}`.replace(/^\/+/, '');
-            
+
             const response = await axios.post(`${this.baseUrl}/create`, {
                 path: fullPath,
                 disk,

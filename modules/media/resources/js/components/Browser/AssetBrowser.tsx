@@ -4,6 +4,7 @@ import { Input } from '@shared/components/ui/input';
 import { Toggle } from '@shared/components/ui/toggle';
 import { Grid, List, Search } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { useMediaBrowser } from '../../hooks/useMediaBrowser';
 import { MediaAsset, MediaFolder } from '../../types/media';
 import { AssetEditor } from '../AssetEditor';
@@ -286,22 +287,24 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                 </div>
 
                 {/* Scrollable Content Area */}
-                <div className="asset-browser-content flex-1 overflow-y-auto pb-12">
+                <div className="asset-browser-content flex-1 overflow-y-auto pb-20">
                     {/* Upload Progress */}
-                    {uploads.length > 0 && (
+                    {uploads.filter((upload) => upload.status === 'uploading').length > 0 && (
                         <div className="uploads-section bg-blue-50 p-4 dark:bg-blue-900">
                             <h3 className="mb-2 font-semibold">Uploading files...</h3>
-                            {uploads.map((upload) => (
-                                <div key={upload.id} className="upload-item mb-2">
-                                    <div className="flex justify-between text-sm">
-                                        <span>{upload.name}</span>
-                                        <span>{upload.progress}%</span>
+                            {uploads
+                                .filter((upload) => upload.status === 'uploading')
+                                .map((upload) => (
+                                    <div key={upload.id} className="upload-item mb-2">
+                                        <div className="flex justify-between text-sm">
+                                            <span>{upload.name}</span>
+                                            <span>{upload.progress}%</span>
+                                        </div>
+                                        <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                                            <div className="h-2 rounded-full bg-blue-600 transition-all" style={{ width: `${upload.progress}%` }} />
+                                        </div>
                                     </div>
-                                    <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
-                                        <div className="h-2 rounded-full bg-blue-600 transition-all" style={{ width: `${upload.progress}%` }} />
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
                         </div>
                     )}
 
@@ -450,10 +453,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                 onError={(error) => {
                     console.error('Upload error:', error);
                     // Show error toast
-                    const event = new CustomEvent('toast', {
-                        detail: { type: 'error', message: error },
-                    });
-                    window.dispatchEvent(event);
+                    toast.error(error);
                 }}
             />
 
