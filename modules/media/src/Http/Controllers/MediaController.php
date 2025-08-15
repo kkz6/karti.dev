@@ -28,7 +28,6 @@ use Modules\Shared\Http\Controllers\BaseController;
 
 class MediaController extends BaseController
 {
-
     protected $ignore = ['conversions'];
 
     public function __construct(
@@ -75,8 +74,9 @@ class MediaController extends BaseController
 
     /**
      * Upload a piece of media to a specified path, and create associated media entry representing it.
-     * @param MediaStoreRequest $request
+     *
      * @return ResponseFactory|Application|Response|object
+     *
      * @throws MediaManagerException
      * @throws ConfigurationException
      * @throws FileExistsException
@@ -130,6 +130,8 @@ class MediaController extends BaseController
 
     /**
      * Move or rename a specified media entry.
+     *
+     * @throws MediaManagerException
      */
     public function update(MediaUpdateRequest $request)
     {
@@ -157,10 +159,8 @@ class MediaController extends BaseController
     /**
      * Delete media
      */
-    public function destroy(Request $request)
+    public function destroy($id)
     {
-        $id    = $request->id;
-
         return response(Media::destroy($id));
     }
 

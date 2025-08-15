@@ -143,19 +143,22 @@ export const AssetMover: React.FC<AssetMoverProps> = ({ assets, container, folde
 
     return (
         <Dialog open={show} onOpenChange={setShow}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="border-gray-200 bg-white sm:max-w-md dark:border-gray-700 dark:bg-gray-900">
                 <DialogHeader>
-                    <DialogTitle>Move File</DialogTitle>
+                    <DialogTitle className="text-gray-900 dark:text-gray-100">Move File</DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-4">
-                    <Alert>
-                        <AlertDescription>{warningText}</AlertDescription>
+                    <Alert className="border-yellow-200 bg-yellow-50 text-yellow-800 dark:border-yellow-800/30 dark:bg-yellow-900/20 dark:text-yellow-200">
+                        <AlertDescription className="text-yellow-700 dark:text-yellow-300">{warningText}</AlertDescription>
                     </Alert>
 
                     {errors && (
-                        <Alert variant="destructive">
-                            <AlertDescription>
+                        <Alert
+                            variant="destructive"
+                            className="border-red-200 bg-red-50 text-red-800 dark:border-red-800/30 dark:bg-red-900/20 dark:text-red-200"
+                        >
+                            <AlertDescription className="text-red-700 dark:text-red-300">
                                 {errors.map((error, i) => (
                                     <p key={i}>{error}</p>
                                 ))}
@@ -164,7 +167,9 @@ export const AssetMover: React.FC<AssetMoverProps> = ({ assets, container, folde
                     )}
 
                     <div className="space-y-2">
-                        <Label htmlFor="folder">Folder</Label>
+                        <Label htmlFor="folder" className="text-gray-900 dark:text-gray-100">
+                            Folder
+                        </Label>
                         <Select value={selectedFolder || ''} onValueChange={setSelectedFolder} disabled={loadingFolders}>
                             <SelectTrigger>
                                 <SelectValue placeholder={loadingFolders ? 'Loading folders...' : 'Select a folder'} />
