@@ -1,3 +1,4 @@
+import type { MediaAsset } from '@media/types/media';
 import { Alert, AlertDescription } from '@shared/components/ui/alert';
 import { Button } from '@shared/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
@@ -7,12 +8,10 @@ import { Textarea } from '@shared/components/ui/textarea';
 import axios from 'axios';
 import { Download, ExternalLink, Save, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { MediaAsset } from '../types/media';
-import { ActionButton } from './ActionButton';
-import { FileIcon } from './FileIcon';
+import { FileIcon } from '../Icons';
+import { ActionButton, LoadingGraphic } from '../UI';
 import { FocalPointEditor } from './FocalPointEditor';
 import { ImageEditor } from './ImageEditor';
-import { LoadingGraphic } from './LoadingGraphic';
 
 interface AssetEditorProps {
     assetId: string | null;

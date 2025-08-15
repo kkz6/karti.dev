@@ -4,11 +4,21 @@ declare(strict_types=1);
 
 namespace Modules\Media\Http\Controllers;
 
+use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Modules\Media\DTOs\MediaAssetData;
 use Modules\Media\Exceptions\MediaManagerException;
+use Modules\Media\Exceptions\MediaUpload\ConfigurationException;
+use Modules\Media\Exceptions\MediaUpload\FileExistsException;
+use Modules\Media\Exceptions\MediaUpload\FileNotFoundException;
+use Modules\Media\Exceptions\MediaUpload\FileNotSupportedException;
+use Modules\Media\Exceptions\MediaUpload\FileSizeException;
+use Modules\Media\Exceptions\MediaUpload\ForbiddenException;
+use Modules\Media\Exceptions\MediaUpload\InvalidHashException;
 use Modules\Media\Http\Requests\MediaStoreRequest;
 use Modules\Media\Http\Requests\MediaUpdateRequest;
 use Modules\Media\Models\Media;
@@ -18,7 +28,6 @@ use Modules\Shared\Http\Controllers\BaseController;
 
 class MediaController extends BaseController
 {
-    protected $model;
 
     protected $ignore = ['conversions'];
 
@@ -27,7 +36,6 @@ class MediaController extends BaseController
         protected readonly MediaUploader $uploader,
         array $ignore = []
     ) {
-        $this->model    = config('media-manager.model');
         $this->ignore   = array_merge($ignore, $this->ignore);
     }
 
@@ -39,12 +47,11 @@ class MediaController extends BaseController
         $diskString = $this->manager->verifyDisk($request->disk);
         $disk       = Storage::disk($diskString);
         $path       = $this->manager->verifyDirectory($diskString, $path);
-        $model      = config('media-manager.model');
 
-        $media          = $model::inDirectory($diskString, $path)->paginate(20)->toArray();
+        $media          = Media::inDirectory($diskString, $path)->paginate(20)->toArray();
         $subdirectories = array_diff($disk->directories($path), $this->ignore);
 
-        $key            = trim('root.' . implode('.', explode('/', $path)), "\.");
+        $key            = trim('root.'.implode('.', explode('/', $path)), "\.");
         $subdirectories = Cache::remember("media.manager.folders.{$key}", 60 * 60 * 24, function () use ($subdirectories) {
             $modified = Media::whereIn('directory', $subdirectories)
                 ->selectRaw('directory, max(updated_at) as timestamp')
@@ -68,40 +75,41 @@ class MediaController extends BaseController
 
     /**
      * Upload a piece of media to a specified path, and create associated media entry representing it.
+     * @param MediaStoreRequest $request
+     * @return ResponseFactory|Application|Response|object
+     * @throws MediaManagerException
+     * @throws ConfigurationException
+     * @throws FileExistsException
+     * @throws FileNotFoundException
+     * @throws FileNotSupportedException
+     * @throws FileSizeException
+     * @throws ForbiddenException
+     * @throws InvalidHashException
      */
     public function create(MediaStoreRequest $request)
     {
-        // Set up data we need for uploads, turn file into an array so we can always iterate over it.
-        $media = is_array($request->file) ? $request->file : [$request->file];
-        $data = collect($request->only(['title', 'alt', 'caption', 'credit']));
-        $disk = $this->manager->verifyDisk($request->disk);
-        $path = $this->manager->verifyDirectory($disk, trim($request->path, "/"));
+        $media    = is_array($request->file) ? $request->file : [$request->file];
+        $data     = collect($request->only(['title', 'alt', 'caption', 'credit']));
+        $disk     = $this->manager->verifyDisk($request->disk);
+        $path     = $this->manager->verifyDirectory($disk, trim($request->path, '/'));
         $response = [];
 
-
         foreach ($media as $m) {
-
-            // Prep an uploader instance with the file.
             $model = $this->uploader
                 ->toDestination($disk, $path)
                 ->fromSource($m);
-
-            // If the request has meta data about the file, apply that meta data as part of the upload.
             if ($data->isNotEmpty()) {
                 $model->beforeSave(function (Media $m) use ($data) {
                     $m->fill($data->toArray());
                 });
             }
-
-            // Check that the file we're uploading doesn't already exist
-            if ($c = $this->model::inDirectory($disk, $path)->where('filename', $m->getClientOriginalName())->count()) {
+            if ($c = Media::inDirectory($disk, $path)->where('filename', $m->getClientOriginalName())->count()) {
                 $model = $model->useFilename("{$m->getClientOriginalName()}_{$c}");
             }
 
             $response[] = $model->upload();
         }
 
-        // Return all the media.
         return response($response);
     }
 
@@ -114,7 +122,7 @@ class MediaController extends BaseController
      */
     public function show($id)
     {
-        $media     = $this->model::findOrFail($id);
+        $media     = Media::findOrFail($id);
         $mediaData = MediaAssetData::fromModel($media);
 
         return response($mediaData->toArray());
@@ -125,16 +133,13 @@ class MediaController extends BaseController
      */
     public function update(MediaUpdateRequest $request)
     {
-        $model = config('media-manager.model');
         $valid = $request->validated();
-
-        $media = $model::find($valid['id']);
+        $media = Media::find($valid['id']);
         $disk  = $this->manager->verifyDisk($valid['disk']);
         $path  = $this->manager->verifyDirectory($disk, $valid['path'] ?? $media->directory);
 
         if (! $request->has('path')) {
             $details = $request->only(['title', 'alt', 'caption', 'credit']);
-            // Can't call fill due to backwards compatibility (fill doesn't trigger mutators)... Use loop instead.
             foreach ($details as $attribute => $detail) {
                 $media->$attribute = $detail;
             }
@@ -154,10 +159,9 @@ class MediaController extends BaseController
      */
     public function destroy(Request $request)
     {
-        $model = config('media-manager.model');
         $id    = $request->id;
 
-        return response($model::destroy($id));
+        return response(Media::destroy($id));
     }
 
     /**
@@ -166,13 +170,12 @@ class MediaController extends BaseController
      */
     public function resize(Request $request)
     {
-        $model = config('media-manager.model');
         $id    = $request->id;
         $size  = $request->size;
         // TODO: add exceptions for this that will detect incorrect function calls
         $function = $request->function ?? MediaManager::RESIZE_WIDTH;
 
-        $image = $model::findOrFail($id);
+        $image = Media::findOrFail($id);
         $this->manager->resize($image, $size, $function);
     }
 }

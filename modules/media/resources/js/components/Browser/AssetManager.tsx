@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
+import { AssetBrowser } from './AssetBrowser';
 import { AssetMover } from './AssetMover';
-import { AssetBrowser } from './Browser/AssetBrowser';
 
 interface AssetManagerProps {
     container?: string | null;

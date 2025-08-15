@@ -1,7 +1,7 @@
+import { ActionButton } from '@media/components/UI';
+import { MediaFolder } from '@media/types/media';
 import { Edit, Folder, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
-import { MediaFolder } from '../../../types/media';
-import { ActionButton } from '../../ActionButton';
 
 interface FolderRowProps {
     folder: MediaFolder;

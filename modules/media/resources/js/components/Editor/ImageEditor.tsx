@@ -1,14 +1,16 @@
+import { MediaAsset } from '@media/types/media';
 import { Button } from '@shared/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
 import { TooltipButton } from '@shared/components/ui/tooltip-button';
 import axios from 'axios';
 import { Code, Loader2, RotateCcw, X } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { MediaAsset } from '../types/media';
 import { FilterPresets } from './FilterPresets';
 import { ImageControls } from './ImageControls';
 import { ImageFilters } from './ImageFilters';
 
+import '@media/../css/image-editor.css';
+import { FilterOptions, ImageFilterProcessor } from '@media/utils/imageFilters';
 import 'cropperjs';
 import type { CropperCanvas, CropperHandle, CropperImage, CropperSelection } from 'cropperjs';
 import {
@@ -23,8 +25,6 @@ import {
     ACTION_RESIZE_WEST,
     ACTION_SELECT,
 } from 'cropperjs';
-import '../../css/image-editor.css';
-import { FilterOptions, ImageFilterProcessor } from '../utils/imageFilters';
 
 type CropperImageElement = CropperImage;
 type CropperSelectionElement = CropperSelection;
