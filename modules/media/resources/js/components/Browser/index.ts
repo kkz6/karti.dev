@@ -1,4 +1,5 @@
 export { AssetBrowser } from './AssetBrowser';
-export { Breadcrumbs } from './Breadcrumbs';
-export { FolderEditor } from './FolderEditor';
+export { AssetManager } from './AssetManager';
+export { AssetMover } from './AssetMover';
 export * from './Listing';
+export * from './Navigation';

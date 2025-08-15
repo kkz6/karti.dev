@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { ChevronDown, ChevronUp, CornerLeftUp } from 'lucide-react';
 import React, { useState } from 'react';
 import { MediaAsset, MediaFolder } from '../../../types/media';
-import { FileIcon } from '../../FileIcon';
+import { FileIcon } from '../../Icons/FileIcon';
 import { AssetRow } from './AssetRow';
 import { FolderRow } from './FolderRow';
 

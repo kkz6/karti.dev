@@ -7,12 +7,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useMediaBrowser } from '../../hooks/useMediaBrowser';
 import { MediaAsset, MediaFolder } from '../../types/media';
-import { AssetEditor } from '../AssetEditor';
-import { LoadingGraphic } from '../LoadingGraphic';
-import { Uploader } from '../Uploader';
-import { Breadcrumbs } from './Breadcrumbs';
-import { FolderEditor } from './FolderEditor';
+import { AssetEditor } from '../Editor/AssetEditor';
+import { LoadingGraphic } from '../UI/LoadingGraphic';
+import { Uploader } from '../Upload/Uploader';
 import { GridListing, TableListing } from './Listing';
+import { Breadcrumbs } from './Navigation/Breadcrumbs';
+import { FolderEditor } from './Navigation/FolderEditor';
 
 interface AssetBrowserProps {
     selectedContainer?: string | null;

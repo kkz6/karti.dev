@@ -1,6 +1,7 @@
+import { CornerLeftUp } from 'lucide-react';
 import React from 'react';
 import { MediaAsset, MediaFolder } from '../../../types/media';
-import { FileIcon } from '../../FileIcon';
+import { FileIcon } from '../../Icons/FileIcon';
 import { AssetTile } from './AssetTile';
 import { FolderTile } from './FolderTile';
 
@@ -66,14 +67,23 @@ export const GridListing: React.FC<GridListingProps> = ({
     };
 
     return (
-        <div className="asset-grid-listing grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+        <div className="asset-grid-listing grid grid-cols-3 gap-3 p-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
             {hasParent && !restrictNavigation && (
-                <div className="asset-tile is-folder group cursor-pointer" onDoubleClick={handleParentSelect}>
-                    <div className="asset-thumb-container mb-2 rounded-lg bg-gray-100 p-6 transition-colors group-hover:bg-gray-200 dark:bg-gray-800 dark:group-hover:bg-gray-700">
-                        <FileIcon extension="folder" className="mx-auto h-12 w-12" />
+                <div
+                    className="asset-tile is-folder group cursor-pointer rounded-lg border border-gray-200 bg-white transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+                    onDoubleClick={handleParentSelect}
+                >
+                    <div className="relative">
+                        <div className="asset-thumb-container flex aspect-square items-center justify-center rounded-t-lg bg-blue-50 dark:bg-blue-900">
+                            <div className="flex flex-col items-center gap-1">
+                                <CornerLeftUp className="h-8 w-8 text-blue-500" />
+                                <FileIcon extension="folder" className="h-6 w-6 text-blue-500" />
+                            </div>
+                        </div>
                     </div>
-                    <div className="asset-meta text-center">
-                        <div className="asset-filename truncate text-sm font-medium text-gray-900 dark:text-gray-100">..</div>
+                    <div className="asset-meta p-2">
+                        <div className="asset-filename truncate text-xs font-medium text-gray-900 dark:text-gray-100">Go Back</div>
+                        <div className="asset-details text-xs text-gray-500 dark:text-gray-400">Parent Folder</div>
                     </div>
                 </div>
             )}

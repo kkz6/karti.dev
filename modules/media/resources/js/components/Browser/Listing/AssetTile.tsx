@@ -4,7 +4,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Download, Edit, MoreHorizontal, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { MediaAsset } from '../../../types/media';
-import { FileIcon } from '../../FileIcon';
+import { FileIcon } from '../../Icons/FileIcon';
 
 interface AssetTileProps {
     asset: MediaAsset;
@@ -131,28 +131,23 @@ export const AssetTile: React.FC<AssetTileProps> = ({
                     {thumbnailUrl ? (
                         <img src={thumbnailUrl} alt={asset.title} className="h-full w-full object-cover" />
                     ) : (
-                        <FileIcon extension={asset.extension} className="h-12 w-12 text-gray-400" />
+                        <FileIcon extension={asset.extension} className="h-8 w-8 text-gray-400" />
                     )}
                 </div>
             </div>
 
             {/* Asset Info */}
-            <div className="asset-meta p-3">
+            <div className="asset-meta p-2">
                 <div
-                    className="asset-filename mb-1 cursor-pointer truncate text-sm font-medium text-gray-900 hover:text-blue-600 dark:text-gray-100 dark:hover:text-blue-400"
+                    className="asset-filename mb-1 cursor-pointer truncate text-xs font-medium text-gray-900 hover:text-blue-600 dark:text-gray-100 dark:hover:text-blue-400"
                     onClick={handleSingleClick}
                     onDoubleClick={handleDoubleClick}
                 >
                     {asset.title || asset.filename}
                 </div>
-                <div className="asset-details space-y-1 text-xs text-gray-500 dark:text-gray-400">
+                <div className="asset-details space-y-0.5 text-xs text-gray-500 dark:text-gray-400">
                     <div>{asset.extension.toUpperCase()}</div>
                     <div>{formatFileSize(asset.size)}</div>
-                    {asset.dimensions && (
-                        <div>
-                            {asset.dimensions.width} × {asset.dimensions.height}
-                        </div>
-                    )}
                 </div>
             </div>
         </div>

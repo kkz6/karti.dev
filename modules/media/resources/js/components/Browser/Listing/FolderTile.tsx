@@ -65,13 +65,13 @@ export const FolderTile: React.FC<FolderTileProps> = ({ folder, canEdit, onSelec
                     className="folder-thumb-container flex aspect-square items-center justify-center rounded-t-lg bg-blue-50 dark:bg-blue-900"
                     onDoubleClick={handleDoubleClick}
                 >
-                    <Folder className="h-16 w-16 text-blue-500" />
+                    <Folder className="h-10 w-10 text-blue-500" />
                 </div>
             </div>
 
             {/* Folder Info */}
-            <div className="folder-meta p-3" onDoubleClick={handleDoubleClick}>
-                <div className="folder-name truncate text-sm font-medium text-gray-900 dark:text-gray-100">{folder.title}</div>
+            <div className="folder-meta p-2" onDoubleClick={handleDoubleClick}>
+                <div className="folder-name truncate text-xs font-medium text-gray-900 dark:text-gray-100">{folder.title}</div>
                 <div className="folder-details text-xs text-gray-500 dark:text-gray-400">Folder</div>
             </div>
         </div>

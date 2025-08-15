@@ -4,8 +4,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Download, Edit, MoreHorizontal, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { MediaAsset } from '../../../types/media';
-import { ActionButton } from '../../ActionButton';
-import { FileIcon } from '../../FileIcon';
+import { FileIcon } from '../../Icons/FileIcon';
+import { ActionButton } from '../../UI/ActionButton';
 
 interface AssetRowProps {
     asset: MediaAsset;

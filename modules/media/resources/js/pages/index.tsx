@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
 import AppLayout from '@shared/layouts/app-layout';
 import { Toaster } from 'sonner';
-import { AssetManager } from '../components/AssetManager';
+import { AssetManager } from '../components/Browser/AssetManager';
 
 export default function MediaIndex() {
     const breadcrumbs = [
