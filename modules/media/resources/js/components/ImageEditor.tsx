@@ -465,7 +465,15 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
             cropperHandle.action = 'move';
         }
 
-        // Reset filters would go here when CamanJS is integrated
+        // Reset filters to original image
+        if (filterProcessorRef.current) {
+            try {
+                const originalImageUrl = filterProcessorRef.current.reset();
+                cropperImage.src = originalImageUrl;
+            } catch (error) {
+                console.error('Error resetting filters:', error);
+            }
+        }
     }, [fitImageToContainer]);
 
     const getCropperData = useCallback(() => {
@@ -563,10 +571,14 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
 
             let filters = { ...camanFilters };
 
-            // Remove filter if value is null/empty
-            if (!value && Object.prototype.hasOwnProperty.call(filters, name)) {
-                delete (filters as any)[name];
-            } else if (value !== null && value !== undefined) {
+            // Handle filter application/removal
+            if (value === false || value === null || value === undefined) {
+                // Remove filter
+                if (Object.prototype.hasOwnProperty.call(filters, name)) {
+                    delete (filters as any)[name];
+                }
+            } else {
+                // Apply filter
                 (filters as any)[name] = value;
             }
 

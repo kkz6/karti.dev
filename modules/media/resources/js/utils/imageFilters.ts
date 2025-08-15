@@ -17,6 +17,25 @@ export interface FilterOptions {
     blur?: number; // 0 to 20
     greyscale?: boolean;
     invert?: boolean;
+    // Preset filters
+    clarity?: boolean;
+    pinhole?: boolean;
+    love?: boolean;
+    jarques?: boolean;
+    orangePeel?: boolean;
+    sinCity?: boolean;
+    grungy?: boolean;
+    oldBoot?: boolean;
+    lomo?: boolean;
+    vintage?: boolean;
+    crossProcess?: boolean;
+    concentrate?: boolean;
+    glowingSun?: boolean;
+    sunrise?: boolean;
+    nostalgia?: boolean;
+    hemingway?: boolean;
+    herMajesty?: boolean;
+    hazyDays?: boolean;
 }
 
 export class ImageFilterProcessor {
@@ -117,6 +136,62 @@ export class ImageFilterProcessor {
 
         if (filters.blur !== undefined) {
             imageData = this.applyBlur(imageData, filters.blur);
+        }
+
+        // Apply preset filters
+        if (filters.clarity) {
+            imageData = this.applyClarity(imageData);
+        }
+        if (filters.pinhole) {
+            imageData = this.applyPinhole(imageData);
+        }
+        if (filters.love) {
+            imageData = this.applyLove(imageData);
+        }
+        if (filters.jarques) {
+            imageData = this.applyJarques(imageData);
+        }
+        if (filters.orangePeel) {
+            imageData = this.applyOrangePeel(imageData);
+        }
+        if (filters.sinCity) {
+            imageData = this.applySinCity(imageData);
+        }
+        if (filters.grungy) {
+            imageData = this.applyGrungy(imageData);
+        }
+        if (filters.oldBoot) {
+            imageData = this.applyOldBoot(imageData);
+        }
+        if (filters.lomo) {
+            imageData = this.applyLomo(imageData);
+        }
+        if (filters.vintage) {
+            imageData = this.applyVintage(imageData);
+        }
+        if (filters.crossProcess) {
+            imageData = this.applyCrossProcess(imageData);
+        }
+        if (filters.concentrate) {
+            imageData = this.applyConcentrate(imageData);
+        }
+        if (filters.glowingSun) {
+            imageData = this.applyGlowingSun(imageData);
+        }
+        if (filters.sunrise) {
+            imageData = this.applySunrise(imageData);
+        }
+        if (filters.nostalgia) {
+            imageData = this.applyNostalgia(imageData);
+        }
+        if (filters.hemingway) {
+            imageData = this.applyHemingway(imageData);
+        }
+        if (filters.herMajesty) {
+            imageData = this.applyHerMajesty(imageData);
+        }
+        if (filters.hazyDays) {
+            imageData = this.applyHazyDays(imageData);
         }
 
         // Put processed image data back to canvas
@@ -397,5 +472,159 @@ export class ImageFilterProcessor {
         }
 
         return new ImageData(output, width, height);
+    }
+
+    // Preset filters (combinations of basic filters)
+    private applyClarity(imageData: ImageData): ImageData {
+        // Clarity: Increase contrast and sharpening
+        let result = this.applyContrast(imageData, 20);
+        result = this.applySharpen(result, 15);
+        return result;
+    }
+
+    private applyPinhole(imageData: ImageData): ImageData {
+        // Pinhole: High contrast, dark vignette effect
+        let result = this.applyContrast(imageData, 40);
+        result = this.applyBrightness(result, -20);
+        result = this.applySaturation(result, 30);
+        return result;
+    }
+
+    private applyLove(imageData: ImageData): ImageData {
+        // Love: Warm, romantic tones
+        let result = this.applyBrightness(imageData, 10);
+        result = this.applySaturation(result, 25);
+        result = this.applyHue(result, 15); // Slightly warmer
+        return result;
+    }
+
+    private applyJarques(imageData: ImageData): ImageData {
+        // Jarques: High contrast vintage look
+        let result = this.applyContrast(imageData, 35);
+        result = this.applyBrightness(result, 5);
+        result = this.applySaturation(result, -10);
+        return result;
+    }
+
+    private applyOrangePeel(imageData: ImageData): ImageData {
+        // Orange Peel: Orange-tinted warm tones
+        let result = this.applyHue(imageData, 25); // Orange shift
+        result = this.applySaturation(result, 20);
+        result = this.applyBrightness(result, 5);
+        return result;
+    }
+
+    private applySinCity(imageData: ImageData): ImageData {
+        // Sin City: High contrast black and white with selective color
+        let result = this.applyContrast(imageData, 60);
+        result = this.applyBrightness(result, -10);
+        result = this.applySaturation(result, -80); // Almost B&W
+        return result;
+    }
+
+    private applyGrungy(imageData: ImageData): ImageData {
+        // Grungy: Dark, gritty look
+        let result = this.applyContrast(imageData, 25);
+        result = this.applyBrightness(result, -25);
+        result = this.applySaturation(result, -20);
+        result = this.applyNoise(result, 10);
+        return result;
+    }
+
+    private applyOldBoot(imageData: ImageData): ImageData {
+        // Old Boot: Vintage sepia-like effect
+        let result = this.applySepia(imageData, 40);
+        result = this.applyContrast(result, 15);
+        result = this.applyBrightness(result, -5);
+        return result;
+    }
+
+    private applyLomo(imageData: ImageData): ImageData {
+        // Lomo: Cross-processed film look
+        let result = this.applyContrast(imageData, 30);
+        result = this.applySaturation(result, 40);
+        result = this.applyHue(result, 10);
+        result = this.applyBrightness(result, -5);
+        return result;
+    }
+
+    private applyVintage(imageData: ImageData): ImageData {
+        // Vintage: Aged photo look
+        let result = this.applySepia(imageData, 30);
+        result = this.applyContrast(result, 10);
+        result = this.applyBrightness(result, 10);
+        result = this.applySaturation(result, -15);
+        return result;
+    }
+
+    private applyCrossProcess(imageData: ImageData): ImageData {
+        // Cross Process: Film processing technique
+        let result = this.applyContrast(imageData, 25);
+        result = this.applySaturation(result, 35);
+        result = this.applyHue(result, 20);
+        result = this.applyBrightness(result, 5);
+        return result;
+    }
+
+    private applyConcentrate(imageData: ImageData): ImageData {
+        // Concentrate: Enhanced clarity and color
+        let result = this.applyContrast(imageData, 20);
+        result = this.applySaturation(result, 25);
+        result = this.applySharpen(result, 10);
+        return result;
+    }
+
+    private applyGlowingSun(imageData: ImageData): ImageData {
+        // Glowing Sun: Warm, bright, golden tones
+        let result = this.applyBrightness(imageData, 20);
+        result = this.applyHue(imageData, 30); // Golden
+        result = this.applySaturation(result, 30);
+        result = this.applyContrast(result, 10);
+        return result;
+    }
+
+    private applySunrise(imageData: ImageData): ImageData {
+        // Sunrise: Warm morning light
+        let result = this.applyBrightness(imageData, 15);
+        result = this.applyHue(imageData, 20); // Warm
+        result = this.applySaturation(result, 20);
+        result = this.applyContrast(result, 15);
+        return result;
+    }
+
+    private applyNostalgia(imageData: ImageData): ImageData {
+        // Nostalgia: Faded, dreamy look
+        let result = this.applySepia(imageData, 20);
+        result = this.applyBrightness(result, 10);
+        result = this.applyContrast(result, -15);
+        result = this.applySaturation(result, -25);
+        return result;
+    }
+
+    private applyHemingway(imageData: ImageData): ImageData {
+        // Hemingway: Classic literary feel
+        let result = this.applyContrast(imageData, 35);
+        result = this.applyBrightness(result, -10);
+        result = this.applySaturation(result, -30);
+        result = this.applySepia(result, 15);
+        return result;
+    }
+
+    private applyHerMajesty(imageData: ImageData): ImageData {
+        // Her Majesty: Elegant, royal tones
+        let result = this.applyContrast(imageData, 20);
+        result = this.applySaturation(result, 15);
+        result = this.applyBrightness(result, 5);
+        result = this.applyHue(imageData, 350); // Slight purple tint
+        return result;
+    }
+
+    private applyHazyDays(imageData: ImageData): ImageData {
+        // Hazy Days: Soft, dreamy atmosphere
+        let result = this.applyBrightness(imageData, 15);
+        result = this.applyContrast(result, -20);
+        result = this.applySaturation(result, -10);
+        result = this.applyBlur(result, 1); // Very slight blur
+        return result;
     }
 }

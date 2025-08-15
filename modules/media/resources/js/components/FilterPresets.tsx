@@ -41,7 +41,12 @@ export const FilterPresets: React.FC<FilterPresetsProps> = ({ processing, camanF
     };
 
     const applyPreset = (presetName: string) => {
-        applyFilter(presetName, null);
+        // Check if preset is already active, if so remove it, otherwise apply it
+        if (isPresetActive(presetName)) {
+            applyFilter(presetName, false);
+        } else {
+            applyFilter(presetName, true);
+        }
     };
 
     // Group presets into chunks of 3 for better layout
