@@ -18,7 +18,7 @@ class FileArray implements ValidationRule
             }
         }
 
-        if ($areFiles) {
+        if (!$areFiles) {
             $fail('You must upload a file or collection of files.');
         }
     }

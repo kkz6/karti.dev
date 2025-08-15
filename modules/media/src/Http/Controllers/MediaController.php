@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Modules\Media\DTOs\MediaAssetData;
 use Modules\Media\Exceptions\MediaManagerException;
+use Modules\Media\Http\Requests\MediaStoreRequest;
 use Modules\Media\Http\Requests\MediaUpdateRequest;
 use Modules\Media\Models\Media;
 use Modules\Media\Support\MediaManager;
@@ -66,6 +67,45 @@ class MediaController extends BaseController
     }
 
     /**
+     * Upload a piece of media to a specified path, and create associated media entry representing it.
+     */
+    public function create(MediaStoreRequest $request)
+    {
+        // Set up data we need for uploads, turn file into an array so we can always iterate over it.
+        $media = is_array($request->file) ? $request->file : [$request->file];
+        $data = collect($request->only(['title', 'alt', 'caption', 'credit']));
+        $disk = $this->manager->verifyDisk($request->disk);
+        $path = $this->manager->verifyDirectory($disk, trim($request->path, "/"));
+        $response = [];
+
+
+        foreach ($media as $m) {
+
+            // Prep an uploader instance with the file.
+            $model = $this->uploader
+                ->toDestination($disk, $path)
+                ->fromSource($m);
+
+            // If the request has meta data about the file, apply that meta data as part of the upload.
+            if ($data->isNotEmpty()) {
+                $model->beforeSave(function (Media $m) use ($data) {
+                    $m->fill($data->toArray());
+                });
+            }
+
+            // Check that the file we're uploading doesn't already exist
+            if ($c = $this->model::inDirectory($disk, $path)->where('filename', $m->getClientOriginalName())->count()) {
+                $model = $model->useFilename("{$m->getClientOriginalName()}_{$c}");
+            }
+
+            $response[] = $model->upload();
+        }
+
+        // Return all the media.
+        return response($response);
+    }
+
+    /**
      * Retrieve details about a specific piece of media.
      *
      * @param mixed $id
@@ -118,44 +158,6 @@ class MediaController extends BaseController
         $id    = $request->id;
 
         return response($model::destroy($id));
-    }
-
-    /**
-     * Upload files to the media manager
-     *
-     * @throws MediaManagerException
-     */
-    public function upload(Request $request)
-    {
-        $request->validate([
-            'file' => 'required|file|max:10240', // 10MB max
-            'path' => 'nullable|string',
-        ]);
-
-        $diskString = $this->manager->verifyDisk($request->disk ?? 'public');
-        $path       = $request->path ?? '';
-
-        try {
-            $file = $request->file('file');
-
-            // Use the MediaUploader to handle the upload
-            $media = $this->uploader
-                ->fromSource($file)
-                ->toDisk($diskString)
-                ->toDirectory($path)
-                ->upload();
-
-            return response()->json([
-                'success' => true,
-                'media'   => $media,
-                'message' => 'File uploaded successfully',
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to upload file: ' . $e->getMessage(),
-            ], 500);
-        }
     }
 
     /**

@@ -19,7 +19,7 @@ export interface UploaderRef {
 }
 
 export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
-    ({ domElement = null, container = null, path = null, onProgress, onUploadComplete, onError, onUpdated }, ref) => {
+    ({ container = null, path = null, onUploadComplete, onError, onUpdated }, ref) => {
         const fileInputRef = useRef<HTMLInputElement>(null);
         const [uploads, setUploads] = useState<MediaUpload[]>([]);
 
@@ -36,30 +36,20 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
         const selectFile = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
             const files = event.target.files;
             if (files && files.length > 0) {
-                Array.from(files).forEach((file) => {
-                    upload(file);
-                });
+                Array.from(files).forEach(upload);
+            }
+            if (event.target) {
+                event.target.value = '';
             }
         }, []);
 
         const upload = useCallback(
             async (file: File) => {
                 const uuid = generateId();
+                const maxFileSize = 10 * 1024 * 1024;
 
-                // Client-side file size validation (10MB limit)
-                const maxFileSize = 10 * 1024 * 1024; // 10MB in bytes
                 if (file.size > maxFileSize) {
                     const errorMessage = `File "${file.name}" is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum file size is 10MB.`;
-
-                    const errorUpload: MediaUpload = {
-                        id: uuid,
-                        name: file.name,
-                        progress: 0,
-                        status: 'error',
-                        error: errorMessage,
-                    };
-
-                    // Call onError callback, let parent handle toast notification
                     onError?.(errorMessage);
                     return;
                 }
@@ -76,13 +66,11 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('disk', container || 'public');
-                formData.append('path', path || '');
+                formData.append('path', path === '/' ? '' : path || '');
 
                 try {
                     const response = await axios.post(route('media.create'), formData, {
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                        },
+                        headers: { 'Content-Type': 'multipart/form-data' },
                         onUploadProgress: (progressEvent) => {
                             if (progressEvent.total) {
                                 const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -92,26 +80,19 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
                     });
 
                     if (response.status === 200 || response.status === 201) {
-                        // Backend returns media array directly
                         const mediaArray = Array.isArray(response.data) ? response.data : [response.data];
-                        const uploadedMedia = mediaArray[0]; // Get first uploaded media
+                        const uploadedMedia = mediaArray[0];
 
                         setUploads((prev) => prev.filter((u) => u.id !== uuid));
                         onUploadComplete?.(
                             uploadedMedia,
                             uploads.filter((u) => u.id !== uuid),
                         );
-
-                        // Show success toast
                         toast.success(`"${file.name}" uploaded successfully`);
                     } else {
-                        setUploads((prev) => prev.map((u) => (u.id === uuid ? { ...u, status: 'error' as const, error: 'Upload failed' } : u)));
+                        setUploads((prev) => prev.map((u) => (u.id === uuid ? { ...u, status: 'error', error: 'Upload failed' } : u)));
                         onError?.('Upload failed');
-
-                        // Auto-remove error upload after 5 seconds
-                        setTimeout(() => {
-                            setUploads((prev) => prev.filter((u) => u.id !== uuid));
-                        }, 5000);
+                        setTimeout(() => setUploads((prev) => prev.filter((u) => u.id !== uuid)), 5000);
                     }
                 } catch (error: any) {
                     let errorMessage = 'Network error';
@@ -128,32 +109,15 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
                         }
                     }
 
-                    setUploads((prev) => prev.map((u) => (u.id === uuid ? { ...u, status: 'error' as const, error: errorMessage } : u)));
+                    setUploads((prev) => prev.map((u) => (u.id === uuid ? { ...u, status: 'error', error: errorMessage } : u)));
                     onError?.(errorMessage);
-
-                    // Auto-remove error upload after 5 seconds
-                    setTimeout(() => {
-                        setUploads((prev) => prev.filter((u) => u.id !== uuid));
-                    }, 5000);
+                    setTimeout(() => setUploads((prev) => prev.filter((u) => u.id !== uuid)), 5000);
                 }
             },
-            [container, path, onUploadComplete, onError, onUpdated],
+            [container, path, onUploadComplete, onError, uploads],
         );
 
-        const uploadFiles = useCallback(
-            (files: FileList) => {
-                Array.from(files).forEach((file) => {
-                    upload(file);
-                });
-            },
-            [upload],
-        );
-
-        // Expose methods via ref
-        React.useImperativeHandle(ref, () => ({
-            browse,
-            upload,
-        }));
+        React.useImperativeHandle(ref, () => ({ browse, upload }));
 
         useEffect(() => {
             onUpdated?.(uploads);
