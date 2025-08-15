@@ -29,6 +29,7 @@ declare global {
         $setTransform(transform: { x?: number; y?: number; rotate?: number; scaleX?: number; scaleY?: number }): void;
         $getTransform(): { x: number; y: number; rotate: number; scaleX: number; scaleY: number };
         $resetTransform(): void;
+        $center?(): void;
     }
 
     interface CropperSelectionElement extends HTMLElement {
@@ -136,7 +137,114 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
     const containerRef = useRef<HTMLDivElement>(null);
     const filterProcessorRef = useRef<ImageFilterProcessor | null>(null);
     const initDataRef = useRef<string | null>(null);
-    const rotation = 45; // degrees per rotation step
+    const rotation = 90; // degrees per rotation step
+
+    // Track if fitting is in progress to prevent multiple parallel attempts
+    const fittingInProgress = useRef(false);
+
+    const fitImageToContainer = useCallback(async () => {
+        if (fittingInProgress.current) return;
+        fittingInProgress.current = true;
+
+        const cropperImage = cropperImageRef.current;
+        const containerEl = containerRef.current;
+
+        if (!cropperImage || !containerEl) {
+            fittingInProgress.current = false;
+            return;
+        }
+
+        try {
+            // Use clientWidth/clientHeight for accurate measurements
+            const containerWidth = containerEl.clientWidth;
+            const containerHeight = containerEl.clientHeight;
+
+            console.log('Container dimensions:', { width: containerWidth, height: containerHeight });
+
+            if (!containerWidth || !containerHeight) {
+                console.log('Container not ready, skipping fit');
+                fittingInProgress.current = false;
+                return;
+            }
+
+            // Get image dimensions from the asset since cropper element doesn't expose them
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+
+            const imageLoaded = new Promise<{ width: number; height: number }>((resolve, reject) => {
+                img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+                img.onerror = reject;
+                img.src = asset?.url || '';
+            });
+
+            const dimensions = await imageLoaded;
+            const { width: naturalWidth, height: naturalHeight } = dimensions;
+
+            console.log('Image natural dimensions:', { width: naturalWidth, height: naturalHeight });
+
+            // Calculate scale to fit image in container with padding
+            const scaleX = containerWidth / naturalWidth;
+            const scaleY = containerHeight / naturalHeight;
+            const baseScale = Math.min(scaleX, scaleY);
+            const scale = baseScale * 0.85; // Use 85% for good padding
+
+            console.log('Calculated scale:', scale, 'baseScale:', baseScale);
+
+            // Reset transform and apply scale
+            cropperImage.$resetTransform();
+
+            // Apply scale first
+            cropperImage.$scale(scale, scale);
+
+            // Try to center using different approaches
+            try {
+                // First try the $center method if available
+                if (typeof cropperImage.$center === 'function') {
+                    cropperImage.$center();
+                    console.log('Image centered using $center method');
+                } else {
+                    // Fallback to $moveTo with container center
+                    const centerX = containerWidth / 2;
+                    const centerY = containerHeight / 2;
+                    cropperImage.$moveTo(centerX, centerY);
+                    console.log('Image centered using $moveTo at:', { x: centerX, y: centerY });
+                }
+            } catch (centerError) {
+                console.warn('Could not center image:', centerError);
+            }
+
+            console.log('Image fitted to container successfully with scale:', scale);
+        } catch (error) {
+            console.error('Error fitting image to container:', error);
+            // Fallback scaling with centering
+            const containerWidth = containerEl.clientWidth;
+            const containerHeight = containerEl.clientHeight;
+
+            cropperImage.$resetTransform();
+            cropperImage.$scale(0.6, 0.6);
+
+            if (containerWidth && containerHeight) {
+                try {
+                    if (typeof cropperImage.$center === 'function') {
+                        cropperImage.$center();
+                        console.log('Applied fallback scale: 0.6, centered using $center');
+                    } else {
+                        const centerX = containerWidth / 2;
+                        const centerY = containerHeight / 2;
+                        cropperImage.$moveTo(centerX, centerY);
+                        console.log('Applied fallback scale: 0.6, centered at:', { x: centerX, y: centerY });
+                    }
+                } catch (centerError) {
+                    console.warn('Could not center in fallback:', centerError);
+                    console.log('Applied fallback scale: 0.6 (no centering)');
+                }
+            } else {
+                console.log('Applied fallback scale: 0.6 (no centering - container dimensions unavailable)');
+            }
+        } finally {
+            fittingInProgress.current = false;
+        }
+    }, [asset]);
 
     const initializeCropper = useCallback(async () => {
         if (!cropperImageRef.current || !asset) {
@@ -179,13 +287,18 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
             // Set up the cropper handle element (main selection handle)
             const cropperHandle = cropperHandleRef.current;
             if (cropperHandle) {
-                cropperHandle.action = 'select'; // This handle is for creating selections
+                cropperHandle.action = dragMode === 'move' ? 'move' : 'select';
                 cropperHandle.plain = true;
             }
 
             // Wait for the image to be ready
             await cropperImage.$ready();
             console.log('ImageEditor: Cropper image ready');
+
+            // Fit image to container after everything is ready
+            setTimeout(() => {
+                fitImageToContainer();
+            }, 300);
 
             // Ensure selection is hidden initially
             if (cropperSelection) {
@@ -198,24 +311,48 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
             console.error('ImageEditor: Error during initialization:', error);
             setProcessing(false);
         }
-    }, [asset, dragMode]);
+    }, [asset, dragMode, fitImageToContainer]);
 
     // Initialize the editor when opened
     useEffect(() => {
         if (isOpen && asset) {
             setProcessing(true);
             console.log('ImageEditor: Starting initialization for asset:', asset.filename);
-            // Small delay to ensure web components are rendered
+            // Delay to ensure web components and dialog are fully rendered
             setTimeout(() => {
                 initializeCropper().catch((error) => {
                     console.error('Error initializing cropper:', error);
                     setProcessing(false);
                 });
-            }, 500);
+            }, 100);
         }
 
         // No cleanup needed for v2 web components - they handle their own lifecycle
     }, [isOpen, asset, initializeCropper]);
+
+    // Re-fit image when container is resized
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleResize = () => {
+            setTimeout(() => {
+                fitImageToContainer();
+            }, 100);
+        };
+
+        window.addEventListener('resize', handleResize);
+
+        let observer: ResizeObserver | null = null;
+        if (containerRef.current && 'ResizeObserver' in window) {
+            observer = new ResizeObserver(handleResize);
+            observer.observe(containerRef.current);
+        }
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            if (observer && containerRef.current) observer.disconnect();
+        };
+    }, [isOpen, fitImageToContainer]);
 
     const handleOperation = useCallback(
         (action: string) => {
@@ -230,12 +367,16 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
             switch (action) {
                 case 'move':
                     setDragMode('move');
-                    // The main handle remains as 'select' - move mode is handled differently in v2
+                    if (cropperHandle) {
+                        cropperHandle.action = 'move';
+                    }
                     break;
 
                 case 'crop':
                     setDragMode('crop');
-                    // The main handle remains as 'select' for creating crop selections
+                    if (cropperHandle) {
+                        cropperHandle.action = 'select';
+                    }
                     break;
 
                 case 'zoom-in':
@@ -250,30 +391,24 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
 
                 case 'rotate-left':
                     cropperImage.$rotate(-rotation);
+                    setHasChanged(true);
                     break;
 
                 case 'rotate-right':
                     cropperImage.$rotate(rotation);
+                    setHasChanged(true);
                     break;
 
                 case 'flip-horizontal':
                     const currentData = getData();
-                    const ranges = getRotationRanges();
-                    if (ranges.includes(currentData.rotate)) {
-                        cropperImage.$scale(currentData.scaleX, -currentData.scaleY);
-                    } else {
-                        cropperImage.$scale(-currentData.scaleX, currentData.scaleY);
-                    }
+                    cropperImage.$scale(-currentData.scaleX, currentData.scaleY);
+                    setHasChanged(true);
                     break;
 
                 case 'flip-vertical':
                     const data = getData();
-                    const rotRanges = getRotationRanges();
-                    if (rotRanges.includes(data.rotate)) {
-                        cropperImage.$scale(-data.scaleX, data.scaleY);
-                    } else {
-                        cropperImage.$scale(data.scaleX, -data.scaleY);
-                    }
+                    cropperImage.$scale(data.scaleX, -data.scaleY);
+                    setHasChanged(true);
                     break;
 
                 case 'reset':
@@ -294,21 +429,6 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
         },
         [rotation],
     );
-
-    const getRotationRanges = () => {
-        const angles = 360 / rotation;
-        const list = Array.from(Array(angles).keys()).slice(1);
-        const ranges: number[] = [];
-
-        list.forEach((item) => {
-            const res = item * rotation;
-            if (res !== 180) {
-                ranges.push(-res, res);
-            }
-        });
-
-        return ranges;
-    };
 
     const checkForChanges = useCallback(() => {
         const cropperImage = cropperImageRef.current;
@@ -334,7 +454,9 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
         setDiffDisable(true);
         setCamanFilters({});
 
-        cropperImage.$resetTransform();
+        // Reset to initial fitted view
+        fitImageToContainer();
+
         if (cropperSelection) {
             cropperSelection.$reset();
             cropperSelection.hidden = true;
@@ -344,7 +466,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
         }
 
         // Reset filters would go here when CamanJS is integrated
-    }, []);
+    }, [fitImageToContainer]);
 
     const getCropperData = useCallback(() => {
         const cropperSelection = cropperSelectionRef.current;
@@ -709,7 +831,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                                         React.createElement('cropper-handle', {
                                             key: 'handle',
                                             ref: cropperHandleRef,
-                                            action: 'select',
+                                            action: dragMode === 'move' ? 'move' : 'select',
                                             plain: true,
                                         }),
                                         React.createElement(
