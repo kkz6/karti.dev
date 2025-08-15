@@ -60,11 +60,7 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(({
       status: 'uploading',
     };
 
-    setUploads(prev => {
-      const updated = [...prev, newUpload];
-      onUpdated?.(updated);
-      return updated;
-    });
+    setUploads(prev => [...prev, newUpload]);
 
     const formData = new FormData();
     formData.append('file', file);
@@ -74,55 +70,40 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(({
     formData.append('extension', file.name.split('.').pop() || '');
 
     try {
-      const response = await axios.post('/api/media/upload', formData, {
+      const response = await axios.post('/admin/media/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
             const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            setUploads(prev => {
-              const updated = prev.map(u => 
-                u.id === uuid ? { ...u, progress } : u
-              );
-              onUpdated?.(updated);
-              return updated;
-            });
+            setUploads(prev => prev.map(u => 
+              u.id === uuid ? { ...u, progress } : u
+            ));
           }
         },
       });
 
-      if (response.status === 201) {
+      if (response.status === 200 || response.status === 201) {
         if (response.data.success) {
-          setUploads(prev => {
-            const updated = prev.filter(u => u.id !== uuid);
-            onUploadComplete?.(response.data.item, updated);
-            onUpdated?.(updated);
-            return updated;
-          });
+          setUploads(prev => prev.filter(u => u.id !== uuid));
+          onUploadComplete?.(response.data.media, uploads.filter(u => u.id !== uuid));
         } else {
-          setUploads(prev => {
-            const updated = prev.map(u => 
-              u.id === uuid 
-                ? { ...u, status: 'error' as const, error: 'Error on file upload' }
-                : u
-            );
-            onError?.('Error on file upload');
-            onUpdated?.(updated);
-            return updated;
-          });
+          const errorMsg = response.data.message || 'Error on file upload';
+          setUploads(prev => prev.map(u => 
+            u.id === uuid 
+              ? { ...u, status: 'error' as const, error: errorMsg }
+              : u
+          ));
+          onError?.(errorMsg);
         }
       } else {
-        setUploads(prev => {
-          const updated = prev.map(u => 
-            u.id === uuid 
-              ? { ...u, status: 'error' as const, error: 'Upload failed' }
-              : u
-          );
-          onError?.('Upload failed');
-          onUpdated?.(updated);
-          return updated;
-        });
+        setUploads(prev => prev.map(u => 
+          u.id === uuid 
+            ? { ...u, status: 'error' as const, error: 'Upload failed' }
+            : u
+        ));
+        onError?.('Upload failed');
       }
     } catch (error: any) {
       let errorMessage = 'Network error';
@@ -135,16 +116,12 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(({
         }
       }
 
-      setUploads(prev => {
-        const updated = prev.map(u => 
-          u.id === uuid 
-            ? { ...u, status: 'error' as const, error: errorMessage }
-            : u
-        );
-        onError?.(errorMessage);
-        onUpdated?.(updated);
-        return updated;
-      });
+      setUploads(prev => prev.map(u => 
+        u.id === uuid 
+          ? { ...u, status: 'error' as const, error: errorMessage }
+          : u
+      ));
+      onError?.(errorMessage);
     }
   }, [container, path, onUploadComplete, onError, onUpdated]);
 
