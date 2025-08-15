@@ -564,7 +564,10 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
 
     const applyFilter = useCallback(
         async (name: string, value: any) => {
-            if (!filterProcessorRef.current) return;
+            if (!filterProcessorRef.current) {
+                console.warn('Filter processor not available');
+                return;
+            }
 
             setHasChanged(true);
             setProcessing(true);
@@ -590,6 +593,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
 
                 // Update cropper image with filtered image
                 if (cropperImageRef.current) {
+                    // Use simpler approach to avoid hanging loader
                     cropperImageRef.current.src = filteredImageUrl;
                 }
             } catch (error) {
