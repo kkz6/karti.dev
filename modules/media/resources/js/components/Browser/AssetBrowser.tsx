@@ -196,7 +196,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
             onDrop={handleDrop}
         >
             {canEdit && draggingFile && (
-                <div className="drag-notification bg-opacity-90 fixed inset-0 z-50 flex items-center justify-center bg-blue-50">
+                <div className="drag-notification bg-opacity-90 fixed inset-0 z-50 flex items-center justify-center bg-blue-50 dark:bg-blue-900">
                     <div className="text-center">
                         <div className="mb-4 text-4xl">📁</div>
                         <h3 className="text-lg font-semibold">Drop to Upload</h3>
@@ -205,12 +205,12 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
             )}
 
             {showSidebar && (
-                <div className="asset-browser-sidebar w-64 bg-gray-50 p-4">
+                <div className="asset-browser-sidebar w-64 bg-gray-50 p-4 dark:bg-gray-800">
                     <h4 className="mb-4 font-semibold">Containers</h4>
                     {Object.values(containers).map((c) => (
                         <div
                             key={c.id}
-                            className={`sidebar-item cursor-pointer rounded p-2 hover:bg-gray-100 ${container?.id === c.id ? 'bg-gray-200' : ''}`}
+                            className={`sidebar-item cursor-pointer rounded p-2 hover:bg-gray-100 dark:hover:bg-gray-700 ${container?.id === c.id ? 'bg-gray-200 dark:bg-gray-600' : ''}`}
                         >
                             <button onClick={() => selectContainer(c.id)} className="w-full text-left">
                                 {c.title}
@@ -221,7 +221,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
             )}
 
             <div className="asset-browser-main flex min-h-0 flex-1 flex-col">
-                <div className="asset-browser-header shrink-0 rounded-t-lg bg-gray-50 p-4">
+                <div className="asset-browser-header shrink-0 rounded-t-lg bg-gray-50 p-4 dark:bg-gray-800">
                     <div className="mb-4 flex items-center justify-between">
                         <h1 className="flex items-center gap-2 text-xl font-semibold">
                             {isSearching ? 'Search Results' : restrictNavigation ? folder?.title || folder?.path : container?.title}
@@ -289,7 +289,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                 <div className="asset-browser-content flex-1 overflow-y-auto pb-12">
                     {/* Upload Progress */}
                     {uploads.length > 0 && (
-                        <div className="uploads-section bg-blue-50 p-4">
+                        <div className="uploads-section bg-blue-50 p-4 dark:bg-blue-900">
                             <h3 className="mb-2 font-semibold">Uploading files...</h3>
                             {uploads.map((upload) => (
                                 <div key={upload.id} className="upload-item mb-2">
@@ -297,7 +297,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                                         <span>{upload.name}</span>
                                         <span>{upload.progress}%</span>
                                     </div>
-                                    <div className="h-2 w-full rounded-full bg-gray-200">
+                                    <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
                                         <div className="h-2 rounded-full bg-blue-600 transition-all" style={{ width: `${upload.progress}%` }} />
                                     </div>
                                 </div>
@@ -360,7 +360,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
 
                 {/* Fixed Breadcrumbs Footer */}
                 {!restrictNavigation && !isSearching && (
-                    <div className="absolute right-0 bottom-0 left-0 z-10 border-t bg-white shadow-sm">
+                    <div className="absolute right-0 bottom-0 left-0 z-10 border-t bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
                         <Breadcrumbs path={path} folder={folder} folders={folders} onNavigated={handleFolderSelected} />
                     </div>
                 )}

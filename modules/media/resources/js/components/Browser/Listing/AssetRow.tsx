@@ -87,7 +87,7 @@ export const AssetRow: React.FC<AssetRowProps> = ({
     const thumbnailUrl = getThumbnailUrl();
 
     return (
-        <tr className="border-b border-gray-100 hover:bg-gray-50">
+        <tr className="border-b border-gray-100 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700">
             {/* Checkbox */}
             <td className="p-3">
                 <Checkbox checked={isSelected} onCheckedChange={handleCheckboxChange} />
@@ -111,20 +111,20 @@ export const AssetRow: React.FC<AssetRowProps> = ({
             {/* Title */}
             <td className="p-3">
                 <div
-                    className="cursor-pointer text-sm font-medium text-gray-900 hover:text-blue-600"
+                    className="cursor-pointer text-sm font-medium text-gray-900 hover:text-blue-600 dark:text-gray-100 dark:hover:text-blue-400"
                     onClick={handleSingleClick}
                     onDoubleClick={handleDoubleClick}
                 >
                     {asset.title || asset.filename}
                 </div>
-                <div className="text-xs text-gray-500">{asset.extension.toUpperCase()}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{asset.extension.toUpperCase()}</div>
             </td>
 
             {/* File Size */}
-            <td className="hidden p-3 text-sm text-gray-600 md:table-cell">{formatFileSize(asset.size)}</td>
+            <td className="hidden p-3 text-sm text-gray-600 md:table-cell dark:text-gray-400">{formatFileSize(asset.size)}</td>
 
             {/* Date Modified */}
-            <td className="hidden p-3 text-sm text-gray-600 md:table-cell">{formatDate(asset.updated_at)}</td>
+            <td className="hidden p-3 text-sm text-gray-600 md:table-cell dark:text-gray-400">{formatDate(asset.updated_at)}</td>
 
             {/* Direct Action Buttons */}
             <td className="hidden p-3 md:table-cell">

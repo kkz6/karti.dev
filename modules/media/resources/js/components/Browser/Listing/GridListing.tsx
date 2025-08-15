@@ -69,11 +69,11 @@ export const GridListing: React.FC<GridListingProps> = ({
         <div className="asset-grid-listing grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             {hasParent && !restrictNavigation && (
                 <div className="asset-tile is-folder group cursor-pointer" onDoubleClick={handleParentSelect}>
-                    <div className="asset-thumb-container mb-2 rounded-lg bg-gray-100 p-6 transition-colors group-hover:bg-gray-200">
+                    <div className="asset-thumb-container mb-2 rounded-lg bg-gray-100 p-6 transition-colors group-hover:bg-gray-200 dark:bg-gray-800 dark:group-hover:bg-gray-700">
                         <FileIcon extension="folder" className="mx-auto h-12 w-12" />
                     </div>
                     <div className="asset-meta text-center">
-                        <div className="asset-filename truncate text-sm font-medium text-gray-900">..</div>
+                        <div className="asset-filename truncate text-sm font-medium text-gray-900 dark:text-gray-100">..</div>
                     </div>
                 </div>
             )}

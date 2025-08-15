@@ -82,7 +82,7 @@ export const AssetTile: React.FC<AssetTileProps> = ({
     const thumbnailUrl = getThumbnailUrl();
 
     return (
-        <div className="asset-tile group rounded-lg border border-gray-200 bg-white transition-shadow hover:shadow-md">
+        <div className="asset-tile group rounded-lg border border-gray-200 bg-white transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
             <div className="relative">
                 {/* Selection Checkbox */}
                 <div className="absolute top-2 left-2 z-10">
@@ -124,7 +124,7 @@ export const AssetTile: React.FC<AssetTileProps> = ({
 
                 {/* Thumbnail */}
                 <div
-                    className="asset-thumb-container flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-t-lg bg-gray-100"
+                    className="asset-thumb-container flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-t-lg bg-gray-100 dark:bg-gray-700"
                     onClick={handleSingleClick}
                     onDoubleClick={handleDoubleClick}
                 >
@@ -139,13 +139,13 @@ export const AssetTile: React.FC<AssetTileProps> = ({
             {/* Asset Info */}
             <div className="asset-meta p-3">
                 <div
-                    className="asset-filename mb-1 cursor-pointer truncate text-sm font-medium text-gray-900 hover:text-blue-600"
+                    className="asset-filename mb-1 cursor-pointer truncate text-sm font-medium text-gray-900 hover:text-blue-600 dark:text-gray-100 dark:hover:text-blue-400"
                     onClick={handleSingleClick}
                     onDoubleClick={handleDoubleClick}
                 >
                     {asset.title || asset.filename}
                 </div>
-                <div className="asset-details space-y-1 text-xs text-gray-500">
+                <div className="asset-details space-y-1 text-xs text-gray-500 dark:text-gray-400">
                     <div>{asset.extension.toUpperCase()}</div>
                     <div>{formatFileSize(asset.size)}</div>
                     {asset.dimensions && (

@@ -33,7 +33,7 @@ export const FolderRow: React.FC<FolderRowProps> = ({ folder, canEdit, onSelecte
     };
 
     return (
-        <tr className="border-b border-gray-100 hover:bg-gray-50">
+        <tr className="border-b border-gray-100 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700">
             {/* Empty checkbox column */}
             <td className="p-3"></td>
 
@@ -46,17 +46,20 @@ export const FolderRow: React.FC<FolderRowProps> = ({ folder, canEdit, onSelecte
 
             {/* Folder Name */}
             <td className="p-3">
-                <div className="cursor-pointer text-sm font-medium text-gray-900 hover:text-blue-600" onDoubleClick={handleDoubleClick}>
+                <div
+                    className="cursor-pointer text-sm font-medium text-gray-900 hover:text-blue-600 dark:text-gray-100 dark:hover:text-blue-400"
+                    onDoubleClick={handleDoubleClick}
+                >
                     {folder.title}
                 </div>
-                <div className="text-xs text-gray-500">Folder</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Folder</div>
             </td>
 
             {/* Size (empty for folders) */}
-            <td className="hidden p-3 text-sm text-gray-600 md:table-cell">-</td>
+            <td className="hidden p-3 text-sm text-gray-600 md:table-cell dark:text-gray-400">-</td>
 
             {/* Date Modified */}
-            <td className="hidden p-3 text-sm text-gray-600 md:table-cell">{formatDate(folder.updated_at)}</td>
+            <td className="hidden p-3 text-sm text-gray-600 md:table-cell dark:text-gray-400">{formatDate(folder.updated_at)}</td>
 
             {/* Direct Action Buttons */}
             <td className="hidden p-3 md:table-cell">

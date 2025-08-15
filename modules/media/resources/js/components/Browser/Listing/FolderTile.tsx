@@ -30,7 +30,7 @@ export const FolderTile: React.FC<FolderTileProps> = ({ folder, canEdit, onSelec
     };
 
     return (
-        <div className="folder-tile group cursor-pointer rounded-lg border border-gray-200 bg-white transition-shadow hover:shadow-md">
+        <div className="folder-tile group cursor-pointer rounded-lg border border-gray-200 bg-white transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
             <div className="relative">
                 {/* Actions Dropdown */}
                 {canEdit && (
@@ -62,7 +62,7 @@ export const FolderTile: React.FC<FolderTileProps> = ({ folder, canEdit, onSelec
 
                 {/* Folder Icon */}
                 <div
-                    className="folder-thumb-container flex aspect-square items-center justify-center rounded-t-lg bg-blue-50"
+                    className="folder-thumb-container flex aspect-square items-center justify-center rounded-t-lg bg-blue-50 dark:bg-blue-900"
                     onDoubleClick={handleDoubleClick}
                 >
                     <Folder className="h-16 w-16 text-blue-500" />
@@ -71,8 +71,8 @@ export const FolderTile: React.FC<FolderTileProps> = ({ folder, canEdit, onSelec
 
             {/* Folder Info */}
             <div className="folder-meta p-3" onDoubleClick={handleDoubleClick}>
-                <div className="folder-name truncate text-sm font-medium text-gray-900">{folder.title}</div>
-                <div className="folder-details text-xs text-gray-500">Folder</div>
+                <div className="folder-name truncate text-sm font-medium text-gray-900 dark:text-gray-100">{folder.title}</div>
+                <div className="folder-details text-xs text-gray-500 dark:text-gray-400">Folder</div>
             </div>
         </div>
     );

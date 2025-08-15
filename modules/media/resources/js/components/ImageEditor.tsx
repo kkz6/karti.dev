@@ -9,15 +9,108 @@ import { ImageControls } from './ImageControls';
 import { ImageFilters } from './ImageFilters';
 
 // Import the required libraries
-import Cropper from 'cropperjs';
-import 'cropperjs/dist/cropper.css';
+import 'cropperjs';
 import { FilterOptions, ImageFilterProcessor } from '../utils/imageFilters';
 
-// CropperJS v1.6.2 interface
-interface CropperData {
-    rotate: number;
-    scaleX: number;
-    scaleY: number;
+// CropperJS v2 web component interfaces
+declare global {
+    interface CropperImageElement extends HTMLElement {
+        src: string;
+        translatable: boolean;
+        rotatable: boolean;
+        scalable: boolean;
+        naturalWidth: number;
+        naturalHeight: number;
+        $ready(): Promise<void>;
+        $move(x: number, y: number): void;
+        $moveTo(x: number, y: number): void;
+        $rotate(angle: number): void;
+        $scale(scaleX: number, scaleY?: number): void;
+        $setTransform(transform: { x?: number; y?: number; rotate?: number; scaleX?: number; scaleY?: number }): void;
+        $getTransform(): { x: number; y: number; rotate: number; scaleX: number; scaleY: number };
+        $resetTransform(): void;
+    }
+
+    interface CropperSelectionElement extends HTMLElement {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+        aspectRatio: number;
+        initialCoverage: number;
+        movable: boolean;
+        resizable: boolean;
+        hidden: boolean;
+        $change(): void;
+        $reset(): void;
+        $toCanvas(options?: { fillColor?: string; imageSmoothingQuality?: string }): HTMLCanvasElement;
+    }
+
+    interface CropperCanvasElement extends HTMLElement {
+        disabled: boolean;
+        background: boolean;
+        scaleStep: number;
+    }
+
+    interface CropperHandleElement extends HTMLElement {
+        action: 'select' | 'move' | 'n-resize' | 'e-resize' | 's-resize' | 'w-resize' | 'ne-resize' | 'nw-resize' | 'se-resize' | 'sw-resize';
+        plain?: boolean;
+    }
+}
+
+// Extend JSX intrinsic elements for v2 web components
+declare global {
+    namespace JSX {
+        interface IntrinsicElements {
+            'cropper-canvas': React.DetailedHTMLProps<React.HTMLAttributes<CropperCanvasElement>, CropperCanvasElement> & {
+                disabled?: boolean;
+                background?: boolean;
+                'scale-step'?: number;
+            };
+            'cropper-image': React.DetailedHTMLProps<React.HTMLAttributes<CropperImageElement>, CropperImageElement> & {
+                src?: string;
+                translatable?: boolean;
+                rotatable?: boolean;
+                scalable?: boolean;
+            };
+            'cropper-selection': React.DetailedHTMLProps<React.HTMLAttributes<CropperSelectionElement>, CropperSelectionElement> & {
+                x?: number;
+                y?: number;
+                width?: number;
+                height?: number;
+                'aspect-ratio'?: number;
+                'initial-coverage'?: number;
+                movable?: boolean;
+                resizable?: boolean;
+                hidden?: boolean;
+            };
+            'cropper-handle': React.DetailedHTMLProps<React.HTMLAttributes<CropperHandleElement>, CropperHandleElement> & {
+                action?:
+                    | 'select'
+                    | 'move'
+                    | 'n-resize'
+                    | 'e-resize'
+                    | 's-resize'
+                    | 'w-resize'
+                    | 'ne-resize'
+                    | 'nw-resize'
+                    | 'se-resize'
+                    | 'sw-resize';
+                plain?: boolean;
+                'theme-color'?: string;
+            };
+            'cropper-shade': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
+            'cropper-grid': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+                role?: string;
+                bordered?: boolean;
+                covered?: boolean;
+            };
+            'cropper-crosshair': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+                centered?: boolean;
+            };
+            'cropper-viewer': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
+        }
+    }
 }
 
 interface ImageEditorProps {
@@ -25,12 +118,6 @@ interface ImageEditorProps {
     isOpen: boolean;
     onClose: () => void;
     onSaved?: (asset: MediaAsset) => void;
-}
-
-interface CropperData {
-    rotate: number;
-    scaleX: number;
-    scaleY: number;
 }
 
 export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose, onSaved }) => {
@@ -42,40 +129,21 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
     const [diffDisable, setDiffDisable] = useState(true);
     const [camanFilters, setCamanFilters] = useState<FilterOptions>({});
 
-    const imageRef = useRef<HTMLImageElement>(null);
+    const cropperCanvasRef = useRef<CropperCanvasElement>(null);
+    const cropperImageRef = useRef<CropperImageElement>(null);
+    const cropperSelectionRef = useRef<CropperSelectionElement>(null);
+    const cropperHandleRef = useRef<CropperHandleElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const cropperRef = useRef<Cropper | null>(null);
     const filterProcessorRef = useRef<ImageFilterProcessor | null>(null);
     const initDataRef = useRef<string | null>(null);
     const rotation = 45; // degrees per rotation step
 
-    const fitImageToContainer = useCallback(() => {
-        const cropper = cropperRef.current;
-        const containerEl = containerRef.current;
-        if (!cropper || !containerEl) return;
-
-        const rect = containerEl.getBoundingClientRect();
-        const container = { width: rect.width, height: rect.height } as { width: number; height: number };
-        const imageData = cropper.getImageData();
-
-        if (!container.width || !container.height || !imageData.naturalWidth || !imageData.naturalHeight) return;
-
-        // Use max to "cover" the container and ensure full height is used
-        const scale = Math.max(container.width / imageData.naturalWidth, container.height / imageData.naturalHeight);
-
-        // Zoom around the center so the image stays centered
-        cropper.zoomTo(scale, { x: container.width / 2, y: container.height / 2 });
-    }, []);
-
     const initializeCropper = useCallback(async () => {
-        if (!imageRef.current || !asset) {
-            console.log('ImageEditor: Missing imageRef or asset');
+        if (!cropperImageRef.current || !asset) {
+            console.log('ImageEditor: Missing cropper image element or asset');
             setProcessing(false);
             return;
         }
-
-        const image = imageRef.current;
-        console.log('ImageEditor: Image element found, initializing...');
 
         try {
             // Initialize filter processor
@@ -84,74 +152,60 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
             await filterProcessorRef.current.loadImage(asset.url);
             console.log('ImageEditor: Filter processor loaded successfully');
 
-            // Initialize CropperJS
-            console.log('ImageEditor: Initializing CropperJS...');
-            cropperRef.current = new Cropper(image, {
-                viewMode: 1,
-                dragMode: dragMode,
-                guides: false,
-                highlight: false,
-                autoCrop: false,
-                toggleDragModeOnDblclick: true,
-                responsive: true,
-                checkOrientation: false,
-                restore: false,
-                center: true,
-                scalable: true,
-                zoomable: true,
-                zoomOnWheel: false,
-                cropBoxMovable: true,
-                cropBoxResizable: true,
-                background: true,
-                modal: true,
-                ready: () => {
-                    console.log('ImageEditor: CropperJS ready callback triggered');
+            // Set up the cropper image element
+            const cropperImage = cropperImageRef.current;
+            cropperImage.src = asset.url;
+            cropperImage.translatable = true;
+            cropperImage.rotatable = true;
+            cropperImage.scalable = true;
 
-                    // Force cropper to recalculate and fit the container
-                    fitImageToContainer();
+            // Set up the cropper selection element
+            const cropperSelection = cropperSelectionRef.current;
+            if (cropperSelection) {
+                cropperSelection.initialCoverage = 0; // autoCrop: false equivalent
+                cropperSelection.movable = true;
+                cropperSelection.resizable = true;
+                cropperSelection.hidden = true; // Start without selection
+            }
 
-                    setProcessing(false);
-                    console.log('ImageEditor: Processing set to false');
-                    if (!initDataRef.current && cropperRef.current) {
-                        const canvas = cropperRef.current.getCroppedCanvas();
-                        initDataRef.current = canvas.toDataURL();
-                    }
-                },
-                cropmove: (e: any) => {
-                    const action = e.detail.action;
-                    switch (action) {
-                        case 'move':
-                        case 'crop':
-                            setCroppedByUser(true);
-                            setHasChanged(true);
-                            break;
-                        case 'zoom':
-                            setHasChanged(true);
-                            break;
-                    }
-                },
-                zoom: () => {
-                    setHasChanged(true);
-                },
-            });
-            console.log('ImageEditor: CropperJS initialized successfully');
+            // Set up the cropper canvas element
+            const cropperCanvas = cropperCanvasRef.current;
+            if (cropperCanvas) {
+                cropperCanvas.disabled = false;
+                cropperCanvas.background = true;
+                cropperCanvas.scaleStep = 0.1; // wheelZoomRatio equivalent
+            }
 
-            // Set processing to false immediately after initialization
-            // The ready callback might not always fire reliably
-            console.log('ImageEditor: Setting processing to false after initialization');
+            // Set up the cropper handle element (main selection handle)
+            const cropperHandle = cropperHandleRef.current;
+            if (cropperHandle) {
+                cropperHandle.action = 'select'; // This handle is for creating selections
+                cropperHandle.plain = true;
+            }
+
+            // Wait for the image to be ready
+            await cropperImage.$ready();
+            console.log('ImageEditor: Cropper image ready');
+
+            // Ensure selection is hidden initially
+            if (cropperSelection) {
+                cropperSelection.hidden = true;
+            }
+
             setProcessing(false);
+            console.log('ImageEditor: Processing set to false');
         } catch (error) {
             console.error('ImageEditor: Error during initialization:', error);
             setProcessing(false);
         }
-    }, [asset, dragMode, fitImageToContainer]);
+    }, [asset, dragMode]);
 
     // Initialize the editor when opened
     useEffect(() => {
         if (isOpen && asset) {
             setProcessing(true);
             console.log('ImageEditor: Starting initialization for asset:', asset.filename);
-            // Small delay to ensure image is rendered
+            // Small delay to ensure web components are rendered
             setTimeout(() => {
                 initializeCropper().catch((error) => {
                     console.error('Error initializing cropper:', error);
@@ -160,76 +214,55 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
             }, 500);
         }
 
-        return () => {
-            if (cropperRef.current && typeof cropperRef.current.destroy === 'function') {
-                try {
-                    cropperRef.current.destroy();
-                } catch (error) {
-                    console.warn('Error destroying cropper:', error);
-                }
-                cropperRef.current = null;
-            }
-        };
+        // No cleanup needed for v2 web components - they handle their own lifecycle
     }, [isOpen, asset, initializeCropper]);
-
-    // Refit on container resize or window resize
-    useEffect(() => {
-        if (!isOpen) return;
-
-        const handleResize = () => fitImageToContainer();
-        window.addEventListener('resize', handleResize);
-
-        let observer: ResizeObserver | null = null;
-        if (containerRef.current && 'ResizeObserver' in window) {
-            observer = new ResizeObserver(() => fitImageToContainer());
-            observer.observe(containerRef.current);
-        }
-
-        return () => {
-            window.removeEventListener('resize', handleResize);
-            if (observer && containerRef.current) observer.disconnect();
-        };
-    }, [isOpen, fitImageToContainer]);
 
     const handleOperation = useCallback(
         (action: string) => {
-            const cropper = cropperRef.current;
-            if (!cropper) return;
+            const cropperImage = cropperImageRef.current;
+            const cropperSelection = cropperSelectionRef.current;
+            const cropperHandle = cropperHandleRef.current;
 
-            const getData = (): CropperData => cropper.getData() as CropperData;
+            if (!cropperImage) return;
+
+            const getData = () => cropperImage.$getTransform();
 
             switch (action) {
                 case 'move':
+                    setDragMode('move');
+                    // The main handle remains as 'select' - move mode is handled differently in v2
+                    break;
+
                 case 'crop':
-                    setDragMode(action as 'move' | 'crop');
-                    cropper.setDragMode(action);
+                    setDragMode('crop');
+                    // The main handle remains as 'select' for creating crop selections
                     break;
 
                 case 'zoom-in':
-                    cropper.zoom(0.1);
+                    cropperImage.$scale(1.1, 1.1);
                     setHasChanged(true);
                     break;
 
                 case 'zoom-out':
-                    cropper.zoom(-0.1);
+                    cropperImage.$scale(0.9, 0.9);
                     setHasChanged(true);
                     break;
 
                 case 'rotate-left':
-                    cropper.rotate(-rotation);
+                    cropperImage.$rotate(-rotation);
                     break;
 
                 case 'rotate-right':
-                    cropper.rotate(rotation);
+                    cropperImage.$rotate(rotation);
                     break;
 
                 case 'flip-horizontal':
                     const currentData = getData();
                     const ranges = getRotationRanges();
                     if (ranges.includes(currentData.rotate)) {
-                        cropper.scaleY(-currentData.scaleY);
+                        cropperImage.$scale(currentData.scaleX, -currentData.scaleY);
                     } else {
-                        cropper.scaleX(-currentData.scaleX);
+                        cropperImage.$scale(-currentData.scaleX, currentData.scaleY);
                     }
                     break;
 
@@ -237,9 +270,9 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                     const data = getData();
                     const rotRanges = getRotationRanges();
                     if (rotRanges.includes(data.rotate)) {
-                        cropper.scaleX(-data.scaleX);
+                        cropperImage.$scale(-data.scaleX, data.scaleY);
                     } else {
-                        cropper.scaleY(-data.scaleY);
+                        cropperImage.$scale(data.scaleX, -data.scaleY);
                     }
                     break;
 
@@ -249,7 +282,11 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
 
                 case 'clear':
                     setCroppedByUser(false);
-                    cropper.clear();
+                    if (cropperSelection) {
+                        cropperSelection.hidden = true;
+                        cropperSelection.$reset();
+                    }
+                    setHasChanged(false);
                     break;
             }
 
@@ -274,20 +311,22 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
     };
 
     const checkForChanges = useCallback(() => {
-        const cropper = cropperRef.current;
-        if (!cropper) return;
+        const cropperImage = cropperImageRef.current;
+        const cropperSelection = cropperSelectionRef.current;
+        if (!cropperImage) return;
 
-        const data = cropper.getData() as CropperData;
+        const data = cropperImage.$getTransform();
         const hasFilters = Object.keys(camanFilters).length > 0;
 
-        const cropBoxData = cropper.getCropBoxData();
-        const hasCrop = cropBoxData.width > 0 && cropBoxData.height > 0;
+        const hasCrop = cropperSelection ? cropperSelection.width > 0 && cropperSelection.height > 0 && !cropperSelection.hidden : false;
         setHasChanged(data.rotate !== 0 || data.scaleX !== 1 || data.scaleY !== 1 || hasCrop || hasFilters);
     }, [camanFilters]);
 
     const resetAll = useCallback(() => {
-        const cropper = cropperRef.current;
-        if (!cropper) return;
+        const cropperImage = cropperImageRef.current;
+        const cropperSelection = cropperSelectionRef.current;
+        const cropperHandle = cropperHandleRef.current;
+        if (!cropperImage) return;
 
         setDragMode('move');
         setHasChanged(false);
@@ -295,41 +334,54 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
         setDiffDisable(true);
         setCamanFilters({});
 
-        cropper.reset();
-        cropper.clear();
-        cropper.setDragMode('move');
+        cropperImage.$resetTransform();
+        if (cropperSelection) {
+            cropperSelection.$reset();
+            cropperSelection.hidden = true;
+        }
+        if (cropperHandle) {
+            cropperHandle.action = 'move';
+        }
 
         // Reset filters would go here when CamanJS is integrated
     }, []);
 
-    const getCropperData = useCallback(
-        (cropper: Cropper = cropperRef.current!) => {
-            if (!cropper || !asset) return null;
+    const getCropperData = useCallback(() => {
+        const cropperSelection = cropperSelectionRef.current;
+        const cropperImage = cropperImageRef.current;
+        if (!cropperSelection || !asset || !cropperImage) return null;
 
-            // If user hasn't made a crop selection, create one
-            if (!croppedByUser) {
-                cropper.crop();
-                const containerData = cropper.getContainerData();
-                cropper.setCropBoxData({
-                    height: containerData.height,
-                    left: 0,
-                    top: 0,
-                    width: containerData.width,
-                });
-            }
+        // If user hasn't made a crop selection, create a temporary one that covers the full image
+        if (!croppedByUser || cropperSelection.hidden) {
+            // Show the selection temporarily and set it to cover the entire visible image
+            cropperSelection.hidden = false;
 
-            const canvas = cropper.getCroppedCanvas({
-                fillColor: asset.mime_type?.includes('png') ? 'transparent' : '#fff',
-                imageSmoothingQuality: 'high',
-            });
+            // Use the natural image dimensions or fall back to reasonable defaults
+            const width = cropperImage.naturalWidth || 800;
+            const height = cropperImage.naturalHeight || 600;
 
-            return canvas.toDataURL(asset.mime_type);
-        },
-        [asset, croppedByUser],
-    );
+            // Set selection to cover the entire image area
+            cropperSelection.x = 0;
+            cropperSelection.y = 0;
+            cropperSelection.width = width;
+            cropperSelection.height = height;
+        }
+
+        const canvas = cropperSelection.$toCanvas({
+            fillColor: asset.mime_type?.includes('png') ? 'transparent' : '#fff',
+            imageSmoothingQuality: 'high',
+        });
+
+        // Hide the selection again if user didn't create it
+        if (!croppedByUser) {
+            cropperSelection.hidden = true;
+        }
+
+        return canvas.toDataURL(asset.mime_type);
+    }, [asset, croppedByUser]);
 
     const handleSave = useCallback(async () => {
-        if (!asset || !cropperRef.current) return;
+        if (!asset || !cropperSelectionRef.current) return;
 
         const imageData = getCropperData();
         if (!imageData) return;
@@ -371,9 +423,9 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
             // Reset to original image
             const originalImageUrl = filterProcessorRef.current.reset();
 
-            // Update cropper with original image
-            if (cropperRef.current) {
-                cropperRef.current.replace(originalImageUrl, true);
+            // Update cropper image with original image
+            if (cropperImageRef.current) {
+                cropperImageRef.current.src = originalImageUrl;
             }
         } catch (error) {
             console.error('Error resetting filters:', error);
@@ -402,9 +454,9 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                 // Apply all filters
                 const filteredImageUrl = filterProcessorRef.current.applyFilters(filters);
 
-                // Update cropper with filtered image
-                if (cropperRef.current) {
-                    cropperRef.current.replace(filteredImageUrl, true);
+                // Update cropper image with filtered image
+                if (cropperImageRef.current) {
+                    cropperImageRef.current.src = filteredImageUrl;
                 }
             } catch (error) {
                 console.error('Error applying filter:', error);
@@ -417,36 +469,91 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
 
     const haveFilters = () => Object.keys(camanFilters).length > 0;
 
+    // Add event listeners for v2 components
+    useEffect(() => {
+        if (!isOpen || !cropperCanvasRef.current) return;
+
+        const canvas = cropperCanvasRef.current;
+
+        const handleActionStart = (e: Event) => {
+            const customEvent = e as CustomEvent;
+            const action = customEvent.detail?.action;
+            console.log('Action start:', action);
+            if (action === 'select' || action?.includes('resize')) {
+                setCroppedByUser(true);
+                // Show the selection when user starts creating/resizing a selection
+                const cropperSelection = cropperSelectionRef.current;
+                if (cropperSelection) {
+                    cropperSelection.hidden = false;
+                }
+            }
+        };
+
+        const handleActionMove = (e: Event) => {
+            const customEvent = e as CustomEvent;
+            const action = customEvent.detail?.action;
+            switch (action) {
+                case 'select':
+                case 'move':
+                    setCroppedByUser(true);
+                    setHasChanged(true);
+                    break;
+                default:
+                    if (action?.includes('resize')) {
+                        setCroppedByUser(true);
+                        setHasChanged(true);
+                    }
+                    break;
+            }
+        };
+
+        const handleActionEnd = () => {
+            checkForChanges();
+        };
+
+        canvas.addEventListener('actionstart' as any, handleActionStart);
+        canvas.addEventListener('actionmove' as any, handleActionMove);
+        canvas.addEventListener('actionend' as any, handleActionEnd);
+
+        return () => {
+            canvas.removeEventListener('actionstart' as any, handleActionStart);
+            canvas.removeEventListener('actionmove' as any, handleActionMove);
+            canvas.removeEventListener('actionend' as any, handleActionEnd);
+        };
+    }, [isOpen, checkForChanges]);
+
     if (!asset) return null;
 
     return (
         <>
             <style>{`
-                /* Cropper container */
+                /* Cropper v2 container */
                 .__cropper {
                     position: relative;
                     height: 100%;
                     flex: 1;
                     overflow: hidden;
+                    background-image:
+                        linear-gradient(45deg, #e5e7eb 25%, transparent 25%),
+                        linear-gradient(-45deg, #e5e7eb 25%, transparent 25%),
+                        linear-gradient(45deg, transparent 75%, #e5e7eb 75%),
+                        linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+                    background-size: 20px 20px;
+                    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
                 }
 
-                /* Image container - fill available space */
-                .__cropper .image {
-                    display: block;
-                    width: 100%;
-                    height: 100%;
-                    min-height: 0;
-                    position: relative;
+                /* Dark mode checkered background pattern */
+                @media (prefers-color-scheme: dark) {
+                    .__cropper {
+                        background-image:
+                            linear-gradient(45deg, #374151 25%, transparent 25%),
+                            linear-gradient(-45deg, #374151 25%, transparent 25%),
+                            linear-gradient(45deg, transparent 75%, #374151 75%),
+                            linear-gradient(-45deg, transparent 75%, #374151 75%);
+                    }
                 }
 
-                /* Original image (hidden by cropper) */
-                .__cropper .image img {
-                    display: block;
-                    max-width: 100%;
-                    max-height: 100%;
-                }
-
-                /* Loader from original */
+                /* Loader */
                 .__cropper .__loader {
                     align-items: center;
                     display: flex;
@@ -457,116 +564,80 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                     position: absolute;
                     top: 0;
                     width: 100%;
+                    z-index: 10;
                 }
 
-                /* Force CropperJS container to fill space */
-                .cropper-container {
-                    direction: ltr;
-                    font-size: 0;
-                    line-height: 0;
-                    position: relative;
-                    touch-action: none;
-                    user-select: none;
-                    width: 100% !important;
-                    height: 100% !important;
+                /* Cropper v2 web components styling */
+                cropper-canvas {
+                    display: block;
+                    width: 100%;
+                    height: 100%;
                 }
 
-                .cropper-wrap-box,
-                .cropper-canvas,
-                .cropper-drag-box,
-                .cropper-crop-box,
-                .cropper-modal {
-                    bottom: 0;
-                    left: 0;
+                cropper-image {
+                    display: block;
+                    width: 100%;
+                    height: 100%;
+                }
+
+                cropper-selection {
+                    display: block;
+                }
+
+                cropper-handle {
+                    display: block;
+                }
+
+                cropper-shade {
+                    display: block;
+                }
+
+                cropper-grid {
+                    display: block;
                     position: absolute;
-                    right: 0;
                     top: 0;
-                }
-
-                .cropper-drag-box {
-                    background-color: transparent;
-                    opacity: 1;
-                }
-
-                /* Add checkered background pattern */
-                .__cropper {
-                    background-image:
-                        linear-gradient(45deg, #e5e7eb 25%, transparent 25%),
-                        linear-gradient(-45deg, #e5e7eb 25%, transparent 25%),
-                        linear-gradient(45deg, transparent 75%, #e5e7eb 75%),
-                        linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
-                    background-size: 20px 20px;
-                    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-                }
-
-                /* Ensure cropper uses full width */
-                .cropper-container {
-                    position: relative !important;
-                    touch-action: none;
-                    user-select: none;
-                }
-
-                /* Absolutely fill the image box so height always matches */
-                .__cropper .image > .cropper-container {
-                    position: absolute !important;
-                    top: 0;
-                    right: 0;
-                    bottom: 0;
                     left: 0;
-                    width: 100% !important;
-                    height: 100% !important;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
                 }
 
-                /* Ensure the cropper modal image fits the container */
-                .cropper-modal {
-                    background-color: rgba(0, 0, 0, 0.5);
+
+
+                cropper-crosshair {
+                    display: block;
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
                 }
 
-                .cropper-view-box {
-                    outline: 1px solid rgba(255, 255, 255, 0.75);
+                /* Hide corner bracket lines */
+                cropper-grid::before,
+                cropper-grid::after,
+                cropper-selection::before,
+                cropper-selection::after {
+                    display: none !important;
                 }
 
-                /* Cropper styling from original Laravel Media Manager */
-                .cropper-line {
-                    background-color: transparent !important;
+                /* Hide any corner indicators */
+                cropper-grid > *::before,
+                cropper-grid > *::after {
+                    display: none !important;
                 }
 
-                .cropper-point {
-                    z-index: 1;
+                /* Override default cropper corner styling */
+                cropper-selection {
+                    border: 1px solid rgba(255, 255, 255, 0.5) !important;
                 }
 
-                .cropper-point.point-e,
-                .cropper-point.point-w,
-                .cropper-point.point-s,
-                .cropper-point.point-n {
-                    background-color: transparent !important;
-                }
-
-                .cropper-point.point-ne,
-                .cropper-point.point-se,
-                .cropper-point.point-nw,
-                .cropper-point.point-sw {
-                    background-color: transparent !important;
-                    border-color: white;
-                    border-style: solid;
-                    height: 20px;
-                    width: 20px;
-                }
-
-                .cropper-point.point-ne {
-                    border-width: 3px 3px 0 0;
-                }
-
-                .cropper-point.point-nw {
-                    border-width: 3px 0 0 3px;
-                }
-
-                .cropper-point.point-se {
-                    border-width: 0 3px 3px 0;
-                }
-
-                .cropper-point.point-sw {
-                    border-width: 0 0 3px 3px;
+                /* Hide corner bracket pseudo-elements that might be creating the lines */
+                cropper-selection > *::before,
+                cropper-selection > *::after {
+                    content: none !important;
+                    display: none !important;
                 }
             `}</style>
             <Dialog open={isOpen} onOpenChange={onClose}>
@@ -577,7 +648,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
 
                     <div className="image-editor flex min-h-0 flex-col">
                         {/* Top Toolbar */}
-                        <div className="flex items-center justify-between border-b bg-gray-50 px-6 py-2">
+                        <div className="flex items-center justify-between border-b bg-gray-50 px-6 py-2 dark:border-gray-700 dark:bg-gray-800">
                             <div className="flex items-center space-x-2">
                                 <ImageFilters processing={processing} reset={false} applyFilter={applyFilter} camanFilters={camanFilters} />
                             </div>
@@ -604,40 +675,90 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                         {/* Main Editor Area */}
                         <div className="flex min-h-0 flex-1 overflow-hidden">
                             {/* Side Controls */}
-                            <div className="flex w-16 flex-col items-center space-y-2 border-r bg-gray-50 py-2">
+                            <div className="flex w-16 flex-col items-center space-y-2 border-r bg-gray-50 py-2 dark:border-gray-700 dark:bg-gray-800">
                                 <ImageControls dragMode={dragMode} onOperation={handleOperation} processing={processing} />
                             </div>
 
                             {/* Image Area */}
-                            <div ref={containerRef} className="__cropper relative min-h-0 flex-1 bg-gray-100">
+                            <div ref={containerRef} className="__cropper relative min-h-0 flex-1 bg-gray-100 dark:bg-gray-900">
                                 {processing && (
                                     <div className="__loader">
                                         <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
                                     </div>
                                 )}
 
-                                <div className="image" style={{ opacity: processing ? 0 : 1, width: '100%', height: '100%' }}>
-                                    <img
-                                        ref={imageRef}
-                                        id="cropper"
-                                        src={asset.url}
-                                        alt={asset.filename}
-                                        crossOrigin="anonymous"
-                                        style={{ maxWidth: '100%', maxHeight: '100%' }}
-                                        onLoad={() => console.log('ImageEditor: Image loaded successfully')}
-                                        onError={(e) => console.error('ImageEditor: Image load error:', e)}
-                                    />
-                                </div>
+                                {React.createElement(
+                                    'cropper-canvas',
+                                    {
+                                        ref: cropperCanvasRef,
+                                        disabled: processing,
+                                        background: true,
+                                        'scale-step': 0.1,
+                                        style: { opacity: processing ? 0 : 1, width: '100%', height: '100%' },
+                                    },
+                                    [
+                                        React.createElement('cropper-image', {
+                                            key: 'image',
+                                            ref: cropperImageRef,
+                                            src: asset.url,
+                                            translatable: true,
+                                            rotatable: true,
+                                            scalable: true,
+                                        }),
+                                        React.createElement('cropper-shade', { key: 'shade' }),
+                                        React.createElement('cropper-handle', {
+                                            key: 'handle',
+                                            ref: cropperHandleRef,
+                                            action: 'select',
+                                            plain: true,
+                                        }),
+                                        React.createElement(
+                                            'cropper-selection',
+                                            {
+                                                key: 'selection',
+                                                ref: cropperSelectionRef,
+                                                'initial-coverage': 0,
+                                                movable: true,
+                                                resizable: true,
+                                                hidden: true,
+                                            },
+                                            [
+                                                React.createElement('cropper-grid', {
+                                                    key: 'grid',
+                                                    role: 'grid',
+                                                    covered: true,
+                                                }),
+                                                React.createElement('cropper-crosshair', {
+                                                    key: 'crosshair',
+                                                    centered: true,
+                                                }),
+                                                React.createElement('cropper-handle', {
+                                                    key: 'move-handle',
+                                                    action: 'move',
+                                                    'theme-color': 'rgba(255, 255, 255, 0.35)',
+                                                }),
+                                                React.createElement('cropper-handle', { key: 'n-resize', action: 'n-resize' }),
+                                                React.createElement('cropper-handle', { key: 'e-resize', action: 'e-resize' }),
+                                                React.createElement('cropper-handle', { key: 's-resize', action: 's-resize' }),
+                                                React.createElement('cropper-handle', { key: 'w-resize', action: 'w-resize' }),
+                                                React.createElement('cropper-handle', { key: 'ne-resize', action: 'ne-resize' }),
+                                                React.createElement('cropper-handle', { key: 'nw-resize', action: 'nw-resize' }),
+                                                React.createElement('cropper-handle', { key: 'se-resize', action: 'se-resize' }),
+                                                React.createElement('cropper-handle', { key: 'sw-resize', action: 'sw-resize' }),
+                                            ],
+                                        ),
+                                    ],
+                                )}
                             </div>
 
                             {/* Presets Panel */}
-                            <div className="w-64 border-l bg-gray-50 p-4">
+                            <div className="w-64 border-l bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
                                 <FilterPresets processing={processing} camanFilters={camanFilters} applyFilter={applyFilter} />
                             </div>
                         </div>
 
                         {/* Bottom Toolbar */}
-                        <div className="flex items-center justify-center space-x-2 border-t bg-gray-50 px-6 py-2">
+                        <div className="flex items-center justify-center space-x-2 border-t bg-gray-50 px-6 py-2 dark:border-gray-700 dark:bg-gray-800">
                             <Button variant="outline" disabled={processing || !hasChanged} onClick={() => handleOperation('reset')}>
                                 <RotateCcw className="mr-2 h-4 w-4" />
                                 Reset

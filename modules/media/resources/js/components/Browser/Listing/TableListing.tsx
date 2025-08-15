@@ -143,14 +143,14 @@ export const TableListing: React.FC<TableListingProps> = ({
                 <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                         <thead>
-                            <tr className="border-b border-gray-200">
+                            <tr className="border-b border-gray-200 dark:border-gray-700">
                                 <th className="w-12"></th>
                                 <th className="w-12"></th>
                                 {columns.map((column, index) => (
                                     <th
                                         key={index}
-                                        className={`p-3 text-left font-medium text-gray-900 ${column.extra ? 'hidden md:table-cell' : ''} ${
-                                            !isSearching ? 'cursor-pointer hover:bg-gray-50' : ''
+                                        className={`p-3 text-left font-medium text-gray-900 dark:text-gray-100 ${column.extra ? 'hidden md:table-cell' : ''} ${
+                                            !isSearching ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700' : ''
                                         }`}
                                         onClick={() => handleSort(column.field)}
                                     >
@@ -167,7 +167,7 @@ export const TableListing: React.FC<TableListingProps> = ({
                         </thead>
                         <tbody>
                             {hasParent && !restrictNavigation && (
-                                <tr className="cursor-pointer border-b border-gray-100 hover:bg-gray-50">
+                                <tr className="cursor-pointer border-b border-gray-100 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700">
                                     <td className="p-3" onDoubleClick={handleParentSelect}>
                                         <div className="flex h-8 w-8 items-center justify-center">
                                             <CornerLeftUp className="h-4 w-4 text-gray-600" />
@@ -179,7 +179,10 @@ export const TableListing: React.FC<TableListingProps> = ({
                                         </div>
                                     </td>
                                     <td className="p-3">
-                                        <button onDoubleClick={handleParentSelect} className="cursor-pointer text-blue-600 hover:text-blue-800">
+                                        <button
+                                            onDoubleClick={handleParentSelect}
+                                            className="cursor-pointer text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                        >
                                             ..
                                         </button>
                                     </td>

@@ -208,7 +208,7 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
                 {!loading && !saving && asset && (
                     <div className="space-y-6">
                         {/* Asset Meta Information */}
-                        <div className="grid grid-cols-1 gap-4 rounded-lg bg-gray-50 p-4 md:grid-cols-2">
+                        <div className="grid grid-cols-1 gap-4 rounded-lg bg-gray-50 p-4 md:grid-cols-2 dark:bg-gray-800">
                             <div className="space-y-2">
                                 <div className="flex items-center gap-2">
                                     <FileIcon extension={asset.extension} className="h-4 w-4" />
@@ -299,25 +299,29 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
                                     <div>
                                         <Label>Focal Point</Label>
                                         <div className="flex items-center space-x-2">
-                                            <span className="text-sm text-gray-600">
+                                            <span className="text-sm text-gray-600 dark:text-gray-400">
                                                 {focus ? `${focus.replace('-', '%, ')}%` : 'Not set (default: 50%, 50%)'}
                                             </span>
                                             <Button type="button" variant="outline" size="sm" onClick={() => setShowFocalPointEditor(true)}>
                                                 Edit Focal Point
                                             </Button>
                                         </div>
-                                        <p className="mt-1 text-xs text-gray-500">Set the focal point for image cropping</p>
+                                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Set the focal point for image cropping</p>
                                     </div>
 
                                     <div>
                                         <Label>Image Editor</Label>
                                         <div className="flex items-center space-x-2">
-                                            <span className="text-sm text-gray-600">Edit, crop, rotate and apply filters to your image</span>
+                                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                                                Edit, crop, rotate and apply filters to your image
+                                            </span>
                                             <Button type="button" variant="outline" size="sm" onClick={() => setShowImageEditor(true)}>
                                                 Edit Image
                                             </Button>
                                         </div>
-                                        <p className="mt-1 text-xs text-gray-500">Advanced image editing with cropping, filters and effects</p>
+                                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                            Advanced image editing with cropping, filters and effects
+                                        </p>
                                     </div>
                                 </>
                             )}

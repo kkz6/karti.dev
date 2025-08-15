@@ -114,15 +114,17 @@ export const FocalPointEditor: React.FC<FocalPointEditorProps> = ({ isOpen, imag
 
                 <div className="focal-point-editor">
                     <div className="mb-6">
-                        <label className="mb-2 block text-sm font-medium text-gray-700">Click or drag to adjust the focal point</label>
-                        <p className="mb-4 text-sm text-gray-500">
+                        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Click or drag to adjust the focal point
+                        </label>
+                        <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
                             Click anywhere on the image or drag the red circle to set the focal point. This determines which part of the image stays
                             visible when cropping.
                         </p>
 
                         {/* Pointer Size Controls */}
                         <div className="mb-4 flex items-center space-x-4">
-                            <span className="text-sm font-medium text-gray-700">Pointer Size:</span>
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Pointer Size:</span>
                             <div className="flex items-center space-x-2">
                                 <Button
                                     type="button"
@@ -152,13 +154,13 @@ export const FocalPointEditor: React.FC<FocalPointEditorProps> = ({ isOpen, imag
                                 >
                                     <Plus className="h-4 w-4" />
                                 </Button>
-                                <span className="text-sm text-gray-600">{pointerSize}px</span>
+                                <span className="text-sm text-gray-600 dark:text-gray-400">{pointerSize}px</span>
                             </div>
                         </div>
 
                         {/* Main focal point image */}
                         <div
-                            className="relative inline-block overflow-hidden rounded-lg border border-gray-200"
+                            className="relative inline-block overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
                             onMouseMove={handleMouseMove}
                             onMouseUp={handleMouseUp}
                         >
@@ -201,12 +203,12 @@ export const FocalPointEditor: React.FC<FocalPointEditorProps> = ({ isOpen, imag
                     <div className="mb-4 flex items-center justify-between">
                         <div className="flex space-x-4">
                             <div className="flex items-center space-x-2">
-                                <span className="text-sm font-medium text-gray-700">X:</span>
-                                <span className="text-sm text-gray-900">{x}%</span>
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">X:</span>
+                                <span className="text-sm text-gray-900 dark:text-gray-100">{x}%</span>
                             </div>
                             <div className="flex items-center space-x-2">
-                                <span className="text-sm font-medium text-gray-700">Y:</span>
-                                <span className="text-sm text-gray-900">{y}%</span>
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Y:</span>
+                                <span className="text-sm text-gray-900 dark:text-gray-100">{y}%</span>
                             </div>
                         </div>
                     </div>
