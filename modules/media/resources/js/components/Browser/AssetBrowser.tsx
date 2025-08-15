@@ -1,5 +1,4 @@
 import { Button } from '@shared/components/ui/button';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
 import { Input } from '@shared/components/ui/input';
 import { Toggle } from '@shared/components/ui/toggle';
 import { Grid, List, Search } from 'lucide-react';
@@ -10,6 +9,7 @@ import { MediaAsset, MediaFolder } from '../../types/media';
 import { AssetEditor } from '../Editor/AssetEditor';
 import { LoadingGraphic } from '../UI/LoadingGraphic';
 import { Uploader } from '../Upload/Uploader';
+import { AssetDeleter } from './AssetDeleter';
 import { GridListing, TableListing } from './Listing';
 import { Breadcrumbs } from './Navigation/Breadcrumbs';
 import { FolderEditor } from './Navigation/FolderEditor';
@@ -83,9 +83,8 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
         elementRef,
     } = useMediaBrowser(selectedContainer, selectedPath);
 
-    const [deleteModalMulti, setDeleteModalMulti] = useState<boolean>(false);
-    const [deleteModal, setDeleteModal] = useState<boolean>(false);
-    const [assetToBeDeleted, setAssetToBeDeleted] = useState<string[]>([]);
+    const [showAssetDeleter, setShowAssetDeleter] = useState<boolean>(false);
+    const [assetsToBeDeleted, setAssetsToBeDeleted] = useState<MediaAsset[]>([]);
     const [showAssetEditor, setShowAssetEditor] = useState<boolean>(false);
     const [editedAssetId, setEditedAssetId] = useState<string | null>(null);
     const [showFolderCreator, setShowFolderCreator] = useState<boolean>(false);
@@ -137,10 +136,16 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
         [canEdit],
     );
 
-    const handleAssetDeleting = useCallback((assetId: string) => {
-        setDeleteModal(true);
-        setAssetToBeDeleted([assetId]);
-    }, []);
+    const handleAssetDeleting = useCallback(
+        (assetId: string) => {
+            const assetToDelete = assets.find((asset) => asset.id === assetId);
+            if (assetToDelete) {
+                setAssetsToBeDeleted([assetToDelete]);
+                setShowAssetDeleter(true);
+            }
+        },
+        [assets],
+    );
 
     const handleFolderSelected = useCallback(
         (folderData: MediaFolder) => {
@@ -167,12 +172,32 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
         [onAssetDoubleClicked],
     );
 
-    const handleDeleteAssets = async (ids: string[]) => {
-        // Implement delete logic here
-        setDeleteModal(false);
-        setDeleteModalMulti(false);
-        setAssetToBeDeleted([]);
-    };
+    const handleDeleteAssets = useCallback(() => {
+        const assetsToDelete = assets.filter((asset) => browserSelectedAssets.includes(asset.id));
+        if (assetsToDelete.length > 0) {
+            setAssetsToBeDeleted(assetsToDelete);
+            setShowAssetDeleter(true);
+        }
+    }, [assets, browserSelectedAssets]);
+
+    const handleAssetsDeleted = useCallback(
+        (deletedAssetIds: string[]) => {
+            // Clear all selections since deleted assets were likely selected
+            clearSelections();
+
+            // Refresh the assets list
+            loadAssets();
+
+            // Show success message
+            toast.success(`Successfully deleted ${deletedAssetIds.length} ${deletedAssetIds.length === 1 ? 'item' : 'items'}`);
+        },
+        [clearSelections, loadAssets],
+    );
+
+    const handleAssetDeleterClosed = useCallback(() => {
+        setShowAssetDeleter(false);
+        setAssetsToBeDeleted([]);
+    }, []);
 
     const handleCreateFolder = () => {
         setShowFolderCreator(true);
@@ -246,7 +271,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
 
                         {browserSelectedAssets.length > 0 && (
                             <div className="flex gap-2">
-                                <Button variant="destructive" onClick={() => setDeleteModalMulti(true)}>
+                                <Button variant="destructive" onClick={handleDeleteAssets}>
                                     Delete
                                 </Button>
                                 <Button variant="outline" onClick={() => clearSelections()}>
@@ -369,40 +394,15 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                 )}
             </div>
 
-            {/* Delete Modals */}
-            <Dialog open={deleteModalMulti} onOpenChange={setDeleteModalMulti}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>
-                            Delete {browserSelectedAssets.length} {browserSelectedAssets.length === 1 ? 'item' : 'items'}?
-                        </DialogTitle>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteModalMulti(false)}>
-                            Cancel
-                        </Button>
-                        <Button variant="destructive" onClick={() => handleDeleteAssets(browserSelectedAssets)}>
-                            Delete
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={deleteModal} onOpenChange={setDeleteModal}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Delete item?</DialogTitle>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteModal(false)}>
-                            Cancel
-                        </Button>
-                        <Button variant="destructive" onClick={() => handleDeleteAssets(assetToBeDeleted)}>
-                            Delete
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            {/* Asset Deleter */}
+            {showAssetDeleter && (
+                <AssetDeleter
+                    assets={assetsToBeDeleted}
+                    isOpen={showAssetDeleter}
+                    onDeleted={handleAssetsDeleted}
+                    onClosed={handleAssetDeleterClosed}
+                />
+            )}
 
             {/* Folder Creator Modal */}
             {showFolderCreator && (

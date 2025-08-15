@@ -8,6 +8,7 @@ import { Textarea } from '@shared/components/ui/textarea';
 import axios from 'axios';
 import { Download, ExternalLink, Save, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { AssetDeleter } from '../Browser/AssetDeleter';
 import { FileIcon } from '../Icons';
 import { ActionButton, LoadingGraphic } from '../UI';
 import { FocalPointEditor } from './FocalPointEditor';
@@ -41,6 +42,7 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
     const [focus, setFocus] = useState<string | null>(null);
     const [showFocalPointEditor, setShowFocalPointEditor] = useState(false);
     const [showImageEditor, setShowImageEditor] = useState(false);
+    const [showAssetDeleter, setShowAssetDeleter] = useState(false);
     const [errors, setErrors] = useState<string[]>([]);
 
     const isImage = asset?.is_image || false;
@@ -109,36 +111,26 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
         }
     };
 
-    const handleDelete = async () => {
-        if (!asset || !assetId) return;
+    const handleDeleteClick = () => {
+        setShowAssetDeleter(true);
+    };
 
-        if (!confirm('Are you sure you want to delete this asset?')) {
-            return;
+    const handleAssetDeleted = (deletedAssetIds: string[]) => {
+        if (onDeleted && deletedAssetIds.length > 0) {
+            onDeleted(deletedAssetIds[0]);
         }
 
-        try {
-            await axios.delete(route('media.destroy', assetId));
+        // Show success message
+        const event = new CustomEvent('toast', {
+            detail: { type: 'success', message: 'Asset deleted successfully' },
+        });
+        window.dispatchEvent(event);
 
-            if (onDeleted) {
-                onDeleted(assetId);
-            }
+        onClose();
+    };
 
-            // Show success message
-            const event = new CustomEvent('toast', {
-                detail: { type: 'success', message: 'Asset deleted successfully' },
-            });
-            window.dispatchEvent(event);
-
-            onClose();
-        } catch (error) {
-            console.error('Error deleting asset:', error);
-
-            // Show error toast
-            const event = new CustomEvent('toast', {
-                detail: { type: 'error', message: 'Error deleting asset' },
-            });
-            window.dispatchEvent(event);
-        }
+    const handleAssetDeleterClosed = () => {
+        setShowAssetDeleter(false);
     };
 
     const handleDownload = () => {
@@ -233,7 +225,7 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
                             <div className="flex items-start justify-end gap-2">
                                 <ActionButton action={handleOpen} icon={ExternalLink} tooltip="Open in new tab" />
                                 <ActionButton action={handleDownload} icon={Download} tooltip="Download" />
-                                {allowDeleting && <ActionButton action={handleDelete} icon={X} tooltip="Delete" variant="destructive" />}
+                                {allowDeleting && <ActionButton action={handleDeleteClick} icon={X} tooltip="Delete" variant="destructive" />}
                             </div>
                         </div>
 
@@ -366,6 +358,16 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
                         setShowImageEditor(false);
                         if (onSaved) onSaved(updatedAsset);
                     }}
+                />
+            )}
+
+            {/* Asset Deleter */}
+            {showAssetDeleter && asset && (
+                <AssetDeleter
+                    assets={[asset as MediaAsset]}
+                    isOpen={showAssetDeleter}
+                    onDeleted={handleAssetDeleted}
+                    onClosed={handleAssetDeleterClosed}
                 />
             )}
         </Dialog>

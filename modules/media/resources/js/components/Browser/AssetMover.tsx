@@ -149,18 +149,19 @@ export const AssetMover: React.FC<AssetMoverProps> = ({ assets, container, folde
                 </DialogHeader>
 
                 <div className="space-y-4">
-                    <Alert className="border-yellow-200 bg-yellow-50 text-yellow-800 dark:border-yellow-800/30 dark:bg-yellow-900/20 dark:text-yellow-200">
-                        <AlertDescription className="text-yellow-700 dark:text-yellow-300">{warningText}</AlertDescription>
+                    <Alert className="border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900/30">
+                        <AlertDescription className="text-yellow-900 dark:text-yellow-100">
+                            <span className="font-medium text-yellow-900 dark:text-yellow-100">{warningText}</span>
+                        </AlertDescription>
                     </Alert>
 
                     {errors && (
-                        <Alert
-                            variant="destructive"
-                            className="border-red-200 bg-red-50 text-red-800 dark:border-red-800/30 dark:bg-red-900/20 dark:text-red-200"
-                        >
-                            <AlertDescription className="text-red-700 dark:text-red-300">
+                        <Alert variant="destructive" className="border-red-400 bg-red-50 shadow-sm dark:border-red-600 dark:bg-red-900/30">
+                            <AlertDescription className="text-red-900 dark:text-red-100">
                                 {errors.map((error, i) => (
-                                    <p key={i}>{error}</p>
+                                    <p key={i} className="text-sm leading-relaxed font-medium text-red-900 dark:text-red-100">
+                                        {error}
+                                    </p>
                                 ))}
                             </AlertDescription>
                         </Alert>
