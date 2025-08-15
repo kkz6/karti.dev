@@ -29,11 +29,11 @@ class MediaController extends BaseController
     }
 
     /**
-     * @param mixed $path
+     * @param string $path
      *
      * @throws MediaManagerException
      */
-    public function index(Request $request, $path = '')
+    public function index(Request $request, string $path = '')
     {
         $diskString = $this->manager->verifyDisk($request->disk);
         $disk       = Storage::disk($diskString);
@@ -63,57 +63,5 @@ class MediaController extends BaseController
         });
 
         return response(['subdirectories' => $subdirectories->sortBy('name'), 'media' => $media['data'], 'page_count' => $media['last_page']]);
-    }
-
-    /**
-     * Get media manager configuration
-     */
-    public function config()
-    {
-        return response()->json([
-            'config' => [
-                'baseUrl'      => '/admin/media',
-                'hideFilesExt' => false,
-                'mimeTypes'    => [
-                    'image'    => ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'],
-                    'video'    => ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm'],
-                    'audio'    => ['mp3', 'wav', 'flac', 'aac', 'ogg'],
-                    'document' => ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'],
-                    'archive'  => ['zip', 'rar', '7z', 'tar', 'gz'],
-                ],
-                'broadcasting'             => false,
-                'gfi'                      => true,
-                'ratioBar'                 => true,
-                'previewFilesBeforeUpload' => true,
-            ],
-            'routes' => [
-                'files'       => route('admin.media.index'),
-                'config'      => route('admin.media.config'),
-                'upload'      => '/admin/media/upload',
-                'lock'        => '/admin/media/lock',
-                'visibility'  => '/admin/media/visibility',
-                'locked_list' => '/admin/media/locked',
-            ],
-            'translations' => [
-                'upload'                     => 'Upload',
-                'new_folder'                 => 'New Folder',
-                'delete'                     => 'Delete',
-                'rename'                     => 'Rename',
-                'move'                       => 'Move',
-                'edit'                       => 'Edit',
-                'search'                     => 'Search files...',
-                'no_files_found'             => 'No files found',
-                'bulk_select'                => 'Bulk Select',
-                'cancel'                     => 'Cancel',
-                'download'                   => 'Download',
-                'show_info'                  => 'Show Info',
-                'hide_info'                  => 'Hide Info',
-                'folder_name'                => 'Folder Name',
-                'folder_name_placeholder'    => 'Enter folder name...',
-                'create'                     => 'Create',
-                'no_val'                     => 'Please provide a value',
-                'create_success'             => 'Successfully created',
-            ],
-        ]);
     }
 }

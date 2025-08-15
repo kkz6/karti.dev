@@ -104,7 +104,7 @@ export const AssetManager: React.FC<AssetManagerProps> = ({
   }, [bindBrowserNavigation]);
 
   return (
-    <div className="asset-manager">
+    <div className="asset-manager relative flex flex-col h-full">
       <AssetBrowser
         selectedContainer={activeContainer}
         selectedPath={activePath}

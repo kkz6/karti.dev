@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Grid, List } from 'lucide-react';
 import { Button } from '@shared/components/ui/button';
 import { Input } from '@shared/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@shared/components/ui/dialog';
@@ -9,6 +9,7 @@ import { LoadingGraphic } from '../LoadingGraphic';
 import { Toggle } from '@shared/components/ui/toggle';
 import { GridListing, TableListing } from './Listing';
 import { Breadcrumbs } from './Breadcrumbs';
+import { FolderEditor } from './FolderEditor';
 import { useMediaBrowser, createDefaultServices } from '../../hooks/useMediaBrowser';
 import { MediaAsset, MediaFolder, MediaContainer, DisplayMode } from '../../types/media';
 
@@ -59,6 +60,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
     showSidebar,
     draggingFile,
     // Actions
+    loadAssets,
     navigate,
     selectFolder,
     selectContainer,
@@ -169,7 +171,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
   return (
     <div
       ref={elementRef}
-      className="asset-browser"
+      className="asset-browser relative flex h-full"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -201,8 +203,8 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
         </div>
       )}
 
-      <div className="asset-browser-main flex-1">
-        <div className="asset-browser-header bg-gray-50 rounded-t-lg p-4">
+      <div className="asset-browser-main flex-1 flex flex-col min-h-0">
+        <div className="asset-browser-header bg-gray-50 rounded-t-lg p-4 shrink-0">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl font-semibold flex items-center gap-2">
               {isSearching ? (
@@ -253,14 +255,14 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                 onPressedChange={() => setDisplayMode('grid')}
                 aria-label="Grid view"
               >
-                <span className="icon icon-grid" />
+                <Grid className="h-4 w-4" />
               </Toggle>
               <Toggle
                 pressed={displayMode === 'table'}
                 onPressedChange={() => setDisplayMode('table')}
                 aria-label="Table view"
               >
-                <span className="icon icon-list" />
+                <List className="h-4 w-4" />
               </Toggle>
             </div>
 
@@ -287,7 +289,8 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
           </div>
         </div>
 
-        <div className="asset-browser-content">
+        {/* Scrollable Content Area */}
+        <div className="asset-browser-content flex-1 overflow-y-auto pb-12">
           {/* Upload Progress */}
           {uploads.length > 0 && (
             <div className="uploads-section p-4 bg-blue-50">
@@ -357,23 +360,25 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
               <h2 className="text-lg font-semibold text-gray-500">No Search Results</h2>
             </div>
           )}
+
+          {/* Pagination */}
+          {pagination && (
+            <div className="pagination-section p-4">
+              {/* You'll need to implement pagination component */}
+            </div>
+          )}
         </div>
 
-        {/* Pagination */}
-        {pagination && (
-          <div className="pagination-section p-4">
-            {/* You'll need to implement pagination component */}
-          </div>
-        )}
-
-        {/* Breadcrumbs */}
+        {/* Fixed Breadcrumbs Footer */}
         {!restrictNavigation && !isSearching && (
-          <Breadcrumbs
-            path={path}
-            folder={folder}
-            folders={folders}
-            onNavigated={handleFolderSelected}
-          />
+          <div className="absolute bottom-0 left-0 right-0 bg-white border-t shadow-sm z-10">
+            <Breadcrumbs
+              path={path}
+              folder={folder}
+              folders={folders}
+              onNavigated={handleFolderSelected}
+            />
+          </div>
         )}
       </div>
 
@@ -423,6 +428,40 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Folder Creator Modal */}
+      {showFolderCreator && (
+        <FolderEditor
+          container={container!}
+          path={path}
+          parentUuid={folder?.uuid}
+          create={true}
+          onCreated={(newFolder) => {
+            setShowFolderCreator(false);
+            loadAssets(); // Reload to show the new folder
+          }}
+          onClosed={() => setShowFolderCreator(false)}
+        />
+      )}
+
+      {/* Folder Editor Modal */}
+      {showFolderEditor && editedFolderPath && (
+        <FolderEditor
+          container={container!}
+          path={folders.find(f => f.path === editedFolderPath) || editedFolderPath}
+          parentUuid={folder?.uuid}
+          create={false}
+          onUpdated={(updatedFolder) => {
+            setShowFolderEditor(false);
+            setEditedFolderPath(null);
+            loadAssets(); // Reload to show the updated folder
+          }}
+          onClosed={() => {
+            setShowFolderEditor(false);
+            setEditedFolderPath(null);
+          }}
+        />
+      )}
     </div>
   );
 };

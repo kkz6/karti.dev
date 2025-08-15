@@ -63,12 +63,15 @@ export const FolderEditor: React.FC<FolderEditorProps> = ({
 
     try {
       if (create) {
-        // Create folder
-        const response = await axios.post('/api/media/folder', {
-          ...form,
-          path: typeof path === 'string' ? path : path?.path,
-          container: container,
-          parent_id: parentUuid
+        // Create folder using media-manager.create route
+        const currentPath = typeof path === 'string' ? path : (path?.path || '/');
+        const fullPath = currentPath === '/' 
+          ? form.basename 
+          : `${currentPath}/${form.basename}`.replace(/\/+/g, '/');
+        
+        const response = await axios.post('/admin/media-manager/create', {
+          path: fullPath,
+          disk: 'public'
         });
 
         // Show success toast
@@ -77,7 +80,18 @@ export const FolderEditor: React.FC<FolderEditorProps> = ({
         });
         window.dispatchEvent(event);
         
-        onCreated?.(response.data);
+        // Create a folder object to return since backend only returns success
+        const newFolder: MediaFolder = {
+          uuid: `folder-${fullPath}`,
+          path: fullPath,
+          title: form.basename,
+          parent_path: currentPath === '/' ? null : currentPath,
+          container_id: container.id,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        onCreated?.(newFolder);
       } else {
         // Update folder
         const folderToUpdate = path as MediaFolder;

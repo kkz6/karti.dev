@@ -93,23 +93,22 @@ export class MediaService {
      */
     async getFiles(params: MediaListParams = {}): Promise<MediaApiResponse> {
         try {
-            const requestData: any = {};
+            // Build URL with path if provided
+            const path = params.path && params.path !== '/' 
+                ? `/${params.path.replace(/^\//, '')}` 
+                : '';
             
-            if (params.path) {
-                requestData.path = params.path;
-            }
-            if (params.disk) {
-                requestData.disk = params.disk;
-            }
-            
-            // Add pagination as query parameter if needed
+            // Add query parameters
             const queryParams = new URLSearchParams();
+            if (params.disk) {
+                queryParams.append('disk', params.disk);
+            }
             if (params.page) {
                 queryParams.append('page', params.page.toString());
             }
 
-            const url = `${this.baseUrl}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-            const response: AxiosResponse<MediaApiResponse> = await axios.post(url, requestData);
+            const url = `${this.baseUrl}${path}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+            const response: AxiosResponse<MediaApiResponse> = await axios.get(url);
 
             return response.data;
         } catch (error) {
@@ -161,6 +160,19 @@ export class MediaService {
         } catch (error) {
             console.error('Error deleting file:', error);
             throw new Error(`Failed to delete file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+
+    /**
+     * Delete multiple media files
+     */
+    async deleteFiles(mediaIds: number[]): Promise<void> {
+        try {
+            const deletePromises = mediaIds.map(id => this.deleteFile(id));
+            await Promise.all(deletePromises);
+        } catch (error) {
+            console.error('Error deleting files:', error);
+            throw new Error(`Failed to delete files: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 

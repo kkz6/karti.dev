@@ -9,12 +9,12 @@ import {
   MediaMoveParams,
   DisplayMode,
   SortOrder,
-  MediaUpload
+  MediaUpload,
+  MediaPagination
 } from '../types/media';
 
 // Service interface for media operations
 interface MediaServices {
-  browseContainer: () => Promise<{ data: { items: MediaContainer[] } }>;
   loadFilesService: (params: MediaLoadParams) => Promise<{ data: { data: MediaBrowserData; pagination: any } }>;
   searchFilesService: (params: MediaSearchParams) => Promise<{ data: { assets: MediaAsset[]; folders: MediaFolder[] } }>;
   moveFilesService: (params: MediaMoveParams) => Promise<void>;
@@ -25,29 +25,118 @@ import axios from 'axios';
 
 // Default service implementation using axios API calls
 export const createDefaultServices = (): MediaServices => ({
-  browseContainer: async () => {
-    const response = await axios.get(route('media.index'));
-    return response.data;
-  },
-
   loadFilesService: async (params: MediaLoadParams) => {
-    const response = await axios.get('/api/media/get-files', { params });
-    return response.data;
+    // Call the Laravel media controller index method
+    // The route now accepts path as a route parameter
+    const url = params.path && params.path !== '/' 
+      ? `/admin/media/${params.path.replace(/^\//, '')}` 
+      : '/admin/media';
+    
+    const response = await axios.get(url, {
+      params: {
+        disk: 'public',
+        page: params.page
+      }
+    });
+    
+    // Transform the backend response to match frontend expectations
+    const { subdirectories, media, page_count } = response.data;
+    
+    // Transform subdirectories to folders format
+    const folders: MediaFolder[] = subdirectories.map((dir: any) => ({
+      uuid: `folder-${dir.name}`,
+      path: dir.name,
+      title: dir.name.split('/').pop() || dir.name,
+      parent_path: params.path === '/' ? null : params.path,
+      container_id: 'public',
+      created_at: dir.timestamp !== 'N/A' ? dir.timestamp : new Date().toISOString(),
+      updated_at: dir.timestamp !== 'N/A' ? dir.timestamp : new Date().toISOString(),
+    }));
+    
+    // Transform media to assets format
+    const assets: MediaAsset[] = media.map((file: any) => ({
+      id: file.id.toString(),
+      title: file.basename || file.filename,
+      filename: file.filename,
+      extension: file.extension,
+      mime_type: file.mime_type,
+      size: file.size,
+      url: file.url,
+      thumbnail_url: file.aggregate_type === 'image' ? file.url : undefined,
+      created_at: file.created_at,
+      updated_at: file.updated_at,
+      is_image: file.aggregate_type === 'image',
+      path: file.directory,
+      container_id: 'public',
+      dimensions: undefined // Backend doesn't provide dimensions yet
+    }));
+    
+    // Create current folder object
+    const folder: MediaFolder = {
+      uuid: `folder-${params.path}`,
+      path: params.path,
+      title: params.path === '/' ? 'Root' : (params.path.split('/').pop() || params.path),
+      parent_path: params.path === '/' ? null : params.path.split('/').slice(0, -1).join('/') || '/',
+      container_id: 'public',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    
+    // Create pagination object
+    const pagination: MediaPagination = {
+      meta: {
+        current_page: params.page,
+        last_page: page_count,
+        per_page: 20, // Backend uses 20 per page
+        total: page_count * 20 // Approximate total
+      },
+      links: {
+        first: params.page > 1 ? '1' : null,
+        last: params.page < page_count ? page_count.toString() : null,
+        prev: params.page > 1 ? (params.page - 1).toString() : null,
+        next: params.page < page_count ? (params.page + 1).toString() : null
+      }
+    };
+    
+    return {
+      data: {
+        data: {
+          assets,
+          folders,
+          folder
+        },
+        pagination
+      }
+    };
   },
 
   searchFilesService: async (params: MediaSearchParams) => {
-    const response = await axios.get('/api/media/search', { params });
-    return response.data;
+    // Search is not yet implemented in the backend, return empty results
+    return {
+      data: {
+        assets: [],
+        folders: []
+      }
+    };
   },
 
   moveFilesService: async (params: MediaMoveParams) => {
-    const response = await axios.post('/api/media/move', params);
+    // Call the backend move endpoint when it's available
+    const response = await axios.post('/admin/media/move', {
+      media_ids: params.assets.map(id => parseInt(id)),
+      destination: params.folder,
+      disk: 'public'
+    });
     return response.data;
   },
 
   deleteFilesService: async (params: { ids: string[] }) => {
-    const response = await axios.delete('/api/media/delete', { data: params });
-    return response.data;
+    // Delete multiple files - backend expects individual deletes
+    const deletePromises = params.ids.map(id => 
+      axios.delete(`/admin/media/${id}`)
+    );
+    await Promise.all(deletePromises);
+    return { success: true };
   },
 });
 
@@ -82,29 +171,21 @@ export function useMediaBrowser(
   const uploaderRef = useRef<any>(null);
   const elementRef = useRef<HTMLDivElement>(null);
 
-  // Load containers
-  const loadContainers = useCallback(async () => {
-    try {
-      const response = await services.browseContainer();
-      const containersData = response.data.items.reduce((acc, container) => {
-        acc[container.id] = container;
-        return acc;
-      }, {} as Record<string, MediaContainer>);
-      
-      setContainers(containersData);
-      
-      // Set initial container - either the specified one or the first available
-      const targetContainer = initialContainer 
-        ? containersData[initialContainer] 
-        : Object.values(containersData)[0] || null;
-      
-      setContainer(targetContainer);
-      setLoadingContainers(false);
-    } catch (error) {
-      console.error('Error loading containers:', error);
-      setLoadingContainers(false);
-    }
-  }, [initialContainer, services]);
+  // Initialize containers (no API call needed, using default container)
+  const initializeContainers = useCallback(() => {
+    // Create a default public container
+    const defaultContainer: MediaContainer = {
+      id: 'public',
+      title: 'Public',
+      uuid: 'public-uuid',
+      item_id: 'public'
+    };
+    
+    const containersData = { public: defaultContainer };
+    setContainers(containersData);
+    setContainer(defaultContainer);
+    setLoadingContainers(false);
+  }, []);
 
   // Load assets
   const loadAssets = useCallback(async () => {
@@ -274,14 +355,15 @@ export function useMediaBrowser(
 
   // Effects
   useEffect(() => {
-    loadContainers();
-  }, [loadContainers]);
+    initializeContainers();
+  }, [initializeContainers]);
 
   useEffect(() => {
     if (container) {
       loadAssets();
     }
-  }, [container, path, selectedPage, sort, sortOrder, pathUuid, loadAssets]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [container, path, selectedPage, sort, sortOrder, pathUuid]);
 
   useEffect(() => {
     if (searchTerm.length >= 3) {
@@ -289,7 +371,8 @@ export function useMediaBrowser(
     } else if (searchTerm.length === 0 && isSearching) {
       loadAssets();
     }
-  }, [searchTerm, search, loadAssets, isSearching]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, isSearching]);
 
   // Computed values
   const initialized = !loadingContainers && initializedAssets;
@@ -329,7 +412,7 @@ export function useMediaBrowser(
     isEmpty,
     showSidebar,
     // Actions
-    loadContainers,
+    loadContainers: initializeContainers,
     loadAssets,
     search,
     deleteAssets,

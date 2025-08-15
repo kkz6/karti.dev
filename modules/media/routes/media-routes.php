@@ -11,8 +11,6 @@ Route::middleware(['web','auth'])->prefix('admin')->group(function () {
 
     // Media API routes
     Route::prefix('media')->name('media.')->group(function () {
-        Route::get('/', [MediaController::class, 'index'])->name('index');
-        Route::post('create', [MediaController::class, 'create'])->name('create');
-        Route::get('/config', [MediaController::class, 'config'])->name('config');
+        Route::get('/{path?}', [MediaController::class, 'index'])->where('path', '.*')->name('index');
     });
 });
