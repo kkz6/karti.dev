@@ -19,7 +19,7 @@ export default function AddFilterDropdown({ filters, state, onAdd }: AddFilterDr
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="it-dropdown-button w-full justify-start">
+                <Button variant="outline" className="it-dropdown-button justify-center">
                     <Filter className="me-2 size-4" />
                     <span>{t('table::table.filters_button')}</span>
                 </Button>

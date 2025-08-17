@@ -182,18 +182,20 @@ const Table: React.FC<TableProps> = ({
                               resource.hasExports ||
                               resource.hasFilters ||
                               resource.hasToggleableColumns) && (
-                              <div className="it-topbar flex flex-col justify-between md:flex-row md:items-center md:space-x-4 rtl:md:space-x-reverse">
+                              <div className="it-topbar flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                   {resource.hasSearch && (
-                                      <Input
-                                          value={state.search ?? ''}
-                                          onChange={(e) => setSearch(e.target.value)}
-                                          className="w-full md:max-w-md"
-                                          autoFocus={resource.autofocus === 'search'}
-                                          placeholder={t('table::table.search_placeholder')}
-                                      />
+                                      <div className="flex-1 sm:max-w-sm lg:max-w-md">
+                                          <Input
+                                              value={state.search ?? ''}
+                                              onChange={(e) => setSearch(e.target.value)}
+                                              className="w-full"
+                                              autoFocus={resource.autofocus === 'search'}
+                                              placeholder={t('table::table.search_placeholder')}
+                                          />
+                                      </div>
                                   )}
 
-                                  <div className="mt-4 flex gap-4 md:mt-0">
+                                  <div className="flex flex-shrink-0 gap-2">
                                       {(resource.hasBulkActions || resource.hasExports) && (
                                           <ActionsDropdown
                                               actions={resource.actions || []}
@@ -618,7 +620,7 @@ const Table: React.FC<TableProps> = ({
                                           type={resource.paginationType as 'full' | 'simple'}
                                           options={resource.perPageOptions || []}
                                           perPage={state.perPage}
-                                          onClick={(page: number) => visitPaginationUrl(String(page), scrollToTopOfTable)}
+                                          onClick={(url: string) => visitPaginationUrl(url, scrollToTopOfTable)}
                                           onChange={setPerPage}
                                       />
                                   )}

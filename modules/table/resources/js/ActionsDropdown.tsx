@@ -11,9 +11,9 @@ import {
     DropdownMenuTrigger,
 } from '@shared/components/ui/dropdown-menu';
 import { useLang } from '@shared/hooks/use-lang';
+import type { ActionsDropdownProps, TableExport } from '@table/types';
 import DynamicIcon from './DynamicIcon';
 import TableActions from './TableActions';
-import type { ActionsDropdownProps, TableExport } from './types/actions';
 
 export default function ActionsDropdown({
     actions,
@@ -53,7 +53,7 @@ export default function ActionsDropdown({
             {({ handle, asyncExport }) => (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="it-dropdown-button w-full justify-start">
+                        <Button variant="outline" className="it-dropdown-button justify-center">
                             <Wrench className="me-2 size-4" />
                             <span>{t('table::table.actions_button')}</span>
                         </Button>

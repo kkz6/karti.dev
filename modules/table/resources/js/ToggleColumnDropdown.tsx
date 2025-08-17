@@ -18,7 +18,7 @@ export default function ToggleColumnDropdown({ columns, state, onToggle }: Toggl
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="it-dropdown-button w-full justify-start">
+                <Button variant="outline" className="it-dropdown-button justify-center">
                     <Eye className="me-2 size-4" />
                     <span>{t('table::table.columns_button')}</span>
                 </Button>

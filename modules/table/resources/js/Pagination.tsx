@@ -21,6 +21,11 @@ interface PaginationMeta {
     total: number;
     on_first_page: boolean;
     on_last_page: boolean;
+    first_page_url?: string;
+    prev_page_url?: string | null;
+    next_page_url?: string | null;
+    last_page_url?: string;
+    links?: Array<{ url: string | null; label: string; page: number | null; active: boolean }>;
 }
 
 interface TablePaginationProps {
@@ -28,7 +33,7 @@ interface TablePaginationProps {
     options: number[];
     perPage: number;
     type?: 'full' | 'simple';
-    onClick: (page: number) => void;
+    onClick: (url: string) => void;
     onChange: (perPage: number) => void;
 }
 
@@ -115,8 +120,8 @@ export default function TablePagination({ meta, options, perPage, type = 'full',
                                     href="#"
                                     onClick={(e) => {
                                         e.preventDefault();
-                                        if (!meta.on_first_page) {
-                                            onClick(meta.current_page - 1);
+                                        if (meta.prev_page_url) {
+                                            onClick(meta.prev_page_url);
                                         }
                                     }}
                                     className={cn(meta.on_first_page && 'pointer-events-none opacity-50')}
@@ -133,7 +138,11 @@ export default function TablePagination({ meta, options, perPage, type = 'full',
                                             href="#"
                                             onClick={(e) => {
                                                 e.preventDefault();
-                                                onClick(page as number);
+                                                // Find the URL for this page number from the links array
+                                                const link = meta.links?.find((l) => l.page === page);
+                                                if (link?.url) {
+                                                    onClick(link.url);
+                                                }
                                             }}
                                             isActive={page === meta.current_page}
                                         >
@@ -149,8 +158,8 @@ export default function TablePagination({ meta, options, perPage, type = 'full',
                                     href="#"
                                     onClick={(e) => {
                                         e.preventDefault();
-                                        if (!meta.on_last_page) {
-                                            onClick(meta.current_page + 1);
+                                        if (meta.next_page_url) {
+                                            onClick(meta.next_page_url);
                                         }
                                     }}
                                     className={cn(meta.on_last_page && 'pointer-events-none opacity-50')}

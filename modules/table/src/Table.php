@@ -611,7 +611,7 @@ abstract class Table implements Arrayable
     {
         return tap(
             array_values($this->actions())[$id] ?? null,
-            fn (?Action $action): ?\InertiaUI\Table\Action => $action?->setIndex($id)->setTable($this)
+            fn (?Action $action): ?\Modules\Table\Action => $action?->setIndex($id)->setTable($this)
         );
     }
 
@@ -633,7 +633,7 @@ abstract class Table implements Arrayable
     {
         return tap(
             array_values($this->exports())[$id] ?? null,
-            fn (?Export $export): ?\InertiaUI\Table\Export => $export?->setIndex($id)->setTable($this)
+            fn (?Export $export): ?\Modules\Table\Export => $export?->setIndex($id)->setTable($this)
         );
     }
 
@@ -819,10 +819,10 @@ abstract class Table implements Arrayable
             'name'                               => $this->name,
             'results'                            => $results,
             'search'                             => $search   = $this->search(),
-            'columns'                            => $columns = collect($this->buildColumns())->toArray(),
-            'filters'                            => $filters = collect($this->buildFilters())->toArray(),
-            'actions'                            => $actions = $this->buildActions(),
-            'exports'                            => $exports = $this->buildExports(),
+            'columns'                            => $columns  = collect($this->buildColumns())->toArray(),
+            'filters'                            => $filters  = collect($this->buildFilters())->toArray(),
+            'actions'                            => $actions  = $this->buildActions(),
+            'exports'                            => $exports  = $this->buildExports(),
             'state'                              => $tableRequest->toArray(),
             'pagination'                         => $this->shouldPaginate(),
             'paginationType'                     => $paginationType?->value,

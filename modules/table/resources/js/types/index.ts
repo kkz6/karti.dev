@@ -76,6 +76,14 @@ export interface TableConfig<T = any> extends TableResource {
         current_page?: number;
         last_page?: number;
         last_page_url?: string;
+        first_page_url?: string;
+        prev_page_url?: string | null;
+        next_page_url?: string | null;
+        from?: number;
+        to?: number;
+        on_first_page?: boolean;
+        on_last_page?: boolean;
+        links?: { url: string | null; label: string; page: number | null; active: boolean }[];
     };
 }
 
@@ -342,6 +350,11 @@ export interface PaginationMeta {
     per_page: number;
     to: number;
     total: number;
+    first_page_url?: string;
+    prev_page_url?: string | null;
+    next_page_url?: string | null;
+    last_page_url?: string;
+    links?: Array<{ url: string | null; label: string; page: number | null; active: boolean }>;
 }
 
 export interface TablePaginationProps {
@@ -349,7 +362,7 @@ export interface TablePaginationProps {
     options: number[];
     perPage: number;
     type?: 'full' | 'simple';
-    onClick: (page: number) => void;
+    onClick: (url: string) => void;
     onChange: (perPage: number) => void;
 }
 
@@ -368,7 +381,14 @@ export interface TableResource {
         current_page?: number;
         last_page?: number;
         last_page_url?: string;
-        links?: { url: string | null; label: string; active: boolean }[];
+        first_page_url?: string;
+        prev_page_url?: string | null;
+        next_page_url?: string | null;
+        from?: number;
+        to?: number;
+        on_first_page?: boolean;
+        on_last_page?: boolean;
+        links?: { url: string | null; label: string; page: number | null; active: boolean }[];
     };
     defaultSort: string;
     defaultPerPage: number;

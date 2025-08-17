@@ -189,25 +189,25 @@ export default function RowActions({
                         <DropdownMenuTrigger asChild>
                             <button
                                 className={clsx(
-                                    'it-row-actions-dropdown inline-flex size-6 rounded p-0.5 transition-colors hover:bg-gray-200/75 data-[state=open]:bg-gray-200/75 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:data-[state=open]:bg-zinc-800',
+                                    'it-row-actions-dropdown inline-flex items-center justify-center size-8 rounded cursor-pointer transition-colors hover:bg-gray-100 data-[state=open]:bg-gray-100 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:data-[state=open]:bg-zinc-800',
                                 )}
                                 aria-label="Actions"
                             >
                                 <MoreHorizontal className="size-4" />
                             </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent className="it-dropdown-items w-max min-w-24">
+                        <DropdownMenuContent className="it-dropdown-items w-max min-w-24 bg-black text-white border-zinc-800">
                             {actions.map((action, key) =>
                                 actionIsVisible(action, key) ? (
                                     <DropdownMenuItem
                                         key={key}
                                         disabled={!action.authorized}
                                         onClick={() => handle(action)}
-                                        className="it-dropdown-item"
+                                        className="it-dropdown-item text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white"
                                     >
                                         {hasVisibleActionsWithIcons && action.icon && (
                                             <DynamicIcon
-                                                className="it-row-actions-dropdown-icon me-2 size-3.5"
+                                                className="it-row-actions-dropdown-icon me-2 size-3.5 text-white"
                                                 resolver={iconResolver as any}
                                                 icon={action.icon}
                                                 context={action}

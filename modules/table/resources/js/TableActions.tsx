@@ -37,7 +37,11 @@ export default function Actions({
     const [confirmContext, setConfirmContext] = useState<ConfirmContext | null>(null);
 
     const handle = (action: TableAction): void => {
-        if (!action.confirmationRequired) {
+        // Check if confirmation is actually needed (has confirmation content)
+        const needsConfirmation = action.confirmationRequired && 
+            (action.confirmationTitle || action.confirmationMessage);
+        
+        if (!needsConfirmation) {
             return perform(action);
         }
 
@@ -69,7 +73,15 @@ export default function Actions({
     const perform = (action: TableAction): void => {
         if (action.isLink) {
             const actionKey = actions.findIndex((a) => a === action);
-            const url = item?._actions?.[actionKey];
+            const actionData = item?._actions?.[actionKey];
+
+            // Extract the URL string from the action data
+            let url: string | null = null;
+            if (typeof actionData === 'string') {
+                url = actionData;
+            } else if (actionData && typeof actionData === 'object' && actionData.url) {
+                url = actionData.url;
+            }
 
             // For modal URLs, we'll treat them as regular navigation for now
             // In the future, this could open a shadcn dialog instead
@@ -79,7 +91,9 @@ export default function Actions({
             return;
         }
 
+        // Close any open dialogs
         setConfirmDialogIsOpen(false);
+        setAsyncExportDialogIsOpen(false);
 
         const performPromise = performAction(action, keys);
 
@@ -98,8 +112,16 @@ export default function Actions({
                         onSuccess?.(action, successResult.keys);
                     }
                 })
-                .catch(({ keys, error }: { keys: (string | number)[]; error: any }) => {
-                    onError ? onError(action, keys, error) : setActionFailed(true);
+                .catch((errorData) => {
+                    // Make sure we have the expected error structure
+                    if (errorData && typeof errorData === 'object' && 'keys' in errorData) {
+                        const { keys, error } = errorData as { keys: (string | number)[]; error: any };
+                        onError ? onError(action, keys, error) : setActionFailed(true);
+                    } else {
+                        // If error structure is unexpected, still handle it
+                        console.error('Unexpected error structure in table action:', errorData);
+                        onError ? onError(action, keys, errorData) : setActionFailed(true);
+                    }
                 });
         }
     };
@@ -119,7 +141,7 @@ export default function Actions({
             <FailedActionDialog show={actionFailed} onConfirm={() => setActionFailed(false)} />
 
             <ConfirmDialog
-                show={asyncExportDialogIsOpen}
+                show={asyncExportDialogIsOpen && !!(asyncExportContext?.dialogTitle || asyncExportContext?.dialogMessage)}
                 title={asyncExportContext?.dialogTitle ?? ''}
                 message={asyncExportContext?.dialogMessage ?? ''}
                 icon={'MoreHorizontal' as any}

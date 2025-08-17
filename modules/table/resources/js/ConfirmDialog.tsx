@@ -1,15 +1,7 @@
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@shared/components/ui/alert-dialog';
-import React, { useMemo } from 'react';
-import DynamicIcon from './DynamicIcon';
+import { Button } from '@shared/components/ui/button';
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
+import { cn } from '@shared/lib/utils';
+import React from 'react';
 import type { ConfirmDialogProps } from './types';
 
 export default function ConfirmDialog({
@@ -20,44 +12,43 @@ export default function ConfirmDialog({
     show,
     danger = false,
     variant = null,
-    customVariantClass = '', // Keep for backward compatibility but not used
+    customVariantClass = '',
     onCancel,
     onConfirm = null,
-    icon = null,
-    iconResolver,
-}: ConfirmDialogProps): React.ReactElement {
+    dialogClassName = '',
+    overlayClassName = '',
+}: ConfirmDialogProps & { dialogClassName?: string; overlayClassName?: string }): React.ReactElement {
     const finalVariant = variant || (danger ? 'danger' : 'info');
 
-    const iconElement = useMemo(() => {
-        if (!icon || !iconResolver) {
-            return null;
-        }
-
-        return (
-            <div className="bg-muted mx-auto mb-4 flex size-12 items-center justify-center rounded-full">
-                <DynamicIcon className="text-muted-foreground size-6" resolver={iconResolver as any} icon={icon} />
-            </div>
-        );
-    }, [icon, iconResolver]);
-
     return (
-        <AlertDialog open={show} onOpenChange={(open) => !open && onCancel?.()}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    {iconElement}
-                    <AlertDialogTitle>{title}</AlertDialogTitle>
-                    <AlertDialogDescription>{message}</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    {cancelButton !== false && <AlertDialogCancel onClick={onCancel || undefined}>{cancelButton || 'Cancel'}</AlertDialogCancel>}
-                    <AlertDialogAction
-                        className={finalVariant === 'danger' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : undefined}
+        <Dialog open={show} onOpenChange={(open) => !open && onCancel?.()}>
+            <DialogContent 
+                className={cn("gap-3 p-5 sm:max-w-[425px]", dialogClassName)} 
+                showCloseButton={false}
+                overlayClassName={overlayClassName}
+            >
+                <DialogHeader className="text-left">
+                    <DialogTitle>{title}</DialogTitle>
+                </DialogHeader>
+                <p className="text-muted-foreground">{message}</p>
+                <DialogFooter className="mt-4">
+                    {cancelButton !== false && (
+                        <DialogClose asChild>
+                            <Button type="button" variant="outline" onClick={onCancel || undefined}>
+                                {cancelButton || 'Cancel'}
+                            </Button>
+                        </DialogClose>
+                    )}
+                    <Button
+                        type="button"
+                        variant={finalVariant === 'danger' ? 'destructive' : 'default'}
+                        className={cn(customVariantClass)}
                         onClick={onConfirm || undefined}
                     >
                         {confirmButton}
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
