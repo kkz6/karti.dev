@@ -4458,11 +4458,11 @@
         },
         {
             "name": "modules/table",
-            "version": "1.0",
+            "version": "1.0.1",
             "dist": {
                 "type": "path",
                 "url": "modules/table",
-                "reference": "3c14cde6196fb0dfc016a50f67945a66c90d0353"
+                "reference": "4a2e1758e27699548da5558596a722f80460d5da"
             },
             "suggest": {
                 "kirschbaum-development/eloquent-power-joins": "To order tables by related models. (3.5 or ^4.0)",
