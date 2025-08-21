@@ -78,6 +78,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
         dropFile,
         setDraggingFile,
         setUploads,
+        downloadAsset,
         // Refs
         uploaderRef,
         elementRef,
@@ -145,6 +146,19 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
             }
         },
         [assets],
+    );
+
+    const handleAssetDownloading = useCallback(
+        async (assetId: string) => {
+            try {
+                await downloadAsset(assetId);
+                toast.success('Download started');
+            } catch (error) {
+                console.error('Download error:', error);
+                toast.error('Failed to download file');
+            }
+        },
+        [downloadAsset],
     );
 
     const handleFolderSelected = useCallback(
@@ -351,6 +365,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                             onAssetDeselected={handleAssetDeselected}
                             onAssetEditing={handleAssetEditing}
                             onAssetDeleting={handleAssetDeleting}
+                            onAssetDownloading={handleAssetDownloading}
                             onAssetDoubleClicked={handleAssetDoubleClicked}
                             onSorted={sortBy}
                         />
@@ -371,6 +386,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                             onAssetDeselected={handleAssetDeselected}
                             onAssetEditing={handleAssetEditing}
                             onAssetDeleting={handleAssetDeleting}
+                            onAssetDownloading={handleAssetDownloading}
                             onAssetDoubleClicked={handleAssetDoubleClicked}
                             onSorted={sortBy}
                         />

@@ -14,6 +14,7 @@ interface AssetTileProps {
     onDeselected: (assetId: string) => void;
     onEditing: (assetId: string) => void;
     onDeleting: (assetId: string) => void;
+    onDownloading: (assetId: string) => void;
     onDoubleClicked: (asset: MediaAsset) => void;
 }
 
@@ -25,6 +26,7 @@ export const AssetTile: React.FC<AssetTileProps> = ({
     onDeselected,
     onEditing,
     onDeleting,
+    onDownloading,
     onDoubleClicked,
 }) => {
     const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
@@ -61,6 +63,11 @@ export const AssetTile: React.FC<AssetTileProps> = ({
         setDropdownOpen(false);
     };
 
+    const handleDownload = () => {
+        onDownloading(asset.id);
+        setDropdownOpen(false);
+    };
+
     const formatFileSize = (bytes: number) => {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -90,37 +97,37 @@ export const AssetTile: React.FC<AssetTileProps> = ({
                 </div>
 
                 {/* Actions Dropdown */}
-                {canEdit && (
-                    <div className="absolute top-2 right-2 z-10">
-                        <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-8 w-8 bg-white/80 p-0 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
-                                >
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={handleEdit}>
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={handleDelete} className="text-red-600">
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <a href={asset.url} download target="_blank" rel="noopener noreferrer">
-                                        <Download className="mr-2 h-4 w-4" />
-                                        Download
-                                    </a>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                )}
+                <div className="absolute top-2 right-2 z-10">
+                    <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 bg-white/80 p-0 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
+                            >
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            {canEdit && (
+                                <>
+                                    <DropdownMenuItem onClick={handleEdit}>
+                                        <Edit className="mr-2 h-4 w-4" />
+                                        Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={handleDelete} className="text-red-600">
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Delete
+                                    </DropdownMenuItem>
+                                </>
+                            )}
+                            <DropdownMenuItem onClick={handleDownload}>
+                                <Download className="mr-2 h-4 w-4" />
+                                Download
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
 
                 {/* Thumbnail */}
                 <div

@@ -76,8 +76,15 @@ export default function RowActions({
 
             if (mutableActionItem.componentType != 'button-component') {
                 mutableActionItem.bindings = mutableActionItem.bindings || {};
-                mutableActionItem.bindings.class =
-                    (mutableActionItem as any).linkClass || getClassesForLinkVariant((mutableActionItem as any).variant || 'default').join(' ');
+                // Use shadcn button variants for links
+                const variant = (mutableActionItem as any).variant || 'default';
+                if (variant === 'info' || variant === 'success' || variant === 'warning') {
+                    mutableActionItem.bindings.variant = variant;
+                } else if (variant === 'danger') {
+                    mutableActionItem.bindings.variant = 'destructive';
+                } else {
+                    mutableActionItem.bindings.variant = 'outline';
+                }
             }
 
             if (mutableActionItem.bindings?.class) {
@@ -115,15 +122,10 @@ export default function RowActions({
                 } else if (mutableActionItem.bindings.danger) {
                     mutableActionItem.bindings.variant = 'destructive';
                     delete mutableActionItem.bindings.danger;
-                } else if (mutableActionItem.bindings.variant === 'info') {
-                    mutableActionItem.bindings.variant = 'default';
-                } else if (mutableActionItem.bindings.variant === 'success') {
-                    mutableActionItem.bindings.variant = 'default';
-                } else if (mutableActionItem.bindings.variant === 'warning') {
-                    mutableActionItem.bindings.variant = 'default';
                 } else if (!mutableActionItem.bindings.variant) {
                     mutableActionItem.bindings.variant = 'outline';
                 }
+                // Keep info, success, warning variants as they are now supported
 
                 // Remove custom props that don't exist in shadcn
                 delete mutableActionItem.bindings.customVariantClass;
@@ -140,33 +142,6 @@ export default function RowActions({
         },
         [item, asDropdown],
     );
-
-    function getClassesForLinkVariant(variant: string): string[] {
-        const baseClasses: Record<string, string[]> = {
-            info: [
-                'it-primary-link it-info-link text-blue-600 hover:text-blue-500 focus:ring-blue-500',
-                'dark:text-blue-400 dark:hover:text-blue-300 dark:focus:ring-offset-blue-800',
-            ],
-            danger: [
-                'it-danger-link text-red-600 hover:text-red-500 focus:ring-red-500',
-                'dark:text-red-400 dark:hover:text-red-300 dark:focus:ring-offset-red-800',
-            ],
-            default: [
-                'it-default-link text-gray-700 hover:text-gray-500 focus:ring-gray-500',
-                'dark:text-zinc-300 dark:hover:text-zinc-300 dark:focus:ring-offset-zinc-800',
-            ],
-            success: [
-                'it-success-link text-emerald-600 hover:text-emerald-500 focus:ring-emerald-500',
-                'dark:text-emerald-400 dark:hover:text-emerald-300 dark:focus:ring-offset-emerald-800',
-            ],
-            warning: [
-                'it-warning-link text-amber-600 hover:text-amber-500 focus:ring-amber-500',
-                'dark:text-amber-400 dark:hover:text-amber-300 dark:focus:ring-offset-amber-800',
-            ],
-        };
-
-        return baseClasses[variant] || baseClasses.default;
-    }
 
     const hasVisibleActionsWithIcons = useMemo((): boolean => {
         return actions.some((action, key) => actionIsVisible(action, key) && action.icon);
@@ -189,14 +164,14 @@ export default function RowActions({
                         <DropdownMenuTrigger asChild>
                             <button
                                 className={clsx(
-                                    'it-row-actions-dropdown inline-flex items-center justify-center size-8 rounded cursor-pointer transition-colors hover:bg-gray-100 data-[state=open]:bg-gray-100 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:data-[state=open]:bg-zinc-800',
+                                    'it-row-actions-dropdown inline-flex size-8 cursor-pointer items-center justify-center rounded transition-colors hover:bg-gray-100 data-[state=open]:bg-gray-100 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:data-[state=open]:bg-zinc-800',
                                 )}
                                 aria-label="Actions"
                             >
                                 <MoreHorizontal className="size-4" />
                             </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent className="it-dropdown-items w-max min-w-24 bg-black text-white border-zinc-800">
+                        <DropdownMenuContent className="it-dropdown-items w-max min-w-24 border-zinc-800 bg-black text-white">
                             {actions.map((action, key) =>
                                 actionIsVisible(action, key) ? (
                                     <DropdownMenuItem

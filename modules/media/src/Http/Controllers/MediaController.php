@@ -50,7 +50,7 @@ class MediaController extends BaseController
         $media          = Media::inDirectory($diskString, $path)->paginate(20)->toArray();
         $subdirectories = array_diff($disk->directories($path), $this->ignore);
 
-        $key            = trim('root.'.implode('.', explode('/', $path)), "\.");
+        $key            = trim('root.' . implode('.', explode('/', $path)), "\.");
         $subdirectories = Cache::remember("media.manager.folders.{$key}", 60 * 60 * 24, function () use ($subdirectories) {
             $modified = Media::whereIn('directory', $subdirectories)
                 ->selectRaw('directory, max(updated_at) as timestamp')
@@ -162,6 +162,27 @@ class MediaController extends BaseController
     public function destroy($id)
     {
         return response(Media::destroy($id));
+    }
+
+    /**
+     * Download media file
+     */
+    public function download($id)
+    {
+        $media = Media::findOrFail($id);
+        $disk = Storage::disk($media->disk);
+        $path = $media->getDiskPath();
+
+        if (!$disk->exists($path)) {
+            abort(404, 'File not found');
+        }
+
+        $filename = $media->filename . '.' . $media->extension;
+        $contents = $disk->get($path);
+
+        return response($contents)
+            ->header('Content-Type', $media->mime_type)
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
     }
 
     /**

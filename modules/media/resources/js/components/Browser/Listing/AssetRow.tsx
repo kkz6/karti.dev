@@ -15,6 +15,7 @@ interface AssetRowProps {
     onDeselected: (assetId: string) => void;
     onEditing: (assetId: string) => void;
     onDeleting: (assetId: string) => void;
+    onDownloading: (assetId: string) => void;
     onDoubleClicked: (asset: MediaAsset) => void;
 }
 
@@ -26,6 +27,7 @@ export const AssetRow: React.FC<AssetRowProps> = ({
     onDeselected,
     onEditing,
     onDeleting,
+    onDownloading,
     onDoubleClicked,
 }) => {
     const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
@@ -59,6 +61,11 @@ export const AssetRow: React.FC<AssetRowProps> = ({
 
     const handleDelete = () => {
         onDeleting(asset.id);
+        setDropdownOpen(false);
+    };
+
+    const handleDownload = () => {
+        onDownloading(asset.id);
         setDropdownOpen(false);
     };
 
@@ -138,23 +145,19 @@ export const AssetRow: React.FC<AssetRowProps> = ({
 
             {/* More Actions */}
             <td className="p-3">
-                {canEdit && (
-                    <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                                <a href={asset.url} download target="_blank" rel="noopener noreferrer">
-                                    <Download className="mr-2 h-4 w-4" />
-                                    Download
-                                </a>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                )}
+                <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={handleDownload}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Download
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </td>
         </tr>
     );

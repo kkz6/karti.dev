@@ -15,6 +15,7 @@ Route::middleware(['web', 'auth'])->prefix('admin')->group(function () {
         Route::post('{id}', [MediaController::class, 'show'])->name('show');
         Route::patch('{id}', [MediaController::class, 'update'])->name('update');
         Route::delete('{id}', [MediaController::class, 'destroy'])->name('destroy');
+        Route::get('{id}/download', [MediaController::class, 'download'])->where('id', '[0-9]+')->name('download');
         Route::post('/image-editor/save', [MediaController::class, 'saveEditedImage'])->name('image-editor.save');
         Route::get('/{path?}', [MediaController::class, 'index'])->where('path', '.*')->name('index');
     });

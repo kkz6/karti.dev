@@ -21,6 +21,7 @@ interface GridListingProps {
     onAssetDeselected: (assetId: string) => void;
     onAssetEditing: (assetId: string) => void;
     onAssetDeleting: (assetId: string) => void;
+    onAssetDownloading: (assetId: string) => void;
     onAssetDoubleClicked: (asset: MediaAsset) => void;
     onSorted: (field: string) => void;
 }
@@ -41,6 +42,7 @@ export const GridListing: React.FC<GridListingProps> = ({
     onAssetDeselected,
     onAssetEditing,
     onAssetDeleting,
+    onAssetDownloading,
     onAssetDoubleClicked,
     onSorted,
 }) => {
@@ -112,6 +114,7 @@ export const GridListing: React.FC<GridListingProps> = ({
                     onDeselected={onAssetDeselected}
                     onEditing={onAssetEditing}
                     onDeleting={onAssetDeleting}
+                    onDownloading={onAssetDownloading}
                     onDoubleClicked={onAssetDoubleClicked}
                 />
             ))}

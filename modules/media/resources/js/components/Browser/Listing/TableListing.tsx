@@ -23,6 +23,7 @@ interface TableListingProps {
     onAssetDeselected: (assetId: string) => void;
     onAssetEditing: (assetId: string) => void;
     onAssetDeleting: (assetId: string) => void;
+    onAssetDownloading: (assetId: string) => void;
     onAssetDoubleClicked: (asset: MediaAsset) => void;
     onSorted: (field: string) => void;
 }
@@ -49,6 +50,7 @@ export const TableListing: React.FC<TableListingProps> = ({
     onAssetDeselected,
     onAssetEditing,
     onAssetDeleting,
+    onAssetDownloading,
     onAssetDoubleClicked,
     onSorted,
 }) => {
@@ -214,6 +216,7 @@ export const TableListing: React.FC<TableListingProps> = ({
                                     onDeselected={onAssetDeselected}
                                     onEditing={onAssetEditing}
                                     onDeleting={onAssetDeleting}
+                                    onDownloading={onAssetDownloading}
                                     onDoubleClicked={onAssetDoubleClicked}
                                 />
                             ))}
