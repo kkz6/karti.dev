@@ -1,0 +1,3 @@
+[submodule "modules/table"]
+	path = modules/table
+	url = file:///Users/karthickk/projects/table-module
