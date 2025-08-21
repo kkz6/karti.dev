@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Modules\Table\Filters;
+namespace Modules\Table\Exception;
 
+use Modules\Table\Filters\Clause;
 use RuntimeException;
 
 class UnsupportedClauseException extends RuntimeException

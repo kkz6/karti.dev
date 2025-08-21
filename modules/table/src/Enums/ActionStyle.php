@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Modules\Table;
+namespace Modules\Table\Enums;
 
 /**
  * @deprecated Use a combination of ActionType and Variant instead
@@ -39,7 +39,7 @@ enum ActionStyle: string
     {
         return match ($this) {
             self::PrimaryButton => Variant::Info,
-            self::DangerButton  => Variant::Danger,
+            self::DangerButton  => Variant::Destructive,
             default             => Variant::Default,
         };
     }

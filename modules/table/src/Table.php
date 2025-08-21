@@ -18,7 +18,11 @@ use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\Tappable;
 use Maatwebsite\Excel\Excel;
 use Modules\Table\Columns\Column;
+use Modules\Table\Enums\PaginationType;
+use Modules\Table\Enums\ScrollPosition;
+use Modules\Table\Enums\TableComponent;
 use Modules\Table\Filters\Filter;
+use Modules\Table\Traits\EncryptsAndDecryptsState;
 use RuntimeException;
 use TypeError;
 

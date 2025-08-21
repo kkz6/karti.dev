@@ -7,8 +7,7 @@ namespace Modules\Table;
 use Closure;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Traits\Conditionable;
-use InertiaUI\Modal\ModalConfig;
-use InertiaUI\Modal\ModalVisit;
+use Modules\Table\Traits\HasUrl;
 use RuntimeException;
 
 class Url implements Arrayable
@@ -116,16 +115,6 @@ class Url implements Arrayable
     }
 
     /**
-     * Assert that the InertiaUI Modal package is installed.
-     */
-    protected function assertModalPackageIsInstalled(): bool
-    {
-        return class_exists(ModalConfig::class) || throw new RuntimeException(
-            "To use the 'modal' method, please install the InertiaUI Modal package."
-        );
-    }
-
-    /**
      * Recursively sanitizes the modal visit array by removing
      * null values and empty arrays.
      */
@@ -144,32 +133,6 @@ class Url implements Arrayable
         }
 
         return $result;
-    }
-
-    /**
-     * Set whether the URL should be displayed in a modal.
-     */
-    public function modal(array|bool|callable|ModalVisit|ModalConfig $modal = true): self
-    {
-        $this->assertModalPackageIsInstalled();
-
-        if (is_callable($modal)) {
-            $modal = tap(new ModalVisit, $modal);
-        }
-
-        $modal = match (true) {
-            $modal instanceof ModalConfig => ['config' => $modal->toArray()],
-            $modal instanceof ModalVisit  => $modal->toArray(),
-            default                       => $modal,
-        };
-
-        if (is_array($modal)) {
-            $modal = static::sanitizeModalVisitArray($modal);
-        }
-
-        $this->modal = $modal === [] ? true : $modal;
-
-        return $this;
     }
 
     /**

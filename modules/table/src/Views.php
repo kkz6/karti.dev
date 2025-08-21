@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\Tappable;
+use Modules\Table\Traits\BelongsToTable;
+use Modules\Table\Traits\GeneratesSignedTableUrls;
 
 class Views implements Arrayable
 {

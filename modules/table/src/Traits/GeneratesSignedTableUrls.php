@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Modules\Table;
+namespace Modules\Table\Traits;
 
 use Illuminate\Support\Facades\URL;
+use Modules\Table\Table;
 
 trait GeneratesSignedTableUrls
 {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Modules\Table;
+namespace Modules\Table\Traits;
 
 use DateInterval;
 use DateTimeInterface;

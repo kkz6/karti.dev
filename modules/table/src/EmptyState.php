@@ -8,6 +8,8 @@ use Closure;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\Tappable;
+use Modules\Table\Traits\HasDataAttributes;
+use Modules\Table\Traits\HasMeta;
 
 class EmptyState implements Arrayable
 {

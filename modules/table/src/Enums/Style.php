@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Modules\Table;
+namespace Modules\Table\Enums;
 
-enum Variant: string
+/**
+ * @deprecated Use the Variant enum instead.
+ */
+enum Style: string
 {
     case Danger  = 'danger';
     case Default = 'default';

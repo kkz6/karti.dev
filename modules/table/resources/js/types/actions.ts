@@ -3,14 +3,14 @@
 // Extended action interface for table operations (matches backend Action.php)
 export interface TableAction {
     label: string;
-    icon?: string;
+    icon?: string; // Lucide icon name
     url?: string;
     authorized: boolean;
     isCustom: boolean;
     isLink: boolean;
     isAction: boolean;
     type: 'button' | 'link';
-    variant: 'danger' | 'default' | 'info' | 'success' | 'warning';
+    variant: 'destructive' | 'default' | 'info' | 'success' | 'warning' | 'outline' | 'secondary' | 'ghost' | 'link';
     buttonClass?: string | null;
     linkClass?: string | null;
     style: string;

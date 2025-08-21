@@ -7,6 +7,7 @@ namespace Modules\Table;
 use Closure;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Traits\Conditionable;
+use Modules\Table\Traits\HasUrl;
 
 class Image implements Arrayable
 {

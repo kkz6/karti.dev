@@ -10,12 +10,6 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::resource('blog/categories', AdminCategoryController::class);
     Route::resource('blog', AdminBlogController::class);
 
-    // Additional bulk action route
-    Route::post('blog/bulk-action', [AdminBlogController::class, 'bulkAction'])
-        ->name('blog.bulk-action');
-
-    // Categories resource routes
-
     // Tags resource routes
     Route::resource('blog/tags', AdminTagController::class);
 });

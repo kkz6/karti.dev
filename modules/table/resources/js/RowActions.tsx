@@ -22,18 +22,18 @@ export default function RowActions({
     const componentType = useCallback(
         (action: TableAction, key: number): React.ComponentType<any> | string => {
             // Check if we have action data for this item
-            if (!item._actions || !item._actions[key]) {
+            if (!item._actions || !item._actions[String(key)]) {
                 // Fallback based on action type
                 return action.type === 'link' ? 'a' : Button;
             }
 
-            const actionItem = getActionForItem(item._actions[key] as any, action);
+            const actionItem = getActionForItem(item._actions[String(key)] as any, action);
 
-            if (actionItem?.componentType === 'button-component') {
+            if (actionItem?.componentType === 'button-component' || actionItem?.style === 'button' || actionItem?.type === 'button') {
                 return asDropdown ? 'button' : Button;
             }
 
-            // Return the component type or default to 'a' for links, 'button' for others
+            // Return the component type or default to 'a' for links, Button for others
             return actionItem?.componentType || (action.type === 'link' ? 'a' : Button);
         },
         [item, asDropdown],
@@ -42,11 +42,11 @@ export default function RowActions({
     const actionIsVisible = useCallback(
         (action: TableAction, key: number): boolean => {
             // Check if we have action data for this item
-            if (!item._actions || !item._actions[key]) {
+            if (!item._actions || !item._actions[String(key)]) {
                 return true; // Default to visible
             }
 
-            return getActionForItem(item._actions[key], action)?.isVisible ?? true;
+            return getActionForItem(item._actions[String(key)], action)?.isVisible ?? true;
         },
         [item],
     );
@@ -54,15 +54,28 @@ export default function RowActions({
     const componentBindings = useCallback(
         (action: TableAction, key: number, handle: (action: TableAction) => void): Record<string, any> => {
             // Check if we have action data for this item
-            if (!item._actions || !item._actions[key]) {
-                // Return basic bindings for the action
+            if (!item._actions) {
+                console.log('⚠️ No item._actions found');
                 return {
                     onClick: () => handle(action),
                     disabled: !action.authorized,
                 };
             }
 
-            const actionItem = getActionForItem(item._actions[key] as any, action);
+            // Try to find the action data using string key (since backend uses string keys)
+            const stringKey = String(key);
+            const actionData = item._actions[stringKey];
+
+            if (!actionData) {
+                // Use the variant directly from the action since item._actions doesn't have the data
+                return {
+                    onClick: () => handle(action),
+                    disabled: !action.authorized,
+                    variant: action.variant || 'outline',
+                };
+            }
+
+            const actionItem = getActionForItem(actionData as any, action);
 
             if (!actionItem) {
                 return {
@@ -74,17 +87,11 @@ export default function RowActions({
             // Create a mutable copy to avoid readonly issues
             const mutableActionItem = { ...actionItem };
 
-            if (mutableActionItem.componentType != 'button-component') {
-                mutableActionItem.bindings = mutableActionItem.bindings || {};
-                // Use shadcn button variants for links
-                const variant = (mutableActionItem as any).variant || 'default';
-                if (variant === 'info' || variant === 'success' || variant === 'warning') {
-                    mutableActionItem.bindings.variant = variant;
-                } else if (variant === 'danger') {
-                    mutableActionItem.bindings.variant = 'destructive';
-                } else {
-                    mutableActionItem.bindings.variant = 'outline';
-                }
+            mutableActionItem.bindings = mutableActionItem.bindings || {};
+
+            // Pass through the variant directly from the backend for all components
+            if ('variant' in mutableActionItem && mutableActionItem.variant) {
+                mutableActionItem.bindings.variant = mutableActionItem.variant;
             }
 
             if (mutableActionItem.bindings?.class) {
@@ -93,12 +100,10 @@ export default function RowActions({
             }
 
             if (!mutableActionItem.asDownload) {
-                mutableActionItem.bindings = mutableActionItem.bindings || {};
                 mutableActionItem.bindings.onClick = () => handle(action);
             }
 
             if (mutableActionItem.type === 'link') {
-                mutableActionItem.bindings = mutableActionItem.bindings || {};
                 mutableActionItem.bindings.className = mutableActionItem.bindings?.className || '';
                 mutableActionItem.bindings.className += asDropdown ? '' : ' it-row-actions-link flex flex-row items-center';
 
@@ -107,30 +112,15 @@ export default function RowActions({
                 }
             }
 
-            // Convert custom button props to shadcn variants
-            if (mutableActionItem.componentType === 'button-component' && mutableActionItem.bindings) {
-                // Convert size prop
-                if (mutableActionItem.bindings.small) {
-                    mutableActionItem.bindings.size = 'sm';
-                    delete mutableActionItem.bindings.small;
-                }
-
-                // Convert variant props
-                if (mutableActionItem.bindings.primary) {
-                    mutableActionItem.bindings.variant = 'default';
-                    delete mutableActionItem.bindings.primary;
-                } else if (mutableActionItem.bindings.danger) {
-                    mutableActionItem.bindings.variant = 'destructive';
-                    delete mutableActionItem.bindings.danger;
-                } else if (!mutableActionItem.bindings.variant) {
-                    mutableActionItem.bindings.variant = 'outline';
-                }
-                // Keep info, success, warning variants as they are now supported
-
-                // Remove custom props that don't exist in shadcn
-                delete mutableActionItem.bindings.customVariantClass;
-                delete mutableActionItem.bindings.sr;
+            // Convert legacy size prop for buttons
+            if (mutableActionItem.bindings.small) {
+                mutableActionItem.bindings.size = 'sm';
+                delete mutableActionItem.bindings.small;
             }
+
+            // Remove custom props that don't exist in shadcn
+            delete mutableActionItem.bindings.customVariantClass;
+            delete mutableActionItem.bindings.sr;
 
             if (asDropdown && mutableActionItem.bindings) {
                 delete mutableActionItem.bindings.primary;
@@ -198,12 +188,13 @@ export default function RowActions({
                     <div className="it-row-actions flex items-center space-x-2 text-sm font-medium rtl:space-x-reverse">
                         {actions.map((action, key) => {
                             const Component = componentType(action, key);
+                            const bindings = componentBindings(action, key, handle);
                             // Safety check to ensure Component is never undefined
                             if (!Component || action.asRowAction === false || !actionIsVisible(action, key)) {
                                 return null;
                             }
                             return (
-                                <Component key={key} title={action.label} {...componentBindings(action, key, handle)}>
+                                <Component key={key} title={action.label} {...bindings}>
                                     {action.icon && (
                                         <DynamicIcon
                                             resolver={iconResolver as any}

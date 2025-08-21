@@ -12,6 +12,14 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\Tappable;
+use Modules\Table\Enums\ActionStyle;
+use Modules\Table\Enums\ActionType;
+use Modules\Table\Enums\Variant;
+use Modules\Table\Traits\BelongsToTable;
+use Modules\Table\Traits\GeneratesSignedTableUrls;
+use Modules\Table\Traits\HandlesAuthorization;
+use Modules\Table\Traits\HasDataAttributes;
+use Modules\Table\Traits\HasMeta;
 
 class Action implements Arrayable
 {
@@ -169,7 +177,7 @@ class Action implements Arrayable
      */
     public function asDangerButton(): self
     {
-        return tap($this->asButton(Variant::Danger), function (): void {
+        return tap($this->asButton(Variant::Destructive), function (): void {
             $this->style = ActionStyle::DangerButton; // deprecated (for backwards compatibility)
         });
     }
@@ -233,7 +241,7 @@ class Action implements Arrayable
      */
     public function asDangerLink(): self
     {
-        return $this->asLink(Variant::Danger);
+        return $this->asLink(Variant::Destructive);
     }
 
     /**
@@ -509,7 +517,7 @@ class Action implements Arrayable
             url: $url,
             before: $before,
             handle: $handle,
-            after: is_string($after) ? fn () => redirect()->to($after) : $after,
+            after: is_string($after) ? fn() => redirect()->to($after) : $after,
             authorize: $authorize,
             chunkSize: $chunkSize,
             eachById: $eachById,
@@ -612,7 +620,7 @@ class Action implements Arrayable
             /** @var Builder $query */
             $query = $allItemsAreSelected
                 ? $queryBuilder->getResourceWithRequestApplied(applySort: false)
-                : $queryBuilder->getResource()->tap(fn (Builder $query) => $this->table->scopePrimaryKey($query, $keys));
+                : $queryBuilder->getResource()->tap(fn(Builder $query) => $this->table->scopePrimaryKey($query, $keys));
 
             $result = null;
 

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Modules\Table\Columns;
 
+use Modules\Table\Enums\ColumnAlignment;
+
 class ActionColumn extends Column
 {
     /**

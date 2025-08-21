@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Modules\Table\Columns;
+namespace Modules\Table\Enums;
 
 enum ColumnAlignment: string
 {

@@ -12,6 +12,11 @@ use Illuminate\Foundation\Bus\PendingDispatch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Maatwebsite\Excel\Excel;
+use Modules\Table\Traits\BelongsToTable;
+use Modules\Table\Traits\GeneratesSignedTableUrls;
+use Modules\Table\Traits\HandlesAuthorization;
+use Modules\Table\Traits\HasDataAttributes;
+use Modules\Table\Traits\HasMeta;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
