@@ -57,16 +57,37 @@ class Media extends Model
         'aggregate_type',
         'variant_name',
         'original_media_id',
-        'alt',
+        'custom_properties',
     ];
 
     protected $casts = [
         'size' => 'int',
+        'custom_properties' => 'array',
     ];
 
-    protected $attributes = [
-        'alt' => '',
-    ];
+    protected $attributes = [];
+
+    /**
+     * Get the focus point from custom properties
+     */
+    public function getFocusAttribute(): ?string
+    {
+        return $this->custom_properties['focus'] ?? null;
+    }
+
+    /**
+     * Set the focus point in custom properties
+     */
+    public function setFocusAttribute(?string $value): void
+    {
+        $customProperties = $this->custom_properties ?? [];
+        if ($value === null) {
+            unset($customProperties['focus']);
+        } else {
+            $customProperties['focus'] = $value;
+        }
+        $this->custom_properties = $customProperties;
+    }
 
     /**
      * {@inheritdoc}
@@ -195,7 +216,7 @@ class Media extends Model
      */
     public function getBasenameAttribute(): string
     {
-        return $this->filename.'.'.$this->extension;
+        return $this->filename . '.' . $this->extension;
     }
 
     /**
@@ -218,7 +239,7 @@ class Media extends Model
         $q->where('disk', $disk);
         if ($recursive) {
             $directory = str_replace(['%', '_'], ['\%', '\_'], $directory);
-            $q->where('directory', 'like', $directory.'%');
+            $q->where('directory', 'like', $directory . '%');
         } else {
             $q->where('directory', '=', $directory);
         }

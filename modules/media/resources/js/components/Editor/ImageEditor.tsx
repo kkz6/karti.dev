@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FilterPresets } from './FilterPresets';
 import { ImageControls } from './ImageControls';
 import { ImageFilters } from './ImageFilters';
+import { SaveDropdown } from './SaveDropdown';
 
 import '@media/../css/image-editor.css';
 import { FilterOptions, ImageFilterProcessor } from '@media/utils/imageFilters';
@@ -73,7 +74,18 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
         const cropperImage = cropperImageRef.current;
         if (!cropperImage) return;
 
-        cropperImage.$center('contain');
+        try {
+            // Center the image with contain mode to fit it in the viewport
+            cropperImage.$center('contain');
+        } catch (error) {
+            console.warn('Error centering image:', error);
+            // Fallback: try to center without mode
+            try {
+                cropperImage.$center();
+            } catch (e) {
+                console.warn('Fallback center also failed:', e);
+            }
+        }
     }, []);
 
     const cleanup = useCallback(() => {
@@ -149,25 +161,38 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
 
         const cropperImage = cropperImageRef.current;
 
-        cropperImage.$ready().then(() => {
-            centerImage();
-            setImageLoading(false);
-        });
-    }, [isOpen, asset, centerImage]);
-
-    useEffect(() => {
-        if (!isOpen || !containerRef.current) return;
-
-        const resizeObserver = new ResizeObserver(() => {
-            setTimeout(() => centerImage(), 100);
-        });
-
-        resizeObserver.observe(containerRef.current);
-
-        return () => {
-            resizeObserver.disconnect();
+        // Simple ready check - wait for the image element to be ready
+        const initImage = () => {
+            setTimeout(() => {
+                if (cropperImage.$ready) {
+                    cropperImage.$ready().then(() => {
+                        centerImage();
+                        setImageLoading(false);
+                    });
+                } else {
+                    centerImage();
+                    setImageLoading(false);
+                }
+            }, 100);
         };
-    }, [isOpen, centerImage]);
+
+        initImage();
+
+        // Add resize observer to re-center image when container size changes
+        const container = containerRef.current;
+        if (container) {
+            const resizeObserver = new ResizeObserver(() => {
+                if (!processing && !imageLoading) {
+                    centerImage();
+                }
+            });
+            resizeObserver.observe(container);
+
+            return () => {
+                resizeObserver.disconnect();
+            };
+        }
+    }, [isOpen, asset, centerImage, processing, imageLoading]);
 
     const handleOperation = useCallback((action: string) => {
         const cropperImage = cropperImageRef.current;
@@ -320,6 +345,37 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
             path: '',
             name: asset.filename,
             mime_type: asset.mime_type,
+            overwrite: true,
+        });
+
+        if (response.data.success) {
+            onSaved?.(response.data.asset);
+            onClose();
+        }
+
+        setProcessing(false);
+    }, [asset, getCropperData, onSaved, onClose]);
+
+    const handleSaveAsCopy = useCallback(async () => {
+        if (!asset || !cropperSelectionRef.current) return;
+
+        const imageData = await getCropperData();
+        if (!imageData) return;
+
+        setProcessing(true);
+
+        // Generate a new filename for the copy
+        const timestamp = Date.now();
+        const nameWithoutExt = asset.filename.replace(/\.[^/.]+$/, '');
+        const extension = asset.filename.split('.').pop();
+        const newFilename = `${nameWithoutExt}_copy_${timestamp}.${extension}`;
+
+        const response = await axios.post(route('media.image-editor.save'), {
+            data: imageData,
+            path: '',
+            name: newFilename,
+            mime_type: asset.mime_type,
+            overwrite: false,
         });
 
         if (response.data.success) {
@@ -476,7 +532,10 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                             <ImageControls dragMode={dragMode} onOperation={handleOperation} processing={processing || imageLoading} />
                         </div>
 
-                        <div ref={containerRef} className="__cropper relative min-h-0 flex-1 bg-gray-100 dark:bg-gray-900">
+                        <div
+                            ref={containerRef}
+                            className="__cropper relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-gray-100 dark:bg-gray-900"
+                        >
                             {(processing || imageLoading) && (
                                 <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
                                     <div className="flex flex-col items-center space-y-4 rounded-lg bg-white p-8 shadow-lg dark:bg-gray-800">
@@ -540,21 +599,22 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                                 'cropper-canvas',
                                 {
                                     ref: cropperCanvasRef,
-                                    background: true,
-                                    disabled: processing || imageLoading,
-                                    'scale-step': 0.1,
-                                    style: { opacity: processing || imageLoading ? 0 : 1, width: '100%', height: '100%' },
+                                    background: 'true',
+                                    disabled: processing || imageLoading ? 'true' : undefined,
+                                    style: {
+                                        height: '100%',
+                                        width: '100%',
+                                    },
                                 },
                                 [
                                     React.createElement('cropper-image', {
                                         key: `image-${asset.id}`,
                                         ref: cropperImageRef,
-                                        src: isOpen ? asset.url : '',
-                                        alt: `Image to edit: ${asset.filename}`,
-                                        translatable: true,
-                                        rotatable: true,
-                                        scalable: true,
-                                        'initial-center-size': 'contain',
+                                        src: asset.url,
+                                        alt: asset.filename,
+                                        rotatable: 'true',
+                                        scalable: 'true',
+                                        translatable: 'true',
                                     }),
                                     React.createElement('cropper-shade', { key: 'shade' }),
                                     React.createElement('cropper-handle', {
@@ -617,10 +677,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                             Clear
                         </Button>
 
-                        <Button disabled={processing || imageLoading || !hasChanged} onClick={handleSave}>
-                            {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {processing ? 'Saving...' : 'Apply Changes'}
-                        </Button>
+                        <SaveDropdown onSave={handleSave} onSaveAsCopy={handleSaveAsCopy} isSaving={processing} hasChanges={hasChanged} />
                     </div>
                 </div>
             </DialogContent>

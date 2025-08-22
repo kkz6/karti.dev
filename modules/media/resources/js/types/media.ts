@@ -1,24 +1,36 @@
 export interface MediaAsset {
     id: string;
-    title: string;
+    disk: string;
+    directory: string;
     filename: string;
+    title?: string;
+    alt?: string;
     extension: string;
     mime_type: string;
     aggregate_type: string;
     size: number;
-    url: string;
-    thumbnail_url?: string;
+    variant_name?: string;
+    original_media_id?: number;
+    credit?: string;
+    caption?: string;
+    focus?: string;
     created_at: string;
     updated_at: string;
+    container_id: string;
+
+    // Computed properties
     is_image: boolean;
     is_audio: boolean;
     is_video: boolean;
+    url: string;
+    thumbnail_url?: string;
+    preview?: string;
+    path: string;
+    formatted_size: string;
     dimensions?: {
         width: number;
         height: number;
     };
-    path: string;
-    container_id: string;
 }
 
 export interface MediaFolder {

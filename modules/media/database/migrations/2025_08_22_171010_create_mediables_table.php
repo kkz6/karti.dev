@@ -21,12 +21,4 @@ return new class extends Migration
             $table->index(['mediable_id', 'mediable_type']);
         });
     }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('mediables');
-    }
 };

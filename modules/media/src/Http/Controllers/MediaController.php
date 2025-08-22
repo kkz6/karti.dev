@@ -10,8 +10,10 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
-use Modules\Media\DTOs\MediaAssetData;
+use Modules\Media\DTO\MediaAssetData;
+use Modules\Media\DTO\ImageEditorSaveData;
 use Modules\Media\Exceptions\MediaManagerException;
+use Modules\Media\Exceptions\MediaMoveException;
 use Modules\Media\Exceptions\MediaUpload\ConfigurationException;
 use Modules\Media\Exceptions\MediaUpload\FileExistsException;
 use Modules\Media\Exceptions\MediaUpload\FileNotFoundException;
@@ -21,6 +23,7 @@ use Modules\Media\Exceptions\MediaUpload\ForbiddenException;
 use Modules\Media\Exceptions\MediaUpload\InvalidHashException;
 use Modules\Media\Http\Requests\MediaStoreRequest;
 use Modules\Media\Http\Requests\MediaUpdateRequest;
+
 use Modules\Media\Models\Media;
 use Modules\Media\Support\MediaManager;
 use Modules\Media\Support\MediaUploader;
@@ -91,7 +94,7 @@ class MediaController extends BaseController
         $media    = is_array($request->file) ? $request->file : [$request->file];
         $data     = collect($request->only(['title', 'alt', 'caption', 'credit']));
         $disk     = $this->manager->verifyDisk($request->disk);
-        $path     = $this->manager->verifyDirectory($disk, trim($request->path, '/'));
+        $path     = $this->manager->verifyDirectory($disk, trim($request->path ?? '', '/'));
         $response = [];
 
         foreach ($media as $m) {
@@ -131,33 +134,41 @@ class MediaController extends BaseController
     /**
      * Move or rename a specified media entry.
      *
+     * @param mixed $media
+     *
      * @throws MediaManagerException
+     * @throws MediaMoveException
      */
-    public function update(MediaUpdateRequest $request)
+    public function update(MediaUpdateRequest $request, $media)
     {
         $valid = $request->validated();
-        $media = Media::find($valid['id']);
+        $media = Media::find($media);
         $disk  = $this->manager->verifyDisk($valid['disk']);
         $path  = $this->manager->verifyDirectory($disk, $valid['path'] ?? $media->directory);
 
-        if (! $request->has('path')) {
-            $details = $request->only(['title', 'alt', 'caption', 'credit']);
-            foreach ($details as $attribute => $detail) {
-                $media->$attribute = $detail;
-            }
+        // Update metadata fields
+        $details = $request->only(['title', 'alt', 'caption', 'credit', 'focus']);
+        foreach ($details as $attribute => $detail) {
+            $media->$attribute = $detail;
         }
 
+        // Handle moving if path has changed
         if ($path != $media->directory) {
             $media->move($path, $valid['rename'] ?? null);
         }
 
         $media->save();
 
-        return response($media->fresh());
+        $updatedMedia = $media->fresh();
+        $assetData    = MediaAssetData::fromModel($updatedMedia);
+
+        return response(['asset' => $assetData->toArray()]);
     }
 
     /**
      * Delete media
+     *
+     * @param mixed $id
      */
     public function destroy($id)
     {
@@ -166,14 +177,16 @@ class MediaController extends BaseController
 
     /**
      * Download media file
+     *
+     * @param mixed $id
      */
     public function download($id)
     {
         $media = Media::findOrFail($id);
-        $disk = Storage::disk($media->disk);
-        $path = $media->getDiskPath();
+        $disk  = Storage::disk($media->disk);
+        $path  = $media->getDiskPath();
 
-        if (!$disk->exists($path)) {
+        if (! $disk->exists($path)) {
             abort(404, 'File not found');
         }
 
@@ -186,17 +199,93 @@ class MediaController extends BaseController
     }
 
     /**
-     * Adjust the size of a specified piece of media, while preserving aspect ratio
-     * Note: Does **not** preserve original image
+     * Save edited image from image editor
+     *
+     * @throws MediaManagerException
+     * @throws ConfigurationException
+     * @throws FileExistsException
+     * @throws FileNotFoundException
+     * @throws FileNotSupportedException
+     * @throws FileSizeException
+     * @throws ForbiddenException
+     * @throws InvalidHashException
      */
-    public function resize(Request $request)
+    public function saveEditedImage(ImageEditorSaveData $saveData)
     {
-        $id    = $request->id;
-        $size  = $request->size;
-        // TODO: add exceptions for this that will detect incorrect function calls
-        $function = $request->function ?? MediaManager::RESIZE_WIDTH;
 
-        $image = Media::findOrFail($id);
-        $this->manager->resize($image, $size, $function);
+        // Decode base64 image data
+        $imageData = $saveData->data;
+        if (strpos($imageData, 'data:') === 0) {
+            // Remove data URL prefix (e.g., "data:image/jpeg;base64,")
+            $imageData = substr($imageData, strpos($imageData, ',') + 1);
+        }
+        $decodedImage = base64_decode($imageData);
+
+        if ($decodedImage === false) {
+            return response(['success' => false, 'message' => 'Invalid image data'], 400);
+        }
+
+        // Verify disk and path
+        $disk = $this->manager->verifyDisk('public'); // Default to public disk
+        $path = $this->manager->verifyDirectory($disk, trim($saveData->path ?? '', '/'));
+
+        // Generate filename if not overwriting
+        $filename = $saveData->name;
+        if (!$saveData->overwrite) {
+            // Check if file exists and generate unique name
+            $diskInstance = Storage::disk($disk);
+            $fullPath = $path ? $path . '/' . $filename : $filename;
+
+            if ($diskInstance->exists($fullPath)) {
+                $pathInfo = pathinfo($filename);
+                $basename = $pathInfo['filename'];
+                $extension = $pathInfo['extension'] ?? '';
+                $counter = 1;
+
+                do {
+                    $newBasename = $basename . '_' . $counter;
+                    $filename = $extension ? $newBasename . '.' . $extension : $newBasename;
+                    $fullPath = $path ? $path . '/' . $filename : $filename;
+                    $counter++;
+                } while ($diskInstance->exists($fullPath));
+            }
+        }
+
+        // Save the file
+        $diskInstance = Storage::disk($disk);
+        $fullPath = $path ? $path . '/' . $filename : $filename;
+        $diskInstance->put($fullPath, $decodedImage);
+
+        // Create media record
+        $pathInfo = pathinfo($filename);
+        $filesize = strlen($decodedImage);
+        $extension = $pathInfo['extension'] ?? '';
+
+        // Infer aggregate type using the uploader's logic
+        $aggregateType = $this->uploader->inferAggregateType($saveData->mimeType, $extension);
+
+        $media = Media::forceCreate([
+            'disk' => $disk,
+            'directory' => $path,
+            'filename' => $pathInfo['filename'],
+            'extension' => $extension,
+            'mime_type' => $saveData->mimeType,
+            'aggregate_type' => $aggregateType,
+            'size' => $filesize,
+            'title' => $pathInfo['filename'],
+            'alt' => null,
+            'caption' => null,
+            'credit' => null,
+            'custom_properties' => [],
+        ]);
+
+        // Convert to DTO for response
+        $assetData = MediaAssetData::from($media);
+
+        return response([
+            'success' => true,
+            'message' => $saveData->overwrite ? 'Image saved successfully' : 'Image copy saved successfully',
+            'asset' => $assetData->toArray(),
+        ]);
     }
 }

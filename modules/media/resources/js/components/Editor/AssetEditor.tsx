@@ -29,8 +29,6 @@ interface AssetEditorData extends MediaAsset {
     width?: number;
     height?: number;
     last_modified_relative?: string;
-    alt?: string;
-    focus?: string;
 }
 
 export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClose, onSaved, onDeleted, allowDeleting = false }) => {
@@ -39,6 +37,8 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
     const [asset, setAsset] = useState<AssetEditorData | null>(null);
     const [title, setTitle] = useState('');
     const [altText, setAltText] = useState('');
+    const [credit, setCredit] = useState('');
+    const [caption, setCaption] = useState('');
     const [focus, setFocus] = useState<string | null>(null);
     const [showFocalPointEditor, setShowFocalPointEditor] = useState(false);
     const [showImageEditor, setShowImageEditor] = useState(false);
@@ -65,6 +65,8 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
             setAsset(assetData);
             setTitle(assetData.title || assetData.filename);
             setAltText(assetData.alt || '');
+            setCredit(assetData.credit || '');
+            setCaption(assetData.caption || '');
             setFocus(assetData.focus || null);
             setErrors([]);
         } catch (error) {
@@ -81,8 +83,12 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
         setSaving(true);
         try {
             const response = await axios.patch(route('media.update', assetId), {
+                disk: asset.disk,
+                path: asset.directory,
                 title,
-                altText,
+                alt: altText,
+                credit,
+                caption,
                 focus,
             });
 
@@ -166,7 +172,7 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl md:max-w-4xl lg:max-w-5xl">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         {asset && <FileIcon extension={asset.extension} className="h-5 w-5" />}
@@ -274,6 +280,27 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
                                 <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Asset title" />
                             </div>
 
+                            <div>
+                                <Label htmlFor="credit">Credit</Label>
+                                <Input
+                                    id="credit"
+                                    value={credit}
+                                    onChange={(e) => setCredit(e.target.value)}
+                                    placeholder="Photo credit or attribution"
+                                />
+                            </div>
+
+                            <div>
+                                <Label htmlFor="caption">Caption</Label>
+                                <Textarea
+                                    id="caption"
+                                    value={caption}
+                                    onChange={(e) => setCaption(e.target.value)}
+                                    placeholder="Caption or description"
+                                    rows={3}
+                                />
+                            </div>
+
                             {isImage && (
                                 <>
                                     <div>
@@ -289,7 +316,7 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
 
                                     <div>
                                         <Label>Focal Point</Label>
-                                        <div className="flex items-center space-x-2">
+                                        <div className="flex items-center justify-between">
                                             <span className="text-sm text-gray-600 dark:text-gray-400">
                                                 {focus ? `${focus.replace('-', '%, ')}%` : 'Not set (default: 50%, 50%)'}
                                             </span>
@@ -302,7 +329,7 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
 
                                     <div>
                                         <Label>Image Editor</Label>
-                                        <div className="flex items-center space-x-2">
+                                        <div className="flex items-center justify-between">
                                             <span className="text-sm text-gray-600 dark:text-gray-400">
                                                 Edit, crop, rotate and apply filters to your image
                                             </span>

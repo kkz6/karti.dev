@@ -14,12 +14,14 @@ class MediaUpdateRequest extends FormRequest
     public function rules()
     {
         return [
-            'id'     => ['required', 'exists:media,id'],
-            'disk'   => ['string'],
-            'path'   => ['string', 'nullable'],
-            'rename' => ['string', 'nullable'],
-            'title'  => ['required_without:path', 'string'],
-            'credit' => ['nullable', 'string'],
+            'disk'    => ['string'],
+            'path'    => ['string', 'nullable'],
+            'rename'  => ['string', 'nullable'],
+            'title'   => ['required_without:path', 'string'],
+            'alt'     => ['nullable', 'string'],
+            'credit'  => ['nullable', 'string'],
+            'caption' => ['nullable', 'string'],
+            'focus'   => ['nullable', 'string'],
         ];
     }
 

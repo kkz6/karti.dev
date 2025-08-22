@@ -66,7 +66,7 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('disk', container || 'public');
-                formData.append('path', path === '/' ? '' : path || '');
+                formData.append('path', path || '');
 
                 try {
                     const response = await axios.post(route('media.create'), formData, {

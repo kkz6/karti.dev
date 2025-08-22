@@ -17,16 +17,20 @@ return new class extends Migration
             $table->string('disk', 32);
             $table->string('directory');
             $table->string('filename');
-            $table->text('alt');
+            $table->text('alt')->nullable();
             $table->string('extension', 32);
             $table->string('mime_type', 128);
             $table->string('aggregate_type', 32)->index();
             $table->unsignedInteger('size');
             $table->string('variant_name', 255)->nullable();
+            $table->string('credit')->nullable();
+            $table->text('caption')->nullable();
+            $table->string('title')->nullable();
             $table->foreignIdFor(Media::class, 'original_media_id')
                 ->nullable()
                 ->constrained('media')
                 ->nullOnDelete();
+            $table->json('custom_properties')->nullable();
             $table->timestamps();
 
             $table->unique(['disk', 'directory', 'filename', 'extension']);

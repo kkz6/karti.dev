@@ -16,6 +16,8 @@ class MediaStoreRequest extends FormRequest
     {
         return [
             'file'    => ['required', new FileArray],
+            'disk'    => ['required', 'string'],
+            'path'    => ['nullable', 'string'],
             'title'   => ['sometimes', 'string'],
             'alt'     => ['sometimes', 'string'],
             'caption' => ['sometimes', 'string'],

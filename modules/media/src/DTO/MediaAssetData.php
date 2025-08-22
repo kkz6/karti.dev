@@ -1,12 +1,12 @@
 <?php
 
-namespace Modules\Media\DTOs;
+namespace Modules\Media\DTO;
 
 use Illuminate\Support\Facades\Storage;
-use Spatie\LaravelData\Data;
+use Modules\Media\Models\Media;
 use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\MapName;
-use Modules\Media\Models\Media;
+use Spatie\LaravelData\Data;
 
 class MediaAssetData extends Data
 {
@@ -24,9 +24,9 @@ class MediaAssetData extends Data
         public ?int $original_media_id,
         public string $created_at,
         public string $updated_at,
-        #[MapName('title')]
         public ?string $title = null,
-        #[MapName('focus')]
+        public ?string $credit = null,
+        public ?string $caption = null,
         public ?string $focus = null,
     ) {}
 
@@ -47,7 +47,9 @@ class MediaAssetData extends Data
             created_at: $media->created_at->toISOString(),
             updated_at: $media->updated_at->toISOString(),
             title: $media->title ?? $media->filename,
-            focus: $media->focus,
+            credit: $media->credit,
+            caption: $media->caption,
+            focus: $media->focus, // This will use the accessor from custom_properties
         );
     }
 
@@ -83,7 +85,7 @@ class MediaAssetData extends Data
     #[Computed]
     public function getThumbnailUrl(): ?string
     {
-        if (!$this->getIsImage()) {
+        if (! $this->getIsImage()) {
             return null;
         }
 
@@ -107,6 +109,7 @@ class MediaAssetData extends Data
     public function getPath(): string
     {
         $fullFilename = $this->filename . '.' . $this->extension;
+
         return $this->directory ? $this->directory . '/' . $fullFilename : $fullFilename;
     }
 
@@ -114,6 +117,7 @@ class MediaAssetData extends Data
     public function getFullPath(): string
     {
         $fullFilename = $this->filename . '.' . $this->extension;
+
         return $this->directory ? $this->directory . '/' . $fullFilename : $fullFilename;
     }
 
@@ -121,11 +125,13 @@ class MediaAssetData extends Data
     public function getFormattedSize(): string
     {
         $bytes = $this->size;
-        if ($bytes === 0) return '0 Bytes';
+        if ($bytes === 0) {
+            return '0 Bytes';
+        }
 
-        $k = 1024;
+        $k     = 1024;
         $sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        $i = floor(log($bytes) / log($k));
+        $i     = floor(log($bytes) / log($k));
 
         return round($bytes / pow($k, $i), 2) . ' ' . $sizes[$i];
     }
@@ -133,7 +139,7 @@ class MediaAssetData extends Data
     #[Computed]
     public function getDimensions(): ?array
     {
-        if (!$this->getIsImage()) {
+        if (! $this->getIsImage()) {
             return null;
         }
 
@@ -145,33 +151,35 @@ class MediaAssetData extends Data
     public function toArray(): array
     {
         return [
-            'id' => (string) $this->id,
-            'disk' => $this->disk,
-            'directory' => $this->directory,
-            'filename' => $this->filename,
-            'title' => $this->title,
-            'alt' => $this->alt,
-            'extension' => $this->extension,
-            'mime_type' => $this->mime_type,
-            'aggregate_type' => $this->aggregate_type,
-            'size' => $this->size,
-            'variant_name' => $this->variant_name,
+            'id'                => (string) $this->id,
+            'disk'              => $this->disk,
+            'directory'         => $this->directory,
+            'filename'          => $this->filename,
+            'title'             => $this->title,
+            'alt'               => $this->alt,
+            'extension'         => $this->extension,
+            'mime_type'         => $this->mime_type,
+            'aggregate_type'    => $this->aggregate_type,
+            'size'              => $this->size,
+            'variant_name'      => $this->variant_name,
             'original_media_id' => $this->original_media_id,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
-            'focus' => $this->focus,
-            'container_id' => $this->disk, // Use disk as container_id for now
+            'created_at'        => $this->created_at,
+            'updated_at'        => $this->updated_at,
+            'credit'            => $this->credit,
+            'caption'           => $this->caption,
+            'focus'             => $this->focus,
+            'container_id'      => $this->disk, // Use disk as container_id for now
 
             // Computed properties
-            'is_image' => $this->getIsImage(),
-            'is_audio' => $this->getIsAudio(),
-            'is_video' => $this->getIsVideo(),
-            'url' => $this->getUrl(),
-            'thumbnail_url' => $this->getThumbnailUrl(),
-            'preview' => $this->getPreviewUrl(),
-            'path' => $this->getPath(),
+            'is_image'       => $this->getIsImage(),
+            'is_audio'       => $this->getIsAudio(),
+            'is_video'       => $this->getIsVideo(),
+            'url'            => $this->getUrl(),
+            'thumbnail_url'  => $this->getThumbnailUrl(),
+            'preview'        => $this->getPreviewUrl(),
+            'path'           => $this->getPath(),
             'formatted_size' => $this->getFormattedSize(),
-            'dimensions' => $this->getDimensions(),
+            'dimensions'     => $this->getDimensions(),
         ];
     }
 }
