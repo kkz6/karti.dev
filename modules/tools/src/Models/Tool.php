@@ -21,6 +21,8 @@ class Tool extends Model
         'sort_order',
         'featured',
         'status',
+        'meta_title',
+        'meta_description',
     ];
 
     protected $casts = [

@@ -1,13 +1,32 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Head, Link, router } from '@inertiajs/react';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@shared/components/ui/form';
 import { Input } from '@shared/components/ui/input';
-import { Label } from '@shared/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Textarea } from '@shared/components/ui/textarea';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
-import { ArrowLeft, Save, Trash2 } from 'lucide-react';
-import { FormEventHandler } from 'react';
+import { Save, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+
+// Zod schema for category form validation
+const categorySchema = z.object({
+    name: z.string().min(1, 'Name is required').max(255, 'Name must be less than 255 characters'),
+    slug: z
+        .string()
+        .min(1, 'Slug is required')
+        .max(255, 'Slug must be less than 255 characters')
+        .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase and contain only letters, numbers, and hyphens'),
+    description: z.string().optional(),
+    meta_title: z.string().max(60, 'Meta title must be less than 60 characters').optional(),
+    meta_description: z.string().max(160, 'Meta description must be less than 160 characters').optional(),
+});
+
+type CategoryFormData = z.infer<typeof categorySchema>;
 
 interface Category {
     id: number;
@@ -20,38 +39,39 @@ interface Category {
 
 export default function Edit({ category }: { category: Category }) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Articles', href: route('admin.blog.index') },
+        { title: 'Blog Management', href: route('admin.blog.index') },
         { title: 'Categories', href: route('admin.categories.index') },
         { title: category.name, href: route('admin.categories.show', category.id) },
         { title: 'Edit', href: route('admin.categories.edit', category.id) },
     ];
 
-    const { data, setData, put, processing, errors } = useForm({
-        name: category.name || '',
-        slug: category.slug || '',
-        description: category.description || '',
-        meta_title: category.meta_title || '',
-        meta_description: category.meta_description || '',
+    const [activeTab, setActiveTab] = useState('main');
+
+    const form = useForm<CategoryFormData>({
+        resolver: zodResolver(categorySchema),
+        defaultValues: {
+            name: category.name || '',
+            slug: category.slug || '',
+            description: category.description || '',
+            meta_title: category.meta_title || '',
+            meta_description: category.meta_description || '',
+        },
     });
 
-    const generateSlug = (text: string) => {
-        return text
-            .toLowerCase()
-            .replace(/[^a-z0-9 -]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-')
-            .trim();
-    };
-
-    const submit: FormEventHandler = (e) => {
-        e.preventDefault();
-        put(route('admin.blog.categories.update', category.id));
+    const onSubmit = (data: CategoryFormData) => {
+        router.put(route('admin.categories.update', category.id), data, {
+            preserveState: true,
+            preserveScroll: true,
+        });
     };
 
     const handleDelete = () => {
         if (confirm(`Are you sure you want to delete "${category.name}"?`)) {
-            // TODO: Implement delete functionality using router.delete
-            console.log('Delete category:', category.id);
+            router.delete(route('admin.categories.destroy', category.id), {
+                onSuccess: () => {
+                    // Redirect will be handled by the controller
+                },
+            });
         }
     };
 
@@ -59,141 +79,166 @@ export default function Edit({ category }: { category: Category }) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Edit Category: ${category.name}`} />
             <div className="flex h-full flex-col space-y-6 p-8 pt-6">
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                        <Button variant="ghost" size="sm" asChild>
-                            <Link href={route('admin.blog.categories.show', category.id)}>
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back to Category
-                            </Link>
-                        </Button>
-                        <h1 className="text-3xl font-bold tracking-tight">Edit Category</h1>
+                <div className="mx-auto w-full max-w-7xl">
+                    {/* Header with Actions */}
+                    <div className="mb-6 flex items-center justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold tracking-tight">Edit Category</h1>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                            <Button type="submit" form="category-form" disabled={form.formState.isSubmitting}>
+                                <Save className="mr-2 h-4 w-4" />
+                                {form.formState.isSubmitting ? 'Updating...' : 'Update Category'}
+                            </Button>
+                            <Button type="button" variant="outline" asChild>
+                                <Link href={route('admin.categories.show', category.id)}>Cancel</Link>
+                            </Button>
+                            <Button type="button" variant="destructive" onClick={handleDelete}>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                            </Button>
+                        </div>
                     </div>
+
+                    <Form {...form}>
+                        <form id="category-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                            {/* Tabs Header */}
+                            <Tabs defaultValue="main" value={activeTab} onValueChange={setActiveTab} className="w-full">
+                                <TabsList className="border-border text-foreground h-auto gap-2 rounded-none border-b bg-transparent px-0 py-1">
+                                    <TabsTrigger
+                                        value="main"
+                                        className="hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                                    >
+                                        Main
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="seo"
+                                        className="hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                                    >
+                                        SEO
+                                    </TabsTrigger>
+                                </TabsList>
+
+                                {/* Content Grid */}
+                                <div className="mt-6 grid gap-8 lg:grid-cols-6">
+                                    {/* Left column with tab content - 4/6 */}
+                                    <div className="lg:col-span-4">
+                                        <TabsContent value="main" className="mt-0 space-y-6">
+                                            {/* Basic Information */}
+                                            <Card>
+                                                <CardHeader>
+                                                    <CardTitle>Basic Information</CardTitle>
+                                                    <CardDescription>Update the basic details for the category</CardDescription>
+                                                </CardHeader>
+                                                <CardContent className="space-y-4">
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="name"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Name *</FormLabel>
+                                                                <FormControl>
+                                                                    <Input {...field} placeholder="Enter category name" />
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="description"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Description</FormLabel>
+                                                                <FormControl>
+                                                                    <Textarea {...field} placeholder="Describe this category..." rows={3} />
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                </CardContent>
+                                            </Card>
+                                        </TabsContent>
+
+                                        <TabsContent value="seo" className="mt-0 space-y-6">
+                                            <Card>
+                                                <CardHeader>
+                                                    <CardTitle>SEO Settings</CardTitle>
+                                                    <CardDescription>Optimize your content for search engines</CardDescription>
+                                                </CardHeader>
+                                                <CardContent className="space-y-4">
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="meta_title"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Meta Title</FormLabel>
+                                                                <FormControl>
+                                                                    <Input {...field} placeholder="SEO title for search engines" maxLength={60} />
+                                                                </FormControl>
+                                                                <FormDescription>{(field.value || '').length}/60 characters</FormDescription>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="meta_description"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Meta Description</FormLabel>
+                                                                <FormControl>
+                                                                    <Textarea
+                                                                        {...field}
+                                                                        placeholder="Brief description for search engine results"
+                                                                        rows={3}
+                                                                        maxLength={160}
+                                                                    />
+                                                                </FormControl>
+                                                                <FormDescription>{(field.value || '').length}/160 characters</FormDescription>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                </CardContent>
+                                            </Card>
+                                        </TabsContent>
+                                    </div>
+
+                                    {/* Right column - fixed - 2/6 */}
+                                    <div className="lg:col-span-2">
+                                        {/* URL Settings */}
+                                        <Card>
+                                            <CardHeader>
+                                                <CardTitle>URL Settings</CardTitle>
+                                                <CardDescription>Configure the URL for this category</CardDescription>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <FormField
+                                                    control={form.control}
+                                                    name="slug"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Category Slug *</FormLabel>
+                                                            <FormControl>
+                                                                <Input {...field} placeholder="url-friendly-slug" />
+                                                            </FormControl>
+                                                            <FormDescription>Used in URLs.</FormDescription>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+                                </div>
+                            </Tabs>
+                        </form>
+                    </Form>
                 </div>
-
-                <form onSubmit={submit} className="space-y-6">
-                    <div className="grid gap-6 md:grid-cols-3">
-                        <div className="space-y-6 md:col-span-2">
-                            {/* Basic Information */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Basic Information</CardTitle>
-                                    <CardDescription>Update the basic details for the category</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div>
-                                        <Label htmlFor="name">Name *</Label>
-                                        <Input
-                                            id="name"
-                                            value={data.name}
-                                            onChange={(e) => setData('name', e.target.value)}
-                                            placeholder="Enter category name"
-                                            className={errors.name ? 'border-red-500' : ''}
-                                        />
-                                        {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
-                                    </div>
-
-                                    <div>
-                                        <Label htmlFor="slug">Slug *</Label>
-                                        <Input
-                                            id="slug"
-                                            value={data.slug}
-                                            onChange={(e) => setData('slug', e.target.value)}
-                                            placeholder="category-slug"
-                                            className={errors.slug ? 'border-red-500' : ''}
-                                        />
-                                        {errors.slug && <p className="mt-1 text-sm text-red-500">{errors.slug}</p>}
-                                        <p className="text-muted-foreground mt-1 text-sm">Used in URLs.</p>
-                                    </div>
-
-                                    <div>
-                                        <Label htmlFor="description">Description</Label>
-                                        <Textarea
-                                            id="description"
-                                            value={data.description}
-                                            onChange={(e) => setData('description', e.target.value)}
-                                            placeholder="Describe this category..."
-                                            rows={3}
-                                            className={errors.description ? 'border-red-500' : ''}
-                                        />
-                                        {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            {/* SEO Settings */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>SEO Settings</CardTitle>
-                                    <CardDescription>Optimize this category for search engines</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div>
-                                        <Label htmlFor="meta_title">Meta Title</Label>
-                                        <Input
-                                            id="meta_title"
-                                            value={data.meta_title}
-                                            onChange={(e) => setData('meta_title', e.target.value)}
-                                            placeholder="SEO title for this category"
-                                            className={errors.meta_title ? 'border-red-500' : ''}
-                                        />
-                                        {errors.meta_title && <p className="mt-1 text-sm text-red-500">{errors.meta_title}</p>}
-                                    </div>
-
-                                    <div>
-                                        <Label htmlFor="meta_description">Meta Description</Label>
-                                        <Textarea
-                                            id="meta_description"
-                                            value={data.meta_description}
-                                            onChange={(e) => setData('meta_description', e.target.value)}
-                                            placeholder="SEO description for this category..."
-                                            rows={3}
-                                            className={errors.meta_description ? 'border-red-500' : ''}
-                                        />
-                                        {errors.meta_description && <p className="mt-1 text-sm text-red-500">{errors.meta_description}</p>}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
-
-                        {/* Sidebar */}
-                        <div className="space-y-6">
-                            {/* Actions */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Actions</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <Button type="submit" disabled={processing} className="w-full">
-                                        <Save className="mr-2 h-4 w-4" />
-                                        {processing ? 'Updating...' : 'Update Category'}
-                                    </Button>
-                                    <Button type="button" variant="outline" asChild className="w-full">
-                                        <Link href={route('admin.blog.categories.show', category.id)}>Cancel</Link>
-                                    </Button>
-                                </CardContent>
-                            </Card>
-
-                            {/* Danger Zone */}
-                            <Card className="border-red-200">
-                                <CardHeader>
-                                    <CardTitle className="text-red-600">Danger Zone</CardTitle>
-                                    <CardDescription>Irreversible actions</CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <Button type="button" variant="destructive" size="sm" onClick={handleDelete} className="w-full">
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        Delete Category
-                                    </Button>
-                                    <p className="text-muted-foreground mt-2 text-xs">
-                                        This action cannot be undone. Articles in this category will be unassigned.
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </div>
-                </form>
             </div>
         </AppLayout>
     );

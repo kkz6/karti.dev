@@ -1,0 +1,20 @@
+{
+    "name": "modules/speaking",
+    "description": "Speaking events management module",
+    "type": "library",
+    "require": {
+        "php": "^8.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Speaking\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\Speaking\\Providers\\SpeakingServiceProvider"
+            ]
+        }
+    }
+}

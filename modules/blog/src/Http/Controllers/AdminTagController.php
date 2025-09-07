@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Blog\Models\Tag;
+use Modules\Blog\Tables\Tags;
 use Modules\Shared\Http\Controllers\BaseController;
 
 class AdminTagController extends BaseController
@@ -14,14 +15,11 @@ class AdminTagController extends BaseController
     /**
      * Display a listing of tags.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $tags = Tag::withCount('articles')
-            ->orderBy('name')
-            ->get();
-
-        return Inertia::render('blog::admin/tags/index', [
-            'tags' => $tags,
+        return Inertia::render('blog::tags/index', [
+            'tags' => Tags::make(),
+            'filters' => $request->only(['search', 'name']),
         ]);
     }
 
@@ -30,7 +28,7 @@ class AdminTagController extends BaseController
      */
     public function create(): Response
     {
-        return Inertia::render('blog::admin/tags/create');
+        return Inertia::render('blog::tags/create');
     }
 
     /**
@@ -39,16 +37,17 @@ class AdminTagController extends BaseController
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name'        => 'required|string|max:255|unique:tags,name',
-            'slug'        => 'required|string|max:255|unique:tags,slug',
-            'description' => 'nullable|string|max:500',
-            'color'       => 'nullable|string|max:7', // For hex color codes
+            'name'             => 'required|string|max:255|unique:tags,name',
+            'slug'             => 'required|string|max:255|unique:tags,slug',
+            'description'      => 'nullable|string|max:500',
+            'meta_title'       => 'nullable|string|max:60',
+            'meta_description' => 'nullable|string|max:160',
         ]);
 
         Tag::create($validated);
 
         return redirect()
-            ->route('admin.blog.tags.index')
+            ->route('admin.tags.index')
             ->with('success', 'Tag created successfully.');
     }
 
@@ -61,7 +60,7 @@ class AdminTagController extends BaseController
             $query->with('user', 'category')->latest()->take(10);
         }]);
 
-        return Inertia::render('blog::admin/tags/show', [
+        return Inertia::render('blog::tags/show', [
             'tag' => $tag,
         ]);
     }
@@ -71,7 +70,7 @@ class AdminTagController extends BaseController
      */
     public function edit(Tag $tag): Response
     {
-        return Inertia::render('blog::admin/tags/edit', [
+        return Inertia::render('blog::tags/edit', [
             'tag' => $tag,
         ]);
     }
@@ -82,16 +81,17 @@ class AdminTagController extends BaseController
     public function update(Request $request, Tag $tag): RedirectResponse
     {
         $validated = $request->validate([
-            'name'        => 'required|string|max:255|unique:tags,name,'.$tag->id,
-            'slug'        => 'required|string|max:255|unique:tags,slug,'.$tag->id,
-            'description' => 'nullable|string|max:500',
-            'color'       => 'nullable|string|max:7',
+            'name'             => 'required|string|max:255|unique:tags,name,' . $tag->id,
+            'slug'             => 'required|string|max:255|unique:tags,slug,' . $tag->id,
+            'description'      => 'nullable|string|max:500',
+            'meta_title'       => 'nullable|string|max:60',
+            'meta_description' => 'nullable|string|max:160',
         ]);
 
         $tag->update($validated);
 
         return redirect()
-            ->route('admin.blog.tags.index')
+            ->route('admin.tags.index')
             ->with('success', 'Tag updated successfully.');
     }
 
@@ -105,7 +105,7 @@ class AdminTagController extends BaseController
         $tag->delete();
 
         return redirect()
-            ->route('admin.blog.tags.index')
+            ->route('admin.tags.index')
             ->with('success', 'Tag deleted successfully.');
     }
 }

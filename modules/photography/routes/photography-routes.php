@@ -1,11 +1,15 @@
 <?php
 
-// use Modules\Photography\Http\Controllers\PhotographyController;
+use Illuminate\Support\Facades\Route;
+use Modules\Photography\Http\Controllers\AdminPhotographyController;
+use Modules\Photography\Http\Controllers\AdminPhotoController;
 
-// Route::get('/photographies', [PhotographyController::class, 'index'])->name('photographies.index');
-// Route::get('/photographies/create', [PhotographyController::class, 'create'])->name('photographies.create');
-// Route::post('/photographies', [PhotographyController::class, 'store'])->name('photographies.store');
-// Route::get('/photographies/{photography}', [PhotographyController::class, 'show'])->name('photographies.show');
-// Route::get('/photographies/{photography}/edit', [PhotographyController::class, 'edit'])->name('photographies.edit');
-// Route::put('/photographies/{photography}', [PhotographyController::class, 'update'])->name('photographies.update');
-// Route::delete('/photographies/{photography}', [PhotographyController::class, 'destroy'])->name('photographies.destroy');
+Route::middleware(['web', 'auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+    // Photography Collections resource routes
+    Route::resource('photography', AdminPhotographyController::class);
+
+    // Photos nested resource routes
+    Route::resource('photography.photos', AdminPhotoController::class)->except(['show']);
+    Route::patch('photography/{photoCollection}/photos/sort-order', [AdminPhotoController::class, 'updateSortOrder'])
+        ->name('photography.photos.sort-order');
+});

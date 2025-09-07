@@ -1,5 +1,5 @@
 import { type NavItem } from '@shared/types';
-import { BookOpen, Briefcase, Camera, FileText, Files, Folder, FolderOpen, LayoutGrid, Settings, Tags, User, Wrench } from 'lucide-react';
+import { BookOpen, Briefcase, Camera, FileText, Files, Folder, FolderOpen, LayoutGrid, Mic, Settings, Tags, User, Wrench } from 'lucide-react';
 
 /**
  * Main navigation items for the admin panel
@@ -49,9 +49,14 @@ export const mainNavItems: NavItem[] = [
         icon: FolderOpen,
     },
     {
-        title: 'Pages',
-        href: '/admin/pages',
+        title: 'Projects',
+        href: '/admin/projects',
         icon: Files,
+    },
+    {
+        title: 'Speaking',
+        href: '/admin/speaking',
+        icon: Mic,
     },
     {
         title: 'Tools',

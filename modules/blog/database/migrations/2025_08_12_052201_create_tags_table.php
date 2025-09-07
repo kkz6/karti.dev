@@ -12,7 +12,10 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('slug')->unique();
+            $table->text('description')->nullable();
             $table->string('color', 7)->nullable(); // hex color
+            $table->string('meta_title', 60)->nullable();
+            $table->string('meta_description', 160)->nullable();
             $table->timestamps();
 
             $table->index('slug');
