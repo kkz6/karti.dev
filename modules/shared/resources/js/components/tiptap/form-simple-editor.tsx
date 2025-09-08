@@ -26,7 +26,6 @@ import {
 } from "@shared/components/tiptap/tiptap-ui-primitive/toolbar"
 
 // --- Tiptap Node ---
-import { ImageUploadNode } from "@shared/components/tiptap/tiptap-node/image-upload-node/image-upload-node-extension"
 import { HorizontalRule } from "@shared/components/tiptap/tiptap-node/horizontal-rule-node/horizontal-rule-node-extension"
 import "@shared/components/tiptap/tiptap-node/blockquote-node/blockquote-node.scss"
 import "@shared/components/tiptap/tiptap-node/code-block-node/code-block-node.scss"
@@ -38,7 +37,7 @@ import "@shared/components/tiptap/tiptap-node/paragraph-node/paragraph-node.scss
 
 // --- Tiptap UI ---
 import { HeadingDropdownMenu } from "@shared/components/tiptap/tiptap-ui/heading-dropdown-menu"
-import { ImageUploadButton } from "@shared/components/tiptap/tiptap-ui/image-upload-button"
+import { MediaImageButton } from "@shared/components/tiptap/tiptap-ui/media-image-button"
 import { ListDropdownMenu } from "@shared/components/tiptap/tiptap-ui/list-dropdown-menu"
 import { BlockquoteButton } from "@shared/components/tiptap/tiptap-ui/blockquote-button"
 import { CodeBlockButton } from "@shared/components/tiptap/tiptap-ui/code-block-button"
@@ -70,7 +69,7 @@ import { useCursorVisibility } from "@shared/hooks/use-cursor-visibility"
 import { ThemeToggle } from "@shared/components/tiptap-templates/simple/theme-toggle"
 
 // --- Lib ---
-import { handleImageUpload, MAX_FILE_SIZE } from "@shared/lib/tiptap-utils"
+import { handleMediaImageUpload, MAX_FILE_SIZE } from "@shared/lib/media-image-upload"
 
 import content from "@shared/components/tiptap-templates/simple/data/content.json"
 
@@ -139,7 +138,7 @@ const MainToolbarContent = ({
       <ToolbarSeparator />
 
       <ToolbarGroup>
-        <ImageUploadButton text="Add" />
+        <MediaImageButton text="Add" />
       </ToolbarGroup>
 
       <Spacer />
@@ -221,19 +220,16 @@ export function FormSimpleEditor({ content: initialContent = '', onChange, place
       TaskList,
       TaskItem.configure({ nested: true }),
       Highlight.configure({ multicolor: true }),
-      Image,
+      Image.configure({
+        HTMLAttributes: {
+          class: 'rounded-lg max-w-full h-auto',
+        },
+      }),
       Typography,
       Underline,
       Superscript,
       Subscript,
       Selection,
-      ImageUploadNode.configure({
-        accept: "image/*",
-        maxSize: MAX_FILE_SIZE,
-        limit: 3,
-        upload: handleImageUpload,
-        onError: (error) => console.error("Upload failed:", error),
-      }),
     ],
     content: initialContent || content,
     onUpdate: ({ editor }) => {

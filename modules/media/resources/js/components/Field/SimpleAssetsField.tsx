@@ -1,16 +1,19 @@
 import { Button } from '@shared/components/ui/button';
 import { FormControl, FormItem, FormLabel, FormMessage } from '@shared/components/ui/form';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@shared/components/ui/dialog';
 import { cn } from '@shared/lib/utils';
 import { FolderOpen, Upload, X } from 'lucide-react';
 import React, { useEffect, useRef } from 'react';
 import { useAssetsField } from '../../hooks/useAssetsField';
 import { AssetFieldProps, DisplayMode } from '../../types/asset-field';
 import { LoadingGraphic } from '../UI/LoadingGraphic';
-import { Selector } from '../UI/Selector';
+import { AssetBrowser } from '../Browser/AssetBrowser';
 import { Uploader, UploaderRef } from '../Upload/Uploader';
 import { Uploads } from '../Upload/Uploads';
 import { AssetFieldRow } from './AssetFieldRow';
 import { AssetFieldTile } from './AssetFieldTile';
+import { MediaAsset } from '../../types/media';
+import { MediaService } from '../../services/MediaService';
 
 export function SimpleAssetsField({ name, data = [], config = {}, required = false, readOnly = false, onChange, onError }: AssetFieldProps) {
     const uploaderRef = useRef<UploaderRef>(null);
@@ -60,10 +63,32 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
         uploaderRef.current?.browse();
     };
 
-    const handleAssetsSelected = (selections: string[]) => {
-        // TODO: Convert asset IDs to MediaAsset objects
-        // For now, we'll just close the selector
-        console.log('Selected asset IDs:', selections);
+    const [selectedAssetIds, setSelectedAssetIds] = React.useState<string[]>([]);
+    const mediaService = useRef(new MediaService());
+
+    const handleAssetsSelected = async () => {
+        if (selectedAssetIds.length > 0) {
+            try {
+                // Fetch asset data for selected IDs
+                const assetPromises = selectedAssetIds.map(id => mediaService.current.getFile(id));
+                const assetData = await Promise.all(assetPromises);
+                const validAssets = assetData.filter(asset => asset !== null);
+                
+                // Add to current assets
+                validAssets.forEach(asset => addAsset(asset));
+            } catch (error) {
+                console.error('Error fetching asset data:', error);
+            }
+        }
+        closeSelector();
+    };
+
+    const handleSelectionsUpdated = (selections: string[]) => {
+        setSelectedAssetIds(selections);
+    };
+
+    const handleAssetDoubleClicked = async (asset: MediaAsset) => {
+        addAsset(asset);
         closeSelector();
     };
 
@@ -207,19 +232,44 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                         </>
                     )}
 
-                    {/* Asset selector modal */}
-                    {showSelector && (
-                        <Selector
-                            container={container}
-                            folder={folder}
-                            restrictNavigation={restrictNavigation}
-                            selected={assets.map((a) => a.id)}
-                            maxFiles={maxFiles}
-                            canEdit={canEdit}
-                            onSelected={handleAssetsSelected}
-                            onClosed={closeSelector}
-                        />
-                    )}
+                    {/* Asset selector dialog */}
+                    <Dialog open={showSelector} onOpenChange={closeSelector}>
+                        <DialogContent className="max-w-6xl sm:max-w-6xl md:max-w-6xl lg:max-w-6xl h-[85vh] flex flex-col p-0 gap-0">
+                            <DialogHeader className="px-4 py-3 border-b flex-shrink-0">
+                                <DialogTitle>Select {name}</DialogTitle>
+                            </DialogHeader>
+                            
+                            <div className="flex-1 overflow-hidden p-0">
+                                <AssetBrowser
+                                    selectedContainer={container}
+                                    selectedPath={folder}
+                                    selectedAssets={selectedAssetIds}
+                                    maxFiles={maxFiles}
+                                    canEdit={canEdit}
+                                    restrictNavigation={restrictNavigation}
+                                    onSelectionsUpdated={handleSelectionsUpdated}
+                                    onAssetDoubleClicked={handleAssetDoubleClicked}
+                                />
+                            </div>
+
+                            <DialogFooter className="px-4 py-3 border-t flex-shrink-0 bg-muted/20">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={closeSelector}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="button"
+                                    onClick={handleAssetsSelected}
+                                    disabled={selectedAssetIds.length === 0}
+                                >
+                                    Select
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </FormControl>
             <FormMessage />

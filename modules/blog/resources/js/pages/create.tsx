@@ -211,7 +211,7 @@ export default function Create({ categories }: { categories: Category[]; }) {
                                                                         mode: 'grid',
                                                                         accept: 'image/*',
                                                                         container: 'public',
-                                                                        folder: '/blog/featured-images'
+                                                                        folder: 'blog/featured-images'
                                                                     }}
                                                                     onChange={(assets) => field.onChange(assets)}
                                                                     onError={(error) => console.error('Asset error:', error)}
