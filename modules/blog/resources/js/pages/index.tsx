@@ -49,10 +49,10 @@ export default function Index({ articles, categories }: { articles: TableConfig<
 
         if (article) {
             if (action.id === 'edit') {
-                window.location.href = route('admin.blog.edit', article.id);
+                window.location.href = route('admin.blog.edit', { blog: article.slug });
             }
             if (action.id === 'show') {
-                window.location.href = route('admin.blog.show', article.id);
+                window.location.href = route('admin.blog.show', { blog: article.slug });
             }
         }
 

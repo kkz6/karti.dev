@@ -44,11 +44,11 @@ interface PhotoCollection {
 export default function Show({ collection }: { collection: PhotoCollection }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Photography ', href: route('admin.photography.index') },
-        { title: collection.title, href: route('admin.photography.show', collection.id) },
+        { title: collection.title, href: route('admin.photography.show', { photography: collection.slug }) },
     ];
 
     const handleEdit = () => {
-        window.location.href = route('admin.photography.edit', collection.id);
+        window.location.href = route('admin.photography.edit', { photography: collection.slug });
     };
 
     const handleManagePhotos = () => {
@@ -57,7 +57,7 @@ export default function Show({ collection }: { collection: PhotoCollection }) {
 
     const handleDelete = () => {
         if (confirm('Are you sure you want to delete this collection? This action cannot be undone.')) {
-            router.delete(route('admin.photography.destroy', collection.id));
+            router.delete(route('admin.photography.destroy', { photography: collection.slug }));
         }
     };
 

@@ -16,7 +16,7 @@ class PhotoCollections extends Table
     public function columns(): array
     {
         return [
-            Columns\TextColumn::make('id', 'ID', stickable: true)->url(fn(PhotoCollection $collection) => route('admin.photography.edit', $collection->id)),
+            Columns\TextColumn::make('id', 'ID', stickable: true)->url(fn(PhotoCollection $collection) => route('admin.photography.edit', ['photography' => $collection->slug])),
             Columns\TextColumn::make('title', 'Title', toggleable: false)->searchable(),
             Columns\TextColumn::make('slug', 'Slug', toggleable: false)->sortable(),
             Columns\BadgeColumn::make('status', 'Status', toggleable: false),

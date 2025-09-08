@@ -43,10 +43,10 @@ export default function Index({ collections, categories }: { collections: TableC
 
         if (collection) {
             if (action.id === 'edit') {
-                window.location.href = route('admin.photography.edit', collection.id);
+                window.location.href = route('admin.photography.edit', { photography: collection.slug });
             }
             if (action.id === 'show') {
-                window.location.href = route('admin.photography.show', collection.id);
+                window.location.href = route('admin.photography.show', { photography: collection.slug });
             }
             if (action.id === 'manage-photos') {
                 window.location.href = route('admin.photography.photos.index', collection.id);

@@ -30,7 +30,7 @@ export default function Index({ collection, photos }: { collection: PhotoCollect
     const { props } = usePage<SharedData>();
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Photography', href: route('admin.photography.index') },
-        { title: collection.title, href: route('admin.photography.show', collection.id) },
+        { title: collection.title, href: route('admin.photography.show', { photography: collection.slug }) },
         { title: 'Photos', href: route('admin.photography.photos.index', collection.id) },
     ];
 
@@ -52,7 +52,7 @@ export default function Index({ collection, photos }: { collection: PhotoCollect
     };
 
     const handleBackToCollection = () => {
-        window.location.href = route('admin.photography.show', collection.id);
+        window.location.href = route('admin.photography.show', { photography: collection.slug });
     };
 
     return (

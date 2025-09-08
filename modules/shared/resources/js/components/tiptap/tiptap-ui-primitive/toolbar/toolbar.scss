@@ -44,9 +44,19 @@
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    flex-wrap: wrap;
 
     &::-webkit-scrollbar {
       display: none;
+    }
+
+    @media (max-width: 768px) {
+      flex-wrap: wrap;
+      min-height: auto;
+      
+      .tiptap-toolbar-group {
+        flex-wrap: wrap;
+      }
     }
 
     @media (max-width: 480px) {

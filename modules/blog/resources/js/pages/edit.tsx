@@ -42,7 +42,7 @@ interface Article {
 export default function Edit({ article, categories, tags }: { article: Article; categories: Category[]; tags: Tag[] }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Blog Management', href: route('admin.blog.index') },
-        { title: 'Edit Article', href: route('admin.blog.edit', article.id) },
+        { title: 'Edit Article', href: route('admin.blog.edit', { blog: article.slug }) },
     ];
 
     const { data, setData, put, processing, errors } = useForm({
@@ -61,7 +61,7 @@ export default function Edit({ article, categories, tags }: { article: Article; 
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        put(route('admin.blog.update', article.id));
+        put(route('admin.blog.update', { blog: article.slug }));
     };
 
     const generateSlug = (title: string) => {

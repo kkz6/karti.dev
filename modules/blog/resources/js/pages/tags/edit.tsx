@@ -23,8 +23,8 @@ export default function Edit({ tag }: { tag: Tag }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Blog Management', href: route('admin.blog.index') },
         { title: 'Tags', href: route('admin.tags.index') },
-        { title: tag.name, href: route('admin.tags.show', tag.id) },
-        { title: 'Edit', href: route('admin.tags.edit', tag.id) },
+        { title: tag.name, href: route('admin.tags.show', { tag: tag.slug }) },
+        { title: 'Edit', href: route('admin.tags.edit', { tag: tag.slug }) },
     ];
 
     const [activeTab, setActiveTab] = useState('main');
@@ -39,7 +39,7 @@ export default function Edit({ tag }: { tag: Tag }) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        put(route('admin.tags.update', tag.id));
+        put(route('admin.tags.update', { tag: tag.slug }));
     };
 
     const handleDelete = () => {

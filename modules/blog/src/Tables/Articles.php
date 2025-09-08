@@ -16,7 +16,7 @@ class Articles extends Table
     public function columns(): array
     {
         return [
-            Columns\TextColumn::make('id', 'ID', stickable: true)->url(fn(Article $article) => '/blog/articles/' . $article->id . '/edit'),
+            Columns\TextColumn::make('id', 'ID', stickable: true)->url(fn(Article $article) => route('admin.blog.edit', ['blog' => $article->slug])),
             Columns\TextColumn::make('title', 'Title', toggleable: false)->searchable(),
             Columns\TextColumn::make('slug', 'Slug', toggleable: false)->sortable(),
             Columns\TextColumn::make('status', 'Status', toggleable: false),
@@ -37,7 +37,7 @@ class Articles extends Table
             Filters\TextFilter::make('author_email', 'Author Email')->hidden(true),
 
             // Example of hidden filter with closure condition
-            Filters\TextFilter::make('meta_title', 'Meta Title')->hidden(fn() => !auth()->user()?->hasRole('admin')),
+            // Filters\TextFilter::make('meta_title', 'Meta Title')->hidden(fn() => !auth()->user()?->hasRole('admin')),
         ];
     }
 

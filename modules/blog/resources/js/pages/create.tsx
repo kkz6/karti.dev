@@ -142,7 +142,7 @@ export default function Create({ categories }: { categories: Category[]; }) {
                                 {/* Content Grid */}
                                 <div className="mt-6 grid gap-8 lg:grid-cols-6">
                                     {/* Left column with tab content - 4/6 */}
-                                    <div className="lg:col-span-4">
+                                    <div className="lg:col-span-4 min-w-0">
                                         <TabsContent value="main" className="mt-0 space-y-6">
                                             {/* Basic Information */}
                         <Card>
@@ -225,17 +225,17 @@ export default function Create({ categories }: { categories: Category[]; }) {
                                         </TabsContent>
 
                                         <TabsContent value="content" className="mt-0 space-y-6">
-                                            <Card>
+                                            <Card className="w-full">
                                                 <CardHeader>
                                                     <CardTitle>Article Content</CardTitle>
                                                     <CardDescription>Write the main content of your article</CardDescription>
                                                 </CardHeader>
-                                                <CardContent>
+                                                <CardContent className="w-full overflow-hidden">
                                                     <FormField
                                                         control={form.control}
                                                         name="content"
                                                         render={({ field }) => (
-                                                            <FormItem>
+                                                            <FormItem className="w-full">
                                                                 <FormLabel>Content *</FormLabel>
                                                                 <FormControl>
                                                                     <FormSimpleEditor

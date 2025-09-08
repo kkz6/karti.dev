@@ -20,7 +20,7 @@ interface PhotoCollection {
 export default function Create({ collection }: { collection: PhotoCollection }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Photography', href: route('admin.photography.index') },
-        { title: collection.title, href: route('admin.photography.show', collection.id) },
+        { title: collection.title, href: route('admin.photography.show', { photography: collection.slug }) },
         { title: 'Photos', href: route('admin.photography.photos.index', collection.id) },
         { title: 'Add Photo', href: route('admin.photography.photos.create', collection.id) },
     ];

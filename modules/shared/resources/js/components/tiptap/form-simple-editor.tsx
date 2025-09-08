@@ -255,10 +255,11 @@ export function FormSimpleEditor({ content: initialContent = '', onChange, place
   }, [initialContent, editor])
 
   return (
-    <div className="border border-input rounded-md" style={{ width: '100%' }}>
+    <div className="w-full border border-input rounded-md overflow-hidden">
       <EditorContext.Provider value={{ editor }}>
         <Toolbar
           ref={toolbarRef}
+          className="w-full overflow-x-auto"
           style={{
             ...(isMobile
               ? {
@@ -284,11 +285,10 @@ export function FormSimpleEditor({ content: initialContent = '', onChange, place
         <EditorContent
           editor={editor}
           role="presentation"
+          className="w-full"
           style={{
             minHeight: '300px',
             padding: '1rem',
-            width: '100%',
-            maxWidth: 'none'
           }}
         />
       </EditorContext.Provider>
