@@ -6,6 +6,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Photography\Interfaces\PhotoServiceInterface;
 use Modules\Photography\Models\Photo;
 use Modules\Photography\Models\PhotoCollection;
 use Modules\Photography\Tables\Photos;
@@ -13,6 +14,9 @@ use Modules\Shared\Http\Controllers\BaseController;
 
 class AdminPhotoController extends BaseController
 {
+    public function __construct(
+        private readonly PhotoServiceInterface $photoService,
+    ) {}
     /**
      * Display a listing of photos.
      */

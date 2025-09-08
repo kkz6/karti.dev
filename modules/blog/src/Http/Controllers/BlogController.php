@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Blog\Interfaces\ArticleServiceInterface;
+use Modules\Blog\Interfaces\CategoryServiceInterface;
+use Modules\Blog\Interfaces\TagServiceInterface;
 use Modules\Blog\Models\Article;
 use Modules\Blog\Models\Category;
 use Modules\Blog\Models\Tag;
@@ -15,6 +18,11 @@ use Modules\Shared\Http\Controllers\BaseController;
 
 class BlogController extends BaseController
 {
+    public function __construct(
+        private readonly ArticleServiceInterface $articleService,
+        private readonly CategoryServiceInterface $categoryService,
+        private readonly TagServiceInterface $tagService,
+    ) {}
     /**
      * Display a listing of articles.
      */
@@ -36,8 +44,8 @@ class BlogController extends BaseController
      */
     public function create(): Response
     {
-        $categories = Category::all(['id', 'name', 'slug']);
-        $tags       = Tag::all(['id', 'name', 'slug']);
+        $categories = $this->categoryService->all(['id', 'name', 'slug']);
+        $tags       = $this->tagService->all(['id', 'name', 'slug']);
 
         return Inertia::render('blog::create', [
             'categories' => $categories,
@@ -81,7 +89,7 @@ class BlogController extends BaseController
             }
         }
 
-        $article = Article::create([
+        $article = $this->articleService->create([
             ...$validated,
             'featured_image' => $featuredImageUrl, // Store as URL string for backward compatibility
             'user_id'      => Auth::id(),
@@ -109,12 +117,15 @@ class BlogController extends BaseController
      */
     public function edit($article): Response
     {
-        $article = Article::findOrFail($article);
+        // Handle both slug and ID for route model binding
+        if (is_string($article)) {
+            $article = $this->articleService->findBySlug($article) ?? $this->articleService->findOrFail($article);
+        } else {
+            $article = $this->articleService->findOrFail($article);
+        }
 
-        $article->load(['category', 'tags']);
-
-        $categories = Category::all(['id', 'name', 'slug']);
-        $tags       = Tag::all(['id', 'name', 'slug']);
+        $categories = $this->categoryService->all(['id', 'name', 'slug']);
+        $tags       = $this->tagService->all(['id', 'name', 'slug']);
 
         return Inertia::render('blog::edit', [
             'article'    => $article,
@@ -155,7 +166,7 @@ class BlogController extends BaseController
             }
         }
 
-        $article->update([
+        $this->articleService->update($article->id, [
             ...$validated,
             'featured_image' => $featuredImageUrl, // Store as URL string for backward compatibility
             'published_at' => $validated['status'] === 'published'
@@ -179,7 +190,7 @@ class BlogController extends BaseController
     {
         $article->tags()->detach();
         $article->comments()->delete();
-        $article->delete();
+        $this->articleService->delete($article->id);
 
         return redirect()
             ->route('admin.blog.index')

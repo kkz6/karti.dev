@@ -6,13 +6,19 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Blog\Interfaces\CategoryServiceInterface;
 use Modules\Blog\Models\Category;
+use Modules\Photography\Interfaces\PhotoCollectionServiceInterface;
 use Modules\Photography\Models\PhotoCollection;
 use Modules\Photography\Tables\PhotoCollections;
 use Modules\Shared\Http\Controllers\BaseController;
 
 class AdminPhotographyController extends BaseController
 {
+    public function __construct(
+        private readonly PhotoCollectionServiceInterface $photoCollectionService,
+        private readonly CategoryServiceInterface $categoryService,
+    ) {}
     /**
      * Display a listing of photo collections.
      */

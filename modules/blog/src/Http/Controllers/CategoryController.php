@@ -6,12 +6,16 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Blog\Interfaces\CategoryServiceInterface;
 use Modules\Blog\Models\Category;
 use Modules\Blog\Tables\Categories;
 use Modules\Shared\Http\Controllers\BaseController;
 
 class CategoryController extends BaseController
 {
+    public function __construct(
+        private readonly CategoryServiceInterface $categoryService,
+    ) {}
     /**
      * Display a listing of categories.
      */
