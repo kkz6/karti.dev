@@ -59,14 +59,27 @@ class AdminBlogController extends BaseController
             'tags'             => 'nullable|array',
             'tags.*'           => 'exists:tags,id',
             'status'           => 'required|in:draft,published,archived',
-            'featured_image'   => 'nullable|string',
+            'featured_image'   => 'nullable|array',
             'meta_title'       => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'published_at'     => 'nullable|date',
         ]);
 
+        // Process featured image from asset field
+        $featuredImageData = $validated['featured_image'] ?? [];
+        $featuredImageUrl = null;
+        
+        if (!empty($featuredImageData) && is_array($featuredImageData)) {
+            // Extract the URL from the first asset
+            $firstAsset = $featuredImageData[0] ?? null;
+            if ($firstAsset && isset($firstAsset['url'])) {
+                $featuredImageUrl = $firstAsset['url'];
+            }
+        }
+
         $article = Article::create([
             ...$validated,
+            'featured_image' => $featuredImageUrl, // Store as URL string for backward compatibility
             'user_id'      => Auth::id(),
             'published_at' => $validated['status'] === 'published'
                 ? ($validated['published_at'] ?? now())
@@ -124,14 +137,27 @@ class AdminBlogController extends BaseController
             'tags'             => 'nullable|array',
             'tags.*'           => 'exists:tags,id',
             'status'           => 'required|in:draft,published,archived',
-            'featured_image'   => 'nullable|string',
+            'featured_image'   => 'nullable|array',
             'meta_title'       => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'published_at'     => 'nullable|date',
         ]);
 
+        // Process featured image from asset field
+        $featuredImageData = $validated['featured_image'] ?? [];
+        $featuredImageUrl = null;
+        
+        if (!empty($featuredImageData) && is_array($featuredImageData)) {
+            // Extract the URL from the first asset
+            $firstAsset = $featuredImageData[0] ?? null;
+            if ($firstAsset && isset($firstAsset['url'])) {
+                $featuredImageUrl = $firstAsset['url'];
+            }
+        }
+
         $article->update([
             ...$validated,
+            'featured_image' => $featuredImageUrl, // Store as URL string for backward compatibility
             'published_at' => $validated['status'] === 'published'
                 ? ($validated['published_at'] ?? $article->published_at ?? now())
                 : null,

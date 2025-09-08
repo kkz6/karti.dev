@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Textarea } from '@shared/components/ui/textarea';
 import { FormSimpleEditor } from '@shared/components/tiptap';
+import { SimpleAssetsField } from '@media/components/Field/SimpleAssetsField';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
 import { Save } from 'lucide-react';
@@ -28,7 +29,7 @@ const articleSchema = z.object({
     category_id: z.string().min(1, 'Category is required'),
     tags: z.array(z.number()).optional(),
     status: z.enum(['draft', 'published', 'archived']),
-    featured_image: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+    featured_image: z.array(z.any()).optional(),
     meta_title: z.string().max(60, 'Meta title must be less than 60 characters').optional(),
     meta_description: z.string().max(160, 'Meta description must be less than 160 characters').optional(),
     published_at: z.string().optional(),
@@ -60,7 +61,7 @@ export default function Create({ categories }: { categories: Category[]; }) {
         category_id: '',
             tags: [],
         status: 'draft',
-        featured_image: '',
+            featured_image: [],
         meta_title: '',
         meta_description: '',
         published_at: '',
@@ -202,11 +203,19 @@ export default function Create({ categories }: { categories: Category[]; }) {
                                                         name="featured_image"
                                                         render={({ field }) => (
                                                             <FormItem>
-                                                                <FormLabel>Featured Image URL</FormLabel>
-                                                                <FormControl>
-                                                                    <Input {...field} placeholder="https://example.com/image.jpg" type="url" />
-                                                                </FormControl>
-                                                                <FormDescription>URL of the featured image for this article</FormDescription>
+                                                                <SimpleAssetsField
+                                                                    name="Featured Image"
+                                                                    data={field.value || []}
+                                                                    config={{
+                                                                        max_files: 1,
+                                                                        mode: 'grid',
+                                                                        accept: 'image/*',
+                                                                        container: 'public',
+                                                                        folder: '/blog/featured-images'
+                                                                    }}
+                                                                    onChange={(assets) => field.onChange(assets)}
+                                                                    onError={(error) => console.error('Asset error:', error)}
+                                                                />
                                                                 <FormMessage />
                                                             </FormItem>
                                                         )}
