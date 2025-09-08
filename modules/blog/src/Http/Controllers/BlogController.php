@@ -107,9 +107,12 @@ class BlogController extends BaseController
     /**
      * Show the form for editing the specified article.
      */
-    public function edit(Article $article): Response
+    public function edit($article): Response
     {
+        $article = Article::findOrFail($article);
+
         $article->load(['category', 'tags']);
+
         $categories = Category::all(['id', 'name', 'slug']);
         $tags       = Tag::all(['id', 'name', 'slug']);
 
