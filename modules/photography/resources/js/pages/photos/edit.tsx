@@ -30,7 +30,7 @@ interface Photo {
 
 export default function Edit({ collection, photo }: { collection: PhotoCollection; photo: Photo }) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Photography Management', href: route('admin.photography.index') },
+        { title: 'Photography', href: route('admin.photography.index') },
         { title: collection.title, href: route('admin.photography.show', collection.id) },
         { title: 'Photos', href: route('admin.photography.photos.index', collection.id) },
         { title: 'Edit Photo', href: route('admin.photography.photos.edit', [collection.id, photo.id]) },

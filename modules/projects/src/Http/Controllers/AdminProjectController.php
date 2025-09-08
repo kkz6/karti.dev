@@ -37,24 +37,24 @@ class AdminProjectController extends BaseController
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:projects,slug',
             'description' => 'required|string',
+            'long_description' => 'nullable|string',
             'short_description' => 'nullable|string|max:500',
-            'client' => 'nullable|string|max:255',
+            'content' => 'nullable|string',
+            'logo' => 'nullable|string|max:255',
+            'featured_image' => 'nullable|string|max:255',
+            'link_url' => 'nullable|url|max:255',
+            'link_label' => 'nullable|string|max:255',
             'project_url' => 'nullable|url|max:255',
             'github_url' => 'nullable|url|max:255',
+            'demo_url' => 'nullable|url|max:255',
             'technologies' => 'nullable|array',
-            'technologies.*' => 'string|max:50',
-            'featured_image' => 'nullable|string|max:255',
             'images' => 'nullable|array',
-            'images.*' => 'string|max:255',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'status' => 'in:draft,published,archived',
+            'status' => 'in:active,archived,on_hold',
             'featured' => 'boolean',
-            'meta_title' => 'nullable|string|max:60',
-            'meta_description' => 'nullable|string|max:160',
+            'is_internal' => 'boolean',
         ]);
 
         Project::create($validated);
@@ -90,24 +90,24 @@ class AdminProjectController extends BaseController
     public function update(Request $request, Project $project): RedirectResponse
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:projects,slug,' . $project->id,
             'description' => 'required|string',
+            'long_description' => 'nullable|string',
             'short_description' => 'nullable|string|max:500',
-            'client' => 'nullable|string|max:255',
+            'content' => 'nullable|string',
+            'logo' => 'nullable|string|max:255',
+            'featured_image' => 'nullable|string|max:255',
+            'link_url' => 'nullable|url|max:255',
+            'link_label' => 'nullable|string|max:255',
             'project_url' => 'nullable|url|max:255',
             'github_url' => 'nullable|url|max:255',
+            'demo_url' => 'nullable|url|max:255',
             'technologies' => 'nullable|array',
-            'technologies.*' => 'string|max:50',
-            'featured_image' => 'nullable|string|max:255',
             'images' => 'nullable|array',
-            'images.*' => 'string|max:255',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'status' => 'in:draft,published,archived',
+            'status' => 'in:active,archived,on_hold',
             'featured' => 'boolean',
-            'meta_title' => 'nullable|string|max:60',
-            'meta_description' => 'nullable|string|max:160',
+            'is_internal' => 'boolean',
         ]);
 
         $project->update($validated);

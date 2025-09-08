@@ -25,7 +25,6 @@ class Tools extends Table
             Columns\TextColumn::make('title', 'Title', toggleable: false)
                 ->searchable()
                 ->sortable(),
-            Columns\TextColumn::make('slug', 'Slug', toggleable: false)->sortable(),
             Columns\TextColumn::make('category.name', 'Category')
                 ->sortable('tool_category_id'),
             Columns\TextColumn::make('url', 'URL')

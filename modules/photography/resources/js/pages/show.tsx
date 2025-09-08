@@ -43,7 +43,7 @@ interface PhotoCollection {
 
 export default function Show({ collection }: { collection: PhotoCollection }) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Photography Management', href: route('admin.photography.index') },
+        { title: 'Photography ', href: route('admin.photography.index') },
         { title: collection.title, href: route('admin.photography.show', collection.id) },
     ];
 

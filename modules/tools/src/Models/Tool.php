@@ -14,15 +14,12 @@ class Tool extends Model
     protected $fillable = [
         'tool_category_id',
         'title',
-        'slug',
         'description',
         'url',
         'image',
         'sort_order',
         'featured',
         'status',
-        'meta_title',
-        'meta_description',
     ];
 
     protected $casts = [
@@ -58,6 +55,6 @@ class Tool extends Model
 
     public function getRouteKeyName(): string
     {
-        return 'slug';
+        return 'id';
     }
 }

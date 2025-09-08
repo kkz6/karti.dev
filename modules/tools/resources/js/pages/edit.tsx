@@ -6,12 +6,10 @@ import { Checkbox } from '@shared/components/ui/checkbox';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@shared/components/ui/form';
 import { Input } from '@shared/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Textarea } from '@shared/components/ui/textarea';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
 import { Save, Trash2 } from 'lucide-react';
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -19,18 +17,11 @@ import { z } from 'zod';
 const toolSchema = z.object({
     tool_category_id: z.string().min(1, 'Category is required'),
     title: z.string().min(1, 'Title is required').max(255, 'Title must be less than 255 characters'),
-    slug: z
-        .string()
-        .min(1, 'Slug is required')
-        .max(255, 'Slug must be less than 255 characters')
-        .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase and contain only letters, numbers, and hyphens'),
     description: z.string().min(1, 'Description is required'),
     url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
     image: z.string().optional(),
     featured: z.boolean(),
     status: z.enum(['active', 'inactive']),
-    meta_title: z.string().max(60, 'Meta title must be less than 60 characters').optional(),
-    meta_description: z.string().max(160, 'Meta description must be less than 160 characters').optional(),
 });
 
 type ToolFormData = z.infer<typeof toolSchema>;
@@ -39,14 +30,11 @@ interface Tool {
     id: number;
     tool_category_id: number;
     title: string;
-    slug: string;
     description: string;
     url?: string;
     image?: string;
     featured: boolean;
     status: 'active' | 'inactive';
-    meta_title?: string;
-    meta_description?: string;
 }
 
 interface ToolCategory {
@@ -62,21 +50,17 @@ export default function Edit({ tool, categories }: { tool: Tool; categories: Too
         { title: 'Edit', href: route('admin.tools.edit', tool.id) },
     ];
 
-    const [activeTab, setActiveTab] = useState('main');
 
     const form = useForm<ToolFormData>({
         resolver: zodResolver(toolSchema),
         defaultValues: {
             tool_category_id: tool.tool_category_id.toString(),
             title: tool.title || '',
-            slug: tool.slug || '',
             description: tool.description || '',
             url: tool.url || '',
             image: tool.image || '',
             featured: tool.featured || false,
             status: tool.status || 'active',
-            meta_title: tool.meta_title || '',
-            meta_description: tool.meta_description || '',
         },
     });
 
@@ -124,227 +108,138 @@ export default function Edit({ tool, categories }: { tool: Tool; categories: Too
 
                     <Form {...form}>
                         <form id="tool-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                            {/* Tabs Header */}
-                            <Tabs defaultValue="main" value={activeTab} onValueChange={setActiveTab} className="w-full">
-                                <TabsList className="border-border text-foreground h-auto gap-2 rounded-none border-b bg-transparent px-0 py-1">
-                                    <TabsTrigger
-                                        value="main"
-                                        className="hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-                                    >
-                                        Main
-                                    </TabsTrigger>
-                                    <TabsTrigger
-                                        value="seo"
-                                        className="hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-                                    >
-                                        SEO
-                                    </TabsTrigger>
-                                </TabsList>
-
-                                {/* Content Grid */}
-                                <div className="mt-6 grid gap-8 lg:grid-cols-6">
-                                    {/* Left column with tab content - 4/6 */}
-                                    <div className="lg:col-span-4">
-                                        <TabsContent value="main" className="mt-0 space-y-6">
-                                            {/* Basic Information */}
-                                            <Card>
-                                                <CardHeader>
-                                                    <CardTitle>Basic Information</CardTitle>
-                                                    <CardDescription>Update the basic details for the tool</CardDescription>
-                                                </CardHeader>
-                                                <CardContent className="space-y-4">
-                                                    <FormField
-                                                        control={form.control}
-                                                        name="tool_category_id"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>Category *</FormLabel>
-                                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                                    <FormControl>
-                                                                        <SelectTrigger>
-                                                                            <SelectValue placeholder="Select a category" />
-                                                                        </SelectTrigger>
-                                                                    </FormControl>
-                                                                    <SelectContent>
-                                                                        {categories.map((category) => (
-                                                                            <SelectItem key={category.id} value={category.id.toString()}>
-                                                                                {category.name}
-                                                                            </SelectItem>
-                                                                        ))}
-                                                                    </SelectContent>
-                                                                </Select>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-
-                                                    <FormField
-                                                        control={form.control}
-                                                        name="title"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>Title *</FormLabel>
-                                                                <FormControl>
-                                                                    <Input {...field} placeholder="Enter tool title" />
-                                                                </FormControl>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-
-                                                    <FormField
-                                                        control={form.control}
-                                                        name="description"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>Description *</FormLabel>
-                                                                <FormControl>
-                                                                    <Textarea {...field} placeholder="Describe this tool..." rows={4} />
-                                                                </FormControl>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-
-                                                    <FormField
-                                                        control={form.control}
-                                                        name="url"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>URL</FormLabel>
-                                                                <FormControl>
-                                                                    <Input {...field} placeholder="https://example.com" type="url" />
-                                                                </FormControl>
-                                                                <FormDescription>External link to the tool</FormDescription>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-                                                </CardContent>
-                                            </Card>
-                                        </TabsContent>
-
-                                        <TabsContent value="seo" className="mt-0 space-y-6">
-                                            <Card>
-                                                <CardHeader>
-                                                    <CardTitle>SEO Settings</CardTitle>
-                                                    <CardDescription>Optimize your content for search engines</CardDescription>
-                                                </CardHeader>
-                                                <CardContent className="space-y-4">
-                                                    <FormField
-                                                        control={form.control}
-                                                        name="meta_title"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>Meta Title</FormLabel>
-                                                                <FormControl>
-                                                                    <Input {...field} placeholder="SEO title for search engines" maxLength={60} />
-                                                                </FormControl>
-                                                                <FormDescription>{(field.value || '').length}/60 characters</FormDescription>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-
-                                                    <FormField
-                                                        control={form.control}
-                                                        name="meta_description"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>Meta Description</FormLabel>
-                                                                <FormControl>
-                                                                    <Textarea
-                                                                        {...field}
-                                                                        placeholder="Brief description for search engine results"
-                                                                        rows={3}
-                                                                        maxLength={160}
-                                                                    />
-                                                                </FormControl>
-                                                                <FormDescription>{(field.value || '').length}/160 characters</FormDescription>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-                                                </CardContent>
-                                            </Card>
-                                        </TabsContent>
-                                    </div>
-
-                                    {/* Right column - fixed - 2/6 */}
-                                    <div className="space-y-6 lg:col-span-2">
-                                        {/* URL Settings */}
-                                        <Card>
-                                            <CardHeader>
-                                                <CardTitle>URL Settings</CardTitle>
-                                                <CardDescription>Configure the URL for this tool</CardDescription>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <FormField
-                                                    control={form.control}
-                                                    name="slug"
-                                                    render={({ field }) => (
-                                                        <FormItem>
-                                                            <FormLabel>Tool Slug *</FormLabel>
+                            {/* Content Grid */}
+                            <div className="grid gap-8 lg:grid-cols-6">
+                                {/* Left column - 4/6 */}
+                                <div className="space-y-6 lg:col-span-4">
+                                    {/* Basic Information */}
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle>Basic Information</CardTitle>
+                                            <CardDescription>Update the basic details for the tool</CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            <FormField
+                                                control={form.control}
+                                                name="tool_category_id"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Category *</FormLabel>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                             <FormControl>
-                                                                <Input {...field} placeholder="url-friendly-slug" />
+                                                                <SelectTrigger>
+                                                                    <SelectValue placeholder="Select a category" />
+                                                                </SelectTrigger>
                                                             </FormControl>
-                                                            <FormDescription>Used in URLs.</FormDescription>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
-                                            </CardContent>
-                                        </Card>
+                                                            <SelectContent>
+                                                                {categories.map((category) => (
+                                                                    <SelectItem key={category.id} value={category.id.toString()}>
+                                                                        {category.name}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
 
-                                        {/* Publishing Options */}
-                                        <Card>
-                                            <CardHeader>
-                                                <CardTitle>Publishing Options</CardTitle>
-                                                <CardDescription>Control tool visibility</CardDescription>
-                                            </CardHeader>
-                                            <CardContent className="space-y-4">
-                                                <FormField
-                                                    control={form.control}
-                                                    name="status"
-                                                    render={({ field }) => (
-                                                        <FormItem>
-                                                            <FormLabel>Status</FormLabel>
-                                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                                <FormControl>
-                                                                    <SelectTrigger>
-                                                                        <SelectValue />
-                                                                    </SelectTrigger>
-                                                                </FormControl>
-                                                                <SelectContent>
-                                                                    <SelectItem value="active">Active</SelectItem>
-                                                                    <SelectItem value="inactive">Inactive</SelectItem>
-                                                                </SelectContent>
-                                                            </Select>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
+                                            <FormField
+                                                control={form.control}
+                                                name="title"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Title *</FormLabel>
+                                                        <FormControl>
+                                                            <Input {...field} placeholder="Enter tool title" />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
 
-                                                <FormField
-                                                    control={form.control}
-                                                    name="featured"
-                                                    render={({ field }) => (
-                                                        <FormItem className="flex flex-row items-start space-y-0 space-x-3">
-                                                            <FormControl>
-                                                                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                                                            </FormControl>
-                                                            <div className="space-y-1 leading-none">
-                                                                <FormLabel>Featured Tool</FormLabel>
-                                                                <FormDescription>Display this tool prominently</FormDescription>
-                                                            </div>
-                                                        </FormItem>
-                                                    )}
-                                                />
-                                            </CardContent>
-                                        </Card>
-                                    </div>
+                                            <FormField
+                                                control={form.control}
+                                                name="description"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Description *</FormLabel>
+                                                        <FormControl>
+                                                            <Textarea {...field} placeholder="Describe this tool..." rows={4} />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+
+                                            <FormField
+                                                control={form.control}
+                                                name="url"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>URL</FormLabel>
+                                                        <FormControl>
+                                                            <Input {...field} placeholder="https://example.com" type="url" />
+                                                        </FormControl>
+                                                        <FormDescription>External link to the tool</FormDescription>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </CardContent>
+                                    </Card>
                                 </div>
-                            </Tabs>
+
+                                {/* Right column - 2/6 */}
+                                <div className="space-y-6 lg:col-span-2">
+                                    {/* Publishing Options */}
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle>Publishing Options</CardTitle>
+                                            <CardDescription>Control tool visibility</CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            <FormField
+                                                control={form.control}
+                                                name="status"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Status</FormLabel>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <FormControl>
+                                                                <SelectTrigger>
+                                                                    <SelectValue />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent>
+                                                                <SelectItem value="active">Active</SelectItem>
+                                                                <SelectItem value="inactive">Inactive</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+
+                                            <FormField
+                                                control={form.control}
+                                                name="featured"
+                                                render={({ field }) => (
+                                                    <FormItem className="flex flex-row items-start space-y-0 space-x-3">
+                                                        <FormControl>
+                                                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                                                        </FormControl>
+                                                        <div className="space-y-1 leading-none">
+                                                            <FormLabel>Featured Tool</FormLabel>
+                                                            <FormDescription>Display this tool prominently</FormDescription>
+                                                        </div>
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </div>
                         </form>
                     </Form>
                 </div>

@@ -35,7 +35,7 @@ interface Category {
 
 export default function Index({ collections, categories }: { collections: TableConfig<PhotoCollection>; categories: Category[] }) {
     const { props } = usePage<SharedData>();
-    const breadcrumbs: BreadcrumbItem[] = [{ title: 'Photography Management', href: route('admin.photography.index') }];
+    const breadcrumbs: BreadcrumbItem[] = [{ title: 'Photography', href: route('admin.photography.index') }];
 
     const handleCustomAction = async (action: Action, keys: (string | number)[], onFinish?: () => void) => {
         const collectionId = typeof keys[0] === 'string' ? parseInt(keys[0]) : keys[0];
@@ -62,43 +62,15 @@ export default function Index({ collections, categories }: { collections: TableC
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Photography Management" />
+            <Head title="Photography" />
             <div className="flex h-full flex-col space-y-4 p-8 pt-6">
                 <div className="flex items-center justify-between space-y-2">
-                    <h2 className="text-3xl font-bold tracking-tight">Photography Management</h2>
+                    <h2 className="text-3xl font-bold tracking-tight">Photography </h2>
                     <div className="flex items-center space-x-2">
                         <Button onClick={handleCreateCollection}>
                             <PlusSquare className="mr-2 h-4 w-4" />
                             Create Collection
                         </Button>
-                    </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-3">
-                    <div className="rounded-lg border p-4">
-                        <div className="flex items-center space-x-2">
-                            <Camera className="h-5 w-5 text-blue-500" />
-                            <span className="font-medium">Total Collections</span>
-                        </div>
-                        <p className="text-2xl font-bold">{collections.results?.total || 0}</p>
-                    </div>
-                    <div className="rounded-lg border p-4">
-                        <div className="flex items-center space-x-2">
-                            <Image className="h-5 w-5 text-green-500" />
-                            <span className="font-medium">Total Photos</span>
-                        </div>
-                        <p className="text-2xl font-bold">
-                            {collections.results?.data?.reduce((sum, collection) => sum + collection.image_count, 0) || 0}
-                        </p>
-                    </div>
-                    <div className="rounded-lg border p-4">
-                        <div className="flex items-center space-x-2">
-                            <Eye className="h-5 w-5 text-purple-500" />
-                            <span className="font-medium">Published</span>
-                        </div>
-                        <p className="text-2xl font-bold">
-                            {collections.results?.data?.filter((collection) => collection.status === 'published').length || 0}
-                        </p>
                     </div>
                 </div>
 
@@ -114,14 +86,6 @@ export default function Index({ collections, categories }: { collections: TableC
                         },
                     }}
                     onCustomAction={handleCustomAction}
-                    customActions={[
-                        {
-                            id: 'manage-photos',
-                            label: 'Manage Photos',
-                            icon: 'image',
-                            variant: 'secondary' as any,
-                        },
-                    ]}
                 />
             </div>
         </AppLayout>

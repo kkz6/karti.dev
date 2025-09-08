@@ -45,7 +45,7 @@ interface PhotoCollection {
 
 export default function Edit({ collection, categories }: { collection: PhotoCollection; categories: Category[] }) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Photography Management', href: route('admin.photography.index') },
+        { title: 'Photography', href: route('admin.photography.index') },
         { title: collection.title, href: route('admin.photography.show', collection.id) },
         { title: 'Edit', href: route('admin.photography.edit', collection.id) },
     ];

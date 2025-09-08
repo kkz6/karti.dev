@@ -44,14 +44,11 @@ class AdminToolController extends BaseController
         $validated = $request->validate([
             'tool_category_id' => 'required|exists:tool_categories,id',
             'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:tools,slug',
             'description' => 'required|string',
             'url' => 'nullable|url|max:255',
             'image' => 'nullable|string|max:255',
             'featured' => 'boolean',
             'status' => 'in:active,inactive',
-            'meta_title' => 'nullable|string|max:60',
-            'meta_description' => 'nullable|string|max:160',
         ]);
 
         Tool::create($validated);
@@ -94,14 +91,11 @@ class AdminToolController extends BaseController
         $validated = $request->validate([
             'tool_category_id' => 'required|exists:tool_categories,id',
             'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:tools,slug,' . $tool->id,
             'description' => 'required|string',
             'url' => 'nullable|url|max:255',
             'image' => 'nullable|string|max:255',
             'featured' => 'boolean',
             'status' => 'in:active,inactive',
-            'meta_title' => 'nullable|string|max:60',
-            'meta_description' => 'nullable|string|max:160',
         ]);
 
         $tool->update($validated);

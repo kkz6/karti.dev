@@ -20,24 +20,10 @@ class Projects extends Table
             Columns\TextColumn::make('title', 'Title', toggleable: false)
                 ->searchable()
                 ->sortable(),
-            Columns\TextColumn::make('client', 'Client')
-                ->searchable()
-                ->sortable(),
-            Columns\DateColumn::make('start_date', 'Start Date')
-                ->sortable(),
-            Columns\DateColumn::make('end_date', 'End Date')
-                ->sortable(),
-            Columns\BadgeColumn::make('status', 'Status')
-                ->colors([
-                    'success' => 'published',
-                    'warning' => 'draft',
-                    'secondary' => 'archived',
-                ])
-                ->sortable(),
             Columns\BooleanColumn::make('featured', 'Featured')
                 ->sortable(),
             Columns\TextColumn::make('technologies', 'Technologies')
-                ->format(fn($value) => is_array($value) ? implode(', ', array_slice($value, 0, 3)) . (count($value) > 3 ? '...' : '') : ''),
+                ->mapAs(fn($value) => is_array($value) ? implode(', ', array_slice($value, 0, 3)) . (count($value) > 3 ? '...' : '') : ''),
             Columns\DateColumn::make('created_at', 'Created At', toggleable: false),
             Columns\ActionColumn::new(),
         ];
@@ -47,16 +33,7 @@ class Projects extends Table
     {
         return [
             Filters\TextFilter::make('title', 'Title'),
-            Filters\TextFilter::make('client', 'Client'),
-            Filters\SelectFilter::make('status', 'Status')
-                ->options([
-                    'draft' => 'Draft',
-                    'published' => 'Published',
-                    'archived' => 'Archived',
-                ]),
             Filters\BooleanFilter::make('featured', 'Featured'),
-            Filters\DateFilter::make('start_date', 'Start Date'),
-            Filters\DateFilter::make('end_date', 'End Date'),
         ];
     }
 

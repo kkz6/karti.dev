@@ -1,5 +1,17 @@
 import { type NavItem } from '@shared/types';
-import { BookOpen, Briefcase, Camera, FileText, Files, Folder, FolderOpen, LayoutGrid, Mic, Settings, Tags, User, Wrench } from 'lucide-react';
+import {
+    BookOpen,
+    Camera,
+    Files,
+    FileText,
+    Folder,
+    FolderOpen,
+    LayoutGrid,
+    Settings,
+    Tags,
+    User,
+    Wrench
+} from 'lucide-react';
 
 /**
  * Main navigation items for the admin panel
@@ -8,39 +20,34 @@ import { BookOpen, Briefcase, Camera, FileText, Files, Folder, FolderOpen, Layou
 export const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: '/dashboard',
+        href: route('dashboard'),
         icon: LayoutGrid,
     },
     {
         title: 'Articles',
-        href: '/admin/blog',
+        href: route('admin.blog.index'),
         icon: FileText,
         items: [
             {
                 title: 'All Articles',
-                href: '/admin/blog',
+                href: route('admin.blog.index'),
                 icon: FileText,
             },
             {
                 title: 'Categories',
-                href: '/admin/blog/categories',
+                href: route('admin.categories.index'),
                 icon: Folder,
             },
             {
                 title: 'Tags',
-                href: '/admin/blog/tags',
+                href: route('admin.tags.index'),
                 icon: Tags,
             },
         ],
     },
     {
-        title: 'Portfolio',
-        href: '/admin/portfolio',
-        icon: Briefcase,
-    },
-    {
         title: 'Photography',
-        href: '/admin/photography',
+        href: route('admin.photography.index'),
         icon: Camera,
     },
     {
@@ -50,50 +57,12 @@ export const mainNavItems: NavItem[] = [
     },
     {
         title: 'Projects',
-        href: '/admin/projects',
+        href: route('admin.projects.index'),
         icon: Files,
     },
     {
-        title: 'Speaking',
-        href: '/admin/speaking',
-        icon: Mic,
-    },
-    {
         title: 'Tools',
-        href: '/admin/tools',
+        href: route('admin.tools.index'),
         icon: Wrench,
     },
-    {
-        title: 'Profile',
-        href: '/admin/profile',
-        icon: User,
-    },
-    {
-        title: 'Settings',
-        href: '/admin/settings',
-        icon: Settings,
-    },
 ];
-
-/**
- * Footer navigation items
- * External links and documentation
- */
-export const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
-];
-
-/**
- * Right-side navigation items for header
- * External utilities and resources
- */
-export const rightNavItems: NavItem[] = footerNavItems;

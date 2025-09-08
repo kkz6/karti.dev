@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Modules\Blog\Models\Article;
 use Modules\Photography\Models\PhotoCollection;
-use Modules\Portfolio\Models\Project;
+use Modules\Projects\Models\Project;
 use Modules\Profile\Models\SpeakingEvent;
 use Modules\Profile\Models\WorkExperience;
 use Modules\Settings\Models\SiteSetting;
@@ -74,20 +74,20 @@ class PortfolioController extends BaseController
 
     public function projects()
     {
-        $projects = Project::active()
-            ->with(['technologies', 'categories'])
+        $projects = Project::published()
+            ->featured()
             ->ordered()
             ->get()
             ->map(function ($project) {
                 return [
-                    'name'        => $project->name,
-                    'description' => $project->description,
+                    'title'        => $project->title,
+                    'description' => $project->short_description ?? $project->description,
                     'link'        => [
-                        'href'  => $project->link_url ?? '#',
-                        'label' => $project->link_label ?? 'View project',
+                        'href'  => $project->project_url ?? '#',
+                        'label' => 'View project',
                     ],
-                    'logo'         => $project->logo,
-                    'technologies' => $project->technologies->pluck('name'),
+                    'image'         => $project->featured_image,
+                    'technologies' => $project->technologies,
                 ];
             });
 

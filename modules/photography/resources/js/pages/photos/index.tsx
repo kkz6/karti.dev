@@ -29,7 +29,7 @@ interface PhotoCollection {
 export default function Index({ collection, photos }: { collection: PhotoCollection; photos: TableConfig<Photo> }) {
     const { props } = usePage<SharedData>();
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Photography Management', href: route('admin.photography.index') },
+        { title: 'Photography', href: route('admin.photography.index') },
         { title: collection.title, href: route('admin.photography.show', collection.id) },
         { title: 'Photos', href: route('admin.photography.photos.index', collection.id) },
     ];
@@ -76,40 +76,6 @@ export default function Index({ collection, photos }: { collection: PhotoCollect
                     </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-4">
-                    <Card>
-                        <CardContent className="p-4">
-                            <div className="flex items-center space-x-2">
-                                <Image className="h-5 w-5 text-blue-500" />
-                                <span className="font-medium">Total Photos</span>
-                            </div>
-                            <p className="text-2xl font-bold">{photos.results?.total || 0}</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="p-4">
-                            <div className="flex items-center space-x-2">
-                                <Upload className="h-5 w-5 text-green-500" />
-                                <span className="font-medium">Total Size</span>
-                            </div>
-                            <p className="text-2xl font-bold">
-                                {photos.results?.data
-                                    ? formatTotalSize(photos.results.data.reduce((sum, photo) => sum + (photo.file_size || 0), 0))
-                                    : '0 B'}
-                            </p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="p-4">
-                            <div className="flex items-center space-x-2">
-                                <Camera className="h-5 w-5 text-purple-500" />
-                                <span className="font-medium">Collection</span>
-                            </div>
-                            <p className="truncate text-lg font-bold">{collection.title}</p>
-                        </CardContent>
-                    </Card>
-                </div>
-
                 <InertiaTableWrapper
                     resource={photos}
                     emptyState={{
@@ -126,12 +92,4 @@ export default function Index({ collection, photos }: { collection: PhotoCollect
             </div>
         </AppLayout>
     );
-}
-
-function formatTotalSize(bytes: number): string {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }

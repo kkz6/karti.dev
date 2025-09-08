@@ -21,7 +21,7 @@ interface Category {
 
 export default function Create({ categories }: { categories: Category[] }) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Photography Management', href: route('admin.photography.index') },
+        { title: 'Photography', href: route('admin.photography.index') },
         { title: 'Create Collection', href: route('admin.photography.create') },
     ];
 
