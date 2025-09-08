@@ -7,6 +7,7 @@ import { Input } from '@shared/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Textarea } from '@shared/components/ui/textarea';
+import { FormSimpleEditor } from '@shared/components/tiptap';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
 import { Save } from 'lucide-react';
@@ -52,17 +53,17 @@ export default function Create({ categories }: { categories: Category[]; }) {
     const form = useForm<ArticleFormData>({
         resolver: zodResolver(articleSchema),
         defaultValues: {
-            title: '',
-            slug: '',
-            content: '',
-            excerpt: '',
-            category_id: '',
+        title: '',
+        slug: '',
+        content: '',
+        excerpt: '',
+        category_id: '',
             tags: [],
-            status: 'draft',
-            featured_image: '',
-            meta_title: '',
-            meta_description: '',
-            published_at: '',
+        status: 'draft',
+        featured_image: '',
+        meta_title: '',
+        meta_description: '',
+        published_at: '',
         },
     });
 
@@ -98,9 +99,9 @@ export default function Create({ categories }: { categories: Category[]; }) {
                 <div className="mx-auto w-full max-w-7xl">
                     {/* Header with Actions */}
                     <div className="mb-6 flex items-center justify-between">
-                        <div>
+                    <div>
                             <h1 className="text-3xl font-bold tracking-tight">Create Article</h1>
-                        </div>
+                    </div>
                         <div className="flex items-center space-x-4">
                             <Button type="submit" form="article-form" disabled={form.formState.isSubmitting}>
                                 <Save className="mr-2 h-4 w-4" />
@@ -108,9 +109,9 @@ export default function Create({ categories }: { categories: Category[]; }) {
                             </Button>
                             <Button type="button" variant="outline" asChild>
                                 <Link href={route('admin.blog.index')}>Cancel</Link>
-                            </Button>
-                        </div>
+                        </Button>
                     </div>
+                </div>
 
                     <Form {...form}>
                         <form id="article-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -143,12 +144,12 @@ export default function Create({ categories }: { categories: Category[]; }) {
                                     <div className="lg:col-span-4">
                                         <TabsContent value="main" className="mt-0 space-y-6">
                                             {/* Basic Information */}
-                                            <Card>
-                                                <CardHeader>
+                        <Card>
+                            <CardHeader>
                                                     <CardTitle>Basic Information</CardTitle>
                                                     <CardDescription>Enter the basic details for the article</CardDescription>
-                                                </CardHeader>
-                                                <CardContent className="space-y-4">
+                            </CardHeader>
+                            <CardContent className="space-y-4">
                                                     <FormField
                                                         control={form.control}
                                                         name="title"
@@ -156,11 +157,11 @@ export default function Create({ categories }: { categories: Category[]; }) {
                                                             <FormItem>
                                                                 <FormLabel>Title *</FormLabel>
                                                                 <FormControl>
-                                                                    <Input
+                                    <Input
                                                                         {...field}
-                                                                        onChange={(e) => handleTitleChange(e.target.value)}
-                                                                        placeholder="Enter article title"
-                                                                    />
+                                        onChange={(e) => handleTitleChange(e.target.value)}
+                                        placeholder="Enter article title"
+                                    />
                                                                 </FormControl>
                                                                 <FormMessage />
                                                             </FormItem>
@@ -228,10 +229,10 @@ export default function Create({ categories }: { categories: Category[]; }) {
                                                             <FormItem>
                                                                 <FormLabel>Content *</FormLabel>
                                                                 <FormControl>
-                                                                    <Textarea
-                                                                        {...field}
+                                                                    <FormSimpleEditor
+                                                                        content={field.value}
+                                                                        onChange={field.onChange}
                                                                         placeholder="Write your article content here..."
-                                                                        rows={20}
                                                                     />
                                                                 </FormControl>
                                                                 <FormMessage />
@@ -271,10 +272,10 @@ export default function Create({ categories }: { categories: Category[]; }) {
                                                             <FormItem>
                                                                 <FormLabel>Meta Description</FormLabel>
                                                                 <FormControl>
-                                                                    <Textarea
+                                    <Textarea
                                                                         {...field}
                                                                         placeholder="Brief description for search engine results"
-                                                                        rows={3}
+                                        rows={3}
                                                                         maxLength={160}
                                                                     />
                                                                 </FormControl>
@@ -283,20 +284,20 @@ export default function Create({ categories }: { categories: Category[]; }) {
                                                             </FormItem>
                                                         )}
                                                     />
-                                                </CardContent>
-                                            </Card>
+                            </CardContent>
+                        </Card>
                                         </TabsContent>
                                     </div>
 
                                     {/* Right column - fixed - 2/6 */}
                                     <div className="space-y-6 lg:col-span-2">
                                         {/* Publication Settings */}
-                                        <Card>
-                                            <CardHeader>
-                                                <CardTitle>Publication Settings</CardTitle>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Publication Settings</CardTitle>
                                                 <CardDescription>Control article publication</CardDescription>
-                                            </CardHeader>
-                                            <CardContent className="space-y-4">
+                            </CardHeader>
+                            <CardContent className="space-y-4">
                                                 <FormField
                                                     control={form.control}
                                                     name="category_id"
@@ -305,18 +306,18 @@ export default function Create({ categories }: { categories: Category[]; }) {
                                                             <FormLabel>Category *</FormLabel>
                                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                                 <FormControl>
-                                                                    <SelectTrigger>
-                                                                        <SelectValue placeholder="Select a category" />
-                                                                    </SelectTrigger>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a category" />
+                                        </SelectTrigger>
                                                                 </FormControl>
-                                                                <SelectContent>
-                                                                    {categories.map((category) => (
-                                                                        <SelectItem key={category.id} value={category.id.toString()}>
-                                                                            {category.name}
-                                                                        </SelectItem>
-                                                                    ))}
-                                                                </SelectContent>
-                                                            </Select>
+                                        <SelectContent>
+                                            {categories.map((category) => (
+                                                <SelectItem key={category.id} value={category.id.toString()}>
+                                                    {category.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                                             <FormMessage />
                                                         </FormItem>
                                                     )}
@@ -330,16 +331,16 @@ export default function Create({ categories }: { categories: Category[]; }) {
                                                             <FormLabel>Status</FormLabel>
                                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                                 <FormControl>
-                                                                    <SelectTrigger>
-                                                                        <SelectValue />
-                                                                    </SelectTrigger>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
                                                                 </FormControl>
-                                                                <SelectContent>
-                                                                    <SelectItem value="draft">Draft</SelectItem>
-                                                                    <SelectItem value="published">Published</SelectItem>
-                                                                    <SelectItem value="archived">Archived</SelectItem>
-                                                                </SelectContent>
-                                                            </Select>
+                                        <SelectContent>
+                                            <SelectItem value="draft">Draft</SelectItem>
+                                            <SelectItem value="published">Published</SelectItem>
+                                            <SelectItem value="archived">Archived</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                                             <FormMessage />
                                                         </FormItem>
                                                     )}
@@ -359,14 +360,14 @@ export default function Create({ categories }: { categories: Category[]; }) {
                                                         </FormItem>
                                                     )}
                                                 />
-                                            </CardContent>
-                                        </Card>
-                                    </div>
-                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                            </div>
                             </Tabs>
                         </form>
                     </Form>
-                </div>
+                    </div>
             </div>
         </AppLayout>
     );

@@ -2,6 +2,10 @@
 
 @plugin 'tailwindcss-animate';
 
+/* Tiptap Editor Styles */
+@import '../js/styles/_variables.scss';
+@import '../js/styles/_keyframe-animations.scss';
+
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
