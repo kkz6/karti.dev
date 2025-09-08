@@ -23,6 +23,7 @@
         "modules/shared": "*",
         "modules/table": "*",
         "modules/tools": "*",
+        "modules/seo": "*",
         "spatie/laravel-data": "^4.17",
         "spatie/laravel-permission": "^6.21",
         "spatie/laravel-query-builder": "^6.3",

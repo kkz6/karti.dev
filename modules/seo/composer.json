@@ -2,14 +2,13 @@
     "name": "modules/seo",
     "description": "SEO management module for Laravel applications",
     "type": "library",
+    "version": "1.0.0",
+    "require": {
+        "php": "^8.1"
+    },
     "autoload": {
         "psr-4": {
             "Modules\\Seo\\": "src/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Modules\\Seo\\Tests\\": "tests/"
         }
     },
     "extra": {

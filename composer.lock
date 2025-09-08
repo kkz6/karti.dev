@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9a158de20089de78e489471c193ce489",
+    "content-hash": "4ea8cbe528998e94f72613d2d58be252",
     "packages": [
         {
             "name": "amphp/amp",
@@ -4384,6 +4384,36 @@
                 }
             },
             "description": "Projects portfolio management module",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "modules/seo",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "modules/seo",
+                "reference": "784dfbd29ce3dd9383232c19fd71dce6e3b9c5b6"
+            },
+            "require": {
+                "php": "^8.1"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Modules\\Seo\\Providers\\SeoServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Modules\\Seo\\": "src/"
+                }
+            },
+            "description": "SEO management module for Laravel applications",
             "transport-options": {
                 "symlink": true,
                 "relative": true
