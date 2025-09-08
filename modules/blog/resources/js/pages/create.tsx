@@ -1,14 +1,39 @@
-import { Head, useForm } from '@inertiajs/react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Head, Link, router } from '@inertiajs/react';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@shared/components/ui/form';
 import { Input } from '@shared/components/ui/input';
-import { Label } from '@shared/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Textarea } from '@shared/components/ui/textarea';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
-import { ArrowLeft, Save } from 'lucide-react';
-import { FormEventHandler } from 'react';
+import { Save } from 'lucide-react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+
+// Zod schema for article form validation
+const articleSchema = z.object({
+    title: z.string().min(1, 'Title is required').max(255, 'Title must be less than 255 characters'),
+    slug: z
+        .string()
+        .min(1, 'Slug is required')
+        .max(255, 'Slug must be less than 255 characters')
+        .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase and contain only letters, numbers, and hyphens'),
+    content: z.string().min(1, 'Content is required'),
+    excerpt: z.string().optional(),
+    category_id: z.string().min(1, 'Category is required'),
+    tags: z.array(z.number()).optional(),
+    status: z.enum(['draft', 'published', 'archived']),
+    featured_image: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+    meta_title: z.string().max(60, 'Meta title must be less than 60 characters').optional(),
+    meta_description: z.string().max(160, 'Meta description must be less than 160 characters').optional(),
+    published_at: z.string().optional(),
+});
+
+type ArticleFormData = z.infer<typeof articleSchema>;
 
 interface Category {
     id: number;
@@ -22,230 +47,326 @@ export default function Create({ categories }: { categories: Category[]; }) {
         { title: 'Create Article', href: route('admin.blog.create') },
     ];
 
-    const { data, setData, post, processing, errors } = useForm({
-        title: '',
-        slug: '',
-        content: '',
-        excerpt: '',
-        category_id: '',
-        tags: [] as number[],
-        status: 'draft',
-        featured_image: '',
-        meta_title: '',
-        meta_description: '',
-        published_at: '',
+    const [activeTab, setActiveTab] = useState('main');
+
+    const form = useForm<ArticleFormData>({
+        resolver: zodResolver(articleSchema),
+        defaultValues: {
+            title: '',
+            slug: '',
+            content: '',
+            excerpt: '',
+            category_id: '',
+            tags: [],
+            status: 'draft',
+            featured_image: '',
+            meta_title: '',
+            meta_description: '',
+            published_at: '',
+        },
     });
 
-    const submit: FormEventHandler = (e) => {
-        e.preventDefault();
-        post(route('admin.blog.store'));
-    };
-
-    const generateSlug = (title: string) => {
-        return title
-            .toLowerCase()
-            .trim()
-            .replace(/[^\w\s-]/g, '') // Remove special characters
-            .replace(/[\s_-]+/g, '-') // Replace spaces and underscores with hyphens
-            .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
-    };
-
-    const handleTitleChange = (value: string) => {
-        setData('title', value);
-        if (!data.slug) {
-            setData('slug', generateSlug(value));
+    const handleTitleChange = (title: string) => {
+        form.setValue('title', title);
+        // Auto-generate slug from title
+        const currentSlug = form.getValues('slug');
+        if (!currentSlug || currentSlug === generateSlug(form.watch('title'))) {
+            form.setValue('slug', generateSlug(title));
         }
+    };
+
+    const generateSlug = (text: string) => {
+        return text
+            .toLowerCase()
+            .replace(/[^a-z0-9 -]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-')
+            .trim();
+    };
+
+    const onSubmit = (data: ArticleFormData) => {
+        router.post(route('admin.blog.store'), data, {
+            preserveState: true,
+            preserveScroll: true,
+        });
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create Article" />
-            <div className="flex h-full flex-col space-y-4 p-8 pt-6">
-                <div className="flex items-center justify-between space-y-2">
-                    <div>
-                        <h2 className="text-3xl font-bold tracking-tight">Create Article</h2>
-                        <p className="text-muted-foreground">Create a new blog article.</p>
+            <div className="flex h-full flex-col space-y-6 p-8 pt-6">
+                <div className="mx-auto w-full max-w-7xl">
+                    {/* Header with Actions */}
+                    <div className="mb-6 flex items-center justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold tracking-tight">Create Article</h1>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                            <Button type="submit" form="article-form" disabled={form.formState.isSubmitting}>
+                                <Save className="mr-2 h-4 w-4" />
+                                {form.formState.isSubmitting ? 'Creating...' : 'Create Article'}
+                            </Button>
+                            <Button type="button" variant="outline" asChild>
+                                <Link href={route('admin.blog.index')}>Cancel</Link>
+                            </Button>
+                        </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                        <Button variant="outline" asChild>
-                            <a href={route('admin.blog.index')}>
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back to Articles
-                            </a>
-                        </Button>
-                    </div>
+
+                    <Form {...form}>
+                        <form id="article-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                            {/* Tabs Header */}
+                            <Tabs defaultValue="main" value={activeTab} onValueChange={setActiveTab} className="w-full">
+                                <TabsList className="border-border text-foreground h-auto gap-2 rounded-none border-b bg-transparent px-0 py-1">
+                                    <TabsTrigger
+                                        value="main"
+                                        className="hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                                    >
+                                        Main
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="content"
+                                        className="hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                                    >
+                                        Content
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="seo"
+                                        className="hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                                    >
+                                        SEO
+                                    </TabsTrigger>
+                                </TabsList>
+
+                                {/* Content Grid */}
+                                <div className="mt-6 grid gap-8 lg:grid-cols-6">
+                                    {/* Left column with tab content - 4/6 */}
+                                    <div className="lg:col-span-4">
+                                        <TabsContent value="main" className="mt-0 space-y-6">
+                                            {/* Basic Information */}
+                                            <Card>
+                                                <CardHeader>
+                                                    <CardTitle>Basic Information</CardTitle>
+                                                    <CardDescription>Enter the basic details for the article</CardDescription>
+                                                </CardHeader>
+                                                <CardContent className="space-y-4">
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="title"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Title *</FormLabel>
+                                                                <FormControl>
+                                                                    <Input
+                                                                        {...field}
+                                                                        onChange={(e) => handleTitleChange(e.target.value)}
+                                                                        placeholder="Enter article title"
+                                                                    />
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="slug"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Slug *</FormLabel>
+                                                                <FormControl>
+                                                                    <Input {...field} placeholder="article-slug" />
+                                                                </FormControl>
+                                                                <FormDescription>Used in URLs. Auto-generated from title.</FormDescription>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="excerpt"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Excerpt</FormLabel>
+                                                                <FormControl>
+                                                                    <Textarea {...field} placeholder="Brief description of the article" rows={3} />
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="featured_image"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Featured Image URL</FormLabel>
+                                                                <FormControl>
+                                                                    <Input {...field} placeholder="https://example.com/image.jpg" type="url" />
+                                                                </FormControl>
+                                                                <FormDescription>URL of the featured image for this article</FormDescription>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                </CardContent>
+                                            </Card>
+                                        </TabsContent>
+
+                                        <TabsContent value="content" className="mt-0 space-y-6">
+                                            <Card>
+                                                <CardHeader>
+                                                    <CardTitle>Article Content</CardTitle>
+                                                    <CardDescription>Write the main content of your article</CardDescription>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="content"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Content *</FormLabel>
+                                                                <FormControl>
+                                                                    <Textarea
+                                                                        {...field}
+                                                                        placeholder="Write your article content here..."
+                                                                        rows={20}
+                                                                    />
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                </CardContent>
+                                            </Card>
+                                        </TabsContent>
+
+                                        <TabsContent value="seo" className="mt-0 space-y-6">
+                                            <Card>
+                                                <CardHeader>
+                                                    <CardTitle>SEO Settings</CardTitle>
+                                                    <CardDescription>Optimize your content for search engines</CardDescription>
+                                                </CardHeader>
+                                                <CardContent className="space-y-4">
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="meta_title"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Meta Title</FormLabel>
+                                                                <FormControl>
+                                                                    <Input {...field} placeholder="SEO title for search engines" maxLength={60} />
+                                                                </FormControl>
+                                                                <FormDescription>{(field.value || '').length}/60 characters</FormDescription>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="meta_description"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Meta Description</FormLabel>
+                                                                <FormControl>
+                                                                    <Textarea
+                                                                        {...field}
+                                                                        placeholder="Brief description for search engine results"
+                                                                        rows={3}
+                                                                        maxLength={160}
+                                                                    />
+                                                                </FormControl>
+                                                                <FormDescription>{(field.value || '').length}/160 characters</FormDescription>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                </CardContent>
+                                            </Card>
+                                        </TabsContent>
+                                    </div>
+
+                                    {/* Right column - fixed - 2/6 */}
+                                    <div className="space-y-6 lg:col-span-2">
+                                        {/* Publication Settings */}
+                                        <Card>
+                                            <CardHeader>
+                                                <CardTitle>Publication Settings</CardTitle>
+                                                <CardDescription>Control article publication</CardDescription>
+                                            </CardHeader>
+                                            <CardContent className="space-y-4">
+                                                <FormField
+                                                    control={form.control}
+                                                    name="category_id"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Category *</FormLabel>
+                                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                                <FormControl>
+                                                                    <SelectTrigger>
+                                                                        <SelectValue placeholder="Select a category" />
+                                                                    </SelectTrigger>
+                                                                </FormControl>
+                                                                <SelectContent>
+                                                                    {categories.map((category) => (
+                                                                        <SelectItem key={category.id} value={category.id.toString()}>
+                                                                            {category.name}
+                                                                        </SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+
+                                                <FormField
+                                                    control={form.control}
+                                                    name="status"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Status</FormLabel>
+                                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                                <FormControl>
+                                                                    <SelectTrigger>
+                                                                        <SelectValue />
+                                                                    </SelectTrigger>
+                                                                </FormControl>
+                                                                <SelectContent>
+                                                                    <SelectItem value="draft">Draft</SelectItem>
+                                                                    <SelectItem value="published">Published</SelectItem>
+                                                                    <SelectItem value="archived">Archived</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+
+                                                <FormField
+                                                    control={form.control}
+                                                    name="published_at"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Publish Date</FormLabel>
+                                                            <FormControl>
+                                                                <Input {...field} type="datetime-local" />
+                                                            </FormControl>
+                                                            <FormDescription>Leave empty to publish immediately</FormDescription>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+                                </div>
+                            </Tabs>
+                        </form>
+                    </Form>
                 </div>
-
-                <form onSubmit={submit} className="space-y-6">
-                    <div className="grid gap-6 md:grid-cols-2">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Article Details</CardTitle>
-                                <CardDescription>Basic information about the article.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="title">Title</Label>
-                                    <Input
-                                        id="title"
-                                        value={data.title}
-                                        onChange={(e) => handleTitleChange(e.target.value)}
-                                        error={errors.title}
-                                        placeholder="Enter article title"
-                                    />
-                                    {errors.title && <div className="text-sm text-red-600">{errors.title}</div>}
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="slug">Slug</Label>
-                                    <Input
-                                        id="slug"
-                                        value={data.slug}
-                                        onChange={(e) => setData('slug', e.target.value)}
-                                        error={errors.slug}
-                                        placeholder="article-slug"
-                                    />
-                                    {errors.slug && <div className="text-sm text-red-600">{errors.slug}</div>}
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="excerpt">Excerpt</Label>
-                                    <Textarea
-                                        id="excerpt"
-                                        value={data.excerpt}
-                                        onChange={(e) => setData('excerpt', e.target.value)}
-                                        placeholder="Brief description of the article"
-                                        rows={3}
-                                    />
-                                    {errors.excerpt && <div className="text-sm text-red-600">{errors.excerpt}</div>}
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="featured_image">Featured Image URL</Label>
-                                    <Input
-                                        id="featured_image"
-                                        value={data.featured_image}
-                                        onChange={(e) => setData('featured_image', e.target.value)}
-                                        placeholder="https://example.com/image.jpg"
-                                    />
-                                    {errors.featured_image && <div className="text-sm text-red-600">{errors.featured_image}</div>}
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Publication Settings</CardTitle>
-                                <CardDescription>Control when and how the article is published.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="category_id">Category</Label>
-                                    <Select value={data.category_id} onValueChange={(value) => setData('category_id', value)}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select a category" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {categories.map((category) => (
-                                                <SelectItem key={category.id} value={category.id.toString()}>
-                                                    {category.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    {errors.category_id && <div className="text-sm text-red-600">{errors.category_id}</div>}
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="status">Status</Label>
-                                    <Select value={data.status} onValueChange={(value) => setData('status', value)}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="draft">Draft</SelectItem>
-                                            <SelectItem value="published">Published</SelectItem>
-                                            <SelectItem value="archived">Archived</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    {errors.status && <div className="text-sm text-red-600">{errors.status}</div>}
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="published_at">Publish Date</Label>
-                                    <Input
-                                        id="published_at"
-                                        type="datetime-local"
-                                        value={data.published_at}
-                                        onChange={(e) => setData('published_at', e.target.value)}
-                                    />
-                                    {errors.published_at && <div className="text-sm text-red-600">{errors.published_at}</div>}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Content</CardTitle>
-                            <CardDescription>The main content of the article.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid gap-2">
-                                <Label htmlFor="content">Content</Label>
-                                <Textarea
-                                    id="content"
-                                    value={data.content}
-                                    onChange={(e) => setData('content', e.target.value)}
-                                    placeholder="Write your article content here..."
-                                    rows={15}
-                                />
-                                {errors.content && <div className="text-sm text-red-600">{errors.content}</div>}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>SEO Settings</CardTitle>
-                            <CardDescription>Search engine optimization settings.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="meta_title">Meta Title</Label>
-                                <Input
-                                    id="meta_title"
-                                    value={data.meta_title}
-                                    onChange={(e) => setData('meta_title', e.target.value)}
-                                    placeholder="SEO title for search engines"
-                                />
-                                {errors.meta_title && <div className="text-sm text-red-600">{errors.meta_title}</div>}
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="meta_description">Meta Description</Label>
-                                <Textarea
-                                    id="meta_description"
-                                    value={data.meta_description}
-                                    onChange={(e) => setData('meta_description', e.target.value)}
-                                    placeholder="SEO description for search engines"
-                                    rows={3}
-                                />
-                                {errors.meta_description && <div className="text-sm text-red-600">{errors.meta_description}</div>}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <div className="flex justify-end space-x-2">
-                        <Button type="button" variant="outline" onClick={() => window.history.back()}>
-                            Cancel
-                        </Button>
-                        <Button type="submit" disabled={processing}>
-                            <Save className="mr-2 h-4 w-4" />
-                            Create Article
-                        </Button>
-                    </div>
-                </form>
             </div>
         </AppLayout>
     );
