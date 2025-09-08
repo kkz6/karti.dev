@@ -261,7 +261,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
             )}
 
             <div className="asset-browser-main flex min-h-0 flex-1 flex-col">
-                <div className="asset-browser-header shrink-0 rounded-t-lg bg-gray-50 p-4 dark:bg-gray-800">
+                <div className="asset-browser-header shrink-0 bg-gray-50 p-4 dark:bg-gray-800">
                     <div className="mb-4 flex items-center justify-between">
                         <h1 className="flex items-center gap-2 text-xl font-semibold">
                             {isSearching ? 'Search Results' : restrictNavigation ? folder?.title || folder?.path : container?.title}

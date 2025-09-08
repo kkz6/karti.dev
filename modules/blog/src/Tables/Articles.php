@@ -16,7 +16,7 @@ class Articles extends Table
     public function columns(): array
     {
         return [
-            Columns\TextColumn::make('id', 'ID', stickable: true)->url(fn(Article $article) => route('admin.blog.edit', ['blog' => $article->slug])),
+            Columns\TextColumn::make('id', 'ID', stickable: true)->url(fn(Article $article) => route('admin.blog.edit', ['blog' => $article->slug ?: $article->id])),
             Columns\TextColumn::make('title', 'Title', toggleable: false)->searchable(),
             Columns\TextColumn::make('slug', 'Slug', toggleable: false)->sortable(),
             Columns\TextColumn::make('status', 'Status', toggleable: false),

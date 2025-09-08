@@ -41,8 +41,8 @@ export default function Edit({ category }: { category: Category }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Blog Management', href: route('admin.blog.index') },
         { title: 'Categories', href: route('admin.categories.index') },
-        { title: category.name, href: route('admin.categories.show', { category: category.slug }) },
-        { title: 'Edit', href: route('admin.categories.edit', { category: category.slug }) },
+        { title: category.name, href: route('admin.categories.show', { category: category.slug || category.id }) },
+        { title: 'Edit', href: route('admin.categories.edit', { category: category.slug || category.id }) },
     ];
 
     const [activeTab, setActiveTab] = useState('main');
@@ -59,7 +59,7 @@ export default function Edit({ category }: { category: Category }) {
     });
 
     const onSubmit = (data: CategoryFormData) => {
-        router.put(route('admin.categories.update', { category: category.slug }), data, {
+        router.put(route('admin.categories.update', { category: category.slug || category.id }), data, {
             preserveState: true,
             preserveScroll: true,
         });
@@ -67,7 +67,7 @@ export default function Edit({ category }: { category: Category }) {
 
     const handleDelete = () => {
         if (confirm(`Are you sure you want to delete "${category.name}"?`)) {
-            router.delete(route('admin.categories.destroy', { category: category.slug }), {
+            router.delete(route('admin.categories.destroy', { category: category.slug || category.id }), {
                 onSuccess: () => {
                     // Redirect will be handled by the controller
                 },

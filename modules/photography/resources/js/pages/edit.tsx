@@ -46,8 +46,8 @@ interface PhotoCollection {
 export default function Edit({ collection, categories }: { collection: PhotoCollection; categories: Category[] }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Photography', href: route('admin.photography.index') },
-        { title: collection.title, href: route('admin.photography.show', { photography: collection.slug }) },
-        { title: 'Edit', href: route('admin.photography.edit', { photography: collection.slug }) },
+        { title: collection.title, href: route('admin.photography.show', { photography: collection.slug || collection.id }) },
+        { title: 'Edit', href: route('admin.photography.edit', { photography: collection.slug || collection.id }) },
     ];
 
     const { data, setData, put, processing, errors } = useForm({
@@ -88,7 +88,7 @@ export default function Edit({ collection, categories }: { collection: PhotoColl
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        put(route('admin.photography.update', { photography: collection.slug }));
+        put(route('admin.photography.update', { photography: collection.slug || collection.id }));
     };
 
     const generateSlug = (title: string) => {
