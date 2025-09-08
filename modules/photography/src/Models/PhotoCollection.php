@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Blog\Models\Category;
+use Modules\Seo\Traits\HasSeo;
 
 class PhotoCollection extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasSeo;
 
     protected $fillable = [
         'title',
@@ -22,8 +23,6 @@ class PhotoCollection extends Model
         'featured',
         'sort_order',
         'published_at',
-        'meta_title',
-        'meta_description',
     ];
 
     protected $casts = [

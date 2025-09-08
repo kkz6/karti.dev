@@ -7,17 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Seo\Traits\HasSeo;
 
 class Category extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasSeo;
 
     protected $fillable = [
         'name',
         'slug',
         'description',
-        'meta_title',
-        'meta_description',
         'sort_order',
         'is_active',
     ];

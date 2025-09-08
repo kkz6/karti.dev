@@ -60,15 +60,19 @@ class AdminBlogController extends BaseController
             'tags.*'           => 'exists:tags,id',
             'status'           => 'required|in:draft,published,archived',
             'featured_image'   => 'nullable|array',
-            'meta_title'       => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string|max:500',
+            'seo'              => 'nullable|array',
+            'seo.title'        => 'nullable|string|max:255',
+            'seo.description'  => 'nullable|string|max:500',
+            'seo.author'       => 'nullable|string|max:255',
+            'seo.image'        => 'nullable|string|max:500',
+            'seo.robots'       => 'nullable|string|max:100',
             'published_at'     => 'nullable|date',
         ]);
 
         // Process featured image from asset field
         $featuredImageData = $validated['featured_image'] ?? [];
         $featuredImageUrl = null;
-        
+
         if (!empty($featuredImageData) && is_array($featuredImageData)) {
             // Extract the URL from the first asset
             $firstAsset = $featuredImageData[0] ?? null;
@@ -88,6 +92,11 @@ class AdminBlogController extends BaseController
 
         if (! empty($validated['tags'])) {
             $article->tags()->sync($validated['tags']);
+        }
+
+        // Handle SEO data
+        if (! empty($validated['seo'])) {
+            $article->updateSeo($validated['seo']);
         }
 
         return redirect()
@@ -130,7 +139,7 @@ class AdminBlogController extends BaseController
     {
         $validated = $request->validate([
             'title'            => 'required|string|max:255',
-            'slug'             => 'required|string|max:255|unique:articles,slug,'.$article->id,
+            'slug'             => 'required|string|max:255|unique:articles,slug,' . $article->id,
             'content'          => 'required|string',
             'excerpt'          => 'nullable|string|max:500',
             'category_id'      => 'required|exists:categories,id',
@@ -146,7 +155,7 @@ class AdminBlogController extends BaseController
         // Process featured image from asset field
         $featuredImageData = $validated['featured_image'] ?? [];
         $featuredImageUrl = null;
-        
+
         if (!empty($featuredImageData) && is_array($featuredImageData)) {
             // Extract the URL from the first asset
             $firstAsset = $featuredImageData[0] ?? null;

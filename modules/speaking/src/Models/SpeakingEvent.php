@@ -5,10 +5,11 @@ namespace Modules\Speaking\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Seo\Traits\HasSeo;
 
 class SpeakingEvent extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasSeo;
 
     protected $fillable = [
         'title',
@@ -23,8 +24,6 @@ class SpeakingEvent extends Model
         'featured',
         'sort_order',
         'status',
-        'meta_title',
-        'meta_description',
     ];
 
     protected $casts = [

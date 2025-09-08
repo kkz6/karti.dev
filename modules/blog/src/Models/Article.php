@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Seo\Traits\HasSeo;
 
 class Article extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasSeo;
 
     protected $fillable = [
         'title',
@@ -23,8 +24,6 @@ class Article extends Model
         'author_email',
         'status',
         'published_at',
-        'meta_title',
-        'meta_description',
         'reading_time_minutes',
         'category_id',
         'user_id',
@@ -86,6 +85,6 @@ class Article extends Model
             return $value;
         }
 
-        return substr(strip_tags($this->content), 0, 160).'...';
+        return substr(strip_tags($this->content), 0, 160) . '...';
     }
 }
