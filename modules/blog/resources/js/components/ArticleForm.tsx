@@ -1,9 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, Link, router } from '@inertiajs/react';
+import { format } from 'date-fns';
 import { Button } from '@shared/components/ui/button';
+import { Calendar } from '@shared/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@shared/components/ui/form';
 import { Input } from '@shared/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@shared/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Textarea } from '@shared/components/ui/textarea';
@@ -11,10 +14,11 @@ import { FormSimpleEditor } from '@shared/components/tiptap';
 import { SimpleAssetsField } from '@media/components/Field/SimpleAssetsField';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
-import { Save, Trash2 } from 'lucide-react';
+import { CalendarIcon, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { cn } from '@shared/lib/utils';
 
 // Zod schema for article form validation
 const articleSchema = z.object({
@@ -32,7 +36,7 @@ const articleSchema = z.object({
     featured_image: z.array(z.any()).optional(),
     meta_title: z.string().max(60, 'Meta title must be less than 60 characters').optional(),
     meta_description: z.string().max(160, 'Meta description must be less than 160 characters').optional(),
-    published_at: z.string().optional(),
+    published_at: z.date().optional(),
 });
 
 type ArticleFormData = z.infer<typeof articleSchema>;
@@ -103,7 +107,7 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
             featured_image: article?.featured_image ? [{ url: article.featured_image }] : [],
             meta_title: article?.meta_title || '',
             meta_description: article?.meta_description || '',
-            published_at: article?.published_at ? new Date(article.published_at).toISOString().slice(0, 16) : '',
+            published_at: article?.published_at ? new Date(article.published_at) : undefined,
         },
     });
 
@@ -126,13 +130,19 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
     };
 
     const onSubmit = (data: ArticleFormData) => {
+        // Format the data for the backend
+        const formattedData = {
+            ...data,
+            published_at: data.published_at ? format(data.published_at, "yyyy-MM-dd HH:mm:ss") : null,
+        };
+
         if (isEditing) {
-            router.put(route('admin.blog.update', { blog: article.slug || article.id }), data, {
+            router.put(route('admin.blog.update', { blog: article.slug || article.id }), formattedData, {
                 preserveState: true,
                 preserveScroll: true,
             });
         } else {
-            router.post(route('admin.blog.store'), data, {
+            router.post(route('admin.blog.store'), formattedData, {
                 preserveState: true,
                 preserveScroll: true,
             });
@@ -423,11 +433,48 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
                                                     control={form.control}
                                                     name="published_at"
                                                     render={({ field }) => (
-                                                        <FormItem>
+                                                        <FormItem className="flex flex-col">
                                                             <FormLabel>Publish Date</FormLabel>
-                                                            <FormControl>
-                                                                <Input {...field} type="datetime-local" />
-                                                            </FormControl>
+                                                            <Popover>
+                                                                <PopoverTrigger asChild>
+                                                                    <FormControl>
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            className={cn(
+                                                                                "w-full justify-start text-left font-normal",
+                                                                                !field.value && "text-muted-foreground"
+                                                                            )}
+                                                                        >
+                                                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                                                            {field.value ? (
+                                                                                format(field.value, "PPP p")
+                                                                            ) : (
+                                                                                <span>Pick a publish date</span>
+                                                                            )}
+                                                                        </Button>
+                                                                    </FormControl>
+                                                                </PopoverTrigger>
+                                                                <PopoverContent className="w-auto p-0" align="start">
+                                                                    <Calendar
+                                                                        mode="single"
+                                                                        selected={field.value}
+                                                                        onSelect={field.onChange}
+                                                                        initialFocus
+                                                                    />
+                                                                    {field.value && (
+                                                                        <div className="p-3 border-t">
+                                                                            <Button
+                                                                                variant="outline"
+                                                                                size="sm"
+                                                                                className="w-full"
+                                                                                onClick={() => field.onChange(undefined)}
+                                                                            >
+                                                                                Clear Date
+                                                                            </Button>
+                                                                        </div>
+                                                                    )}
+                                                                </PopoverContent>
+                                                            </Popover>
                                                             <FormDescription>Leave empty to publish immediately</FormDescription>
                                                             <FormMessage />
                                                         </FormItem>
