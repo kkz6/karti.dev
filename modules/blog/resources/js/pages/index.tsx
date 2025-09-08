@@ -1,12 +1,10 @@
-import { Head, usePage } from '@inertiajs/react';
-import { Alert, AlertDescription } from '@shared/components/ui/alert';
+import { Head } from '@inertiajs/react';
 import { Button } from '@shared/components/ui/button';
 import AppLayout from '@shared/layouts/app-layout';
-import { SharedData, type BreadcrumbItem } from '@shared/types';
+import { type BreadcrumbItem } from '@shared/types';
 import { InertiaTableWrapper, type Action, type TableConfig } from '@table/components';
-import { FileText, PenTool, PlusSquare, Tags } from 'lucide-react';
+import { FileText, PenTool, PlusSquare } from 'lucide-react';
 
-// Local interfaces for the blog admin
 interface Article {
     id: number;
     title: string;
@@ -42,14 +40,7 @@ interface Category {
     slug: string;
 }
 
-interface Tag {
-    id: number;
-    name: string;
-    slug: string;
-}
-
-export default function Index({ articles, categories, tags }: { articles: TableConfig<Article>; categories: Category[]; tags: Tag[] }) {
-    const { props } = usePage<SharedData>();
+export default function Index({ articles, categories }: { articles: TableConfig<Article>; categories: Category[] }) {
     const breadcrumbs: BreadcrumbItem[] = [{ title: 'Blog Management', href: route('admin.blog.index') }];
 
     const handleCustomAction = async (action: Action, keys: (string | number)[], onFinish?: () => void) => {
@@ -82,39 +73,6 @@ export default function Index({ articles, categories, tags }: { articles: TableC
                         <Button onClick={handleCreateArticle} disabled={categories.length === 0}>
                             Create Article
                         </Button>
-                    </div>
-                </div>
-
-                {categories.length === 0 && (
-                    <Alert className="mb-4">
-                        <AlertDescription>
-                            No categories found. You need at least one category to create articles. Please create categories first before adding
-                            articles.
-                        </AlertDescription>
-                    </Alert>
-                )}
-
-                <div className="grid gap-4 md:grid-cols-3">
-                    <div className="rounded-lg border p-4">
-                        <div className="flex items-center space-x-2">
-                            <FileText className="h-5 w-5 text-blue-500" />
-                            <span className="font-medium">Total Articles</span>
-                        </div>
-                        <p className="text-2xl font-bold">{articles.results?.total || 0}</p>
-                    </div>
-                    <div className="rounded-lg border p-4">
-                        <div className="flex items-center space-x-2">
-                            <PenTool className="h-5 w-5 text-green-500" />
-                            <span className="font-medium">Categories</span>
-                        </div>
-                        <p className="text-2xl font-bold">{categories.length}</p>
-                    </div>
-                    <div className="rounded-lg border p-4">
-                        <div className="flex items-center space-x-2">
-                            <Tags className="h-5 w-5 text-purple-500" />
-                            <span className="font-medium">Tags</span>
-                        </div>
-                        <p className="text-2xl font-bold">{tags.length}</p>
                     </div>
                 </div>
 

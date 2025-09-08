@@ -10,16 +10,15 @@ use Modules\Blog\Models\Category;
 use Modules\Blog\Tables\Categories;
 use Modules\Shared\Http\Controllers\BaseController;
 
-class AdminCategoryController extends BaseController
+class CategoryController extends BaseController
 {
     /**
      * Display a listing of categories.
      */
-    public function index(Request $request): Response
+    public function index(): Response
     {
         return Inertia::render('blog::categories/index', [
-            'table' => Categories::make($request->all()),
-            'filters' => $request->all(),
+            'categories' => Categories::make(),
         ]);
     }
 
@@ -81,8 +80,8 @@ class AdminCategoryController extends BaseController
     public function update(Request $request, Category $category): RedirectResponse
     {
         $validated = $request->validate([
-            'name'             => 'required|string|max:255|unique:categories,name,' . $category->id,
-            'slug'             => 'required|string|max:255|unique:categories,slug,' . $category->id,
+            'name'             => 'required|string|max:255|unique:categories,name,'.$category->id,
+            'slug'             => 'required|string|max:255|unique:categories,slug,'.$category->id,
             'description'      => 'nullable|string|max:500',
             'meta_title'       => 'nullable|string|max:60',
             'meta_description' => 'nullable|string|max:160',

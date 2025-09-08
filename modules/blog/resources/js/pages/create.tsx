@@ -6,7 +6,7 @@ import { Label } from '@shared/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components/ui/select';
 import { Textarea } from '@shared/components/ui/textarea';
 import AppLayout from '@shared/layouts/app-layout';
-import { SharedData, type BreadcrumbItem } from '@shared/types';
+import { type BreadcrumbItem } from '@shared/types';
 import { ArrowLeft, Save } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
@@ -16,13 +16,7 @@ interface Category {
     slug: string;
 }
 
-interface Tag {
-    id: number;
-    name: string;
-    slug: string;
-}
-
-export default function Create({ categories, tags }: { categories: Category[]; tags: Tag[] }) {
+export default function Create({ categories }: { categories: Category[]; }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Blog Management', href: route('admin.blog.index') },
         { title: 'Create Article', href: route('admin.blog.create') },

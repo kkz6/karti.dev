@@ -24,8 +24,6 @@ export default function Index({ tags }: { tags: TableConfig<Tag> }) {
     ];
 
     const handleCustomAction = async (action: Action, keys: (string | number)[], onFinish?: () => void) => {
-        // The table component handles actions automatically via the table configuration
-        // This is only needed for custom actions not defined in the table
         if (onFinish) onFinish();
     };
 
@@ -51,25 +49,6 @@ export default function Index({ tags }: { tags: TableConfig<Tag> }) {
                     </div>
                 </div>
 
-                {/* Stats Cards */}
-                <div className="grid gap-4 md:grid-cols-2">
-                    <div className="rounded-lg border p-4">
-                        <div className="flex items-center space-x-2">
-                            <TagsIcon className="h-5 w-5 text-purple-500" />
-                            <span className="font-medium">Total Tags</span>
-                        </div>
-                        <p className="text-2xl font-bold">{tags.results?.total || 0}</p>
-                    </div>
-                    <div className="rounded-lg border p-4">
-                        <div className="flex items-center space-x-2">
-                            <Tag className="h-5 w-5 text-blue-500" />
-                            <span className="font-medium">Tagged Articles</span>
-                        </div>
-                        <p className="text-2xl font-bold">{tags.results?.data?.reduce((acc, tag) => acc + (tag.articles_count || 0), 0) || 0}</p>
-                    </div>
-                </div>
-
-                {/* Table */}
                 <InertiaTableWrapper
                     resource={tags}
                     emptyState={{

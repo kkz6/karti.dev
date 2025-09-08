@@ -1,4 +1,4 @@
-import { type NavItem } from '@/types';
+import { type NavItem } from '@shared/types';
 import { Link, usePage } from '@inertiajs/react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@shared/components/ui/collapsible';
 import {

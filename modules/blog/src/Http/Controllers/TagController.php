@@ -10,7 +10,7 @@ use Modules\Blog\Models\Tag;
 use Modules\Blog\Tables\Tags;
 use Modules\Shared\Http\Controllers\BaseController;
 
-class AdminTagController extends BaseController
+class TagController extends BaseController
 {
     /**
      * Display a listing of tags.

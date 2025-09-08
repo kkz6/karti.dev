@@ -2,6 +2,7 @@
 
 namespace Modules\Blog\Tables;
 
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Modules\Blog\Models\Category;
 use Modules\Table\Action;
 use Modules\Table\Columns;
@@ -13,7 +14,7 @@ class Categories extends Table
 {
     protected ?string $resource = Category::class;
 
-    public function resource(): \Illuminate\Contracts\Database\Eloquent\Builder|string
+    public function resource(): Builder|string
     {
         return Category::withCount('articles');
     }
@@ -21,7 +22,8 @@ class Categories extends Table
     public function columns(): array
     {
         return [
-            Columns\TextColumn::make('id', 'ID', stickable: true)->url(fn(Category $category) => route('admin.categories.show', $category)),
+            Columns\TextColumn::make('id', 'ID', stickable: true)
+                ->url(fn (Category $category) => route('admin.categories.show', $category)),
             Columns\TextColumn::make('name', 'Name', toggleable: false)
                 ->searchable()
                 ->sortable(),
@@ -50,13 +52,13 @@ class Categories extends Table
         return [
             Action::make(
                 label: 'Edit',
-                url: fn(Category $category) => route('admin.categories.edit', $category),
+                url: fn (Category $category) => route('admin.categories.edit', $category),
                 icon: 'pencil',
                 variant: Variant::Secondary,
             ),
             Action::make(
                 label: 'View',
-                url: fn(Category $category) => route('admin.categories.show', $category),
+                url: fn (Category $category) => route('admin.categories.show', $category),
                 icon: 'eye',
                 variant: Variant::Secondary,
             ),
@@ -67,6 +69,7 @@ class Categories extends Table
                         return back()->with('error', 'Cannot delete category with existing articles.');
                     }
                     $category->delete();
+
                     return back()->with('success', 'Category deleted successfully.');
                 },
                 icon: 'trash',
