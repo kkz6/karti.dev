@@ -13,7 +13,7 @@ use Modules\Blog\Models\Tag;
 use Modules\Blog\Tables\Articles;
 use Modules\Shared\Http\Controllers\BaseController;
 
-class AdminBlogController extends BaseController
+class BlogController extends BaseController
 {
     /**
      * Display a listing of articles.
@@ -102,18 +102,6 @@ class AdminBlogController extends BaseController
         return redirect()
             ->route('admin.blog.index')
             ->with('success', 'Article created successfully.');
-    }
-
-    /**
-     * Display the specified article.
-     */
-    public function show(Article $article): Response
-    {
-        $article->load(['category', 'tags', 'user', 'comments.user']);
-
-        return Inertia::render('blog::show', [
-            'article' => $article,
-        ]);
     }
 
     /**

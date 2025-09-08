@@ -12,7 +12,7 @@ use Modules\Seo\Traits\HasSeo;
 
 class Article extends Model
 {
-    use HasFactory, SoftDeletes, HasSeo;
+    use HasFactory, HasSeo, SoftDeletes;
 
     protected $fillable = [
         'title',
@@ -85,6 +85,6 @@ class Article extends Model
             return $value;
         }
 
-        return substr(strip_tags($this->content), 0, 160) . '...';
+        return substr(strip_tags($this->content), 0, 160).'...';
     }
 }

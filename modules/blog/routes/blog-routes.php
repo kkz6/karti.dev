@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Blog\Http\Controllers\AdminBlogController;
+use Modules\Blog\Http\Controllers\BlogController;
 use Modules\Blog\Http\Controllers\CategoryController;
 use Modules\Blog\Http\Controllers\TagController;
 
@@ -11,5 +11,5 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('admin')->name('admin.')-
     Route::resource('blog/tags', TagController::class);
 
     // General blog resource routes (should be last due to {blog} parameter)
-    Route::resource('blog', AdminBlogController::class);
+    Route::resource('blog', BlogController::class)->except(['show']);
 });

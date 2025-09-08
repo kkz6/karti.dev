@@ -1,17 +1,5 @@
 import { type NavItem } from '@shared/types';
-import {
-    BookOpen,
-    Camera,
-    Files,
-    FileText,
-    Folder,
-    FolderOpen,
-    LayoutGrid,
-    Settings,
-    Tags,
-    User,
-    Wrench
-} from 'lucide-react';
+import { Camera, Files, FileText, Folder, FolderOpen, LayoutGrid, Tags, Wrench } from 'lucide-react';
 
 /**
  * Main navigation items for the admin panel

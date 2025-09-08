@@ -45,16 +45,6 @@ export default function Index({ articles, categories }: { articles: TableConfig<
 
     const handleCustomAction = async (action: Action, keys: (string | number)[], onFinish?: () => void) => {
         const articleId = typeof keys[0] === 'string' ? parseInt(keys[0]) : keys[0];
-        const article = articles.results?.data?.find((item) => item._primary_key === articleId);
-
-        if (article) {
-            if (action.id === 'edit') {
-                window.location.href = route('admin.blog.edit', { blog: article.slug || article.id });
-            }
-            if (action.id === 'show') {
-                window.location.href = route('admin.blog.show', { blog: article.slug || article.id });
-            }
-        }
 
         if (onFinish) onFinish();
     };

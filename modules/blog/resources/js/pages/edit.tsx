@@ -115,7 +115,6 @@ export default function Edit({ article, categories, tags }: { article: Article; 
                                         id="title"
                                         value={data.title}
                                         onChange={(e) => handleTitleChange(e.target.value)}
-                                        error={errors.title}
                                         placeholder="Enter article title"
                                     />
                                     {errors.title && <div className="text-sm text-red-600">{errors.title}</div>}
@@ -127,7 +126,6 @@ export default function Edit({ article, categories, tags }: { article: Article; 
                                         id="slug"
                                         value={data.slug}
                                         onChange={(e) => setData('slug', e.target.value)}
-                                        error={errors.slug}
                                         placeholder="article-slug"
                                     />
                                     {errors.slug && <div className="text-sm text-red-600">{errors.slug}</div>}
@@ -183,7 +181,7 @@ export default function Edit({ article, categories, tags }: { article: Article; 
 
                                 <div className="grid gap-2">
                                     <Label htmlFor="status">Status</Label>
-                                    <Select value={data.status} onValueChange={(value) => setData('status', value)}>
+                                    <Select value={data.status} onValueChange={(value) => setData('status', value as 'draft' | 'published' | 'archived')}>
                                         <SelectTrigger>
                                             <SelectValue />
                                         </SelectTrigger>
