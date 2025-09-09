@@ -6,11 +6,12 @@ import { InertiaTableWrapper, type Action, type TableConfig } from '@table/compo
 import { Camera, Eye, Image, PlusSquare } from 'lucide-react';
 
 // Local interfaces for photography admin
-interface PhotoCollection {
+interface Photo {
     id: number;
     title: string;
     slug: string;
     description?: string;
+    image_ids: number[];
     cover_image?: string;
     status: 'draft' | 'published' | 'archived';
     featured: boolean;
@@ -33,30 +34,27 @@ interface Category {
     slug: string;
 }
 
-export default function Index({ collections, categories }: { collections: TableConfig<PhotoCollection>; categories: Category[] }) {
+export default function Index({ photos, categories }: { photos: TableConfig<Photo>; categories: Category[] }) {
     const { props } = usePage<SharedData>();
     const breadcrumbs: BreadcrumbItem[] = [{ title: 'Photography', href: route('admin.photography.index') }];
 
     const handleCustomAction = async (action: Action, keys: (string | number)[], onFinish?: () => void) => {
-        const collectionId = typeof keys[0] === 'string' ? parseInt(keys[0]) : keys[0];
-        const collection = collections.results?.data?.find((item) => item._primary_key === collectionId);
+        const photoId = typeof keys[0] === 'string' ? parseInt(keys[0]) : keys[0];
+        const photo = photos.results?.data?.find((item) => item._primary_key === photoId);
 
-        if (collection) {
+        if (photo) {
             if (action.id === 'edit') {
-                window.location.href = route('admin.photography.edit', { photography: collection.slug });
+                window.location.href = route('admin.photography.edit', { photography: photo.id });
             }
             if (action.id === 'show') {
-                window.location.href = route('admin.photography.show', { photography: collection.slug });
-            }
-            if (action.id === 'manage-photos') {
-                window.location.href = route('admin.photography.photos.index', collection.id);
+                window.location.href = route('admin.photography.show', { photography: photo.id });
             }
         }
 
         if (onFinish) onFinish();
     };
 
-    const handleCreateCollection = () => {
+    const handleCreateGallery = () => {
         window.location.href = route('admin.photography.create');
     };
 
@@ -67,22 +65,22 @@ export default function Index({ collections, categories }: { collections: TableC
                 <div className="flex items-center justify-between space-y-2">
                     <h2 className="text-3xl font-bold tracking-tight">Photography </h2>
                     <div className="flex items-center space-x-2">
-                        <Button onClick={handleCreateCollection}>
+                        <Button onClick={handleCreateGallery}>
                             <PlusSquare className="mr-2 h-4 w-4" />
-                            Create Collection
+                            Create Gallery
                         </Button>
                     </div>
                 </div>
 
                 <InertiaTableWrapper
-                    resource={collections}
+                    resource={photos}
                     emptyState={{
-                        title: 'No photo collections found',
-                        description: 'Get started by creating your first photo collection.',
+                        title: 'No photo galleries found',
+                        description: 'Get started by creating your first photo gallery.',
                         icons: [Camera, Image, PlusSquare],
                         action: {
-                            label: 'Create Collection',
-                            onClick: handleCreateCollection,
+                            label: 'Create Gallery',
+                            onClick: handleCreateGallery,
                         },
                     }}
                     onCustomAction={handleCustomAction}

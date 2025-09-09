@@ -9,42 +9,48 @@ use Spatie\LaravelData\Data;
 class PhotoData extends Data
 {
     public function __construct(
-        public ?string $title,
+        public string $title,
+        public string $slug,
         public ?string $description,
-        public array $image_path,
-        public ?string $alt_text,
+        public array $image_ids,
+        public ?string $cover_image,
+        public string $status,
+        public bool $featured,
         public int $sort_order,
-        public ?int $width,
-        public ?int $height,
-        public ?int $file_size,
-        public ?array $exif_data,
+        public ?string $published_at,
+        public ?array $categories,
         public ?int $photo_id = null, // For update operations
     ) {}
 
     public static function rules(): array
     {
         return [
-            'title' => ['nullable', 'string', 'max:255'],
+            'title' => ['required', 'string', 'max:255'],
+            'slug' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'],
             'description' => ['nullable', 'string'],
-            'image_path' => ['required', 'array'],
-            'alt_text' => ['nullable', 'string', 'max:255'],
-            'sort_order' => ['nullable', 'integer', 'min:0'],
-            'width' => ['nullable', 'integer', 'min:1'],
-            'height' => ['nullable', 'integer', 'min:1'],
-            'file_size' => ['nullable', 'integer', 'min:0'],
-            'exif_data' => ['nullable', 'array'],
+            'image_ids' => ['required', 'array'],
+            'image_ids.*' => ['integer'],
+            'cover_image' => ['nullable', 'string'],
+            'status' => ['required', 'in:draft,published,archived'],
+            'featured' => ['boolean'],
+            'sort_order' => ['integer', 'min:0'],
+            'published_at' => ['nullable', 'date'],
+            'categories' => ['nullable', 'array'],
+            'categories.*' => ['exists:categories,id'],
         ];
     }
 
     public function validationMessages(): array
     {
         return [
-            'image_path.required' => 'Please select an image.',
-            'image_path.array' => 'Invalid image data format.',
-            'alt_text.max' => 'The alt text must not exceed 255 characters.',
-            'width.min' => 'Width must be at least 1 pixel.',
-            'height.min' => 'Height must be at least 1 pixel.',
-            'file_size.min' => 'File size cannot be negative.',
+            'title.required' => 'The title field is required.',
+            'title.max' => 'The title must not exceed 255 characters.',
+            'slug.required' => 'The slug field is required.',
+            'slug.regex' => 'The slug must be lowercase and contain only letters, numbers, and hyphens.',
+            'image_ids.required' => 'Please select at least one image.',
+            'image_ids.array' => 'Invalid image data format.',
+            'status.in' => 'The selected status is invalid.',
+            'categories.*.exists' => 'One or more selected categories do not exist.',
         ];
     }
 

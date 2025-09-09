@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Photography\Repositories;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Modules\Photography\Interfaces\PhotoRepositoryInterface;
 use Modules\Photography\Models\Photo;
@@ -19,10 +20,53 @@ class PhotoRepository extends QueryableRepository implements PhotoRepositoryInte
         return Photo::class;
     }
 
-    public function getByCollection(int $collectionId): Collection
+    public function getPaginatedWithFilters(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    {
+        $query = $this->model->newQuery();
+
+        // Apply search filter
+        if (!empty($filters['search'])) {
+            $query->where(function ($q) use ($filters) {
+                $q->where('title', 'like', '%' . $filters['search'] . '%')
+                  ->orWhere('description', 'like', '%' . $filters['search'] . '%');
+            });
+        }
+
+        // Apply status filter
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        // Apply category filter
+        if (!empty($filters['category'])) {
+            $query->whereHas('categories', function ($q) use ($filters) {
+                $q->where('categories.id', $filters['category']);
+            });
+        }
+
+        // Apply featured filter
+        if (isset($filters['featured'])) {
+            $query->where('featured', $filters['featured']);
+        }
+
+        return $query->with('categories')
+            ->ordered()
+            ->paginate($perPage);
+    }
+
+    public function getPublished(): Collection
     {
         return $this->model->newQuery()
-            ->where('photo_collection_id', $collectionId)
+            ->published()
+            ->ordered()
+            ->get();
+    }
+
+    public function getFeatured(): Collection
+    {
+        return $this->model->newQuery()
+            ->featured()
+            ->published()
             ->ordered()
             ->get();
     }
@@ -42,6 +86,14 @@ class PhotoRepository extends QueryableRepository implements PhotoRepositoryInte
     {
         $photo->update($data);
 
-        return $photo->fresh(['collection']);
+        return $photo->fresh(['categories']);
+    }
+
+    public function findBySlug(string $slug): ?Photo
+    {
+        return $this->model->newQuery()
+            ->where('slug', $slug)
+            ->with('categories')
+            ->first();
     }
 }

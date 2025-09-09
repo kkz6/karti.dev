@@ -10,7 +10,7 @@ import { Switch } from '@shared/components/ui/switch';
 import { Textarea } from '@shared/components/ui/textarea';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
-import { ArrowLeft, Image, Save } from 'lucide-react';
+import { ArrowLeft, Save } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
 interface Category {
@@ -21,17 +21,10 @@ interface Category {
 
 interface Photo {
     id: number;
-    title?: string;
-    image_path: string;
-    alt_text?: string;
-    sort_order: number;
-}
-
-interface PhotoCollection {
-    id: number;
     title: string;
     slug: string;
     description?: string;
+    image_ids: number[];
     cover_image?: string;
     status: 'draft' | 'published' | 'archived';
     featured: boolean;
@@ -40,25 +33,25 @@ interface PhotoCollection {
     meta_description?: string;
     published_at?: string;
     categories?: Category[];
-    photos?: Photo[];
 }
 
-export default function Edit({ collection, categories }: { collection: PhotoCollection; categories: Category[] }) {
+export default function Edit({ photo, categories }: { photo: Photo; categories: Category[] }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Photography', href: route('admin.photography.index') },
-        { title: collection.title, href: route('admin.photography.show', { photography: collection.slug || collection.id }) },
-        { title: 'Edit', href: route('admin.photography.edit', { photography: collection.slug || collection.id }) },
+        { title: photo.title, href: route('admin.photography.show', { photography: photo.id }) },
+        { title: 'Edit', href: route('admin.photography.edit', { photography: photo.id }) },
     ];
 
     const { data, setData, put, processing, errors } = useForm({
-        title: collection.title || '',
-        slug: collection.slug || '',
-        description: collection.description || '',
-        cover_image: collection.cover_image
+        title: photo.title || '',
+        slug: photo.slug || '',
+        description: photo.description || '',
+        image_ids: photo.image_ids || [],
+        cover_image: photo.cover_image
             ? [
                   {
                       id: 'temp-' + Date.now(),
-                      url: collection.cover_image,
+                      url: photo.cover_image,
                       filename: 'cover-image',
                       extension: 'jpg',
                       mime_type: 'image/jpeg',
@@ -72,23 +65,23 @@ export default function Edit({ collection, categories }: { collection: PhotoColl
                       is_image: true,
                       is_audio: false,
                       is_video: false,
-                      path: collection.cover_image,
+                      path: photo.cover_image,
                       formatted_size: '0 B',
                   } as MediaAsset,
               ]
             : ([] as MediaAsset[]),
-        categories: collection.categories?.map((cat) => cat.id) || ([] as number[]),
-        status: collection.status || 'draft',
-        featured: collection.featured || false,
-        sort_order: collection.sort_order || 0,
-        meta_title: collection.meta_title || '',
-        meta_description: collection.meta_description || '',
-        published_at: collection.published_at ? new Date(collection.published_at).toISOString().slice(0, 16) : '',
+        categories: photo.categories?.map((cat) => cat.id) || ([] as number[]),
+        status: photo.status || 'draft',
+        featured: photo.featured || false,
+        sort_order: photo.sort_order || 0,
+        meta_title: photo.meta_title || '',
+        meta_description: photo.meta_description || '',
+        published_at: photo.published_at ? new Date(photo.published_at).toISOString().slice(0, 16) : '',
     });
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        put(route('admin.photography.update', { photography: collection.slug || collection.id }));
+        put(route('admin.photography.update', { photography: photo.id }));
     };
 
     const generateSlug = (title: string) => {
@@ -104,28 +97,20 @@ export default function Edit({ collection, categories }: { collection: PhotoColl
         setData('title', value);
     };
 
-    const handleManagePhotos = () => {
-        window.location.href = route('admin.photography.photos.index', collection.id);
-    };
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Edit ${collection.title}`} />
+            <Head title={`Edit ${photo.title}`} />
             <div className="flex h-full flex-col space-y-4 p-8 pt-6">
                 <div className="flex items-center justify-between space-y-2">
                     <div>
-                        <h2 className="text-3xl font-bold tracking-tight">Edit Photo Collection</h2>
-                        <p className="text-muted-foreground">Update the photo collection details.</p>
+                        <h2 className="text-3xl font-bold tracking-tight">Edit Photo Gallery</h2>
+                        <p className="text-muted-foreground">Update the photo gallery details.</p>
                     </div>
                     <div className="flex items-center space-x-2">
-                        <Button variant="outline" onClick={handleManagePhotos}>
-                            <Image className="mr-2 h-4 w-4" />
-                            Manage Photos ({collection.photos?.length || 0})
-                        </Button>
                         <Button variant="outline" asChild>
                             <a href={route('admin.photography.index')}>
                                 <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back to Collections
+                                Back to Galleries
                             </a>
                         </Button>
                     </div>
@@ -135,8 +120,8 @@ export default function Edit({ collection, categories }: { collection: PhotoColl
                     <div className="grid gap-6 md:grid-cols-2">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Collection Details</CardTitle>
-                                <CardDescription>Basic information about the photo collection.</CardDescription>
+                                <CardTitle>Gallery Details</CardTitle>
+                                <CardDescription>Basic information about the photo gallery.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="grid gap-2">
@@ -146,7 +131,7 @@ export default function Edit({ collection, categories }: { collection: PhotoColl
                                         value={data.title}
                                         onChange={(e) => handleTitleChange(e.target.value)}
                                         error={errors.title}
-                                        placeholder="Enter collection title"
+                                        placeholder="Enter gallery title"
                                     />
                                     {errors.title && <div className="text-sm text-red-600">{errors.title}</div>}
                                 </div>
@@ -158,7 +143,7 @@ export default function Edit({ collection, categories }: { collection: PhotoColl
                                         value={data.slug}
                                         onChange={(e) => setData('slug', e.target.value)}
                                         error={errors.slug}
-                                        placeholder="collection-slug"
+                                        placeholder="gallery-slug"
                                     />
                                     {errors.slug && <div className="text-sm text-red-600">{errors.slug}</div>}
                                 </div>
@@ -169,7 +154,7 @@ export default function Edit({ collection, categories }: { collection: PhotoColl
                                         id="description"
                                         value={data.description}
                                         onChange={(e) => setData('description', e.target.value)}
-                                        placeholder="Brief description of the collection"
+                                        placeholder="Brief description of the gallery"
                                         rows={4}
                                     />
                                     {errors.description && <div className="text-sm text-red-600">{errors.description}</div>}
@@ -192,13 +177,34 @@ export default function Edit({ collection, categories }: { collection: PhotoColl
                                     />
                                     {errors.cover_image && <div className="text-sm text-red-600">{errors.cover_image}</div>}
                                 </div>
+
+                                <div className="grid gap-2">
+                                    <SimpleAssetsField
+                                        name="Gallery Images"
+                                        data={data.image_ids.map(id => ({ id } as any))}
+                                        config={{
+                                            container: 'public',
+                                            folder: '/photography/galleries',
+                                            max_files: 50,
+                                            mode: 'grid',
+                                            canEdit: true,
+                                            accept: 'image/*',
+                                        }}
+                                        onChange={(assets) => setData('image_ids', assets.map((asset: any) => asset.id))}
+                                        onError={(error) => console.error('Gallery images error:', error)}
+                                    />
+                                    {errors.image_ids && <div className="text-sm text-red-600">{errors.image_ids}</div>}
+                                    <p className="text-sm text-muted-foreground">
+                                        {data.image_ids.length} image{data.image_ids.length !== 1 ? 's' : ''} in gallery
+                                    </p>
+                                </div>
                             </CardContent>
                         </Card>
 
                         <Card>
                             <CardHeader>
                                 <CardTitle>Publication Settings</CardTitle>
-                                <CardDescription>Control when and how the collection is published.</CardDescription>
+                                <CardDescription>Control when and how the gallery is published.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="grid gap-2">
@@ -218,7 +224,7 @@ export default function Edit({ collection, categories }: { collection: PhotoColl
 
                                 <div className="flex items-center space-x-2">
                                     <Switch id="featured" checked={data.featured} onCheckedChange={(checked) => setData('featured', checked)} />
-                                    <Label htmlFor="featured">Featured Collection</Label>
+                                    <Label htmlFor="featured">Featured Gallery</Label>
                                 </div>
 
                                 <div className="grid gap-2">
@@ -242,6 +248,27 @@ export default function Edit({ collection, categories }: { collection: PhotoColl
                                         onChange={(e) => setData('published_at', e.target.value)}
                                     />
                                     {errors.published_at && <div className="text-sm text-red-600">{errors.published_at}</div>}
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="categories">Categories</Label>
+                                    <Select
+                                        value={data.categories[0]?.toString() || ''}
+                                        onValueChange={(value) => setData('categories', value ? [parseInt(value)] : [])}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a category" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="">None</SelectItem>
+                                            {categories.map((category) => (
+                                                <SelectItem key={category.id} value={category.id.toString()}>
+                                                    {category.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.categories && <div className="text-sm text-red-600">{errors.categories}</div>}
                                 </div>
                             </CardContent>
                         </Card>
@@ -284,7 +311,7 @@ export default function Edit({ collection, categories }: { collection: PhotoColl
                         </Button>
                         <Button type="submit" disabled={processing}>
                             <Save className="mr-2 h-4 w-4" />
-                            Update Collection
+                            Update Gallery
                         </Button>
                     </div>
                 </form>

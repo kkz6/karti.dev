@@ -14,44 +14,21 @@ class Photos extends Table
 {
     protected ?string $resource = Photo::class;
 
-    protected ?int $collectionId = null;
-
-    public function setCollectionId(int $collectionId): self
-    {
-        $this->collectionId = $collectionId;
-        return $this;
-    }
-
-    public function resource(): Builder|string
-    {
-        if ($this->collectionId) {
-            return Photo::where('photo_collection_id', $this->collectionId);
-        }
-
-        return parent::resource();
-    }
-
     public function columns(): array
     {
         return [
             Columns\TextColumn::make('id', 'ID', stickable: true),
-            Columns\ImageColumn::make('image_path', 'Image')->width(60)->height(60),
+            Columns\ImageColumn::make('cover_image', 'Cover'),
             Columns\TextColumn::make('title', 'Title', toggleable: false)->searchable(),
-            Columns\TextColumn::make('alt_text', 'Alt Text'),
+            Columns\TextColumn::make('slug', 'Slug')->searchable(),
+            Columns\TextColumn::make('image_ids', 'Images')->mapAs(function ($state) {
+                $count = is_array($state) ? count($state) : 0;
+                return $count . ' ' . ($count === 1 ? 'image' : 'images');
+            }),
+            Columns\BooleanColumn::make('featured', 'Featured'),
             Columns\NumericColumn::make('sort_order', 'Order')->sortable(),
-            Columns\TextColumn::make('width', 'Dimensions')->formatStateUsing(function ($state, Photo $photo) {
-                if ($photo->width && $photo->height) {
-                    return $photo->width . ' × ' . $photo->height;
-                }
-                return '—';
-            }),
-            Columns\TextColumn::make('file_size', 'Size')->formatStateUsing(function ($state) {
-                if ($state) {
-                    return $this->formatBytes($state);
-                }
-                return '—';
-            }),
-            Columns\DateColumn::make('created_at', 'Created At'),
+            Columns\DateColumn::make('published_at', 'Published'),
+            Columns\DateColumn::make('created_at', 'Created'),
             Columns\ActionColumn::new(),
         ];
     }
@@ -61,6 +38,8 @@ class Photos extends Table
         return [
             Filters\TextFilter::make('id', 'ID'),
             Filters\TextFilter::make('title', 'Title'),
+            Filters\BooleanFilter::make('featured', 'Featured'),
+            Filters\DateFilter::make('published_at', 'Published At'),
             Filters\DateFilter::make('created_at', 'Created At'),
             Filters\TrashedFilter::make('deleted_at', 'Trashed'),
         ];
@@ -85,13 +64,5 @@ class Photos extends Table
         return [
             //
         ];
-    }
-
-    private function formatBytes(int $size, int $precision = 2): string
-    {
-        $base = log($size, 1024);
-        $suffixes = ['B', 'KB', 'MB', 'GB', 'TB'];
-
-        return round(pow(1024, $base - floor($base)), $precision) . ' ' . $suffixes[floor($base)];
     }
 }
