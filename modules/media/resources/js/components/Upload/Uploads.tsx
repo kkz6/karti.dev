@@ -1,22 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Upload } from './Upload';
 import { MediaUpload } from '../types/media';
 
 interface UploadsProps {
   uploads: MediaUpload[];
+  onClearUpload?: (uploadId: string) => void;
 }
 
-export const Uploads: React.FC<UploadsProps> = ({ uploads: initialUploads }) => {
-  const [uploads, setUploads] = useState<MediaUpload[]>(initialUploads);
-
-  const clearUpload = (index: number) => {
-    setUploads(prev => {
-      const updated = [...prev];
-      updated.splice(index, 1);
-      return updated;
-    });
-  };
-
+export const Uploads: React.FC<UploadsProps> = ({ uploads, onClearUpload }) => {
   if (uploads.length === 0) {
     return null;
   }
@@ -29,14 +20,14 @@ export const Uploads: React.FC<UploadsProps> = ({ uploads: initialUploads }) => 
       <div className="overflow-x-auto">
         <table className="w-full">
           <tbody>
-            {uploads.map((upload, index) => (
+            {uploads.map((upload) => (
               <Upload
                 key={upload.id}
                 basename={upload.name}
                 extension={upload.name.split('.').pop() || ''}
                 percent={upload.progress}
                 error={upload.error}
-                onClear={() => clearUpload(index)}
+                onClear={() => onClearUpload?.(upload.id)}
               />
             ))}
           </tbody>

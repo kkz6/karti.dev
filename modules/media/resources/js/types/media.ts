@@ -92,7 +92,7 @@ export interface MediaUpload {
     id: string;
     name: string;
     progress: number;
-    status: 'uploading' | 'complete' | 'error';
+    status: 'uploading' | 'complete' | 'completed' | 'error';
     error?: string;
 }
 

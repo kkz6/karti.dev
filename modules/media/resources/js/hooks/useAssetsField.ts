@@ -156,6 +156,10 @@ export function useAssetsField({ initialAssets = [], config = {}, onChange, onEr
         setUploads(newUploads);
     }, []);
 
+    const clearUpload = useCallback((uploadId: string) => {
+        setUploads((prev) => prev.filter((upload) => upload.id !== uploadId));
+    }, []);
+
     return {
         // State
         assets,
@@ -190,6 +194,7 @@ export function useAssetsField({ initialAssets = [], config = {}, onChange, onEr
         // Upload
         handleUploadComplete,
         handleUploadsUpdated,
+        clearUpload,
         setUploads,
     };
 }

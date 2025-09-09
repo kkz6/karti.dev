@@ -1,6 +1,5 @@
 import axios from 'axios';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
 import { MediaUpload } from '../types/media';
 
 interface UploaderProps {
@@ -83,12 +82,18 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
                         const mediaArray = Array.isArray(response.data) ? response.data : [response.data];
                         const uploadedMedia = mediaArray[0];
 
-                        setUploads((prev) => prev.filter((u) => u.id !== uuid));
+                        // Mark upload as completed but keep it visible for a moment
+                        setUploads((prev) => prev.map((u) => (u.id === uuid ? { ...u, status: 'completed', progress: 100 } : u)));
+                        
                         onUploadComplete?.(
                             uploadedMedia,
                             uploads.filter((u) => u.id !== uuid),
                         );
-                        toast.success(`"${file.name}" uploaded successfully`);
+                        
+                        // Remove the upload after showing success for 3 seconds
+                        setTimeout(() => {
+                            setUploads((prev) => prev.filter((u) => u.id !== uuid));
+                        }, 3000);
                     } else {
                         setUploads((prev) => prev.map((u) => (u.id === uuid ? { ...u, status: 'error', error: 'Upload failed' } : u)));
                         onError?.('Upload failed');

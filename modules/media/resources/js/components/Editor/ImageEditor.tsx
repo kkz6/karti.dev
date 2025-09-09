@@ -420,7 +420,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
             setHasChanged(true);
             setProcessing(true);
 
-            let filters = { ...camanFilters };
+            const filters = { ...camanFilters };
 
             if (value === false || value === null || value === undefined) {
                 delete (filters as any)[name];

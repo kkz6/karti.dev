@@ -1,5 +1,5 @@
 import { Button } from '@shared/components/ui/button';
-import { AlertCircle, X } from 'lucide-react';
+import { AlertCircle, X, CheckCircle } from 'lucide-react';
 import React from 'react';
 import { FileIcon } from '../Icons/FileIcon';
 import { LoadingGraphic } from '../UI/LoadingGraphic';
@@ -17,7 +17,7 @@ export const Upload: React.FC<UploadProps> = ({ extension, basename, percent, er
         if (error) {
             return 'error';
         } else if (percent === 100) {
-            return 'pending';
+            return 'completed';
         } else {
             return 'uploading';
         }
@@ -28,7 +28,13 @@ export const Upload: React.FC<UploadProps> = ({ extension, basename, percent, er
     return (
         <tr className={`upload-row ${status}`}>
             <td className="column-status p-2">
-                {status === 'error' ? <AlertCircle className="h-4 w-4 text-red-500" /> : <LoadingGraphic text="" />}
+                {status === 'error' ? (
+                    <AlertCircle className="h-4 w-4 text-red-500" />
+                ) : status === 'completed' ? (
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                ) : (
+                    <LoadingGraphic text="" />
+                )}
             </td>
 
             <td className="column-thumbnail p-2">
@@ -43,6 +49,8 @@ export const Upload: React.FC<UploadProps> = ({ extension, basename, percent, er
 
             {status === 'error' ? (
                 <td className="column-error p-2 text-sm text-red-600">{error}</td>
+            ) : status === 'completed' ? (
+                <td className="column-progress p-2 text-sm text-green-600 font-medium">Upload completed successfully</td>
             ) : (
                 <td className="column-progress p-2">
                     <div className="w-full rounded-full bg-gray-200">

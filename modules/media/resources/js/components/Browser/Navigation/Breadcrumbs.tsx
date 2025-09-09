@@ -12,7 +12,7 @@ interface BreadcrumbsProps {
 
 export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ path, folder, folders, onNavigated }) => {
     const getPathParts = (): string[] => {
-        let parts = ['/'];
+        const parts = ['/'];
         if (path === '/' || path === null || !folder) {
             return parts;
         }
