@@ -6,7 +6,7 @@ import { type BreadcrumbItem } from '@shared/types';
 import { InertiaTableWrapper } from '@table/components/Table/inertia-table-wrapper';
 import { Mic, Plus, Podcast, Video } from 'lucide-react';
 
-export default function Index({ table, filters }: { table: any; filters: any }) {
+export default function Index({ table }: { table: any }) {
     const breadcrumbs: BreadcrumbItem[] = [{ title: 'Speaking Events', href: route('admin.speaking.index') }];
 
     const handleCreateEvent = () => {
@@ -30,58 +30,20 @@ export default function Index({ table, filters }: { table: any; filters: any }) 
                     </div>
                 </div>
 
-                {/* Stats Cards */}
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Events</CardTitle>
-                            <Mic className="text-muted-foreground h-4 w-4" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{table.meta?.totalCount || 0}</div>
-                            <p className="text-muted-foreground text-xs">Speaking engagements</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Conferences</CardTitle>
-                            <Video className="text-muted-foreground h-4 w-4" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">
-                                {table.data?.filter((event: any) => event.event_type === 'conference').length || 0}
-                            </div>
-                            <p className="text-muted-foreground text-xs">Conference talks</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Podcasts</CardTitle>
-                            <Podcast className="text-muted-foreground h-4 w-4" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{table.data?.filter((event: any) => event.event_type === 'podcast').length || 0}</div>
-                            <p className="text-muted-foreground text-xs">Podcast appearances</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Featured</CardTitle>
-                            <Mic className="text-muted-foreground h-4 w-4" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{table.data?.filter((event: any) => event.featured).length || 0}</div>
-                            <p className="text-muted-foreground text-xs">Highlighted events</p>
-                        </CardContent>
-                    </Card>
-                </div>
-
                 {/* Speaking Events Table */}
                 <div className="flex-1">
-                    <InertiaTableWrapper table={table} filters={filters} />
+                    <InertiaTableWrapper 
+                        resource={table}
+                        emptyState={{
+                            title: 'No speaking events found',
+                            description: 'Get started by creating your first speaking engagement.',
+                            icons: [Mic, Podcast, Video],
+                            action: {
+                                label: 'Create Event',
+                                onClick: handleCreateEvent,
+                            },
+                        }}
+                    />
                 </div>
             </div>
         </AppLayout>

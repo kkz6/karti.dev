@@ -23,25 +23,10 @@ class SpeakingEvents extends Table
             Columns\TextColumn::make('event_name', 'Event', toggleable: false)
                 ->searchable()
                 ->sortable(),
-            Columns\BadgeColumn::make('event_type', 'Type')
-                ->colors([
-                    'primary' => 'conference',
-                    'success' => 'podcast',
-                    'warning' => 'workshop',
-                    'info' => 'webinar',
-                ])
-                ->sortable(),
             Columns\DateColumn::make('event_date', 'Date')
                 ->sortable(),
             Columns\TextColumn::make('location', 'Location'),
             Columns\BooleanColumn::make('featured', 'Featured')
-                ->sortable(),
-            Columns\BadgeColumn::make('status', 'Status')
-                ->colors([
-                    'success' => 'published',
-                    'warning' => 'draft',
-                    'secondary' => 'archived',
-                ])
                 ->sortable(),
             Columns\DateColumn::make('created_at', 'Created At', toggleable: false),
             Columns\ActionColumn::new(),
@@ -53,19 +38,6 @@ class SpeakingEvents extends Table
         return [
             Filters\TextFilter::make('title', 'Title'),
             Filters\TextFilter::make('event_name', 'Event Name'),
-            Filters\SelectFilter::make('event_type', 'Type')
-                ->options([
-                    'conference' => 'Conference',
-                    'podcast' => 'Podcast',
-                    'workshop' => 'Workshop',
-                    'webinar' => 'Webinar',
-                ]),
-            Filters\SelectFilter::make('status', 'Status')
-                ->options([
-                    'draft' => 'Draft',
-                    'published' => 'Published',
-                    'archived' => 'Archived',
-                ]),
             Filters\BooleanFilter::make('featured', 'Featured'),
             Filters\DateFilter::make('event_date', 'Event Date'),
         ];

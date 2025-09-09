@@ -3,7 +3,7 @@ import { Button } from '@shared/components/ui/button';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
 import { InertiaTableWrapper } from '@table/components/Table/inertia-table-wrapper';
-import { Plus } from 'lucide-react';
+import { Plus, Code, Laptop, Briefcase } from 'lucide-react';
 
 export default function Index({ table }: { table: any }) {
     const breadcrumbs: BreadcrumbItem[] = [{ title: 'Projects', href: route('admin.projects.index') }];
@@ -31,7 +31,18 @@ export default function Index({ table }: { table: any }) {
 
                 {/* Projects Table */}
                 <div className="flex-1">
-                    <InertiaTableWrapper resource={table} />
+                    <InertiaTableWrapper 
+                        resource={table}
+                        emptyState={{
+                            title: 'No projects found',
+                            description: 'Get started by creating your first project showcase.',
+                            icons: [Code, Laptop, Briefcase],
+                            action: {
+                                label: 'Create Project',
+                                onClick: handleCreateProject,
+                            },
+                        }}
+                    />
                 </div>
             </div>
         </AppLayout>

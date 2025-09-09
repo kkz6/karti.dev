@@ -1,5 +1,5 @@
 import { type NavItem } from '@shared/types';
-import { Camera, Files, FileText, Folder, FolderOpen, LayoutGrid, Tags, Wrench } from 'lucide-react';
+import { Camera, Files, FileText, Folder, FolderOpen, LayoutGrid, Mic, Tags, Wrench } from 'lucide-react';
 
 /**
  * Main navigation items for the admin panel
@@ -47,6 +47,11 @@ export const mainNavItems: NavItem[] = [
         title: 'Projects',
         href: route('admin.projects.index'),
         icon: Files,
+    },
+    {
+        title: 'Speaking',
+        href: route('admin.speaking.index'),
+        icon: Mic,
     },
     {
         title: 'Tools',

@@ -44,6 +44,10 @@ function isRouteActive(currentRouteName: string | null, itemHref: string): boole
         return currentRouteName.startsWith('admin.projects');
     }
     
+    if (itemHref.includes('/admin/speaking')) {
+        return currentRouteName.startsWith('admin.speaking');
+    }
+    
     if (itemHref.includes('/admin/tools')) {
         return currentRouteName.startsWith('admin.tools');
     }
