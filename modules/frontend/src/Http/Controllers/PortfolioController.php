@@ -66,7 +66,7 @@ class PortfolioController extends BaseController
         ])->get()->keyBy('key');
 
         return Inertia::render('frontend::about', [
-            'portraitImage' => $siteSettings->get('portrait_image')?->value ?? '/images/portrait.jpg',
+            'portraitImage' => $siteSettings->get('portrait_image')?->value ?? '/images/about.jpg',
             'socialLinks'   => $socialLinks,
             'siteSettings'  => $siteSettings,
         ]);

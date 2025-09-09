@@ -30,7 +30,7 @@ export function Avatar({
       className={clsx(className, 'pointer-events-auto')}
     >
       <img
-        src="/images/avatar.jpg"
+        src="/images/avatar.png"
         alt=""
         sizes={large ? '4rem' : '2.25rem'}
         className={clsx(

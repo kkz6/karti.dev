@@ -79,7 +79,7 @@ interface AboutProps {
     portraitImage?: string;
 }
 
-export default function About({ portraitImage = '/images/portrait.jpg' }: AboutProps) {
+export default function About({ portraitImage = '/images/about.jpg' }: AboutProps) {
     return (
         <PublicLayout>
             <Head title="About" />
@@ -136,11 +136,11 @@ export default function About({ portraitImage = '/images/portrait.jpg' }: AboutP
                                 Follow on LinkedIn
                             </SocialLink>
                             <SocialLink
-                                href="mailto:spencer@planetaria.tech"
+                                href="mailto:karthick@gigcodes.com"
                                 icon={MailIcon}
                                 className="mt-8 border-t border-zinc-100 pt-8 dark:border-zinc-700/40"
                             >
-                                spencer@planetaria.tech
+                                karthick@gigcodes.com
                             </SocialLink>
                         </ul>
                     </div>

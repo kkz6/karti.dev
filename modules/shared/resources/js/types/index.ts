@@ -34,6 +34,7 @@ export interface SharedData {
     name: string;
     quote: { message: string; author: string };
     auth: Auth;
+    route: { name: string | null };
     ziggy: Config & { location: string };
     sidebarOpen: boolean;
     translations: Record<string, string>;

@@ -13,7 +13,7 @@ beforeEach(function () {
 
 test('can update profile photo', function () {
     $user = User::factory()->create();
-    $file = UploadedFile::fake()->image('avatar.jpg');
+    $file = UploadedFile::fake()->image('avatar.png');
 
     $user->updateProfilePhoto($file);
 
@@ -38,7 +38,7 @@ test('updating profile photo deletes previous photo', function () {
 
 test('can delete profile photo', function () {
     $user = User::factory()->create();
-    $file = UploadedFile::fake()->image('avatar.jpg');
+    $file = UploadedFile::fake()->image('avatar.png');
 
     $user->updateProfilePhoto($file);
     $photoPath = $user->profile_photo_path;
@@ -59,7 +59,7 @@ test('deleting profile photo when none exists does nothing', function () {
 
 test('can get profile photo URL when photo exists', function () {
     $user = User::factory()->create();
-    $file = UploadedFile::fake()->image('avatar.jpg');
+    $file = UploadedFile::fake()->image('avatar.png');
 
     $user->updateProfilePhoto($file);
 
@@ -106,7 +106,7 @@ test('default profile photo URL handles multiple names', function () {
 
 test('can update profile photo with custom storage path', function () {
     $user = User::factory()->create();
-    $file = UploadedFile::fake()->image('avatar.jpg');
+    $file = UploadedFile::fake()->image('avatar.png');
 
     $user->updateProfilePhoto($file, 'custom-photos');
 
