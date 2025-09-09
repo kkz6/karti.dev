@@ -10,20 +10,22 @@ return new class extends Migration
     {
         Schema::create('photos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('photo_collection_id')->constrained()->onDelete('cascade');
             $table->string('title')->nullable();
+            $table->string('slug')->unique();
             $table->text('description')->nullable();
-            $table->string('image_path');
-            $table->string('alt_text')->nullable();
+            $table->json('image_ids')->default('[]');
+            $table->string('cover_image')->nullable();
+            $table->enum('status', ['draft', 'published', 'archived'])->default('draft');
+            $table->boolean('featured')->default(false);
             $table->integer('sort_order')->default(0);
-            $table->integer('width')->nullable();
-            $table->integer('height')->nullable();
-            $table->bigInteger('file_size')->nullable(); // bytes
-            $table->json('exif_data')->nullable();
+            $table->timestamp('published_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index(['photo_collection_id', 'sort_order']);
+            $table->index('slug');
+            $table->index('status');
+            $table->index('featured');
+            $table->index(['status', 'published_at']);
         });
     }
 

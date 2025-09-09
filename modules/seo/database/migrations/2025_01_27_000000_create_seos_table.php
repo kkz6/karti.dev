@@ -25,8 +25,6 @@ return new class extends Migration
             $table->json('schema')->nullable();
             $table->morphs('seoable');
             $table->timestamps();
-
-            $table->index(['seoable_type', 'seoable_id']);
         });
     }
 

@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Add foreign key relationships to articles table
         Schema::table('articles', function (Blueprint $table) {
-            $table->foreignId('category_id')->nullable()->constrained()->onDelete('set null');
-            $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('category_id')->nullable()->after('reading_time_minutes')->constrained()->onDelete('set null');
+            $table->foreignId('user_id')->nullable()->after('category_id')->constrained()->onDelete('set null');
         });
     }
 

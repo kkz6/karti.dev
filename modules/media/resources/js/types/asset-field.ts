@@ -15,7 +15,7 @@ export interface AssetUpload {
     id: string;
     name: string;
     progress: number;
-    status: 'uploading' | 'completed' | 'error';
+    status: 'uploading' | 'complete' | 'completed' | 'error';
     error?: string;
 }
 

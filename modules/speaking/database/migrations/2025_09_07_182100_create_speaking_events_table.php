@@ -22,8 +22,6 @@ return new class extends Migration
             $table->boolean('featured')->default(false);
             $table->integer('sort_order')->default(0);
             $table->enum('status', ['draft', 'published', 'archived'])->default('published');
-            $table->string('meta_title', 60)->nullable();
-            $table->string('meta_description', 160)->nullable();
             $table->timestamps();
             $table->softDeletes();
 

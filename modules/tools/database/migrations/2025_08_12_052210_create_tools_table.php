@@ -12,7 +12,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('tool_category_id')->constrained()->onDelete('cascade');
             $table->string('title');
-            $table->string('slug')->unique();
             $table->text('description');
             $table->string('url')->nullable();
             $table->string('image')->nullable();
@@ -24,7 +23,6 @@ return new class extends Migration
 
             $table->index(['tool_category_id', 'sort_order']);
             $table->index(['status', 'featured']);
-            $table->index('slug');
         });
     }
 

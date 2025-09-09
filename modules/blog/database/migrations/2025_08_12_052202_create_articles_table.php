@@ -19,8 +19,6 @@ return new class extends Migration
             $table->string('author_email')->nullable();
             $table->enum('status', ['draft', 'published', 'archived'])->default('draft');
             $table->timestamp('published_at')->nullable();
-            $table->string('meta_title')->nullable();
-            $table->text('meta_description')->nullable();
             $table->integer('reading_time_minutes')->nullable();
             $table->timestamps();
             $table->softDeletes();
