@@ -4,87 +4,51 @@ import { Container } from '../components/Container'
 import { Card } from '../components/Card'
 import clsx from 'clsx'
 
-interface PhotoCollection {
+interface Photo {
     slug: string
     title: string
     description: string
-    date: string
+    date: string | null
     coverImage: string
     imageCount: number
+    categories: string[]
 }
 
 interface PhotographyProps {
-    collections?: PhotoCollection[]
+    photos?: Photo[]
 }
 
-function PhotoCollectionCard({ collection }: { collection: PhotoCollection }) {
+function PhotoCard({ photo }: { photo: Photo }) {
     return (
         <Card as="article">
-            <Card.Title href={`/photography/${collection.slug}`}>
-                {collection.title}
+            <Card.Title href={`/photography/${photo.slug}`}>
+                {photo.title}
             </Card.Title>
-            <Card.Eyebrow as="time" dateTime={collection.date} decorate>
-                {new Date(collection.date).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                })}
-            </Card.Eyebrow>
-            <Card.Description>{collection.description}</Card.Description>
-            <div className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-                {collection.imageCount} photos
+            {photo.date && (
+                <Card.Eyebrow as="time" dateTime={photo.date} decorate>
+                    {new Date(photo.date).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                    })}
+                </Card.Eyebrow>
+            )}
+            <Card.Description>{photo.description}</Card.Description>
+            <div className="mt-2 flex flex-wrap gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+                <span>{photo.imageCount} images</span>
+                {photo.categories.length > 0 && (
+                    <>
+                        <span>•</span>
+                        <span>{photo.categories.join(', ')}</span>
+                    </>
+                )}
             </div>
-            <Card.Cta>View collection</Card.Cta>
+            <Card.Cta>View photos</Card.Cta>
         </Card>
     )
 }
 
-export default function Photography({ collections = [] }: PhotographyProps) {
-    // Default collections for demo
-    const defaultCollections: PhotoCollection[] = [
-        {
-            slug: 'street-photography',
-            title: 'Street Photography',
-            description: 'Capturing the raw energy and authentic moments of urban life across different cities.',
-            date: '2024-03-15',
-            coverImage: '/images/photos/image-1.jpg',
-            imageCount: 24
-        },
-        {
-            slug: 'landscapes',
-            title: 'Landscapes & Nature',
-            description: 'Exploring the breathtaking beauty of natural landscapes from mountains to coastlines.',
-            date: '2024-02-20',
-            coverImage: '/images/photos/image-2.jpg',
-            imageCount: 32
-        },
-        {
-            slug: 'portraits',
-            title: 'Portraits',
-            description: 'Intimate portraits that capture the essence and stories of interesting people.',
-            date: '2024-01-10',
-            coverImage: '/images/photos/image-3.jpg',
-            imageCount: 18
-        },
-        {
-            slug: 'architecture',
-            title: 'Architecture',
-            description: 'Geometric patterns and striking structures from modern and classical architecture.',
-            date: '2023-12-05',
-            coverImage: '/images/photos/image-4.jpg',
-            imageCount: 28
-        },
-        {
-            slug: 'travel',
-            title: 'Travel Stories',
-            description: 'Visual narratives from journeys across continents, cultures, and communities.',
-            date: '2023-11-15',
-            coverImage: '/images/photos/image-5.jpg',
-            imageCount: 45
-        }
-    ]
-
-    const collectionsToShow = collections.length > 0 ? collections : defaultCollections
+export default function Photography({ photos = [] }: PhotographyProps) {
 
     // Featured photos for the top section
     const featuredPhotos = [
@@ -132,19 +96,30 @@ export default function Photography({ collections = [] }: PhotographyProps) {
                     </div>
                 </div>
                 
-                {/* Collections section */}
+                {/* Photo galleries section */}
                 <Container className="mt-16 sm:mt-20">
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-800 dark:text-zinc-100 mb-8">
-                        Photography Collections
+                        Photography Galleries
                     </h2>
                     <div className="md:border-l md:border-zinc-100 md:pl-6 md:dark:border-zinc-700/40">
                         <div className="flex max-w-3xl flex-col space-y-16">
-                            {collectionsToShow.map((collection) => (
-                                <PhotoCollectionCard 
-                                    key={collection.slug} 
-                                    collection={collection} 
-                                />
-                            ))}
+                            {photos.length > 0 ? (
+                                photos.map((photo) => (
+                                    <PhotoCard 
+                                        key={photo.slug} 
+                                        photo={photo} 
+                                    />
+                                ))
+                            ) : (
+                                <div className="text-center py-12">
+                                    <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-2">
+                                        No photography galleries yet
+                                    </h3>
+                                    <p className="text-zinc-600 dark:text-zinc-400">
+                                        Check back soon for new photography content.
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </Container>

@@ -11,14 +11,15 @@ interface Photo {
 }
 
 interface PhotographyShowProps {
-    collection: {
+    photo: {
         slug: string
         title: string
         description: string
-        date: string
-        location?: string
-        camera?: string
-        photos: Photo[]
+        date: string | null
+        categories: any[]
+        cover_image: string
+        image_ids: string[]
+        image_count: number
     }
 }
 
@@ -35,21 +36,18 @@ function ArrowLeftIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
     )
 }
 
-export default function PhotographyShow({ collection }: PhotographyShowProps) {
-    // Default photos if none provided
-    const defaultPhotos: Photo[] = [
-        { src: '/images/photos/image-1.jpg', alt: 'Photo 1' },
-        { src: '/images/photos/image-2.jpg', alt: 'Photo 2' },
-        { src: '/images/photos/image-3.jpg', alt: 'Photo 3' },
-        { src: '/images/photos/image-4.jpg', alt: 'Photo 4' },
-        { src: '/images/photos/image-5.jpg', alt: 'Photo 5' },
-    ]
-
-    const photos = collection?.photos || defaultPhotos
+export default function PhotographyShow({ photo }: PhotographyShowProps) {
+    // Convert image_ids to photo objects
+    const photos = photo?.image_ids?.length > 0 
+        ? photo.image_ids.map((id, index) => ({
+            src: `/storage/images/${id}`, // Adjust path as needed
+            alt: `${photo.title} - Image ${index + 1}`
+          }))
+        : []
 
     return (
         <>
-            <Head title={collection?.title || 'Photography Collection'} />
+            <Head title={photo?.title || 'Photography Gallery'} />
             <PublicLayout>
                 <Container className="mt-16 lg:mt-32">
                     <div className="xl:relative">
@@ -64,32 +62,34 @@ export default function PhotographyShow({ collection }: PhotographyShowProps) {
                             
                             <header className="flex flex-col">
                                 <h1 className="mt-6 text-4xl font-bold tracking-tight text-zinc-800 dark:text-zinc-100 sm:text-5xl">
-                                    {collection?.title || 'Photography Collection'}
+                                    {photo?.title || 'Photography Gallery'}
                                 </h1>
                                 <div className="order-first flex items-center gap-3 text-base text-zinc-400 dark:text-zinc-500">
-                                    <time dateTime={collection?.date}>
-                                        {collection?.date && new Date(collection.date).toLocaleDateString('en-US', {
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric',
-                                        })}
-                                    </time>
-                                    {collection?.location && (
+                                    {photo?.date && (
+                                        <time dateTime={photo.date}>
+                                            {new Date(photo.date).toLocaleDateString('en-US', {
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric',
+                                            })}
+                                        </time>
+                                    )}
+                                    {photo?.categories && photo.categories.length > 0 && (
                                         <>
                                             <span className="h-4 w-0.5 rounded-full bg-zinc-200 dark:bg-zinc-500" />
-                                            <span>{collection.location}</span>
+                                            <span>{photo.categories.map(cat => cat.name).join(', ')}</span>
                                         </>
                                     )}
-                                    {collection?.camera && (
+                                    {photo?.image_count && (
                                         <>
                                             <span className="h-4 w-0.5 rounded-full bg-zinc-200 dark:bg-zinc-500" />
-                                            <span>{collection.camera}</span>
+                                            <span>{photo.image_count} images</span>
                                         </>
                                     )}
                                 </div>
-                                {collection?.description && (
+                                {photo?.description && (
                                     <p className="mt-6 text-base text-zinc-600 dark:text-zinc-400">
-                                        {collection.description}
+                                        {photo.description}
                                     </p>
                                 )}
                             </header>
@@ -97,36 +97,49 @@ export default function PhotographyShow({ collection }: PhotographyShowProps) {
                     </div>
                     
                     <div className="mt-16 sm:mt-20">
-                        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                            {photos.map((photo, index) => (
-                                <div
-                                    key={index}
-                                    className="group relative aspect-square overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800"
-                                >
-                                    <img
-                                        src={photo.src}
-                                        alt={photo.alt}
-                                        className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                                    />
+                        {photos.length > 0 ? (
+                            <>
+                                <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                                    {photos.map((photo, index) => (
+                                        <div
+                                            key={index}
+                                            className="group relative aspect-square overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800"
+                                        >
+                                            <img
+                                                src={photo.src}
+                                                alt={photo.alt}
+                                                className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                                            />
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
-                        
-                        {/* Full width images section for variety */}
-                        <div className="mt-8 space-y-8">
-                            {photos.slice(0, 2).map((photo, index) => (
-                                <div
-                                    key={`full-${index}`}
-                                    className="relative aspect-[16/9] overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800"
-                                >
-                                    <img
-                                        src={photo.src}
-                                        alt={photo.alt}
-                                        className="absolute inset-0 h-full w-full object-cover"
-                                    />
+                                
+                                {/* Full width images section for variety */}
+                                <div className="mt-8 space-y-8">
+                                    {photos.slice(0, 2).map((photo, index) => (
+                                        <div
+                                            key={`full-${index}`}
+                                            className="relative aspect-[16/9] overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800"
+                                        >
+                                            <img
+                                                src={photo.src}
+                                                alt={photo.alt}
+                                                className="absolute inset-0 h-full w-full object-cover"
+                                            />
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            </>
+                        ) : (
+                            <div className="text-center py-12">
+                                <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-2">
+                                    No images in this gallery
+                                </h3>
+                                <p className="text-zinc-600 dark:text-zinc-400">
+                                    This gallery doesn't contain any images yet.
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </Container>
             </PublicLayout>

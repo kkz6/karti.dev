@@ -14,17 +14,8 @@ interface ArticleData {
     date: string;
 }
 
-interface RoleData {
-    company: string;
-    title: string;
-    logo: string;
-    start: string;
-    end: string;
-}
-
 interface HomeProps {
     articles: ArticleData[];
-    roles: RoleData[];
 }
 
 function MailIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
@@ -39,28 +30,6 @@ function MailIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
     );
 }
 
-function BriefcaseIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
-            <path
-                d="M2.75 9.75a3 3 0 0 1 3-3h12.5a3 3 0 0 1 3 3v8.5a3 3 0 0 1-3 3H5.75a3 3 0 0 1-3-3v-8.5Z"
-                className="fill-zinc-100 stroke-zinc-400 dark:fill-zinc-100/10 dark:stroke-zinc-500"
-            />
-            <path
-                d="M3 14.25h6.249c.484 0 .952-.002 1.316.319l.777.682a.996.996 0 0 0 1.316 0l.777-.682c.364-.32.832-.319 1.316-.319H21M8.75 6.5V4.75a2 2 0 0 1 2-2h2.5a2 2 0 0 1 2 2V6.5"
-                className="stroke-zinc-400 dark:stroke-zinc-500"
-            />
-        </svg>
-    );
-}
-
-function ArrowDownIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
-    return (
-        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" {...props}>
-            <path d="M4.75 8.75 8 12.25m0 0 3.25-3.5M8 12.25v-8.5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-    );
-}
 
 function GitHubIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
     return (
@@ -74,14 +43,6 @@ function GitHubIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
     );
 }
 
-function InstagramIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
-    return (
-        <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
-            <path d="M12 3c-2.444 0-2.75.01-3.71.054-.959.044-1.613.196-2.185.418A4.412 4.412 0 0 0 4.51 4.511c-.5.5-.809 1.002-1.039 1.594-.222.572-.374 1.226-.418 2.184C3.01 9.25 3 9.556 3 12s.01 2.75.054 3.71c.044.959.196 1.613.418 2.185.23.592.538 1.094 1.039 1.595.5.5 1.002.808 1.594 1.038.572.222 1.226.374 2.184.418C9.25 20.99 9.556 21 12 21s2.75-.01 3.71-.054c.959-.044 1.613-.196 2.185-.419a4.412 4.412 0 0 0 1.595-1.038c.5-.5.808-1.003 1.038-1.595.222-.572.374-1.226.418-2.184.044-.96.054-1.267.054-3.71s-.01-2.75-.054-3.71c-.044-.959-.196-1.613-.419-2.185A4.412 4.412 0 0 0 19.49 4.51c-.5-.5-1.003-.809-1.595-1.039-.572-.222-1.226-.374-2.184-.418C14.75 3.01 14.444 3 12 3Zm0 1.622c2.403 0 2.688.009 3.637.052.877.04 1.354.187 1.67.31.421.163.72.358 1.036.673.315.315.51.615.673 1.035.123.317.27.794.31 1.671.043.95.052 1.234.052 3.637s-.009 2.688-.052 3.637c-.04.877-.187 1.354-.31 1.67-.163.421-.358.72-.673 1.036a2.79 2.79 0 0 1-1.035.673c-.317.123-.794.27-1.671.31-.95.043-1.234.052-3.637.052s-2.688-.009-3.637-.052c-.877-.04-1.354-.187-1.67-.31a2.789 2.789 0 0 1-1.036-.673 2.79 2.79 0 0 1-.673-1.035c-.123-.317-.27-.794-.31-1.671-.043-.95-.052-1.234-.052-3.637s.009-2.688.052-3.637c.04-.877.187-1.354.31-1.67.163-.421.358-.72.673-1.036.315-.315.615-.51 1.035-.673.317-.123.794-.27 1.671-.31.95-.043 1.234-.052 3.637-.052Z" />
-            <path d="M12 15a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm0-7.622a4.622 4.622 0 1 0 0 9.244 4.622 4.622 0 0 0 0-9.244Zm5.884-.182a1.08 1.08 0 1 1-2.16 0 1.08 1.08 0 0 1 2.16 0Z" />
-        </svg>
-    );
-}
 
 function LinkedInIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
     return (
@@ -152,45 +113,6 @@ function Newsletter() {
     );
 }
 
-function Role({ role }: { role: RoleData }) {
-    return (
-        <li className="flex gap-4">
-            <div className="relative mt-1 flex h-10 w-10 flex-none items-center justify-center rounded-full shadow-md ring-1 shadow-zinc-800/5 ring-zinc-900/5 dark:border dark:border-zinc-700/50 dark:bg-zinc-800 dark:ring-0">
-                <img src={role.logo} alt="" className="h-7 w-7" />
-            </div>
-            <dl className="flex flex-auto flex-wrap gap-x-2">
-                <dt className="sr-only">Company</dt>
-                <dd className="w-full flex-none text-sm font-medium text-zinc-900 dark:text-zinc-100">{role.company}</dd>
-                <dt className="sr-only">Role</dt>
-                <dd className="text-xs text-zinc-500 dark:text-zinc-400">{role.title}</dd>
-                <dt className="sr-only">Date</dt>
-                <dd className="ml-auto text-xs text-zinc-400 dark:text-zinc-500" aria-label={`${role.start} until ${role.end}`}>
-                    <time>{role.start}</time> <span aria-hidden="true">—</span> <time>{role.end}</time>
-                </dd>
-            </dl>
-        </li>
-    );
-}
-
-function Resume({ roles }: { roles: RoleData[] }) {
-    return (
-        <div className="rounded-2xl border border-zinc-100 p-6 dark:border-zinc-700/40">
-            <h2 className="flex text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                <BriefcaseIcon className="h-6 w-6 flex-none" />
-                <span className="ml-3">Work</span>
-            </h2>
-            <ol className="mt-6 space-y-4">
-                {roles.map((role, roleIndex) => (
-                    <Role key={roleIndex} role={role} />
-                ))}
-            </ol>
-            <Button variant="secondary" className="group mt-6 w-full">
-                Download CV
-                <ArrowDownIcon className="h-4 w-4 stroke-zinc-400 transition group-active:stroke-zinc-600 dark:group-hover:stroke-zinc-50 dark:group-active:stroke-zinc-50" />
-            </Button>
-        </div>
-    );
-}
 
 function InteractivePhoto({ image, rotation, index }: { image: any; rotation: string; index: number }) {
     const [isHovered, setIsHovered] = useState(false);
@@ -328,7 +250,7 @@ function Photos() {
     );
 }
 
-export default function Home({ articles = [], roles = [] }: HomeProps) {
+export default function Home({ articles = [] }: HomeProps) {
     return (
         <PublicLayout>
             <Container className="mt-9">
@@ -341,10 +263,9 @@ export default function Home({ articles = [], roles = [] }: HomeProps) {
                         develop technologies that empower regular people to explore space on their own terms.
                     </p>
                     <div className="mt-6 flex gap-6">
-                        <SocialLink href="#" aria-label="Follow on X" icon={XIcon} />
-                        <SocialLink href="#" aria-label="Follow on Instagram" icon={InstagramIcon} />
-                        <SocialLink href="#" aria-label="Follow on GitHub" icon={GitHubIcon} />
-                        <SocialLink href="#" aria-label="Follow on LinkedIn" icon={LinkedInIcon} />
+                        <SocialLink href="https://x.com/ikkarti" aria-label="Follow on X" icon={XIcon} />
+                        <SocialLink href="https://github.com/kkz6" aria-label="Follow on GitHub" icon={GitHubIcon} />
+                        <SocialLink href="https://linkedin.com/in/ikkarti" aria-label="Follow on LinkedIn" icon={LinkedInIcon} />
                     </div>
                 </div>
             </Container>
@@ -358,7 +279,6 @@ export default function Home({ articles = [], roles = [] }: HomeProps) {
                     </div>
                     <div className="space-y-10 lg:pl-16 xl:pl-24">
                         <Newsletter />
-                        <Resume roles={roles} />
                     </div>
                 </div>
             </Container>

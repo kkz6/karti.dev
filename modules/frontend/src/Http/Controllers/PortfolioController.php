@@ -5,7 +5,6 @@ namespace Modules\Frontend\Http\Controllers;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Modules\Blog\Models\Article;
-use Modules\Photography\Models\PhotoCollection;
 use Modules\Projects\Models\Project;
 use Modules\Profile\Models\SpeakingEvent;
 use Modules\Profile\Models\WorkExperience;
@@ -194,62 +193,6 @@ class PortfolioController extends BaseController
         ]);
     }
 
-    public function photography()
-    {
-        $collections = PhotoCollection::published()
-            ->with(['photos', 'categories'])
-            ->ordered()
-            ->get()
-            ->map(function ($collection) {
-                return [
-                    'slug'        => $collection->slug,
-                    'title'       => $collection->title,
-                    'description' => $collection->description,
-                    'date'        => $collection->published_at->format('Y-m-d'),
-                    'coverImage'  => $collection->cover_image,
-                    'imageCount'  => $collection->photos->count(),
-                    'categories'  => $collection->categories->pluck('name'),
-                ];
-            });
-
-        return Inertia::render('frontend::photography', [
-            'collections' => $collections,
-        ]);
-    }
-
-    public function showPhotoCollection($slug)
-    {
-        $collection = PhotoCollection::published()
-            ->with(['photos' => function ($query) {
-                $query->ordered();
-            }, 'categories'])
-            ->where('slug', $slug)
-            ->first();
-
-        if (! $collection) {
-            abort(404);
-        }
-
-        return Inertia::render('frontend::photography/show', [
-            'collection' => [
-                'slug'        => $collection->slug,
-                'title'       => $collection->title,
-                'description' => $collection->description,
-                'date'        => $collection->published_at->format('Y-m-d'),
-                'categories'  => $collection->categories,
-                'photos'      => $collection->photos->map(function ($photo) {
-                    return [
-                        'title'       => $photo->title,
-                        'description' => $photo->description,
-                        'image_path'  => $photo->image_path,
-                        'alt_text'    => $photo->alt_text,
-                        'width'       => $photo->width,
-                        'height'      => $photo->height,
-                    ];
-                }),
-            ],
-        ]);
-    }
 
     public function contact()
     {

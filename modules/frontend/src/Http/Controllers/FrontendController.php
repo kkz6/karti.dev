@@ -60,29 +60,6 @@ class FrontendController extends BaseController
         return Inertia::render('frontend::portfolio');
     }
 
-    public function photography(): Response
-    {
-        return Inertia::render('frontend::photography');
-    }
-
-    public function photographyShow(string $slug): Response
-    {
-        // Fetch collection data based on slug
-        // For now, return with default data
-        $collection = [
-            'slug'        => $slug,
-            'title'       => ucfirst(str_replace('-', ' ', $slug)),
-            'description' => 'A collection of photographs exploring themes and moments.',
-            'date'        => '2024-01-15',
-            'location'    => 'Various Locations',
-            'camera'      => 'Canon EOS R5',
-            'photos'      => [],
-        ];
-
-        return Inertia::render('frontend::photography/show', [
-            'collection' => $collection,
-        ]);
-    }
 
     public function privacy(): Response
     {

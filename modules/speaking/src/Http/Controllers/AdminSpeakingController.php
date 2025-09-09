@@ -7,11 +7,16 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Shared\Http\Controllers\BaseController;
+use Modules\Speaking\Interfaces\SpeakingEventServiceInterface;
 use Modules\Speaking\Models\SpeakingEvent;
 use Modules\Speaking\Tables\SpeakingEvents;
 
 class AdminSpeakingController extends BaseController
 {
+    public function __construct(
+        private readonly SpeakingEventServiceInterface $speakingEventService
+    ) {}
+
     /**
      * Display a listing of speaking events.
      */

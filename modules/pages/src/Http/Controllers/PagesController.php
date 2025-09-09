@@ -5,9 +5,14 @@ namespace Modules\Pages\Http\Controllers;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Shared\Http\Controllers\BaseController;
+use Modules\Speaking\Interfaces\SpeakingEventServiceInterface;
 
 class PagesController extends BaseController
 {
+    public function __construct(
+        private readonly SpeakingEventServiceInterface $speakingEventService
+    ) {}
+
     public function about(): Response
     {
         return Inertia::render('pages::about');
@@ -35,6 +40,10 @@ class PagesController extends BaseController
 
     public function speaking(): Response
     {
-        return Inertia::render('pages::speaking');
+        $events = $this->speakingEventService->getPublishedForFrontend();
+
+        return Inertia::render('pages::speaking', [
+            'events' => $events,
+        ]);
     }
 }

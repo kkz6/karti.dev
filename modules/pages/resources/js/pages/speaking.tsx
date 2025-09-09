@@ -11,10 +11,12 @@ interface SpeakingEvent {
     event: string;
     cta: string;
     href: string;
+    date?: string;
+    type: string;
 }
 
 interface SpeakingProps {
-    events?: SpeakingEvent[];
+    events?: Record<string, SpeakingEvent[]>;
 }
 
 function SpeakingSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -38,7 +40,23 @@ function Appearance({ title, description, event, cta, href }: SpeakingEvent) {
     );
 }
 
-export default function Speaking({ events = [] }: SpeakingProps) {
+export default function Speaking({ events = {} }: SpeakingProps) {
+    // Helper function to format event type titles
+    const formatEventTypeTitle = (type: string) => {
+        switch (type) {
+            case 'conference':
+                return 'Conferences';
+            case 'podcast':
+                return 'Podcasts';
+            case 'workshop':
+                return 'Workshops';
+            case 'webinar':
+                return 'Webinars';
+            default:
+                return type.charAt(0).toUpperCase() + type.slice(1) + 's';
+        }
+    };
+
     return (
         <>
             <Head title="Speaking" />
@@ -48,45 +66,26 @@ export default function Speaking({ events = [] }: SpeakingProps) {
                     intro="One of my favorite ways to share my ideas is live on stage, where there's so much more communication bandwidth than there is in writing, and I love podcast interviews because they give me the opportunity to answer questions instead of just present my opinions."
                 >
                     <div className="space-y-20">
-                        <SpeakingSection title="Conferences">
-                            <Appearance
-                                href="#"
-                                title="In space, no one can watch you stream — until now"
-                                description="A technical deep-dive into HelioStream, the real-time streaming library I wrote for transmitting live video back to Earth."
-                                event="SysConf 2021"
-                                cta="Watch video"
-                            />
-                            <Appearance
-                                href="#"
-                                title="Lessons learned from our first product recall"
-                                description="They say that if you're not embarrassed by your first version, you're doing it wrong. Well when you're selling DIY space shuttle kits it turns out it's a bit more complicated."
-                                event="Business of Startups 2020"
-                                cta="Watch video"
-                            />
-                        </SpeakingSection>
-                        <SpeakingSection title="Podcasts">
-                            <Appearance
-                                href="#"
-                                title="Using design as a competitive advantage"
-                                description="How we used world-class visual design to attract a great team, win over customers, and get more press for Planetaria."
-                                event="Encoding Design, July 2022"
-                                cta="Listen to podcast"
-                            />
-                            <Appearance
-                                href="#"
-                                title="Bootstrapping an aerospace company to $17M ARR"
-                                description="The story of how we built one of the most promising space startups in the world without taking any capital from investors."
-                                event="The Escape Velocity Show, March 2022"
-                                cta="Listen to podcast"
-                            />
-                            <Appearance
-                                href="#"
-                                title="Programming your company operating system"
-                                description="On the importance of creating systems and processes for running your business so that everyone on the team knows how to make the right decision no matter the situation."
-                                event="How They Work Radio, September 2021"
-                                cta="Listen to podcast"
-                            />
-                        </SpeakingSection>
+                        {Object.keys(events).length > 0 ? (
+                            Object.entries(events).map(([eventType, typeEvents]) => (
+                                <SpeakingSection key={eventType} title={formatEventTypeTitle(eventType)}>
+                                    {typeEvents.map((event, index) => (
+                                        <Appearance
+                                            key={`${eventType}-${index}`}
+                                            title={event.title}
+                                            description={event.description}
+                                            event={event.event}
+                                            cta={event.cta}
+                                            href={event.href}
+                                        />
+                                    ))}
+                                </SpeakingSection>
+                            ))
+                        ) : (
+                            <div className="text-center py-12">
+                                <p className="text-lg text-gray-500">No speaking events available at the moment.</p>
+                            </div>
+                        )}
                     </div>
                 </SimpleLayout>
             </PublicLayout>
