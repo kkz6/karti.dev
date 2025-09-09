@@ -1,6 +1,6 @@
 import React from 'react';
 import { Upload } from './Upload';
-import { MediaUpload } from '../types/media';
+import { MediaUpload } from '../../types/media';
 
 interface UploadsProps {
   uploads: MediaUpload[];

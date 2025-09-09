@@ -1,6 +1,6 @@
 import axios from 'axios';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { MediaUpload } from '../types/media';
+import { MediaUpload } from '../../types/media';
 
 interface UploaderProps {
     domElement?: HTMLDivElement | null;
@@ -83,21 +83,25 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
                         const uploadedMedia = mediaArray[0];
 
                         // Mark upload as completed but keep it visible for a moment
-                        setUploads((prev) => prev.map((u) => (u.id === uuid ? { ...u, status: 'completed', progress: 100 } : u)));
+                        setUploads((prev) => prev.map((u) => (u.id === uuid ? { ...u, status: 'completed' as const, progress: 100 } : u)));
                         
                         onUploadComplete?.(
                             uploadedMedia,
                             uploads.filter((u) => u.id !== uuid),
                         );
                         
-                        // Remove the upload after showing success for 3 seconds
+                        // Remove the upload after showing success for 4 seconds
                         setTimeout(() => {
                             setUploads((prev) => prev.filter((u) => u.id !== uuid));
-                        }, 3000);
+                        }, 4000);
                     } else {
-                        setUploads((prev) => prev.map((u) => (u.id === uuid ? { ...u, status: 'error', error: 'Upload failed' } : u)));
+                        setUploads((prev) => prev.map((u) => (u.id === uuid ? { ...u, status: 'error' as const, error: 'Upload failed' } : u)));
                         onError?.('Upload failed');
-                        setTimeout(() => setUploads((prev) => prev.filter((u) => u.id !== uuid)), 5000);
+                        
+                        // Keep error visible for 8 seconds
+                        setTimeout(() => {
+                            setUploads((prev) => prev.filter((u) => u.id !== uuid));
+                        }, 8000);
                     }
                 } catch (error: any) {
                     let errorMessage = 'Network error';
@@ -114,9 +118,13 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
                         }
                     }
 
-                    setUploads((prev) => prev.map((u) => (u.id === uuid ? { ...u, status: 'error', error: errorMessage } : u)));
+                    setUploads((prev) => prev.map((u) => (u.id === uuid ? { ...u, status: 'error' as const, error: errorMessage } : u)));
                     onError?.(errorMessage);
-                    setTimeout(() => setUploads((prev) => prev.filter((u) => u.id !== uuid)), 5000);
+                    
+                    // Keep error visible for 8 seconds
+                    setTimeout(() => {
+                        setUploads((prev) => prev.filter((u) => u.id !== uuid));
+                    }, 8000);
                 }
             },
             [container, path, onUploadComplete, onError, uploads],

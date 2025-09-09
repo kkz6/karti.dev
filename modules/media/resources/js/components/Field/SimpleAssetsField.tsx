@@ -68,7 +68,6 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
     // Asset management handlers
     const handleAssetEdit = (asset: MediaAsset) => {
         // TODO: Implement asset editing modal
-        console.log('Edit asset:', asset);
     };
 
     const handleUploadFile = () => {
@@ -112,7 +111,7 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                 // Convert MediaFile objects to MediaAsset objects and add to current assets
                 validAssets.forEach(asset => addAsset(convertMediaFileToAsset(asset)));
             } catch (error) {
-                console.error('Error fetching asset data:', error);
+                // Handle error silently or show user-friendly message
             }
         }
         closeSelector();

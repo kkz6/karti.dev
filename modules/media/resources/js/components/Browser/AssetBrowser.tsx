@@ -1,7 +1,7 @@
 import { Button } from '@shared/components/ui/button';
 import { Input } from '@shared/components/ui/input';
 import { Toggle } from '@shared/components/ui/toggle';
-import { Grid, List, Search } from 'lucide-react';
+import { Grid, List, Search, X } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useMediaBrowser } from '../../hooks/useMediaBrowser';
@@ -328,22 +328,54 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                 {/* Scrollable Content Area */}
                 <div className="asset-browser-content flex-1 overflow-y-auto pb-20">
                     {/* Upload Progress */}
-                    {uploads.filter((upload) => upload.status === 'uploading').length > 0 && (
+                    {uploads.length > 0 && (
                         <div className="uploads-section bg-blue-50 p-4 dark:bg-blue-900">
-                            <h3 className="mb-2 font-semibold">Uploading files...</h3>
-                            {uploads
-                                .filter((upload) => upload.status === 'uploading')
-                                .map((upload) => (
-                                    <div key={upload.id} className="upload-item mb-2">
-                                        <div className="flex justify-between text-sm">
-                                            <span>{upload.name}</span>
-                                            <span>{upload.progress}%</span>
+                            <div className="flex justify-between items-center mb-2">
+                                <h3 className="font-semibold">
+                                    {uploads.some(u => u.status === 'uploading') ? 'Uploading files...' : 'Upload Status'}
+                                </h3>
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={() => setUploads([])} 
+                                    className="h-6 w-6 p-0 hover:bg-blue-100 dark:hover:bg-blue-800"
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </div>
+                            {uploads.map((upload) => (
+                                <div key={upload.id} className="upload-item mb-2">
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="flex-1">{upload.name}</span>
+                                        <div className="flex items-center gap-2">
+                                            {upload.status === 'error' ? (
+                                                <span className="text-red-600 font-medium">Error</span>
+                                            ) : upload.status === 'completed' ? (
+                                                <span className="text-green-600 font-medium">Completed</span>
+                                            ) : (
+                                                <span>{upload.progress}%</span>
+                                            )}
+                                            <Button 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                onClick={() => setUploads(prev => prev.filter(u => u.id !== upload.id))} 
+                                                className="h-4 w-4 p-0 hover:bg-blue-100 dark:hover:bg-blue-800"
+                                            >
+                                                <X className="h-3 w-3" />
+                                            </Button>
                                         </div>
+                                    </div>
+                                    {upload.status === 'error' ? (
+                                        <div className="text-sm text-red-600 mt-1">{upload.error}</div>
+                                    ) : upload.status === 'completed' ? (
+                                        <div className="text-sm text-green-600 mt-1">Upload completed successfully</div>
+                                    ) : (
                                         <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
                                             <div className="h-2 rounded-full bg-blue-600 transition-all" style={{ width: `${upload.progress}%` }} />
                                         </div>
-                                    </div>
-                                ))}
+                                    )}
+                                </div>
+                            ))}
                         </div>
                     )}
 
@@ -461,13 +493,12 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                 path={path}
                 onUploadComplete={(item, uploads) => {
                     loadAssets(); // Reload assets after upload
-                    setUploads([]); // Clear uploads
+                    // Don't clear uploads here - let them clear naturally after showing success state
                 }}
                 onUpdated={(uploads) => {
                     setUploads(uploads);
                 }}
                 onError={(error) => {
-                    console.error('Upload error:', error);
                     // Show error toast
                     toast.error(error);
                 }}
