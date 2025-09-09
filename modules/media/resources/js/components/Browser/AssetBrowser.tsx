@@ -355,14 +355,16 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                                             ) : (
                                                 <span>{upload.progress}%</span>
                                             )}
-                                            <Button 
-                                                variant="ghost" 
-                                                size="sm" 
-                                                onClick={() => setUploads(prev => prev.filter(u => u.id !== upload.id))} 
-                                                className="h-4 w-4 p-0 hover:bg-blue-100 dark:hover:bg-blue-800"
-                                            >
-                                                <X className="h-3 w-3" />
-                                            </Button>
+                                            {(upload.status === 'error' || upload.status === 'completed') && (
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="sm" 
+                                                    onClick={() => setUploads(prev => prev.filter(u => u.id !== upload.id))} 
+                                                    className="h-4 w-4 p-0 hover:bg-blue-100 dark:hover:bg-blue-800"
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </Button>
+                                            )}
                                         </div>
                                     </div>
                                     {upload.status === 'error' ? (

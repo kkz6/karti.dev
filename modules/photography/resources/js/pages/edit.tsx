@@ -46,7 +46,7 @@ export default function Edit({ photo, categories }: { photo: Photo; categories: 
         title: photo.title || '',
         slug: photo.slug || '',
         description: photo.description || '',
-        image_ids: photo.image_ids || [],
+        image_ids: (photo.image_ids || []).map(id => id.toString()),
         cover_image: photo.cover_image
             ? [
                   {
@@ -181,7 +181,7 @@ export default function Edit({ photo, categories }: { photo: Photo; categories: 
                                 <div className="grid gap-2">
                                     <SimpleAssetsField
                                         name="Gallery Images"
-                                        data={data.image_ids.map(id => ({ id } as any))}
+                                        data={data.image_ids}
                                         config={{
                                             container: 'public',
                                             folder: '/photography/galleries',
@@ -190,7 +190,7 @@ export default function Edit({ photo, categories }: { photo: Photo; categories: 
                                             canEdit: true,
                                             accept: 'image/*',
                                         }}
-                                        onChange={(assets) => setData('image_ids', assets.map((asset: any) => asset.id))}
+                                        onChange={(assetIds) => setData('image_ids', assetIds)}
                                         onError={(error) => console.error('Gallery images error:', error)}
                                     />
                                     {errors.image_ids && <div className="text-sm text-red-600">{errors.image_ids}</div>}

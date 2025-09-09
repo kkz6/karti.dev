@@ -2,8 +2,8 @@ import { Button } from '@shared/components/ui/button';
 import { FormControl, FormItem, FormLabel, FormMessage } from '@shared/components/ui/form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@shared/components/ui/dialog';
 import { cn } from '@shared/lib/utils';
-import { FolderOpen, Upload, X } from 'lucide-react';
-import React, { useEffect, useRef } from 'react';
+import { FolderOpen, Upload, X, GripVertical } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useAssetsField } from '../../hooks/useAssetsField';
 import { AssetFieldProps, DisplayMode } from '../../types/asset-field';
@@ -14,11 +14,33 @@ import { Uploads } from '../Upload/Uploads';
 import { AssetFieldRow } from './AssetFieldRow';
 import { AssetFieldTile } from './AssetFieldTile';
 import { MediaAsset } from '../../types/media';
-import { MediaService, MediaFile } from '../../services/MediaService';
+import { MediaService } from '../../services/MediaService';
+import { AssetUpload } from '../../types/asset-field';
+import { AssetEditor } from '../Editor/AssetEditor';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+    useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 export function SimpleAssetsField({ name, data = [], config = {}, required = false, readOnly = false, onChange, onError }: AssetFieldProps) {
     const uploaderRef = useRef<UploaderRef>(null);
     const displayMode: DisplayMode = config.mode || 'grid';
+    const mediaService = useRef(new MediaService());
 
     // Try to get the form context, but don't fail if it's not there
     let isInFormContext = false;
@@ -30,89 +52,184 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
         isInFormContext = false;
     }
 
-    const {
-        assets,
-        uploads,
-        loading,
-        showSelector,
-        draggingFile,
-        maxFilesReached,
-        containerSpecified,
-        isEmpty,
-        isSolo,
-        loadAssets,
-        addAsset,
-        removeAsset,
-        openSelector,
-        closeSelector,
-        handleDragOver,
-        handleDragLeave,
-        handleDrop,
-        handleUploadComplete,
-        handleUploadsUpdated,
-        clearUpload,
-    } = useAssetsField({
-        initialAssets: data,
-        config,
-        onChange,
-        onError,
-    });
+    // State for managing IDs and loaded assets separately
+    const [assetIds, setAssetIds] = useState<string[]>([]);
+    const [loadedAssets, setLoadedAssets] = useState<MediaAsset[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [showSelector, setShowSelector] = useState(false);
+    const [draggingFile, setDraggingFile] = useState(false);
+    const [uploads, setUploads] = useState<AssetUpload[]>([]);
+    const loadedAssetIdsRef = useRef<string[]>([]);
 
-    // Load initial data
+    // Configuration computed values
+    const maxFiles = config.max_files || 0;
+    const maxFilesReached = maxFiles > 0 && assetIds.length >= maxFiles;
+    const containerSpecified = !!config.container;
+    const isEmpty = loadedAssets.length === 0;
+    const isSolo = maxFiles === 1;
+
+    // Initialize asset IDs from data prop
     useEffect(() => {
-        if (data.length > 0) {
-            loadAssets(data);
+        const ids = Array.isArray(data) ? data.map((item: any) => {
+            if (typeof item === 'string') return item;
+            if (typeof item === 'number') return item.toString();
+            if (typeof item === 'object' && item && item.id) return item.id.toString();
+            return null;
+        }).filter((id): id is string => Boolean(id)) : [];
+        
+        setAssetIds(ids);
+    }, [data]);
+
+    // Load full asset data when IDs change (but only if we don't already have those assets)
+    useEffect(() => {
+        if (assetIds.length === 0) {
+            setLoadedAssets([]);
+            loadedAssetIdsRef.current = [];
+            return;
         }
-    }, [data, loadAssets]);
+
+        // Check if we need to load any new assets
+        const currentlyLoadedIds = loadedAssetIdsRef.current;
+        const missingIds = assetIds.filter(id => !currentlyLoadedIds.includes(id));
+        
+        if (missingIds.length > 0) {
+            // Only load missing assets or reload all if we have missing ones
+            loadAssetsFromIds(assetIds);
+        } else {
+            // Just reorder existing assets without API call
+            setLoadedAssets(prevAssets => {
+                const reorderedAssets = assetIds.map(id => prevAssets.find(asset => asset.id === id)).filter(Boolean) as MediaAsset[];
+                return reorderedAssets;
+            });
+        }
+    }, [assetIds]);
+
+    // Function to load assets from IDs
+    const loadAssetsFromIds = async (ids: string[]) => {
+        if (ids.length === 0) {
+            setLoadedAssets([]);
+            loadedAssetIdsRef.current = [];
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const assets = await mediaService.current.getAssetsByIds(ids);
+            // Maintain the order of IDs
+            const orderedAssets = ids.map(id => assets.find(asset => asset.id === id)).filter(Boolean) as MediaAsset[];
+            setLoadedAssets(orderedAssets);
+            loadedAssetIdsRef.current = ids;
+        } catch (error) {
+            console.error('Error loading assets:', error);
+            onError?.('Failed to load assets');
+            setLoadedAssets([]);
+            loadedAssetIdsRef.current = [];
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Update parent component with new IDs
+    const updateParentWithIds = (newIds: string[]) => {
+        setAssetIds(newIds);
+        onChange?.(newIds);
+    };
+
+    // Asset editor state
+    const [showAssetEditor, setShowAssetEditor] = useState(false);
+    const [editedAssetId, setEditedAssetId] = useState<string | null>(null);
 
     // Asset management handlers
     const handleAssetEdit = (asset: MediaAsset) => {
-        // TODO: Implement asset editing modal
+        setEditedAssetId(asset.id);
+        setShowAssetEditor(true);
+    };
+
+    const handleAssetRemove = (asset: MediaAsset) => {
+        const newIds = assetIds.filter(id => id !== asset.id);
+        updateParentWithIds(newIds);
     };
 
     const handleUploadFile = () => {
         uploaderRef.current?.browse();
     };
 
-    const [selectedAssetIds, setSelectedAssetIds] = React.useState<string[]>([]);
-    const mediaService = useRef(new MediaService());
+    // Upload handlers
+    const handleUploadComplete = (asset: MediaAsset) => {
+        const newIds = [...assetIds, asset.id];
+        updateParentWithIds(newIds);
+    };
 
-    // Helper function to convert MediaFile to MediaAsset
-    const convertMediaFileToAsset = (file: MediaFile): MediaAsset => ({
-        id: file.id.toString(),
-        disk: file.disk,
-        directory: file.directory,
-        filename: file.filename,
-        title: file.basename || file.filename,
-        extension: file.extension,
-        mime_type: file.mime_type,
-        aggregate_type: file.aggregate_type,
-        size: file.size,
-        created_at: file.created_at,
-        updated_at: file.updated_at,
-        url: file.url,
-        path: file.directory,
-        container_id: 'public', // Default container
-        is_image: file.aggregate_type === 'image',
-        is_audio: file.aggregate_type === 'audio',
-        is_video: file.aggregate_type === 'video',
-        thumbnail_url: file.aggregate_type === 'image' ? file.url : undefined,
-        formatted_size: `${(file.size / 1024).toFixed(1)} KB`, // Simple formatting
-    });
+    const handleUploadsUpdated = (newUploads: AssetUpload[]) => {
+        setUploads(newUploads);
+    };
 
-    const handleAssetsSelected = async () => {
-        if (selectedAssetIds.length > 0) {
-            try {
-                // Fetch asset data for selected IDs
-                const assetPromises = selectedAssetIds.map(id => mediaService.current.getFileDetails(Number(id)));
-                const assetData = await Promise.all(assetPromises);
-                const validAssets = assetData.filter(asset => asset !== null);
+    const clearUpload = (uploadId: string) => {
+        setUploads(prev => prev.filter(upload => upload.id !== uploadId));
+    };
 
-                // Convert MediaFile objects to MediaAsset objects and add to current assets
-                validAssets.forEach(asset => addAsset(convertMediaFileToAsset(asset)));
-            } catch (error) {
-                // Handle error silently or show user-friendly message
+    // Drag handlers
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setDraggingFile(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setDraggingFile(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setDraggingFile(false);
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0 && uploaderRef.current) {
+            Array.from(files).forEach((file) => {
+                uploaderRef.current?.upload(file);
+            });
+        }
+    };
+
+    const [selectedAssetIds, setSelectedAssetIds] = useState<string[]>([]);
+
+    // Drag and drop sensors
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    // Handle drag end for sorting
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (active.id !== over?.id) {
+            const oldIndex = assetIds.findIndex((id) => id === active.id);
+            const newIndex = assetIds.findIndex((id) => id === over?.id);
+
+            if (oldIndex !== -1 && newIndex !== -1) {
+                const newIds = arrayMove(assetIds, oldIndex, newIndex);
+                updateParentWithIds(newIds);
             }
+        }
+    };
+
+
+    // Asset browser handlers
+    const openSelector = () => {
+        setShowSelector(true);
+    };
+
+    const closeSelector = () => {
+        setShowSelector(false);
+        setSelectedAssetIds([]);
+    };
+
+    const handleAssetsSelected = () => {
+        if (selectedAssetIds.length > 0) {
+            const newIds = [...assetIds, ...selectedAssetIds];
+            updateParentWithIds(newIds);
         }
         closeSelector();
     };
@@ -121,25 +238,59 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
         setSelectedAssetIds(selections);
     };
 
-    const handleAssetDoubleClicked = async (asset: MediaAsset) => {
-        addAsset(asset);
+    const handleAssetDoubleClicked = (asset: MediaAsset) => {
+        const newIds = [...assetIds, asset.id];
+        updateParentWithIds(newIds);
         closeSelector();
-    };
-
-    const handleDropFiles = (e: React.DragEvent) => {
-        const files = handleDrop(e);
-        if (files && files.length > 0 && uploaderRef.current) {
-            Array.from(files).forEach((file) => {
-                uploaderRef.current?.upload(file);
-            });
-        }
     };
 
     const canEdit = config.canEdit ?? true;
     const container = config.container;
     const folder = config.folder || '/';
     const restrictNavigation = config.restrict || false;
-    const maxFiles = config.max_files || 0;
+
+    // Sortable Asset Tile Component with Drag Handle
+    const SortableAssetTile = ({ asset }: { asset: MediaAsset }) => {
+        const {
+            attributes,
+            listeners,
+            setNodeRef,
+            transform,
+            transition,
+            isDragging,
+        } = useSortable({ 
+            id: asset.id,
+        });
+
+        const style = {
+            transform: CSS.Transform.toString(transform),
+            transition,
+            opacity: isDragging ? 0.5 : 1,
+        };
+
+        return (
+            <div ref={setNodeRef} style={style} {...attributes} className="relative group">
+                <AssetFieldTile
+                    asset={asset}
+                    data-id={asset.id}
+                    readOnly={readOnly}
+                    canEdit={canEdit}
+                    onEdit={handleAssetEdit}
+                    onRemove={handleAssetRemove}
+                />
+                {/* Drag Handle */}
+                {!readOnly && (
+                    <div 
+                        {...listeners}
+                        className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing bg-black/70 rounded p-1 hover:bg-black/80 z-10"
+                        title="Drag to reorder"
+                    >
+                        <GripVertical className="h-3 w-3 text-white" />
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     // Render with form components if in form context, otherwise render standalone
     if (isInFormContext) {
@@ -158,7 +309,7 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                     })}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
-                    onDrop={handleDropFiles}
+                    onDrop={handleDrop}
                 >
                     {loading && <LoadingGraphic />}
 
@@ -215,24 +366,24 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                             {!isEmpty && !isSolo && (
                                 <>
                                     {displayMode === 'grid' ? (
-                                        <div className="asset-grid-listing grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-                                            {assets.map((asset) => (
-                                                <AssetFieldTile
-                                                    key={asset.id}
-                                                    asset={asset}
-                                                    data-id={asset.id}
-                                                    readOnly={readOnly}
-                                                    canEdit={canEdit}
-                                                    onEdit={handleAssetEdit}
-                                                    onRemove={removeAsset}
-                                                />
-                                            ))}
-                                        </div>
+                                        <DndContext
+                                            sensors={sensors}
+                                            collisionDetection={closestCenter}
+                                            onDragEnd={handleDragEnd}
+                                        >
+                                            <SortableContext items={loadedAssets.map(asset => asset.id)} strategy={rectSortingStrategy}>
+                                                <div className="asset-grid-listing grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                                                    {loadedAssets.map((asset) => (
+                                                        <SortableAssetTile key={asset.id} asset={asset} />
+                                                    ))}
+                                                </div>
+                                            </SortableContext>
+                                        </DndContext>
                                     ) : (
                                         <div className="asset-table-listing">
                                             <table className="w-full">
                                                 <tbody>
-                                                    {assets.map((asset) => (
+                                                    {loadedAssets.map((asset) => (
                                                         <AssetFieldRow
                                                             key={asset.id}
                                                             asset={asset}
@@ -240,7 +391,7 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                                                             readOnly={readOnly}
                                                             canEdit={canEdit}
                                                             onEdit={handleAssetEdit}
-                                                            onRemove={removeAsset}
+                                                            onRemove={handleAssetRemove}
                                                         />
                                                     ))}
                                                 </tbody>
@@ -254,14 +405,14 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                             {!isEmpty && isSolo && (
                                 <div className="asset-solo-container p-4">
                                     <div className="w-32">
-                                        {assets.map((asset) => (
+                                        {loadedAssets.map((asset) => (
                                             <AssetFieldTile
                                                 key={asset.id}
                                                 asset={asset}
                                                 readOnly={readOnly}
                                                 canEdit={canEdit}
                                                 onEdit={handleAssetEdit}
-                                                onRemove={removeAsset}
+                                                onRemove={handleAssetRemove}
                                             />
                                         ))}
                                     </div>
@@ -308,6 +459,31 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
+
+                    {/* Asset Editor */}
+                    <AssetEditor
+                        assetId={editedAssetId}
+                        isOpen={showAssetEditor}
+                        onClose={() => {
+                            setShowAssetEditor(false);
+                            setEditedAssetId(null);
+                        }}
+                        onSaved={(asset) => {
+                            setShowAssetEditor(false);
+                            setEditedAssetId(null);
+                            // Update the specific asset in the loaded assets list
+                            const updatedAssets = loadedAssets.map(a => a.id === asset.id ? asset : a);
+                            setLoadedAssets(updatedAssets);
+                        }}
+                        onDeleted={(assetId) => {
+                            setShowAssetEditor(false);
+                            setEditedAssetId(null);
+                            // Remove the deleted asset from both lists
+                            const newIds = assetIds.filter(id => id !== assetId);
+                            updateParentWithIds(newIds);
+                        }}
+                        allowDeleting={canEdit}
+                    />
                 </div>
             </FormControl>
             <FormMessage />
@@ -330,7 +506,7 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                 })}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
-                onDrop={handleDropFiles}
+                onDrop={handleDrop}
             >
                 {loading && <LoadingGraphic />}
 
@@ -387,24 +563,24 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                         {!isEmpty && !isSolo && (
                             <>
                                 {displayMode === 'grid' ? (
-                                    <div className="asset-grid-listing grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-                                        {assets.map((asset) => (
-                                            <AssetFieldTile
-                                                key={asset.id}
-                                                asset={asset}
-                                                data-id={asset.id}
-                                                readOnly={readOnly}
-                                                canEdit={canEdit}
-                                                onEdit={handleAssetEdit}
-                                                onRemove={removeAsset}
-                                            />
-                                        ))}
-                                    </div>
+                                    <DndContext
+                                        sensors={sensors}
+                                        collisionDetection={closestCenter}
+                                        onDragEnd={handleDragEnd}
+                                    >
+                                        <SortableContext items={loadedAssets.map(asset => asset.id)} strategy={rectSortingStrategy}>
+                                            <div className="asset-grid-listing grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                                                {loadedAssets.map((asset) => (
+                                                    <SortableAssetTile key={asset.id} asset={asset} />
+                                                ))}
+                                            </div>
+                                        </SortableContext>
+                                    </DndContext>
                                 ) : (
                                     <div className="asset-table-listing">
                                         <table className="w-full">
                                             <tbody>
-                                                {assets.map((asset) => (
+                                                {loadedAssets.map((asset) => (
                                                     <AssetFieldRow
                                                         key={asset.id}
                                                         asset={asset}
@@ -412,7 +588,7 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                                                         readOnly={readOnly}
                                                         canEdit={canEdit}
                                                         onEdit={handleAssetEdit}
-                                                        onRemove={removeAsset}
+                                                        onRemove={handleAssetRemove}
                                                     />
                                                 ))}
                                             </tbody>
@@ -426,14 +602,14 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                         {!isEmpty && isSolo && (
                             <div className="asset-solo-container p-4">
                                 <div className="w-32">
-                                    {assets.map((asset) => (
+                                    {loadedAssets.map((asset) => (
                                         <AssetFieldTile
                                             key={asset.id}
                                             asset={asset}
                                             readOnly={readOnly}
                                             canEdit={canEdit}
                                             onEdit={handleAssetEdit}
-                                            onRemove={removeAsset}
+                                            onRemove={handleAssetRemove}
                                         />
                                     ))}
                                 </div>
@@ -480,6 +656,31 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+
+                {/* Asset Editor */}
+                <AssetEditor
+                    assetId={editedAssetId}
+                    isOpen={showAssetEditor}
+                    onClose={() => {
+                        setShowAssetEditor(false);
+                        setEditedAssetId(null);
+                    }}
+                    onSaved={(asset) => {
+                        setShowAssetEditor(false);
+                        setEditedAssetId(null);
+                        // Update the specific asset in the loaded assets list
+                        const updatedAssets = loadedAssets.map(a => a.id === asset.id ? asset : a);
+                        setLoadedAssets(updatedAssets);
+                    }}
+                    onDeleted={(assetId) => {
+                        setShowAssetEditor(false);
+                        setEditedAssetId(null);
+                        // Remove the deleted asset from both lists
+                        const newIds = assetIds.filter(id => id !== assetId);
+                        updateParentWithIds(newIds);
+                    }}
+                    allowDeleting={canEdit}
+                />
             </div>
         </div>
     );

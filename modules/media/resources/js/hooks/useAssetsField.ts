@@ -26,7 +26,7 @@ export function useAssetsField({ initialAssets = [], config = {}, onChange, onEr
 
     // Load assets from IDs or asset objects
     const loadAssets = useCallback(
-        async (assetData: (string | MediaAsset)[]) => {
+        async (assetData: (string | MediaAsset | { id: string | number })[]) => {
             if (!assetData || !assetData.length) {
                 setAssets([]);
                 return;
@@ -35,16 +35,30 @@ export function useAssetsField({ initialAssets = [], config = {}, onChange, onEr
             try {
                 setLoading(true);
 
-                // If all items are already asset objects, use them directly
-                const allAreObjects = assetData.every((item) => typeof item === 'object' && 'url' in item);
+                // If all items are already full asset objects with url, use them directly
+                const allAreFullObjects = assetData.every((item) => typeof item === 'object' && 'url' in item);
 
-                if (allAreObjects) {
+                if (allAreFullObjects) {
                     setAssets(assetData as MediaAsset[]);
                 } else {
-                    // For now, we'll assume asset data is already in the correct format
-                    // TODO: Implement proper asset loading by IDs when the API supports it
-                    console.warn('Asset loading by IDs not yet implemented');
-                    setAssets([]);
+                    // Extract IDs from the data (could be strings, numbers, or objects with id property)
+                    const ids = assetData.map(item => {
+                        if (typeof item === 'string' || typeof item === 'number') {
+                            return item;
+                        }
+                        if (typeof item === 'object' && 'id' in item) {
+                            return item.id;
+                        }
+                        return null;
+                    }).filter(id => id !== null) as (string | number)[];
+
+                    if (ids.length > 0) {
+                        // Load assets by their IDs
+                        const loadedAssets = await mediaService.current.getAssetsByIds(ids);
+                        setAssets(loadedAssets);
+                    } else {
+                        setAssets([]);
+                    }
                 }
             } catch (error) {
                 console.error('Error loading assets:', error);

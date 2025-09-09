@@ -23,10 +23,10 @@ export type DisplayMode = 'grid' | 'list';
 
 export interface AssetFieldProps {
     name: string;
-    data: MediaAsset[];
+    data: (MediaAsset | string | number | { id: string | number })[];
     config: AssetFieldConfig;
     required?: boolean;
     readOnly?: boolean;
-    onChange: (assets: MediaAsset[]) => void;
+    onChange: (assets: (MediaAsset | string)[]) => void;
     onError?: (error: string) => void;
 }

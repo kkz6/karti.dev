@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
+import { MediaAsset } from '../types/media';
 
 // Types based on the API response structure
 export interface MediaFile {
@@ -245,13 +246,27 @@ export class MediaService {
     /**
      * Get file details
      */
-    async getFileDetails(mediaId: number): Promise<MediaFile> {
+    async getFileDetails(mediaId: number): Promise<MediaAsset> {
         try {
-            const response: AxiosResponse<MediaFile> = await axios.post(`${this.baseUrl}/${mediaId}`);
+            const response: AxiosResponse<MediaAsset> = await axios.post(`${this.baseUrl}/${mediaId}`);
             return response.data;
         } catch (error) {
             console.error('Error fetching file details:', error);
             throw new Error(`Failed to fetch file details: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+
+    /**
+     * Get multiple assets by their IDs
+     */
+    async getAssetsByIds(mediaIds: (string | number)[]): Promise<MediaAsset[]> {
+        try {
+            const promises = mediaIds.map(id => this.getFileDetails(typeof id === 'string' ? parseInt(id) : id));
+            const results = await Promise.all(promises);
+            return results;
+        } catch (error) {
+            console.error('Error fetching assets by IDs:', error);
+            throw new Error(`Failed to fetch assets: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 }

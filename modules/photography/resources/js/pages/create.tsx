@@ -36,7 +36,7 @@ export default function Create({ categories }: { categories: Category[] }) {
         title: '',
         slug: '',
         description: '',
-        image_ids: [] as number[],
+        image_ids: [] as string[],
         cover_image: [] as MediaAsset[],
         categories: [] as number[],
         status: 'draft',
@@ -197,8 +197,8 @@ export default function Create({ categories }: { categories: Category[] }) {
                                             </CardHeader>
                                             <CardContent>
                                                 <SimpleAssetsField
-                                                    name="Gallery Images *"
-                                                    data={data.image_ids.map(id => ({ id } as any))}
+                                                    name="Gallery Images"
+                                                    data={data.image_ids}
                                                     config={{
                                                         container: 'public',
                                                         folder: '/photography/galleries',
@@ -207,7 +207,7 @@ export default function Create({ categories }: { categories: Category[] }) {
                                                         canEdit: true,
                                                         accept: 'image/*',
                                                     }}
-                                                    onChange={(assets) => setData('image_ids', assets.map((asset: any) => asset.id))}
+                                                    onChange={(assetIds) => setData('image_ids', assetIds)}
                                                     onError={(error) => console.error('Gallery images error:', error)}
                                                     required
                                                 />
