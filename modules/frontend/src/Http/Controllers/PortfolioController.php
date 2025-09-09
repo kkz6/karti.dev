@@ -9,10 +9,15 @@ use Modules\Profile\Models\SpeakingEvent;
 use Modules\Profile\Models\WorkExperience;
 use Modules\Settings\Models\SiteSetting;
 use Modules\Settings\Models\SocialLink;
+use Modules\Photography\Interfaces\PhotoServiceInterface;
 use Modules\Shared\Http\Controllers\BaseController;
 
 class PortfolioController extends BaseController
 {
+    public function __construct(
+        private readonly PhotoServiceInterface $photoService
+    ) {}
+
     public function home()
     {
         $articles = Article::published()
@@ -47,11 +52,37 @@ class PortfolioController extends BaseController
             'site_title', 'site_description', 'author_name', 'author_bio',
         ])->get()->keyBy('key');
 
+        // Get featured photos for the hero section
+        $featuredPhotos = $this->photoService->getFeatured()
+            ->take(5)
+            ->map(function ($photo) {
+                // Use the first image from image_ids array, or cover_image as fallback
+                $imageUrl = null;
+                if (!empty($photo->image_ids) && is_array($photo->image_ids)) {
+                    $imageUrl = '/storage/images/' . $photo->image_ids[0];
+                } elseif ($photo->cover_image) {
+                    $imageUrl = $photo->cover_image;
+                }
+                
+                return [
+                    'src' => $imageUrl,
+                    'alt' => $photo->title . ' - Featured photography',
+                    'title' => $photo->title,
+                    'description' => $photo->short_description ?? substr($photo->description, 0, 50) . '...',
+                ];
+            })
+            ->filter(function ($photo) {
+                return !empty($photo['src']);
+            })
+            ->values()
+            ->toArray();
+
         return Inertia::render('frontend::home', [
             'articles'     => $articles,
             'roles'        => $roles,
             'socialLinks'  => $socialLinks,
             'siteSettings' => $siteSettings,
+            'featuredPhotos' => $featuredPhotos,
         ]);
     }
 

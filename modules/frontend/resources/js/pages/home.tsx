@@ -14,8 +14,16 @@ interface ArticleData {
     date: string;
 }
 
+interface FeaturedPhoto {
+    src: string;
+    alt: string;
+    title: string;
+    description: string;
+}
+
 interface HomeProps {
     articles: ArticleData[];
+    featuredPhotos?: FeaturedPhoto[];
 }
 
 function MailIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
@@ -142,9 +150,9 @@ function InteractivePhoto({ image, rotation, index }: { image: any; rotation: st
 
     const handleMouseLeave = () => {
         setIsHovered(false);
-        // Smoothly reset to center with spring animation
-        mouseX.set(0, true);
-        mouseY.set(0, true);
+        // Smoothly reset to center
+        mouseX.set(0);
+        mouseY.set(0);
     };
 
     // Handle scroll events to reset animations
@@ -152,8 +160,8 @@ function InteractivePhoto({ image, rotation, index }: { image: any; rotation: st
         const handleScroll = () => {
             if (isHovered) {
                 setIsHovered(false);
-                mouseX.set(0, true);
-                mouseY.set(0, true);
+                mouseX.set(0);
+                mouseY.set(0);
             }
         };
 
@@ -190,7 +198,7 @@ function InteractivePhoto({ image, rotation, index }: { image: any; rotation: st
                 {/* Image container with padding */}
                 <div className="p-4 flex justify-center">
                     <div className="relative aspect-[9/10] w-44 flex-none overflow-hidden rounded-xl sm:w-72 sm:rounded-2xl cursor-pointer">
-                        <img src={image.src} alt="" sizes="(min-width: 640px) 18rem, 11rem" className="absolute inset-0 h-full w-full object-cover" />
+                        <img src={image.src} alt={image.alt} sizes="(min-width: 640px) 18rem, 11rem" className="absolute inset-0 h-full w-full object-cover" />
                     </div>
                 </div>
                 
@@ -204,34 +212,42 @@ function InteractivePhoto({ image, rotation, index }: { image: any; rotation: st
     );
 }
 
-function Photos() {
-    const images = [
+function Photos({ featuredPhotos = [] }: { featuredPhotos?: FeaturedPhoto[] }) {
+    // Default images if no featured photos provided
+    const defaultImages = [
         {
             src: '/images/photos/image-1.jpg',
+            alt: 'Default photo 1',
             title: 'Pilot\'s View',
             description: 'Cockpit controls over water'
         },
         {
             src: '/images/photos/image-2.jpg',
+            alt: 'Default photo 2',
             title: 'Conference Hall',
             description: 'Speaking at tech event'
         },
         {
             src: '/images/photos/image-3.jpg',
+            alt: 'Default photo 3',
             title: 'Work Station',
             description: 'Productive workspace setup'
         },
         {
             src: '/images/photos/image-4.jpg',
+            alt: 'Default photo 4',
             title: 'Mountain Peak',
             description: 'Adventure in the clouds'
         },
         {
             src: '/images/photos/image-5.jpg',
+            alt: 'Default photo 5',
             title: 'Space Explorer',
             description: 'Mars-like landscape'
         }
     ];
+
+    const images = featuredPhotos.length > 0 ? featuredPhotos : defaultImages;
     const rotations = ['rotate-2', '-rotate-2', 'rotate-2', 'rotate-2', '-rotate-2'];
 
     return (
@@ -250,7 +266,7 @@ function Photos() {
     );
 }
 
-export default function Home({ articles = [] }: HomeProps) {
+export default function Home({ articles = [], featuredPhotos = [] }: HomeProps) {
     return (
         <PublicLayout>
             <Container className="mt-9">
@@ -269,7 +285,7 @@ export default function Home({ articles = [] }: HomeProps) {
                     </div>
                 </div>
             </Container>
-            <Photos />
+            <Photos featuredPhotos={featuredPhotos} />
             <Container className="mt-24 md:mt-28">
                 <div className="mx-auto grid max-w-xl grid-cols-1 gap-y-20 lg:max-w-none lg:grid-cols-2">
                     <div className="flex flex-col gap-16">

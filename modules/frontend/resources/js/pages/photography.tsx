@@ -14,8 +14,14 @@ interface Photo {
     categories: string[]
 }
 
+interface FeaturedPhoto {
+    src: string;
+    alt: string;
+}
+
 interface PhotographyProps {
-    photos?: Photo[]
+    photos?: Photo[];
+    featuredPhotos?: FeaturedPhoto[];
 }
 
 function PhotoCard({ photo }: { photo: Photo }) {
@@ -48,16 +54,17 @@ function PhotoCard({ photo }: { photo: Photo }) {
     )
 }
 
-export default function Photography({ photos = [] }: PhotographyProps) {
-
-    // Featured photos for the top section
-    const featuredPhotos = [
+export default function Photography({ photos = [], featuredPhotos = [] }: PhotographyProps) {
+    // Default featured photos if none provided
+    const defaultFeaturedPhotos = [
         { src: '/images/photos/image-1.jpg', alt: 'Featured photo 1' },
         { src: '/images/photos/image-2.jpg', alt: 'Featured photo 2' },
         { src: '/images/photos/image-3.jpg', alt: 'Featured photo 3' },
         { src: '/images/photos/image-4.jpg', alt: 'Featured photo 4' },
         { src: '/images/photos/image-5.jpg', alt: 'Featured photo 5' },
-    ]
+    ];
+
+    const photosToShow = featuredPhotos.length > 0 ? featuredPhotos : defaultFeaturedPhotos;
 
     return (
         <>
@@ -77,7 +84,7 @@ export default function Photography({ photos = [] }: PhotographyProps) {
                 {/* Featured images section - full width for overflow effect */}
                 <div className="mt-16 sm:mt-20">
                     <div className="-my-4 flex justify-center gap-5 overflow-hidden py-4 sm:gap-8">
-                        {featuredPhotos.map((photo, photoIndex) => (
+                        {photosToShow.map((photo, photoIndex) => (
                             <div
                                 key={photo.src}
                                 className={clsx(
