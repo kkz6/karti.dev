@@ -12,8 +12,6 @@ import { Highlight } from "@tiptap/extension-highlight"
 import { Subscript } from "@tiptap/extension-subscript"
 import { Superscript } from "@tiptap/extension-superscript"
 import { Selection } from "@tiptap/extensions"
-import { Underline } from "@tiptap/extension-underline"
-import { Link } from "@tiptap/extension-link"
 
 // --- UI Primitives ---
 import { Button } from "@shared/components/tiptap/tiptap-ui-primitive/button"
@@ -204,12 +202,12 @@ export function FormSimpleEditor({ content: initialContent = '', onChange, place
     extensions: [
       StarterKit.configure({
         horizontalRule: false,
+        link: {
+          openOnClick: false,
+          enableClickSelection: true,
+        },
       }),
       HorizontalRule,
-      Link.configure({
-        openOnClick: false,
-        enableClickSelection: true,
-      }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       TaskList,
       TaskItem.configure({ nested: true }),
@@ -222,7 +220,6 @@ export function FormSimpleEditor({ content: initialContent = '', onChange, place
         },
       }),
       Typography,
-      Underline,
       Superscript,
       Subscript,
       Selection,
