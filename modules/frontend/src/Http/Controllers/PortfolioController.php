@@ -5,13 +5,11 @@ namespace Modules\Frontend\Http\Controllers;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Modules\Blog\Models\Article;
-use Modules\Projects\Models\Project;
 use Modules\Profile\Models\SpeakingEvent;
 use Modules\Profile\Models\WorkExperience;
 use Modules\Settings\Models\SiteSetting;
 use Modules\Settings\Models\SocialLink;
 use Modules\Shared\Http\Controllers\BaseController;
-use Modules\Tools\Models\ToolCategory;
 
 class PortfolioController extends BaseController
 {
@@ -71,29 +69,6 @@ class PortfolioController extends BaseController
         ]);
     }
 
-    public function projects()
-    {
-        $projects = Project::published()
-            ->featured()
-            ->ordered()
-            ->get()
-            ->map(function ($project) {
-                return [
-                    'title'        => $project->title,
-                    'description' => $project->short_description ?? $project->description,
-                    'link'        => [
-                        'href'  => $project->project_url ?? '#',
-                        'label' => 'View project',
-                    ],
-                    'image'         => $project->featured_image,
-                    'technologies' => $project->technologies,
-                ];
-            });
-
-        return Inertia::render('frontend::projects', [
-            'projects' => $projects,
-        ]);
-    }
 
     public function articles()
     {
@@ -167,31 +142,6 @@ class PortfolioController extends BaseController
         ]);
     }
 
-    public function uses()
-    {
-        $sections = ToolCategory::active()
-            ->with(['tools' => function ($query) {
-                $query->active()->ordered();
-            }])
-            ->ordered()
-            ->get()
-            ->map(function ($category) {
-                return [
-                    'title' => $category->name,
-                    'tools' => $category->tools->map(function ($tool) {
-                        return [
-                            'title'       => $tool->title,
-                            'description' => $tool->description,
-                            'href'        => $tool->url,
-                        ];
-                    }),
-                ];
-            });
-
-        return Inertia::render('frontend::uses', [
-            'sections' => $sections,
-        ]);
-    }
 
 
     public function contact()

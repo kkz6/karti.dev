@@ -56,45 +56,6 @@ function ProjectCard({ project }: { project: Project }) {
 }
 
 export default function Projects({ projects = [] }: ProjectsProps) {
-    const defaultProjects: Project[] = [
-        {
-            name: 'Planetaria',
-            description:
-                'Creating technology to empower civilians to explore space on their own terms.',
-            link: { href: 'http://planetaria.tech', label: 'planetaria.tech' },
-            logo: '/images/logos/planetaria.svg',
-        },
-        {
-            name: 'Animaginary',
-            description:
-                'High performance web animation library, hand-written in optimized WASM.',
-            link: { href: '#', label: 'github.com' },
-            logo: '/images/logos/animaginary.svg',
-        },
-        {
-            name: 'HelioStream',
-            description:
-                'Real-time video streaming library, optimized for interstellar transmission.',
-            link: { href: '#', label: 'github.com' },
-            logo: '/images/logos/helio-stream.svg',
-        },
-        {
-            name: 'cosmOS',
-            description:
-                'The operating system that powers our Planetaria space shuttles.',
-            link: { href: '#', label: 'github.com' },
-            logo: '/images/logos/cosmos.svg',
-        },
-        {
-            name: 'OpenShuttle',
-            description:
-                'The schematics for the first rocket I designed that successfully made it to orbit.',
-            link: { href: '#', label: 'github.com' },
-            logo: '/images/logos/open-shuttle.svg',
-        },
-    ];
-
-    const projectsToShow = projects.length > 0 ? projects : defaultProjects;
 
     return (
         <>
@@ -104,14 +65,25 @@ export default function Projects({ projects = [] }: ProjectsProps) {
                     title="Things I've made trying to put my dent in the universe."
                     intro="I've worked on tons of little projects over the years but these are the ones that I'm most proud of. Many of them are open-source, so if you see something that piques your interest, check out the code and contribute if you have ideas for how it can be improved."
                 >
-                    <ul
-                        role="list"
-                        className="grid grid-cols-1 gap-x-12 gap-y-16 sm:grid-cols-2 lg:grid-cols-3"
-                    >
-                        {projectsToShow.map((project) => (
-                            <ProjectCard key={project.name} project={project} />
-                        ))}
-                    </ul>
+                    {projects.length > 0 ? (
+                        <ul
+                            role="list"
+                            className="grid grid-cols-1 gap-x-12 gap-y-16 sm:grid-cols-2 lg:grid-cols-3"
+                        >
+                            {projects.map((project) => (
+                                <ProjectCard key={project.name} project={project} />
+                            ))}
+                        </ul>
+                    ) : (
+                        <div className="text-center py-12">
+                            <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-2">
+                                No projects available yet
+                            </h3>
+                            <p className="text-zinc-600 dark:text-zinc-400">
+                                Check back soon for new projects and work.
+                            </p>
+                        </div>
+                    )}
                 </SimpleLayout>
             </PublicLayout>
         </>

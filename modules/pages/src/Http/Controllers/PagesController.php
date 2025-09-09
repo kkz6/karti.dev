@@ -18,10 +18,6 @@ class PagesController extends BaseController
         return Inertia::render('pages::about');
     }
 
-    public function uses(): Response
-    {
-        return Inertia::render('pages::uses');
-    }
 
     public function contact(): Response
     {
