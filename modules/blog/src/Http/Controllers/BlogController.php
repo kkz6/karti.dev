@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Blog\DTO\ArticleData;
 use Modules\Blog\Interfaces\ArticleServiceInterface;
 use Modules\Blog\Interfaces\CategoryServiceInterface;
 use Modules\Blog\Interfaces\TagServiceInterface;
@@ -56,29 +57,11 @@ class BlogController extends BaseController
     /**
      * Store a newly created article in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(ArticleData $dto): RedirectResponse
     {
-        $validated = $request->validate([
-            'title'            => 'required|string|max:255',
-            'slug'             => 'required|string|max:255|unique:articles,slug',
-            'content'          => 'required|string',
-            'excerpt'          => 'nullable|string|max:500',
-            'category_id'      => 'required|exists:categories,id',
-            'tags'             => 'nullable|array',
-            'tags.*'           => 'exists:tags,id',
-            'status'           => 'required|in:draft,published,archived',
-            'featured_image'   => 'nullable|array',
-            'seo'              => 'nullable|array',
-            'seo.title'        => 'nullable|string|max:255',
-            'seo.description'  => 'nullable|string|max:500',
-            'seo.author'       => 'nullable|string|max:255',
-            'seo.image'        => 'nullable|string|max:500',
-            'seo.robots'       => 'nullable|string|max:100',
-            'published_at'     => 'nullable|date',
-        ]);
 
         // Process featured image from asset field
-        $featuredImageData = $validated['featured_image'] ?? [];
+        $featuredImageData = $dto->featured_image ?? [];
         $featuredImageUrl = null;
 
         if (!empty($featuredImageData) && is_array($featuredImageData)) {
@@ -90,21 +73,16 @@ class BlogController extends BaseController
         }
 
         $article = $this->articleService->create([
-            ...$validated,
+            ...$dto->toArray(),
             'featured_image' => $featuredImageUrl, // Store as URL string for backward compatibility
-            'user_id'      => Auth::id(),
-            'published_at' => $validated['status'] === 'published'
-                ? ($validated['published_at'] ?? now())
+            'user_id' => Auth::id(),
+            'published_at' => $dto->status === 'published'
+                ? ($dto->published_at ?? now())
                 : null,
         ]);
 
-        if (! empty($validated['tags'])) {
-            $article->tags()->sync($validated['tags']);
-        }
-
-        // Handle SEO data
-        if (! empty($validated['seo'])) {
-            $article->updateSeo($validated['seo']);
+        if (!empty($dto->tags)) {
+            $article->tags()->sync($dto->tags);
         }
 
         return redirect()
@@ -137,25 +115,11 @@ class BlogController extends BaseController
     /**
      * Update the specified article in storage.
      */
-    public function update(Request $request, Article $article): RedirectResponse
+    public function update(ArticleData $dto, Article $article): RedirectResponse
     {
-        $validated = $request->validate([
-            'title'            => 'required|string|max:255',
-            'slug'             => 'required|string|max:255|unique:articles,slug,' . $article->id,
-            'content'          => 'required|string',
-            'excerpt'          => 'nullable|string|max:500',
-            'category_id'      => 'required|exists:categories,id',
-            'tags'             => 'nullable|array',
-            'tags.*'           => 'exists:tags,id',
-            'status'           => 'required|in:draft,published,archived',
-            'featured_image'   => 'nullable|array',
-            'meta_title'       => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string|max:500',
-            'published_at'     => 'nullable|date',
-        ]);
 
         // Process featured image from asset field
-        $featuredImageData = $validated['featured_image'] ?? [];
+        $featuredImageData = $dto->featured_image ?? [];
         $featuredImageUrl = null;
 
         if (!empty($featuredImageData) && is_array($featuredImageData)) {
@@ -167,15 +131,15 @@ class BlogController extends BaseController
         }
 
         $this->articleService->update($article->id, [
-            ...$validated,
+            ...$dto->toArray(),
             'featured_image' => $featuredImageUrl, // Store as URL string for backward compatibility
-            'published_at' => $validated['status'] === 'published'
-                ? ($validated['published_at'] ?? $article->published_at ?? now())
+            'published_at' => $dto->status === 'published'
+                ? ($dto->published_at ?? $article->published_at ?? now())
                 : null,
         ]);
 
-        if (isset($validated['tags'])) {
-            $article->tags()->sync($validated['tags']);
+        if (!empty($dto->tags)) {
+            $article->tags()->sync($dto->tags);
         }
 
         return redirect()

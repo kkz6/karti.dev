@@ -2,27 +2,27 @@
 
 declare(strict_types=1);
 
-namespace Modules\Blog\DTO;
+namespace Modules\Photography\DTO;
 
 use Illuminate\Validation\Rule;
-use Modules\Blog\Models\Article;
+use Modules\Photography\Models\PhotoCollection;
 use Spatie\LaravelData\Data;
 
-class ArticleData extends Data
+class PhotoCollectionData extends Data
 {
     public function __construct(
         public string $title,
         public string $slug,
-        public string $content,
-        public ?string $excerpt,
-        public int $category_id,
-        public array $tags,
+        public ?string $description,
+        public ?array $cover_image,
+        public array $categories,
         public string $status,
-        public ?array $featured_image,
+        public bool $featured,
+        public int $sort_order,
         public ?string $meta_title,
         public ?string $meta_description,
         public ?string $published_at,
-        public ?int $article_id = null, // For update operations
+        public ?int $collection_id = null, // For update operations
     ) {}
 
     public function rules(): array
@@ -30,25 +30,25 @@ class ArticleData extends Data
         $rules = [
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255'],
-            'content' => ['required', 'string'],
-            'excerpt' => ['nullable', 'string', 'max:500'],
-            'category_id' => ['required', 'exists:categories,id'],
-            'tags' => ['nullable', 'array'],
-            'tags.*' => ['exists:tags,id'],
+            'description' => ['nullable', 'string'],
+            'cover_image' => ['nullable', 'array'],
+            'categories' => ['nullable', 'array'],
+            'categories.*' => ['exists:categories,id'],
             'status' => ['required', 'in:draft,published,archived'],
-            'featured_image' => ['nullable', 'array'],
+            'featured' => ['boolean'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
             'published_at' => ['nullable', 'date'],
         ];
 
         // Add unique slug validation rule based on whether this is create or update
-        if ($this->article_id) {
-            // Update operation - exclude current article from unique check
-            $rules['slug'][] = Rule::unique('articles', 'slug')->ignore($this->article_id);
+        if ($this->collection_id) {
+            // Update operation - exclude current collection from unique check
+            $rules['slug'][] = Rule::unique('photo_collections', 'slug')->ignore($this->collection_id);
         } else {
             // Create operation - slug must be unique
-            $rules['slug'][] = 'unique:articles,slug';
+            $rules['slug'][] = 'unique:photo_collections,slug';
         }
 
         return $rules;
@@ -57,14 +57,11 @@ class ArticleData extends Data
     public function validationMessages(): array
     {
         return [
-            'title.required' => 'The article title is required.',
+            'title.required' => 'The collection title is required.',
             'title.max' => 'The title must not exceed 255 characters.',
-            'slug.required' => 'The article slug is required.',
+            'slug.required' => 'The collection slug is required.',
             'slug.max' => 'The slug must not exceed 255 characters.',
-            'content.required' => 'The article content is required.',
-            'category_id.required' => 'Please select a category.',
-            'category_id.exists' => 'The selected category is invalid.',
-            'status.required' => 'Please select an article status.',
+            'status.required' => 'Please select a status.',
             'status.in' => 'The status must be draft, published, or archived.',
         ];
     }
@@ -72,9 +69,9 @@ class ArticleData extends Data
     /**
      * Create instance for update operation
      */
-    public static function forUpdate(array $data, int $articleId): static
+    public static function forUpdate(array $data, int $collectionId): static
     {
-        $data['article_id'] = $articleId;
+        $data['collection_id'] = $collectionId;
         return static::from($data);
     }
 

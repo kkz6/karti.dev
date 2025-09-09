@@ -19,15 +19,26 @@ class CategoryData extends Data
         public ?int $category_id = null, // For update operations
     ) {}
 
-    public static function rules(): array
+    public function rules(): array
     {
-        return [
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
         ];
+
+        // Add unique slug validation rule based on whether this is create or update
+        if ($this->category_id) {
+            // Update operation - exclude current category from unique check
+            $rules['slug'][] = Rule::unique('categories', 'slug')->ignore($this->category_id);
+        } else {
+            // Create operation - slug must be unique
+            $rules['slug'][] = 'unique:categories,slug';
+        }
+
+        return $rules;
     }
 
     public function validationMessages(): array
@@ -38,22 +49,6 @@ class CategoryData extends Data
             'slug.required' => 'The category slug is required.',
             'slug.max' => 'The slug must not exceed 255 characters.',
         ];
-    }
-
-    public static function from(mixed ...$payloads): static
-    {
-        $instance = parent::from(...$payloads);
-        
-        // Add unique slug validation rule based on whether this is create or update
-        if ($instance->category_id) {
-            // Update operation - exclude current category from unique check
-            $instance->additional['rules']['slug'][] = Rule::unique('categories', 'slug')->ignore($instance->category_id);
-        } else {
-            // Create operation - slug must be unique
-            $instance->additional['rules']['slug'][] = 'unique:categories,slug';
-        }
-        
-        return $instance;
     }
 
     /**

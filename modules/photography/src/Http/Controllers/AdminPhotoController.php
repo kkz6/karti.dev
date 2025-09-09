@@ -6,6 +6,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Photography\DTO\PhotoData;
+use Modules\Photography\DTO\SortOrderData;
 use Modules\Photography\Interfaces\PhotoServiceInterface;
 use Modules\Photography\Models\Photo;
 use Modules\Photography\Models\PhotoCollection;
@@ -42,32 +44,22 @@ class AdminPhotoController extends BaseController
     /**
      * Store a newly created photo in storage.
      */
-    public function store(Request $request, PhotoCollection $photoCollection): RedirectResponse
+    public function store(PhotoData $dto, PhotoCollection $photoCollection): RedirectResponse
     {
-        $validated = $request->validate([
-            'title'       => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'image_path'  => 'required|array',
-            'alt_text'    => 'nullable|string|max:255',
-            'sort_order'  => 'nullable|integer|min:0',
-            'width'       => 'nullable|integer|min:1',
-            'height'      => 'nullable|integer|min:1',
-            'file_size'   => 'nullable|integer|min:0',
-            'exif_data'   => 'nullable|array',
-        ]);
 
         // Extract image URL from MediaAsset array
         $imageUrl = null;
-        if (!empty($validated['image_path']) && is_array($validated['image_path'])) {
-            $imageUrl = $validated['image_path'][0]['url'] ?? null;
+        if (!empty($dto->image_path) && is_array($dto->image_path)) {
+            $imageUrl = $dto->image_path[0]['url'] ?? null;
         }
 
         if (!$imageUrl) {
             return redirect()->back()->withErrors(['image_path' => 'Please select an image.']);
         }
 
-        $photoCollection->photos()->create([
-            ...$validated,
+        $this->photoService->create([
+            ...$dto->toArray(),
+            'photo_collection_id' => $photoCollection->id,
             'image_path' => $imageUrl,
         ]);
 
@@ -101,32 +93,20 @@ class AdminPhotoController extends BaseController
     /**
      * Update the specified photo in storage.
      */
-    public function update(Request $request, PhotoCollection $photoCollection, Photo $photo): RedirectResponse
+    public function update(PhotoData $dto, PhotoCollection $photoCollection, Photo $photo): RedirectResponse
     {
-        $validated = $request->validate([
-            'title'       => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'image_path'  => 'required|array',
-            'alt_text'    => 'nullable|string|max:255',
-            'sort_order'  => 'nullable|integer|min:0',
-            'width'       => 'nullable|integer|min:1',
-            'height'      => 'nullable|integer|min:1',
-            'file_size'   => 'nullable|integer|min:0',
-            'exif_data'   => 'nullable|array',
-        ]);
-
         // Extract image URL from MediaAsset array
         $imageUrl = null;
-        if (!empty($validated['image_path']) && is_array($validated['image_path'])) {
-            $imageUrl = $validated['image_path'][0]['url'] ?? null;
+        if (!empty($dto->image_path) && is_array($dto->image_path)) {
+            $imageUrl = $dto->image_path[0]['url'] ?? null;
         }
 
         if (!$imageUrl) {
             return redirect()->back()->withErrors(['image_path' => 'Please select an image.']);
         }
 
-        $photo->update([
-            ...$validated,
+        $this->photoService->update($photo->id, [
+            ...$dto->toArray(),
             'image_path' => $imageUrl,
         ]);
 
@@ -140,7 +120,7 @@ class AdminPhotoController extends BaseController
      */
     public function destroy(PhotoCollection $photoCollection, Photo $photo): RedirectResponse
     {
-        $photo->delete();
+        $this->photoService->delete($photo->id);
 
         return redirect()
             ->route('admin.photography.photos.index', $photoCollection)
@@ -150,19 +130,10 @@ class AdminPhotoController extends BaseController
     /**
      * Update the sort order of photos.
      */
-    public function updateSortOrder(Request $request, PhotoCollection $photoCollection): RedirectResponse
+    public function updateSortOrder(SortOrderData $dto, PhotoCollection $photoCollection): RedirectResponse
     {
-        $validated = $request->validate([
-            'photos'            => 'required|array',
-            'photos.*.id'       => 'required|exists:photos,id',
-            'photos.*.sort_order' => 'required|integer|min:0',
-        ]);
-
-        foreach ($validated['photos'] as $photoData) {
-            Photo::where('id', $photoData['id'])
-                ->where('photo_collection_id', $photoCollection->id)
-                ->update(['sort_order' => $photoData['sort_order']]);
-        }
+        $photoIds = collect($dto->photos)->pluck('id')->toArray();
+        $this->photoService->updateSortOrder($photoIds);
 
         return redirect()
             ->route('admin.photography.photos.index', $photoCollection)

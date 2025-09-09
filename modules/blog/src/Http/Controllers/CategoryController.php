@@ -6,6 +6,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Blog\DTO\CategoryData;
 use Modules\Blog\Interfaces\CategoryServiceInterface;
 use Modules\Blog\Models\Category;
 use Modules\Blog\Tables\Categories;
@@ -37,17 +38,9 @@ class CategoryController extends BaseController
     /**
      * Store a newly created category in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(CategoryData $dto): RedirectResponse
     {
-        $validated = $request->validate([
-            'name'             => 'required|string|max:255|unique:categories,name',
-            'slug'             => 'required|string|max:255|unique:categories,slug',
-            'description'      => 'nullable|string|max:500',
-            'meta_title'       => 'nullable|string|max:60',
-            'meta_description' => 'nullable|string|max:160',
-        ]);
-
-        Category::create($validated);
+        $this->categoryService->create($dto->toArray());
 
         return redirect()
             ->route('admin.categories.index')
@@ -81,17 +74,9 @@ class CategoryController extends BaseController
     /**
      * Update the specified category in storage.
      */
-    public function update(Request $request, Category $category): RedirectResponse
+    public function update(CategoryData $dto, Category $category): RedirectResponse
     {
-        $validated = $request->validate([
-            'name'             => 'required|string|max:255|unique:categories,name,'.$category->id,
-            'slug'             => 'required|string|max:255|unique:categories,slug,'.$category->id,
-            'description'      => 'nullable|string|max:500',
-            'meta_title'       => 'nullable|string|max:60',
-            'meta_description' => 'nullable|string|max:160',
-        ]);
-
-        $category->update($validated);
+        $this->categoryService->update($category->id, $dto->toArray());
 
         return redirect()
             ->route('admin.categories.index')
@@ -110,7 +95,7 @@ class CategoryController extends BaseController
                 ->with('error', 'Cannot delete category with existing articles.');
         }
 
-        $category->delete();
+        $this->categoryService->delete($category->id);
 
         return redirect()
             ->route('admin.categories.index')

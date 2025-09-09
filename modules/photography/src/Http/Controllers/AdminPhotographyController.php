@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Blog\Interfaces\CategoryServiceInterface;
 use Modules\Blog\Models\Category;
+use Modules\Photography\DTO\PhotoCollectionData;
 use Modules\Photography\Interfaces\PhotoCollectionServiceInterface;
 use Modules\Photography\Models\PhotoCollection;
 use Modules\Photography\Tables\PhotoCollections;
@@ -48,39 +49,25 @@ class AdminPhotographyController extends BaseController
     /**
      * Store a newly created photo collection in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(PhotoCollectionData $dto): RedirectResponse
     {
-        $validated = $request->validate([
-            'title'            => 'required|string|max:255',
-            'slug'             => 'required|string|max:255|unique:photo_collections,slug',
-            'description'      => 'nullable|string',
-            'cover_image'      => 'nullable|array',
-            'categories'       => 'nullable|array',
-            'categories.*'     => 'exists:categories,id',
-            'status'           => 'required|in:draft,published,archived',
-            'featured'         => 'boolean',
-            'sort_order'       => 'nullable|integer|min:0',
-            'meta_title'       => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string|max:500',
-            'published_at'     => 'nullable|date',
-        ]);
 
         // Extract cover image URL from MediaAsset array
         $coverImageUrl = null;
-        if (!empty($validated['cover_image']) && is_array($validated['cover_image'])) {
-            $coverImageUrl = $validated['cover_image'][0]['url'] ?? null;
+        if (!empty($dto->cover_image) && is_array($dto->cover_image)) {
+            $coverImageUrl = $dto->cover_image[0]['url'] ?? null;
         }
 
-        $collection = PhotoCollection::create([
-            ...$validated,
+        $collection = $this->photoCollectionService->create([
+            ...$dto->toArray(),
             'cover_image' => $coverImageUrl,
-            'published_at' => $validated['status'] === 'published'
-                ? ($validated['published_at'] ?? now())
+            'published_at' => $dto->status === 'published'
+                ? ($dto->published_at ?? now())
                 : null,
         ]);
 
-        if (! empty($validated['categories'])) {
-            $collection->categories()->sync($validated['categories']);
+        if (!empty($dto->categories)) {
+            $collection->categories()->sync($dto->categories);
         }
 
         return redirect()
@@ -121,39 +108,25 @@ class AdminPhotographyController extends BaseController
     /**
      * Update the specified photo collection in storage.
      */
-    public function update(Request $request, PhotoCollection $photoCollection): RedirectResponse
+    public function update(PhotoCollectionData $dto, PhotoCollection $photoCollection): RedirectResponse
     {
-        $validated = $request->validate([
-            'title'            => 'required|string|max:255',
-            'slug'             => 'required|string|max:255|unique:photo_collections,slug,' . $photoCollection->id,
-            'description'      => 'nullable|string',
-            'cover_image'      => 'nullable|array',
-            'categories'       => 'nullable|array',
-            'categories.*'     => 'exists:categories,id',
-            'status'           => 'required|in:draft,published,archived',
-            'featured'         => 'boolean',
-            'sort_order'       => 'nullable|integer|min:0',
-            'meta_title'       => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string|max:500',
-            'published_at'     => 'nullable|date',
-        ]);
 
         // Extract cover image URL from MediaAsset array
         $coverImageUrl = null;
-        if (!empty($validated['cover_image']) && is_array($validated['cover_image'])) {
-            $coverImageUrl = $validated['cover_image'][0]['url'] ?? null;
+        if (!empty($dto->cover_image) && is_array($dto->cover_image)) {
+            $coverImageUrl = $dto->cover_image[0]['url'] ?? null;
         }
 
-        $photoCollection->update([
-            ...$validated,
+        $this->photoCollectionService->update($photoCollection->id, [
+            ...$dto->toArray(),
             'cover_image' => $coverImageUrl,
-            'published_at' => $validated['status'] === 'published'
-                ? ($validated['published_at'] ?? $photoCollection->published_at ?? now())
+            'published_at' => $dto->status === 'published'
+                ? ($dto->published_at ?? $photoCollection->published_at ?? now())
                 : null,
         ]);
 
-        if (isset($validated['categories'])) {
-            $photoCollection->categories()->sync($validated['categories']);
+        if (!empty($dto->categories)) {
+            $photoCollection->categories()->sync($dto->categories);
         }
 
         return redirect()
@@ -168,7 +141,7 @@ class AdminPhotographyController extends BaseController
     {
         $photoCollection->categories()->detach();
         $photoCollection->photos()->delete();
-        $photoCollection->delete();
+        $this->photoCollectionService->delete($photoCollection->id);
 
         return redirect()
             ->route('admin.photography.index')

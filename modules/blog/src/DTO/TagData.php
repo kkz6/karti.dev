@@ -19,15 +19,26 @@ class TagData extends Data
         public ?int $tag_id = null, // For update operations
     ) {}
 
-    public static function rules(): array
+    public function rules(): array
     {
-        return [
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
         ];
+
+        // Add unique slug validation rule based on whether this is create or update
+        if ($this->tag_id) {
+            // Update operation - exclude current tag from unique check
+            $rules['slug'][] = Rule::unique('tags', 'slug')->ignore($this->tag_id);
+        } else {
+            // Create operation - slug must be unique
+            $rules['slug'][] = 'unique:tags,slug';
+        }
+
+        return $rules;
     }
 
     public function validationMessages(): array
@@ -38,22 +49,6 @@ class TagData extends Data
             'slug.required' => 'The tag slug is required.',
             'slug.max' => 'The slug must not exceed 255 characters.',
         ];
-    }
-
-    public static function from(mixed ...$payloads): static
-    {
-        $instance = parent::from(...$payloads);
-        
-        // Add unique slug validation rule based on whether this is create or update
-        if ($instance->tag_id) {
-            // Update operation - exclude current tag from unique check
-            $instance->additional['rules']['slug'][] = Rule::unique('tags', 'slug')->ignore($instance->tag_id);
-        } else {
-            // Create operation - slug must be unique
-            $instance->additional['rules']['slug'][] = 'unique:tags,slug';
-        }
-        
-        return $instance;
     }
 
     /**

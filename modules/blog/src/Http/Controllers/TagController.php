@@ -6,6 +6,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Blog\DTO\TagData;
 use Modules\Blog\Interfaces\TagServiceInterface;
 use Modules\Blog\Models\Tag;
 use Modules\Blog\Tables\Tags;
@@ -38,17 +39,9 @@ class TagController extends BaseController
     /**
      * Store a newly created tag in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(TagData $dto): RedirectResponse
     {
-        $validated = $request->validate([
-            'name'             => 'required|string|max:255|unique:tags,name',
-            'slug'             => 'required|string|max:255|unique:tags,slug',
-            'description'      => 'nullable|string|max:500',
-            'meta_title'       => 'nullable|string|max:60',
-            'meta_description' => 'nullable|string|max:160',
-        ]);
-
-        Tag::create($validated);
+        $this->tagService->create($dto->toArray());
 
         return redirect()
             ->route('admin.tags.index')
@@ -82,17 +75,9 @@ class TagController extends BaseController
     /**
      * Update the specified tag in storage.
      */
-    public function update(Request $request, Tag $tag): RedirectResponse
+    public function update(TagData $dto, Tag $tag): RedirectResponse
     {
-        $validated = $request->validate([
-            'name'             => 'required|string|max:255|unique:tags,name,' . $tag->id,
-            'slug'             => 'required|string|max:255|unique:tags,slug,' . $tag->id,
-            'description'      => 'nullable|string|max:500',
-            'meta_title'       => 'nullable|string|max:60',
-            'meta_description' => 'nullable|string|max:160',
-        ]);
-
-        $tag->update($validated);
+        $this->tagService->update($tag->id, $dto->toArray());
 
         return redirect()
             ->route('admin.tags.index')
@@ -106,7 +91,7 @@ class TagController extends BaseController
     {
         // Detach from articles before deleting
         $tag->articles()->detach();
-        $tag->delete();
+        $this->tagService->delete($tag->id);
 
         return redirect()
             ->route('admin.tags.index')
