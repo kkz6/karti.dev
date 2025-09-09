@@ -247,7 +247,7 @@ export class MediaService {
      */
     async getFileDetails(mediaId: number): Promise<MediaFile> {
         try {
-            const response: AxiosResponse<MediaFile> = await axios.get(`${this.baseUrl}/${mediaId}`);
+            const response: AxiosResponse<MediaFile> = await axios.post(`${this.baseUrl}/${mediaId}`);
             return response.data;
         } catch (error) {
             console.error('Error fetching file details:', error);

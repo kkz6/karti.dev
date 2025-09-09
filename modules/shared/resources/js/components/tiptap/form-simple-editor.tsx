@@ -5,7 +5,6 @@ import { EditorContent, EditorContext, useEditor } from "@tiptap/react"
 
 // --- Tiptap Core Extensions ---
 import { StarterKit } from "@tiptap/starter-kit"
-import { Image } from "@tiptap/extension-image"
 import { TaskItem, TaskList } from "@tiptap/extension-list"
 import { TextAlign } from "@tiptap/extension-text-align"
 import { Typography } from "@tiptap/extension-typography"
@@ -27,6 +26,7 @@ import {
 
 // --- Tiptap Node ---
 import { HorizontalRule } from "@shared/components/tiptap/tiptap-node/horizontal-rule-node/horizontal-rule-node-extension"
+import { ResizableImage } from "@shared/components/tiptap/extensions/resizable-image/resizable-image-extension"
 import "@shared/components/tiptap/tiptap-node/blockquote-node/blockquote-node.scss"
 import "@shared/components/tiptap/tiptap-node/code-block-node/code-block-node.scss"
 import "@shared/components/tiptap/tiptap-node/horizontal-rule-node/horizontal-rule-node.scss"
@@ -34,6 +34,7 @@ import "@shared/components/tiptap/tiptap-node/list-node/list-node.scss"
 import "@shared/components/tiptap/tiptap-node/image-node/image-node.scss"
 import "@shared/components/tiptap/tiptap-node/heading-node/heading-node.scss"
 import "@shared/components/tiptap/tiptap-node/paragraph-node/paragraph-node.scss"
+import "@shared/components/tiptap/extensions/resizable-image/resizable-image.scss"
 
 // --- Tiptap UI ---
 import { HeadingDropdownMenu } from "@shared/components/tiptap/tiptap-ui/heading-dropdown-menu"
@@ -66,7 +67,6 @@ import { useWindowSize } from "@shared/hooks/use-window-size"
 import { useCursorVisibility } from "@shared/hooks/use-cursor-visibility"
 
 // --- Components ---
-import { ThemeToggle } from "@shared/components/tiptap-templates/simple/theme-toggle"
 
 // --- Lib ---
 import { handleMediaImageUpload, MAX_FILE_SIZE } from "@shared/lib/media-image-upload"
@@ -142,12 +142,6 @@ const MainToolbarContent = ({
       </ToolbarGroup>
 
       <Spacer />
-
-      {isMobile && <ToolbarSeparator />}
-
-      <ToolbarGroup>
-        <ThemeToggle />
-      </ToolbarGroup>
     </>
   )
 }
@@ -220,9 +214,11 @@ export function FormSimpleEditor({ content: initialContent = '', onChange, place
       TaskList,
       TaskItem.configure({ nested: true }),
       Highlight.configure({ multicolor: true }),
-      Image.configure({
+      ResizableImage.configure({
+        inline: false,
+        allowBase64: false,
         HTMLAttributes: {
-          class: 'rounded-lg max-w-full h-auto',
+          class: 'tiptap-resizable-image rounded-lg',
         },
       }),
       Typography,

@@ -22,21 +22,43 @@ export function MediaImageButton({ text = 'Image', editor: providedEditor }: Med
 
   const canInsertImage = React.useMemo(() => {
     if (!editor || !editor.isEditable) return false;
-    return editor.can().setImage({ src: '' });
+    // Check for resizableImage extension first, fallback to regular image
+    return editor.can().setImage?.({ src: '' }) || 
+           editor.can().insertContent({ type: 'resizableImage', attrs: { src: '' } });
   }, [editor]);
 
   const handleInsertImage = (asset: MediaAsset) => {
     if (!editor || !canInsertImage) return;
 
-    editor
+    // Try to use resizableImage if available, otherwise use regular image
+    const inserted = editor
       .chain()
       .focus()
-      .setImage({
-        src: asset.url,
-        alt: asset.alt || asset.filename || '',
-        title: asset.title || asset.filename || '',
+      .insertContent({
+        type: 'resizableImage',
+        attrs: {
+          src: asset.url,
+          alt: asset.alt || asset.filename || '',
+          title: asset.title || asset.filename || '',
+          width: asset.dimensions?.width,
+          height: asset.dimensions?.height,
+          alignment: 'center',
+        },
       })
       .run();
+
+    // Fallback to regular image if resizableImage is not available
+    if (!inserted) {
+      editor
+        .chain()
+        .focus()
+        .setImage({
+          src: asset.url,
+          alt: asset.alt || asset.filename || '',
+          title: asset.title || asset.filename || '',
+        })
+        .run();
+    }
 
     setShowDialog(false);
     setSelectedAssets([]);
@@ -55,9 +77,29 @@ export function MediaImageButton({ text = 'Image', editor: providedEditor }: Med
     if (selectedAssets.length > 0) {
       try {
         const assetId = selectedAssets[0];
-        const assetData = await mediaService.current.getFile(assetId);
+        const assetData = await mediaService.current.getFileDetails(parseInt(assetId));
         if (assetData) {
-          handleInsertImage(assetData);
+          // Convert MediaFile to MediaAsset format
+          const asset: MediaAsset = {
+            id: assetData.id.toString(),
+            disk: assetData.disk,
+            directory: assetData.directory,
+            filename: assetData.filename,
+            extension: assetData.extension,
+            mime_type: assetData.mime_type,
+            aggregate_type: assetData.aggregate_type,
+            size: assetData.size,
+            created_at: assetData.created_at,
+            updated_at: assetData.updated_at,
+            url: assetData.url,
+            container_id: assetData.disk,
+            is_image: assetData.aggregate_type === 'image',
+            is_audio: assetData.aggregate_type === 'audio',
+            is_video: assetData.aggregate_type === 'video',
+            path: `${assetData.directory}/${assetData.filename}`,
+            formatted_size: `${(assetData.size / 1024).toFixed(2)} KB`,
+          };
+          handleInsertImage(asset);
         }
       } catch (error) {
         console.error('Error fetching asset data:', error);

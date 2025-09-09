@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { EditorContent, EditorContext, useEditor } from '@tiptap/react';
 import { StarterKit } from '@tiptap/starter-kit';
-import { Image } from '@tiptap/extension-image';
 import { TaskItem, TaskList } from '@tiptap/extension-list';
 import { TextAlign } from '@tiptap/extension-text-align';
 import { Typography } from '@tiptap/extension-typography';
@@ -23,6 +22,7 @@ import {
 // --- Tiptap Node ---
 import { ImageUploadNode } from '@shared/components/tiptap/tiptap-node/image-upload-node/image-upload-node-extension';
 import { HorizontalRule } from '@shared/components/tiptap/tiptap-node/horizontal-rule-node/horizontal-rule-node-extension';
+import { ResizableImage } from '@shared/components/tiptap/extensions/resizable-image/resizable-image-extension';
 
 // --- Tiptap UI ---
 import { HeadingDropdownMenu } from '@shared/components/tiptap/tiptap-ui/heading-dropdown-menu';
@@ -45,6 +45,7 @@ import '@shared/components/tiptap/tiptap-node/list-node/list-node.scss';
 import '@shared/components/tiptap/tiptap-node/image-node/image-node.scss';
 import '@shared/components/tiptap/tiptap-node/heading-node/heading-node.scss';
 import '@shared/components/tiptap/tiptap-node/paragraph-node/paragraph-node.scss';
+import '@shared/components/tiptap/extensions/resizable-image/resizable-image.scss';
 
 interface TiptapEditorProps {
   content?: string;
@@ -79,7 +80,13 @@ export function TiptapEditor({ content = '', onChange, placeholder = 'Start writ
       TaskList,
       TaskItem.configure({ nested: true }),
       Highlight.configure({ multicolor: true }),
-      Image,
+      ResizableImage.configure({
+        inline: false,
+        allowBase64: false,
+        HTMLAttributes: {
+          class: 'tiptap-resizable-image',
+        },
+      }),
       Typography,
       Underline,
       Superscript,

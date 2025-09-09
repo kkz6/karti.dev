@@ -30,6 +30,7 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
         isEmpty,
         isSolo,
         loadAssets,
+        addAsset,
         removeAsset,
         openSelector,
         closeSelector,
@@ -70,7 +71,7 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
         if (selectedAssetIds.length > 0) {
             try {
                 // Fetch asset data for selected IDs
-                const assetPromises = selectedAssetIds.map(id => mediaService.current.getFile(id));
+                const assetPromises = selectedAssetIds.map(id => mediaService.current.getFileDetails(Number(id)));
                 const assetData = await Promise.all(assetPromises);
                 const validAssets = assetData.filter(asset => asset !== null);
                 
@@ -217,16 +218,18 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                             {/* Solo asset display */}
                             {!isEmpty && isSolo && (
                                 <div className="asset-solo-container p-4">
-                                    {assets.map((asset) => (
-                                        <AssetFieldTile
-                                            key={asset.id}
-                                            asset={asset}
-                                            readOnly={readOnly}
-                                            canEdit={canEdit}
-                                            onEdit={handleAssetEdit}
-                                            onRemove={removeAsset}
-                                        />
-                                    ))}
+                                    <div className="w-32">
+                                        {assets.map((asset) => (
+                                            <AssetFieldTile
+                                                key={asset.id}
+                                                asset={asset}
+                                                readOnly={readOnly}
+                                                canEdit={canEdit}
+                                                onEdit={handleAssetEdit}
+                                                onRemove={removeAsset}
+                                            />
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </>
