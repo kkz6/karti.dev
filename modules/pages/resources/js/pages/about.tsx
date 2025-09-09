@@ -97,27 +97,34 @@ export default function About({ portraitImage = '/images/about.jpg' }: AboutProp
                     </div>
                     <div className="lg:order-first lg:row-span-2">
                         <h1 className="text-4xl font-bold tracking-tight text-zinc-800 sm:text-5xl dark:text-zinc-100">
-                            I'm Spencer Sharp. I live in New York City, where I design the future.
+                            I'm Karthick. I live in Bangalore, where I design the future.
                         </h1>
                         <div className="mt-6 space-y-7 text-base text-zinc-600 dark:text-zinc-400">
                             <p>
-                                I've loved making things for as long as I can remember, and wrote my first program when I was 6 years old, just two
-                                weeks after my mom brought home the brand new Macintosh LC 550 that I taught myself to type on.
+                                I've loved developing software for as long as I can remember. There's something magical about turning ideas into 
+                                working code that can solve real problems and make people's lives better. What makes my journey unique is that 
+                                I've combined this passion with my love for travel.
                             </p>
                             <p>
-                                The only thing I loved more than computers as a kid was space. When I was 8, I climbed the 40-foot oak tree at the
-                                back of our yard while wearing my older sister's motorcycle helmet, counted down from three, and jumped — hoping the
-                                tree was tall enough that with just a bit of momentum I'd be able to get to orbit.
+                                My car and I have been attached for a very long time now, and it's become my mobile office. I can work from 
+                                anywhere, anytime — whether it's parked by a scenic mountain view, near the ocean, or in a bustling city. 
+                                This freedom has allowed me to experience different cultures while continuing to build and create.
                             </p>
                             <p>
-                                I spent the next few summers indoors working on a rocket design, while I recovered from the multiple surgeries it took
-                                to fix my badly broken legs. It took nine iterations, but when I was 15 I sent my dad's Blackberry into orbit and was
-                                able to transmit a photo back down to our family computer from space.
+                                Now I'm planning for more overseas travel, with a mission to understand people better and develop software 
+                                that truly serves their needs. I believe the best solutions come from understanding diverse perspectives and 
+                                real-world challenges that people face across different cultures and environments.
                             </p>
                             <p>
-                                Today, I'm the founder of Planetaria, where we're working on civilian space suits and manned shuttle kits you can
-                                assemble at home so that the next generation of kids really <em>can</em> make it to orbit — from the comfort of their
-                                own backyards.
+                                I'm also working on personal projects with a focus on keeping costs as low as possible, so I can provide 
+                                valuable tools to other developers, travelers, and anyone who dares to dream big. I love connecting software 
+                                with hardware through microcontrollers, constantly bringing exciting new possibilities into the world by 
+                                bridging the digital and physical realms.
+                            </p>
+                            <p>
+                                And yes, I absolutely love rockets — there's something about the engineering precision, the ambitious goals, 
+                                and the sheer audacity of reaching for the stars that resonates deeply with my approach to both development 
+                                and life.
                             </p>
                         </div>
                     </div>
