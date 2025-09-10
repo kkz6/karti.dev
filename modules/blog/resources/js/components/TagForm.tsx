@@ -32,8 +32,8 @@ export default function TagForm({ tag, mode }: TagFormProps) {
         ? [
               { title: 'Blog Management', href: route('admin.blog.index') },
               { title: 'Tags', href: route('admin.tags.index') },
-              { title: tag.name, href: route('admin.tags.show', { tag: tag.slug || tag.id }) },
-              { title: 'Edit', href: route('admin.tags.edit', { tag: tag.slug || tag.id }) },
+              { title: tag.name, href: route('admin.tags.index') },
+              { title: 'Edit', href: route('admin.tags.edit', { tag: tag.id }) },
           ]
         : [
               { title: 'Blog Management', href: route('admin.blog.index') },
@@ -79,16 +79,12 @@ export default function TagForm({ tag, mode }: TagFormProps) {
 
     const pageTitle = isEditing ? `Edit Tag: ${tag.name}` : 'Create Tag';
     const headerTitle = isEditing ? 'Edit Tag' : 'Create Tag';
-    const submitButtonText = processing 
-        ? (isEditing ? 'Updating...' : 'Creating...') 
+    const submitButtonText = processing
+        ? (isEditing ? 'Updating...' : 'Creating...')
         : (isEditing ? 'Update Tag' : 'Create Tag');
-    const cardDescription = isEditing 
-        ? 'Update the basic details for the tag' 
+    const cardDescription = isEditing
+        ? 'Update the basic details for the tag'
         : 'Enter the basic details for the new tag';
-    const cancelHref = isEditing 
-        ? route('admin.tags.show', tag.id) 
-        : route('admin.tags.index');
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={pageTitle} />
@@ -103,9 +99,6 @@ export default function TagForm({ tag, mode }: TagFormProps) {
                             <Button type="submit" form="tag-form" disabled={processing}>
                                 <Save className="mr-2 h-4 w-4" />
                                 {submitButtonText}
-                            </Button>
-                            <Button type="button" variant="outline" asChild>
-                                <Link href={cancelHref}>Cancel</Link>
                             </Button>
                             {isEditing && (
                                 <Button type="button" variant="destructive" onClick={handleDelete}>
