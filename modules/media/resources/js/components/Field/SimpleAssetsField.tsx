@@ -1,39 +1,33 @@
 import { Button } from '@shared/components/ui/button';
 import { FormControl, FormItem, FormLabel, FormMessage } from '@shared/components/ui/form';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@shared/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
 import { cn } from '@shared/lib/utils';
-import { FolderOpen, Upload, X, GripVertical } from 'lucide-react';
+import { FolderOpen, GripVertical, Upload, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { useAssetsField } from '../../hooks/useAssetsField';
-import { AssetFieldProps, DisplayMode } from '../../types/asset-field';
-import { LoadingGraphic } from '@media/components';
-import { AssetBrowser } from '@media/components';
+import { AssetFieldProps, AssetUpload, DisplayMode } from '../../types/asset-field';
+import { AssetBrowser, AssetEditor, LoadingGraphic } from '@media/components';
 import { Uploader, UploaderRef } from '../Upload/Uploader';
 import { Uploads } from '../Upload/Uploads';
 import { AssetFieldRow } from './AssetFieldRow';
 import { AssetFieldTile } from './AssetFieldTile';
 import { MediaAsset } from '../../types/media';
 import { MediaService } from '../../services/MediaService';
-import { AssetUpload } from '../../types/asset-field';
-import { AssetEditor } from '../Editor/AssetEditor';
 import {
-    DndContext,
     closestCenter,
+    DndContext,
+    DragEndEvent,
     KeyboardSensor,
     PointerSensor,
     useSensor,
-    useSensors,
-    DragEndEvent,
+    useSensors
 } from '@dnd-kit/core';
 import {
     arrayMove,
+    rectSortingStrategy,
     SortableContext,
     sortableKeyboardCoordinates,
-    rectSortingStrategy,
-} from '@dnd-kit/sortable';
-import {
-    useSortable,
+    useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -76,7 +70,7 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
             if (typeof item === 'object' && item && item.id) return item.id.toString();
             return null;
         }).filter((id): id is string => Boolean(id)) : [];
-        
+
         setAssetIds(ids);
     }, [data]);
 
@@ -91,15 +85,14 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
         // Check if we need to load any new assets
         const currentlyLoadedIds = loadedAssetIdsRef.current;
         const missingIds = assetIds.filter(id => !currentlyLoadedIds.includes(id));
-        
+
         if (missingIds.length > 0) {
             // Only load missing assets or reload all if we have missing ones
             loadAssetsFromIds(assetIds);
         } else {
             // Just reorder existing assets without API call
             setLoadedAssets(prevAssets => {
-                const reorderedAssets = assetIds.map(id => prevAssets.find(asset => asset.id === id)).filter(Boolean) as MediaAsset[];
-                return reorderedAssets;
+                return assetIds.map((id) => prevAssets.find((asset) => asset.id === id)).filter(Boolean) as MediaAsset[];
             });
         }
     }, [assetIds]);
@@ -258,7 +251,7 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
             transform,
             transition,
             isDragging,
-        } = useSortable({ 
+        } = useSortable({
             id: asset.id,
         });
 
@@ -280,7 +273,7 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                 />
                 {/* Drag Handle */}
                 {!readOnly && (
-                    <div 
+                    <div
                         {...listeners}
                         className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing bg-black/70 rounded p-1 hover:bg-black/80 z-10"
                         title="Drag to reorder"

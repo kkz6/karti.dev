@@ -13,11 +13,22 @@ class ProfileDTO extends Data
         public string $email,
     ) {}
 
-    public function rules(): array
+    public static function rules(): array
     {
         return [
             'name'  => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($this->user()->id)],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255'],
+        ];
+    }
+
+    /**
+     * Get validation rules for update operation
+     */
+    public static function updateRules(int $userId): array
+    {
+        return [
+            'name'  => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($userId)],
         ];
     }
 }

@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Modules\Blog\DTO;
 
+use Illuminate\Container\Attributes\RouteParameter;
 use Illuminate\Validation\Rule;
-use Modules\Blog\Models\Tag;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 class TagData extends Data
 {
@@ -16,55 +17,19 @@ class TagData extends Data
         public ?string $description,
         public ?string $meta_title,
         public ?string $meta_description,
-        public ?int $tag_id = null, // For update operations
+        public ?int $tag_id = null,
     ) {}
 
-    public function rules(): array
-    {
-        $rules = [
-            'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'meta_title' => ['nullable', 'string', 'max:255'],
+    public static function rules(
+        ValidationContext $context,
+        #[RouteParameter('tag')] ?string $tag,
+    ): array {
+        return [
+            'name'             => ['required', 'string', 'max:255'],
+            'slug'             => ['required', 'string', ! $tag ? 'unique:tags,slug' : Rule::unique('tags', 'slug')->ignore($tagId), 'max:255'],
+            'description'      => ['nullable', 'string'],
+            'meta_title'       => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
         ];
-
-        // Add unique slug validation rule based on whether this is create or update
-        if ($this->tag_id) {
-            // Update operation - exclude current tag from unique check
-            $rules['slug'][] = Rule::unique('tags', 'slug')->ignore($this->tag_id);
-        } else {
-            // Create operation - slug must be unique
-            $rules['slug'][] = 'unique:tags,slug';
-        }
-
-        return $rules;
-    }
-
-    public function validationMessages(): array
-    {
-        return [
-            'name.required' => 'The tag name is required.',
-            'name.max' => 'The name must not exceed 255 characters.',
-            'slug.required' => 'The tag slug is required.',
-            'slug.max' => 'The slug must not exceed 255 characters.',
-        ];
-    }
-
-    /**
-     * Create instance for update operation
-     */
-    public static function forUpdate(array $data, int $tagId): static
-    {
-        $data['tag_id'] = $tagId;
-        return static::from($data);
-    }
-
-    /**
-     * Create instance for create operation
-     */
-    public static function forCreate(array $data): static
-    {
-        return static::from($data);
     }
 }

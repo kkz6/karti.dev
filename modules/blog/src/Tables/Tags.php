@@ -2,6 +2,7 @@
 
 namespace Modules\Blog\Tables;
 
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Modules\Blog\Models\Tag;
 use Modules\Table\Action;
 use Modules\Table\Columns;
@@ -13,7 +14,7 @@ class Tags extends Table
 {
     protected ?string $resource = Tag::class;
 
-    public function resource(): \Illuminate\Contracts\Database\Eloquent\Builder|string
+    public function resource(): Builder|string
     {
         return Tag::withCount('articles');
     }
@@ -21,7 +22,7 @@ class Tags extends Table
     public function columns(): array
     {
         return [
-            Columns\TextColumn::make('id', 'ID', stickable: true)->url(fn (Tag $tag) => route('admin.tags.show', $tag)),
+            Columns\TextColumn::make('id', 'ID', stickable: true)->url(fn (Tag $tag) => route('admin.tags.edit', $tag->id)),
             Columns\TextColumn::make('name', 'Name', toggleable: false)
                 ->searchable()
                 ->sortable(),
@@ -48,14 +49,8 @@ class Tags extends Table
         return [
             Action::make(
                 label: 'Edit',
-                url: fn (Tag $tag) => route('admin.tags.edit', $tag),
+                url: fn (Tag $tag) => route('admin.tags.edit', $tag->id),
                 icon: 'pencil',
-                variant: Variant::Secondary,
-            ),
-            Action::make(
-                label: 'View',
-                url: fn (Tag $tag) => route('admin.tags.show', $tag),
-                icon: 'eye',
                 variant: Variant::Secondary,
             ),
             Action::make(
@@ -71,13 +66,6 @@ class Tags extends Table
             )
                 ->confirm('Are you sure you want to delete this tag?')
                 ->asBulkAction(),
-        ];
-    }
-
-    public function exports(): array
-    {
-        return [
-            //
         ];
     }
 }

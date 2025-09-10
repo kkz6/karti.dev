@@ -25,9 +25,9 @@ class ArticleData extends Data
         public ?int $article_id = null, // For update operations
     ) {}
 
-    public function rules(): array
+    public static function rules(): array
     {
-        $rules = [
+        return [
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255'],
             'content' => ['required', 'string'],
@@ -41,16 +41,25 @@ class ArticleData extends Data
             'meta_description' => ['nullable', 'string', 'max:500'],
             'published_at' => ['nullable', 'date'],
         ];
+    }
 
-        // Add unique slug validation rule based on whether this is create or update
-        if ($this->article_id) {
-            // Update operation - exclude current article from unique check
-            $rules['slug'][] = Rule::unique('articles', 'slug')->ignore($this->article_id);
-        } else {
-            // Create operation - slug must be unique
-            $rules['slug'][] = 'unique:articles,slug';
-        }
+    /**
+     * Get validation rules for create operation
+     */
+    public static function createRules(): array
+    {
+        $rules = static::rules();
+        $rules['slug'][] = 'unique:articles,slug';
+        return $rules;
+    }
 
+    /**
+     * Get validation rules for update operation
+     */
+    public static function updateRules(int $articleId): array
+    {
+        $rules = static::rules();
+        $rules['slug'][] = Rule::unique('articles', 'slug')->ignore($articleId);
         return $rules;
     }
 

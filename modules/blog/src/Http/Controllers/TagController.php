@@ -17,13 +17,14 @@ class TagController extends BaseController
     public function __construct(
         private readonly TagServiceInterface $tagService,
     ) {}
+
     /**
      * Display a listing of tags.
      */
     public function index(Request $request): Response
     {
         return Inertia::render('blog::tags/index', [
-            'tags' => Tags::make(),
+            'tags'    => Tags::make(),
             'filters' => $request->only(['search', 'name']),
         ]);
     }
@@ -49,35 +50,23 @@ class TagController extends BaseController
     }
 
     /**
-     * Display the specified tag.
-     */
-    public function show(Tag $tag): Response
-    {
-        $tag->load(['articles' => function ($query) {
-            $query->with('user', 'category')->latest()->take(10);
-        }]);
-
-        return Inertia::render('blog::tags/show', [
-            'tag' => $tag,
-        ]);
-    }
-
-    /**
      * Show the form for editing the specified tag.
      */
-    public function edit(Tag $tag): Response
+    public function edit(string $tag): Response
     {
+        $tagData = $this->tagService->findOrFail($tag);
+
         return Inertia::render('blog::tags/edit', [
-            'tag' => $tag,
+            'tag' => $tagData,
         ]);
     }
 
     /**
      * Update the specified tag in storage.
      */
-    public function update(TagData $dto, Tag $tag): RedirectResponse
+    public function update(TagData $dto, string $tag): RedirectResponse
     {
-        $this->tagService->update($tag->id, $dto->toArray());
+        $this->tagService->update($tag, $dto->toArray());
 
         return redirect()
             ->route('admin.tags.index')
@@ -87,11 +76,13 @@ class TagController extends BaseController
     /**
      * Remove the specified tag from storage.
      */
-    public function destroy(Tag $tag): RedirectResponse
+    public function destroy(string $tag): RedirectResponse
     {
-        // Detach from articles before deleting
-        $tag->articles()->detach();
-        $this->tagService->delete($tag->id);
+        $tagData = $this->tagService->findOrFail($tag);
+
+        $tagData->articles()->detach();
+
+        $tagData->delete();
 
         return redirect()
             ->route('admin.tags.index')

@@ -19,25 +19,34 @@ class CategoryData extends Data
         public ?int $category_id = null, // For update operations
     ) {}
 
-    public function rules(): array
+    public static function rules(): array
     {
-        $rules = [
+        return [
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
         ];
+    }
 
-        // Add unique slug validation rule based on whether this is create or update
-        if ($this->category_id) {
-            // Update operation - exclude current category from unique check
-            $rules['slug'][] = Rule::unique('categories', 'slug')->ignore($this->category_id);
-        } else {
-            // Create operation - slug must be unique
-            $rules['slug'][] = 'unique:categories,slug';
-        }
+    /**
+     * Get validation rules for create operation
+     */
+    public static function createRules(): array
+    {
+        $rules = static::rules();
+        $rules['slug'][] = 'unique:categories,slug';
+        return $rules;
+    }
 
+    /**
+     * Get validation rules for update operation
+     */
+    public static function updateRules(int $categoryId): array
+    {
+        $rules = static::rules();
+        $rules['slug'][] = Rule::unique('categories', 'slug')->ignore($categoryId);
         return $rules;
     }
 
