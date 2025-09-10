@@ -15,6 +15,7 @@ import { Textarea } from '@shared/components/ui/textarea';
 import { cn } from '@shared/lib/utils';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
+import { useSlug } from '@shared/hooks/use-slug';
 import { CalendarIcon, Save } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
 
@@ -31,6 +32,7 @@ export default function Create({ categories }: { categories: Category[] }) {
     ];
 
     const [activeTab, setActiveTab] = useState('main');
+    const { handleTitleChange: handleSlugTitleChange } = useSlug();
 
     const { data, setData, post, processing, errors } = useForm({
         title: '',
@@ -52,20 +54,14 @@ export default function Create({ categories }: { categories: Category[] }) {
         post(route('admin.photography.store'));
     };
 
-    const generateSlug = (title: string) => {
-        return title
-            .toLowerCase()
-            .trim()
-            .replace(/[^\w\s-]/g, '') // Remove special characters
-            .replace(/[\s_-]+/g, '-') // Replace spaces and underscores with hyphens
-            .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
-    };
-
     const handleTitleChange = (value: string) => {
-        setData('title', value);
-        if (!data.slug) {
-            setData('slug', generateSlug(value));
-        }
+        handleSlugTitleChange(
+            value,
+            data.slug,
+            data.title,
+            (title) => setData('title', title),
+            (slug) => setData('slug', slug)
+        );
     };
 
     const publishedDate = data.published_at ? new Date(data.published_at) : undefined;

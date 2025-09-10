@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Modules\Blog\DTO;
 
 use Illuminate\Validation\Rule;
-use Modules\Blog\Models\Category;
 use Spatie\LaravelData\Data;
 
 class CategoryData extends Data

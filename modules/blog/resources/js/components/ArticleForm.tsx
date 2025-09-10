@@ -14,6 +14,7 @@ import { FormSimpleEditor } from '@shared/components/tiptap';
 import { SimpleAssetsField } from '@media/components/Field/SimpleAssetsField';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
+import { useSlug } from '@shared/hooks/use-slug';
 import { CalendarIcon, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -93,6 +94,7 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
     ];
 
     const [activeTab, setActiveTab] = useState('main');
+    const { handleTitleChange: handleSlugTitleChange } = useSlug();
 
     const form = useForm<ArticleFormData>({
         resolver: zodResolver(articleSchema),
@@ -112,21 +114,13 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
     });
 
     const handleTitleChange = (title: string) => {
-        form.setValue('title', title);
-        // Auto-generate slug from title
-        const currentSlug = form.getValues('slug');
-        if (!currentSlug || currentSlug === generateSlug(form.watch('title'))) {
-            form.setValue('slug', generateSlug(title));
-        }
-    };
-
-    const generateSlug = (text: string) => {
-        return text
-            .toLowerCase()
-            .replace(/[^a-z0-9 -]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-')
-            .trim();
+        handleSlugTitleChange(
+            title,
+            form.getValues('slug'),
+            article?.title,
+            (newTitle) => form.setValue('title', newTitle),
+            (newSlug) => form.setValue('slug', newSlug)
+        );
     };
 
     const onSubmit = (data: ArticleFormData) => {

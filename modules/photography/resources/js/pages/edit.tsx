@@ -10,6 +10,7 @@ import { Switch } from '@shared/components/ui/switch';
 import { Textarea } from '@shared/components/ui/textarea';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
+import { useSlug } from '@shared/hooks/use-slug';
 import { ArrowLeft, Save } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
@@ -36,6 +37,8 @@ interface Photo {
 }
 
 export default function Edit({ photo, categories }: { photo: Photo; categories: Category[] }) {
+    const { handleTitleChange: handleSlugTitleChange } = useSlug();
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Photography', href: route('admin.photography.index') },
         { title: photo.title, href: route('admin.photography.show', { photography: photo.id }) },
@@ -84,17 +87,14 @@ export default function Edit({ photo, categories }: { photo: Photo; categories: 
         put(route('admin.photography.update', { photography: photo.id }));
     };
 
-    const generateSlug = (title: string) => {
-        return title
-            .toLowerCase()
-            .trim()
-            .replace(/[^\w\s-]/g, '') // Remove special characters
-            .replace(/[\s_-]+/g, '-') // Replace spaces and underscores with hyphens
-            .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
-    };
-
     const handleTitleChange = (value: string) => {
-        setData('title', value);
+        handleSlugTitleChange(
+            value,
+            data.slug,
+            photo.title,
+            (title) => setData('title', title),
+            (slug) => setData('slug', slug)
+        );
     };
 
     return (
@@ -130,7 +130,6 @@ export default function Edit({ photo, categories }: { photo: Photo; categories: 
                                         id="title"
                                         value={data.title}
                                         onChange={(e) => handleTitleChange(e.target.value)}
-                                        error={errors.title}
                                         placeholder="Enter gallery title"
                                     />
                                     {errors.title && <div className="text-sm text-red-600">{errors.title}</div>}
@@ -142,7 +141,6 @@ export default function Edit({ photo, categories }: { photo: Photo; categories: 
                                         id="slug"
                                         value={data.slug}
                                         onChange={(e) => setData('slug', e.target.value)}
-                                        error={errors.slug}
                                         placeholder="gallery-slug"
                                     />
                                     {errors.slug && <div className="text-sm text-red-600">{errors.slug}</div>}

@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/
 import { Textarea } from '@shared/components/ui/textarea';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
+import { useSlug } from '@shared/hooks/use-slug';
 import { Save } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -36,6 +37,7 @@ export default function Create() {
     ];
 
     const [activeTab, setActiveTab] = useState('main');
+    const { handleTitleChange } = useSlug();
 
     const form = useForm<CategoryFormData>({
         resolver: zodResolver(categorySchema),
@@ -49,21 +51,13 @@ export default function Create() {
     });
 
     const handleNameChange = (name: string) => {
-        form.setValue('name', name);
-        // Auto-generate slug from name
-        const currentSlug = form.getValues('slug');
-        if (!currentSlug || currentSlug === generateSlug(form.watch('name'))) {
-            form.setValue('slug', generateSlug(name));
-        }
-    };
-
-    const generateSlug = (text: string) => {
-        return text
-            .toLowerCase()
-            .replace(/[^a-z0-9 -]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-')
-            .trim();
+        handleTitleChange(
+            name,
+            form.getValues('slug'),
+            form.getValues('name'),
+            (title) => form.setValue('name', title),
+            (slug) => form.setValue('slug', slug)
+        );
     };
 
     const onSubmit = (data: CategoryFormData) => {

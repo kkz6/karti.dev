@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/
 import { Textarea } from '@shared/components/ui/textarea';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
+import { useSlug } from '@shared/hooks/use-slug';
 import { Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -46,6 +47,7 @@ export default function Edit({ category }: { category: Category }) {
     ];
 
     const [activeTab, setActiveTab] = useState('main');
+    const { handleTitleChange } = useSlug();
 
     const form = useForm<CategoryFormData>({
         resolver: zodResolver(categorySchema),
@@ -57,6 +59,16 @@ export default function Edit({ category }: { category: Category }) {
             meta_description: category.meta_description || '',
         },
     });
+
+    const handleNameChange = (name: string) => {
+        handleTitleChange(
+            name,
+            form.getValues('slug'),
+            category.name,
+            (title) => form.setValue('name', title),
+            (slug) => form.setValue('slug', slug)
+        );
+    };
 
     const onSubmit = (data: CategoryFormData) => {
         router.put(route('admin.categories.update', { category: category.slug || category.id }), data, {
@@ -138,7 +150,11 @@ export default function Edit({ category }: { category: Category }) {
                                                             <FormItem>
                                                                 <FormLabel>Name *</FormLabel>
                                                                 <FormControl>
-                                                                    <Input {...field} placeholder="Enter category name" />
+                                                                    <Input
+                                                                        {...field}
+                                                                        onChange={(e) => handleNameChange(e.target.value)}
+                                                                        placeholder="Enter category name"
+                                                                    />
                                                                 </FormControl>
                                                                 <FormMessage />
                                                             </FormItem>
