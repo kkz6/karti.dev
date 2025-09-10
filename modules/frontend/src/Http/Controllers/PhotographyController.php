@@ -34,25 +34,25 @@ class PhotographyController extends BaseController
             ->map(function ($photo) {
                 // Use the first image from image_ids array, or cover_image as fallback
                 $imageUrl = null;
-                if (!empty($photo->image_ids) && is_array($photo->image_ids)) {
-                    $imageUrl = '/storage/images/' . $photo->image_ids[0];
+                if (! empty($photo->image_ids) && is_array($photo->image_ids)) {
+                    $imageUrl = '/storage/images/'.$photo->image_ids[0];
                 } elseif ($photo->cover_image) {
                     $imageUrl = $photo->cover_image;
                 }
-                
+
                 return [
                     'src' => $imageUrl,
-                    'alt' => $photo->title . ' - ' . ($photo->short_description ?? 'Photography'),
+                    'alt' => $photo->title.' - '.($photo->short_description ?? 'Photography'),
                 ];
             })
             ->filter(function ($photo) {
-                return !empty($photo['src']);
+                return ! empty($photo['src']);
             })
             ->values()
             ->toArray();
 
         return Inertia::render('frontend::photography', [
-            'photos' => $photos,
+            'photos'         => $photos,
             'featuredPhotos' => $featuredPhotos,
         ]);
     }

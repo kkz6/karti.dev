@@ -5,19 +5,19 @@ namespace Modules\Frontend\Http\Controllers;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Shared\Http\Controllers\BaseController;
+use Modules\Speaking\Interfaces\SpeakingEventServiceInterface;
 
 class FrontendController extends BaseController
 {
+    public function __construct(
+        private readonly SpeakingEventServiceInterface $speakingEventService
+    ) {}
+
     public function home(): Response
     {
         return Inertia::render('frontend::home');
     }
-
-    public function about(): Response
-    {
-        return Inertia::render('frontend::about');
-    }
-
+    
     public function contact(): Response
     {
         return Inertia::render('frontend::contact');
@@ -40,11 +40,6 @@ class FrontendController extends BaseController
         return Inertia::render('frontend::projects');
     }
 
-    public function speaking(): Response
-    {
-        return Inertia::render('frontend::speaking');
-    }
-
     public function uses(): Response
     {
         return Inertia::render('frontend::uses');
@@ -55,19 +50,17 @@ class FrontendController extends BaseController
         return Inertia::render('frontend::services');
     }
 
-    public function portfolio(): Response
+    public function about(): Response
     {
-        return Inertia::render('frontend::portfolio');
+        return Inertia::render('frontend::about');
     }
 
-
-    public function privacy(): Response
+    public function speaking(): Response
     {
-        return Inertia::render('frontend::privacy');
-    }
+        $events = $this->speakingEventService->getPublishedForFrontend();
 
-    public function terms(): Response
-    {
-        return Inertia::render('frontend::terms');
+        return Inertia::render('frontend::speaking', [
+            'events' => $events,
+        ]);
     }
 }

@@ -14,7 +14,6 @@
         "modules/blog": "*",
         "modules/frontend": "*",
         "modules/media": "*",
-        "modules/pages": "*",
         "modules/photography": "*",
         "modules/profile": "*",
         "modules/projects": "*",
