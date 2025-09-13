@@ -18,9 +18,11 @@ export function Card<T extends React.ElementType = 'div'>({
   as,
   className,
   children,
-}: Omit<React.ComponentPropsWithoutRef<T>, 'as' | 'className'> & {
+  href,
+}: Omit<React.ComponentPropsWithoutRef<T>, 'as' | 'className' | 'href'> & {
   as?: T
   className?: string
+  href?: string
 }) {
   const Component = as ?? 'div'
 
@@ -28,6 +30,13 @@ export function Card<T extends React.ElementType = 'div'>({
     <Component
       className={clsx(className, 'group relative flex flex-col items-start')}
     >
+      {href && (
+        <Link
+          href={href}
+          className="absolute inset-0 z-20"
+          aria-hidden="true"
+        />
+      )}
       {children}
     </Component>
   )

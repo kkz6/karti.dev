@@ -32,13 +32,7 @@ class Articles extends Table
         return [
             Filters\TextFilter::make('id', 'ID'),
             Filters\DateFilter::make('created_at'),
-            Filters\TrashedFilter::make('deleted_at', 'Trashed'),
-
-            // Example of hidden filter with boolean condition
-            Filters\TextFilter::make('author_email', 'Author Email')->hidden(true),
-
-            // Example of hidden filter with closure condition
-            // Filters\TextFilter::make('meta_title', 'Meta Title')->hidden(fn() => !auth()->user()?->hasRole('admin')),
+            Filters\TrashedFilter::make('deleted_at', 'Trashed'),,
         ];
     }
 

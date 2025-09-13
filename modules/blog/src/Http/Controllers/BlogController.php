@@ -24,6 +24,7 @@ class BlogController extends BaseController
         private readonly CategoryServiceInterface $categoryService,
         private readonly TagServiceInterface $tagService,
     ) {}
+
     /**
      * Display a listing of articles.
      */
@@ -62,9 +63,9 @@ class BlogController extends BaseController
 
         // Process featured image from asset field
         $featuredImageData = $dto->featured_image ?? [];
-        $featuredImageUrl = null;
+        $featuredImageUrl  = null;
 
-        if (!empty($featuredImageData) && is_array($featuredImageData)) {
+        if (! empty($featuredImageData) && is_array($featuredImageData)) {
             // Extract the URL from the first asset
             $firstAsset = $featuredImageData[0] ?? null;
             if ($firstAsset && isset($firstAsset['url'])) {
@@ -75,13 +76,13 @@ class BlogController extends BaseController
         $article = $this->articleService->create([
             ...$dto->toArray(),
             'featured_image' => $featuredImageUrl, // Store as URL string for backward compatibility
-            'user_id' => Auth::id(),
-            'published_at' => $dto->status === 'published'
+            'user_id'        => Auth::id(),
+            'published_at'   => $dto->status === 'published'
                 ? ($dto->published_at ?? now())
                 : null,
         ]);
 
-        if (!empty($dto->tags)) {
+        if (! empty($dto->tags)) {
             $article->tags()->sync($dto->tags);
         }
 
@@ -92,15 +93,13 @@ class BlogController extends BaseController
 
     /**
      * Show the form for editing the specified article.
+     *
+     * @param mixed $article
      */
-    public function edit($article): Response
+    public function edit(string $article): Response
     {
         // Handle both slug and ID for route model binding
-        if (is_string($article)) {
-            $article = $this->articleService->findBySlug($article) ?? $this->articleService->findOrFail($article);
-        } else {
-            $article = $this->articleService->findOrFail($article);
-        }
+        $article = $this->articleService->findOrFail($article);
 
         $categories = $this->categoryService->all(['id', 'name', 'slug']);
         $tags       = $this->tagService->all(['id', 'name', 'slug']);
@@ -120,9 +119,9 @@ class BlogController extends BaseController
 
         // Process featured image from asset field
         $featuredImageData = $dto->featured_image ?? [];
-        $featuredImageUrl = null;
+        $featuredImageUrl  = null;
 
-        if (!empty($featuredImageData) && is_array($featuredImageData)) {
+        if (! empty($featuredImageData) && is_array($featuredImageData)) {
             // Extract the URL from the first asset
             $firstAsset = $featuredImageData[0] ?? null;
             if ($firstAsset && isset($firstAsset['url'])) {
@@ -133,12 +132,12 @@ class BlogController extends BaseController
         $this->articleService->update($article->id, [
             ...$dto->toArray(),
             'featured_image' => $featuredImageUrl, // Store as URL string for backward compatibility
-            'published_at' => $dto->status === 'published'
+            'published_at'   => $dto->status === 'published'
                 ? ($dto->published_at ?? $article->published_at ?? now())
                 : null,
         ]);
 
-        if (!empty($dto->tags)) {
+        if (! empty($dto->tags)) {
             $article->tags()->sync($dto->tags);
         }
 

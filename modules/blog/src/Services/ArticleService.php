@@ -48,6 +48,17 @@ class ArticleService extends BaseService implements ArticleServiceInterface
         return $this->repository->findBySlug($slug);
     }
 
+    public function findBySlugOrFail(string $slug): Article
+    {
+        $article = $this->repository->findBySlug($slug);
+        
+        if (!$article) {
+            abort(404, 'Article not found');
+        }
+        
+        return $article;
+    }
+
     public function publish(string|int $id): bool
     {
         return $this->update($id, [
