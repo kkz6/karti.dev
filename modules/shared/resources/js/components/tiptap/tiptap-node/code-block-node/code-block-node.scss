@@ -1,4 +1,5 @@
 /* Code Block Styles */
+.prose .code-block,
 .code-block {
   position: relative;
   border-radius: 8px;
@@ -18,10 +19,15 @@
     pointer-events: none;
     border: 1px solid hsl(var(--border));
     border-radius: 8px;
+    /* ensure overlay is behind interactive content */
+    z-index: 0;
   }
 
   /* Code content */
-  .code-block-content {
+  .code-block-content,
+  .prose .code-block-content {
+    position: relative;
+    z-index: 1; /* keep editable area above overlay */
     background: hsl(var(--background));
     color: hsl(var(--foreground));
     font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", Menlo, Courier, monospace !important;
@@ -53,10 +59,47 @@
     }
   }
 
+  /* Viewer mode (frontend article pages) - when HTML is <pre class="code-block"><code ...> */
+  .prose & > code,
+  > code {
+    display: block;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", Menlo, Courier, monospace !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    padding: 1rem !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    outline: none !important;
+    white-space: pre !important;
+    overflow-x: auto;
+    min-height: 60px;
+  }
+
+  /* Respect wrapping preference saved from editor */
+  .prose &[data-wrap="true"] > code,
+  &[data-wrap="true"] > code {
+    white-space: pre-wrap !important;
+    word-break: break-word;
+  }
+
+  .prose &[data-wrap="false"] > code,
+  &[data-wrap="false"] > code {
+    white-space: pre !important;
+  }
+
   /* Focus and selection states */
   &.ProseMirror-selectednode {
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
+  }
+
+  /* Header should remain above content for interactions */
+  .code-block-header {
+    position: relative;
+    z-index: 2;
   }
 
   /* Dark mode adjustments */
