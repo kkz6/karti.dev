@@ -3,7 +3,7 @@ import { Button } from '@shared/components/ui/button';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
 import { InertiaTableWrapper } from '@table/components/Table/inertia-table-wrapper';
-import { Plus } from 'lucide-react';
+import { Plus, Wrench, Settings, Package } from 'lucide-react';
 
 export default function Index({ table }: { table: any }) {
     const breadcrumbs: BreadcrumbItem[] = [{ title: 'Tools', href: route('admin.tools.index') }];
@@ -31,7 +31,18 @@ export default function Index({ table }: { table: any }) {
 
                 {/* Tools Table */}
                 <div className="flex-1">
-                    <InertiaTableWrapper resource={table} />
+                    <InertiaTableWrapper
+                        resource={table}
+                        emptyState={{
+                            title: 'No tools found',
+                            description: 'Get started by adding your first tool or resource.',
+                            icons: [Wrench, Settings, Package],
+                            action: {
+                                label: 'Create Tool',
+                                onClick: handleCreateTool,
+                            },
+                        }}
+                    />
                 </div>
             </div>
         </AppLayout>

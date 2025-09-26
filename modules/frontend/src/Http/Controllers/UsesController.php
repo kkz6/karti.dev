@@ -30,7 +30,7 @@ class UsesController extends BaseController
                 ];
             });
 
-        return Inertia::render('pages::uses', [
+        return Inertia::render('frontend::uses', [
             'sections' => $sections,
         ]);
     }

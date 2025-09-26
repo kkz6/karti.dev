@@ -10,8 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
-use Modules\Media\DTO\MediaAssetData;
 use Modules\Media\DTO\ImageEditorSaveData;
+use Modules\Media\DTO\MediaAssetData;
 use Modules\Media\Exceptions\MediaManagerException;
 use Modules\Media\Exceptions\MediaMoveException;
 use Modules\Media\Exceptions\MediaUpload\ConfigurationException;
@@ -23,7 +23,6 @@ use Modules\Media\Exceptions\MediaUpload\ForbiddenException;
 use Modules\Media\Exceptions\MediaUpload\InvalidHashException;
 use Modules\Media\Http\Requests\MediaStoreRequest;
 use Modules\Media\Http\Requests\MediaUpdateRequest;
-
 use Modules\Media\Models\Media;
 use Modules\Media\Support\MediaManager;
 use Modules\Media\Support\MediaUploader;
@@ -53,7 +52,7 @@ class MediaController extends BaseController
         $media          = Media::inDirectory($diskString, $path)->paginate(20)->toArray();
         $subdirectories = array_diff($disk->directories($path), $this->ignore);
 
-        $key            = trim('root.' . implode('.', explode('/', $path)), "\.");
+        $key            = trim('root.'.implode('.', explode('/', $path)), "\.");
         $subdirectories = Cache::remember("media.manager.folders.{$key}", 60 * 60 * 24, function () use ($subdirectories) {
             $modified = Media::whereIn('directory', $subdirectories)
                 ->selectRaw('directory, max(updated_at) as timestamp')
@@ -190,12 +189,12 @@ class MediaController extends BaseController
             abort(404, 'File not found');
         }
 
-        $filename = $media->filename . '.' . $media->extension;
+        $filename = $media->filename.'.'.$media->extension;
         $contents = $disk->get($path);
 
         return response($contents)
             ->header('Content-Type', $media->mime_type)
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+            ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
     }
 
     /**
@@ -231,21 +230,21 @@ class MediaController extends BaseController
 
         // Generate filename if not overwriting
         $filename = $saveData->name;
-        if (!$saveData->overwrite) {
+        if (! $saveData->overwrite) {
             // Check if file exists and generate unique name
             $diskInstance = Storage::disk($disk);
-            $fullPath = $path ? $path . '/' . $filename : $filename;
+            $fullPath     = $path ? $path.'/'.$filename : $filename;
 
             if ($diskInstance->exists($fullPath)) {
-                $pathInfo = pathinfo($filename);
-                $basename = $pathInfo['filename'];
+                $pathInfo  = pathinfo($filename);
+                $basename  = $pathInfo['filename'];
                 $extension = $pathInfo['extension'] ?? '';
-                $counter = 1;
+                $counter   = 1;
 
                 do {
-                    $newBasename = $basename . '_' . $counter;
-                    $filename = $extension ? $newBasename . '.' . $extension : $newBasename;
-                    $fullPath = $path ? $path . '/' . $filename : $filename;
+                    $newBasename = $basename.'_'.$counter;
+                    $filename    = $extension ? $newBasename.'.'.$extension : $newBasename;
+                    $fullPath    = $path ? $path.'/'.$filename : $filename;
                     $counter++;
                 } while ($diskInstance->exists($fullPath));
             }
@@ -253,29 +252,29 @@ class MediaController extends BaseController
 
         // Save the file
         $diskInstance = Storage::disk($disk);
-        $fullPath = $path ? $path . '/' . $filename : $filename;
+        $fullPath     = $path ? $path.'/'.$filename : $filename;
         $diskInstance->put($fullPath, $decodedImage);
 
         // Create media record
-        $pathInfo = pathinfo($filename);
-        $filesize = strlen($decodedImage);
+        $pathInfo  = pathinfo($filename);
+        $filesize  = strlen($decodedImage);
         $extension = $pathInfo['extension'] ?? '';
 
         // Infer aggregate type using the uploader's logic
         $aggregateType = $this->uploader->inferAggregateType($saveData->mimeType, $extension);
 
         $media = Media::forceCreate([
-            'disk' => $disk,
-            'directory' => $path,
-            'filename' => $pathInfo['filename'],
-            'extension' => $extension,
-            'mime_type' => $saveData->mimeType,
-            'aggregate_type' => $aggregateType,
-            'size' => $filesize,
-            'title' => $pathInfo['filename'],
-            'alt' => null,
-            'caption' => null,
-            'credit' => null,
+            'disk'              => $disk,
+            'directory'         => $path,
+            'filename'          => $pathInfo['filename'],
+            'extension'         => $extension,
+            'mime_type'         => $saveData->mimeType,
+            'aggregate_type'    => $aggregateType,
+            'size'              => $filesize,
+            'title'             => $pathInfo['filename'],
+            'alt'               => null,
+            'caption'           => null,
+            'credit'            => null,
             'custom_properties' => [],
         ]);
 
@@ -285,7 +284,7 @@ class MediaController extends BaseController
         return response([
             'success' => true,
             'message' => $saveData->overwrite ? 'Image saved successfully' : 'Image copy saved successfully',
-            'asset' => $assetData->toArray(),
+            'asset'   => $assetData->toArray(),
         ]);
     }
 }

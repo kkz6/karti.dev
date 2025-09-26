@@ -19,10 +19,10 @@ class FrontendController extends BaseController
     {
         $articles = $this->articleService->getPublished()->map(function ($article) {
             return [
-                'slug' => $article->slug,
-                'title' => $article->title,
+                'slug'        => $article->slug,
+                'title'       => $article->title,
                 'description' => $article->excerpt,
-                'date' => $article->published_at?->toISOString() ?? $article->created_at->toISOString(),
+                'date'        => $article->published_at?->toISOString() ?? $article->created_at->toISOString(),
             ];
         });
 
@@ -40,10 +40,10 @@ class FrontendController extends BaseController
     {
         $articles = $this->articleService->getPublished()->map(function ($article) {
             return [
-                'slug' => $article->slug,
-                'title' => $article->title,
+                'slug'        => $article->slug,
+                'title'       => $article->title,
                 'description' => $article->excerpt,
-                'date' => $article->published_at?->toISOString() ?? $article->created_at->toISOString(),
+                'date'        => $article->published_at?->toISOString() ?? $article->created_at->toISOString(),
             ];
         });
 
@@ -58,11 +58,11 @@ class FrontendController extends BaseController
 
         // Transform article data to match frontend expectations
         $articleData = [
-            'title' => $article->title,
+            'title'       => $article->title,
             'description' => $article->excerpt,
-            'date' => $article->published_at?->toISOString() ?? $article->created_at->toISOString(),
-            'content' => $article->content,
-            'author' => $article->author_name ?? $article->user?->name ?? 'Anonymous',
+            'date'        => $article->published_at?->toISOString() ?? $article->created_at->toISOString(),
+            'content'     => $article->content,
+            'author'      => $article->author_name ?? $article->user?->name ?? 'Anonymous',
         ];
 
         return Inertia::render('frontend::articles/show', [
@@ -78,11 +78,6 @@ class FrontendController extends BaseController
     public function uses(): Response
     {
         return Inertia::render('frontend::uses');
-    }
-
-    public function services(): Response
-    {
-        return Inertia::render('frontend::services');
     }
 
     public function about(): Response

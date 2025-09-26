@@ -34,7 +34,6 @@ export const createDefaultServices = (): MediaServices => ({
 
         const response = await axios.get(url, {
             params: {
-                disk: 'public',
                 page: params.page,
             },
         });
@@ -48,7 +47,6 @@ export const createDefaultServices = (): MediaServices => ({
             path: dir.name,
             title: dir.name.split('/').pop() || dir.name,
             parent_path: params.path === '/' ? null : params.path,
-            container_id: 'public',
             created_at: dir.timestamp !== 'N/A' ? dir.timestamp : new Date().toISOString(),
             updated_at: dir.timestamp !== 'N/A' ? dir.timestamp : new Date().toISOString(),
         }));
@@ -67,7 +65,6 @@ export const createDefaultServices = (): MediaServices => ({
             updated_at: file.updated_at,
             is_image: file.aggregate_type === 'image',
             path: file.directory,
-            container_id: 'public',
             dimensions: undefined, // Backend doesn't provide dimensions yet
         }));
 
@@ -77,7 +74,6 @@ export const createDefaultServices = (): MediaServices => ({
             path: params.path,
             title: params.path === '/' ? 'Root' : params.path.split('/').pop() || params.path,
             parent_path: params.path === '/' ? null : params.path.split('/').slice(0, -1).join('/') || '/',
-            container_id: 'public',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
         };

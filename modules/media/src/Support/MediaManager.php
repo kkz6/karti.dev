@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Modules\Media\Support;
 
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Drivers\Imagick\Driver as Imagick;
 use Intervention\Image\Drivers\Gd\Driver as Gd;
+use Intervention\Image\Drivers\Imagick\Driver as Imagick;
 use Intervention\Image\Image;
 use Intervention\Image\ImageManager;
 use Modules\Media\Exceptions\MediaManagerException;
@@ -49,6 +49,8 @@ class MediaManager
      *
      * @param null   $disk
      * @param string $method
+     * @param mixed  $image
+     * @param mixed  $dimension
      *
      * @return Image
      *
@@ -75,7 +77,7 @@ class MediaManager
      *
      * @throws MediaManagerException
      */
-    public function verifyDisk($disk = null)
+    public function verifyDisk($disk = null): mixed
     {
         if (! $disk) {
             $disk = config('mediable.default_disk');
@@ -93,13 +95,15 @@ class MediaManager
     }
 
     /**
-     * Checks for the existiance of the passed directory on the specified disk.
+     * Checks for the existence of the passed directory on the specified disk.
      *
-     * @return string
+     *
+     * @param mixed $disk
+     * @param mixed $directory
      *
      * @throws MediaManagerException
      */
-    public function verifyDirectory($disk, $directory)
+    public function verifyDirectory($disk, $directory): string
     {
         $filesystem = Storage::disk($disk);
         if ($directory && ! $filesystem->exists($directory)) {
