@@ -1,54 +1,128 @@
-.tiptap.ProseMirror {
-  --tt-inline-code-bg-color: var(--tt-gray-light-a-100);
-  --tt-inline-code-text-color: var(--tt-gray-light-a-700);
-  --tt-inline-code-border-color: var(--tt-gray-light-a-200);
-  --tt-codeblock-bg: var(--tt-gray-light-a-50);
-  --tt-codeblock-text: var(--tt-gray-light-a-800);
-  --tt-codeblock-border: var(--tt-gray-light-a-200);
+/* Code Block Styles */
+.prose .code-block,
+.code-block {
+  position: relative;
+  border-radius: 8px;
+  border: 1px solid hsl(var(--border)) !important;
+  background: hsl(var(--muted) / 0.06);
+  overflow: hidden;
+  margin: 1.5rem 0;
 
+  /* ensure outer border is visible on light/dark */
+  box-shadow: 0 0 0 1px hsl(var(--border)) inset;
+
+  /* hard overlay border so the outline is always visible on all edges */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    /* ensure overlay is behind interactive content */
+    z-index: 0;
+  }
+
+  /* Code content */
+  .code-block-content,
+  .prose .code-block-content {
+    position: relative;
+    z-index: 1; /* keep editable area above overlay */
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", Menlo, Courier, monospace !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    padding: 0.5rem !important; /* reduce inner padding */
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    outline: none !important;
+    white-space: pre !important;
+    overflow-x: auto;
+    min-height: 60px;
+    
+    /* Ensure cursor is visible */
+    caret-color: hsl(var(--foreground));
+    
+    /* Selection styling */
+    ::selection {
+      background: hsl(var(--primary) / 0.2);
+    }
+
+    /* Remove any default prose styling */
+    &.ProseMirror {
+      padding: 1rem !important;
+      margin: 0 !important;
+      border: none !important;
+      outline: none !important;
+    }
+  }
+
+  /* Viewer mode (frontend article pages) - when HTML is <pre class="code-block"><code ...> */
+  .prose & > code,
+  > code {
+    display: block;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", Menlo, Courier, monospace !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    padding: 1rem !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    outline: none !important;
+    white-space: pre !important;
+    overflow-x: auto;
+    min-height: 60px;
+  }
+
+  /* Respect wrapping preference saved from editor */
+  .prose &[data-wrap="true"] > code,
+  &[data-wrap="true"] > code {
+    white-space: pre-wrap !important;
+    word-break: break-word;
+  }
+
+  .prose &[data-wrap="false"] > code,
+  &[data-wrap="false"] > code {
+    white-space: pre !important;
+  }
+
+  /* Focus and selection states */
+  &.ProseMirror-selectednode {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* Header should remain above content for interactions */
+  .code-block-header {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Dark mode adjustments */
   .dark & {
-    --tt-inline-code-bg-color: var(--tt-gray-dark-a-100);
-    --tt-inline-code-text-color: var(--tt-gray-dark-a-700);
-    --tt-inline-code-border-color: var(--tt-gray-dark-a-200);
-    --tt-codeblock-bg: var(--tt-gray-dark-a-50);
-    --tt-codeblock-text: var(--tt-gray-dark-a-800);
-    --tt-codeblock-border: var(--tt-gray-dark-a-200);
+    border-color: hsl(var(--border));
+    background: hsl(var(--muted) / 0.2);
+    
+    .code-block-content {
+      background: hsl(var(--background));
+      color: hsl(var(--foreground));
+    }
   }
 }
 
-/* =====================
-   CODE FORMATTING
-   ===================== */
-.tiptap.ProseMirror {
-  // Inline code
-  code {
-    background-color: var(--tt-inline-code-bg-color);
-    color: var(--tt-inline-code-text-color);
-    border: 1px solid var(--tt-inline-code-border-color);
-    font-family: "JetBrains Mono NL", monospace;
-    font-size: 0.875em;
-    line-height: 1.4;
-    border-radius: 6px/0.375rem;
-    padding: 0.1em 0.2em;
-  }
-
-  // Code blocks
-  pre {
-    background-color: var(--tt-codeblock-bg);
-    color: var(--tt-codeblock-text);
-    border: 1px solid var(--tt-codeblock-border);
-    margin-top: 1.5em;
-    margin-bottom: 1.5em;
-    padding: 1em;
-    font-size: 1rem;
-    border-radius: 6px/0.375rem;
-
-    code {
-      background-color: transparent;
-      border: none;
-      border-radius: 0;
-      -webkit-text-fill-color: inherit;
-      color: inherit;
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .code-block {
+    margin: 1rem 0;
+    border-radius: 6px;
+    
+    .code-block-content {
+      padding: 0.75rem !important;
+      font-size: 13px !important;
     }
   }
 }

@@ -2,6 +2,8 @@ import React from 'react';
 import { Head } from '@inertiajs/react';
 import PublicLayout from '../../layouts/public-layout';
 import { ArticleLayout } from '../../components/ArticleLayout';
+// Ensure custom code block styles are available on article pages
+import '@shared/components/tiptap/tiptap-node/code-block-node/code-block-node.scss'
 
 interface ArticleProps {
     article: {

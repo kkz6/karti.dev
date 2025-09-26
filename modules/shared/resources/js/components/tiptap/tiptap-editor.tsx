@@ -1,5 +1,10 @@
 import * as React from 'react';
 import { EditorContent, EditorContext, useEditor } from '@tiptap/react';
+
+// --- Enhanced Code Block Styles ---
+import '@shared/components/tiptap/tiptap-node/code-block-node/code-block-node.scss';
+import 'prism-code-editor/layout.css';
+import 'prism-code-editor/themes/github-dark.css';
 import { StarterKit } from '@tiptap/starter-kit';
 import { TaskItem, TaskList } from '@tiptap/extension-list';
 import { TextAlign } from '@tiptap/extension-text-align';
@@ -23,6 +28,7 @@ import {
 import { ImageUploadNode } from '@shared/components/tiptap/tiptap-node/image-upload-node/image-upload-node-extension';
 import { HorizontalRule } from '@shared/components/tiptap/tiptap-node/horizontal-rule-node/horizontal-rule-node-extension';
 import { ResizableImage } from '@shared/components/tiptap/extensions/resizable-image/resizable-image-extension';
+import { CodeBlock } from '@shared/components/tiptap/tiptap-node/code-block-node';
 
 // --- Tiptap UI ---
 import { HeadingDropdownMenu } from '@shared/components/tiptap/tiptap-ui/heading-dropdown-menu';
@@ -38,8 +44,10 @@ import { UndoRedoButton } from '@shared/components/tiptap/tiptap-ui/undo-redo-bu
 import { handleImageUpload, MAX_FILE_SIZE } from '@shared/lib/tiptap-utils';
 
 // --- Styles ---
+import '@shared/components/tiptap/tiptap-ui-primitive/button/button.scss';
+import '@shared/components/tiptap/tiptap-ui-primitive/button/button-colors.scss';
+import '@shared/components/tiptap/tiptap-ui-primitive/toolbar/toolbar.scss';
 import '@shared/components/tiptap/tiptap-node/blockquote-node/blockquote-node.scss';
-import '@shared/components/tiptap/tiptap-node/code-block-node/code-block-node.scss';
 import '@shared/components/tiptap/tiptap-node/horizontal-rule-node/horizontal-rule-node.scss';
 import '@shared/components/tiptap/tiptap-node/list-node/list-node.scss';
 import '@shared/components/tiptap/tiptap-node/image-node/image-node.scss';
@@ -70,8 +78,17 @@ export function TiptapEditor({ content = '', onChange, placeholder = 'Start writ
     extensions: [
       StarterKit.configure({
         horizontalRule: false,
+        codeBlock: false, // Disable default code block to use enhanced version
       }),
       HorizontalRule,
+      CodeBlock.configure({
+        languageClassPrefix: 'language-',
+        defaultLanguage: null,
+        HTMLAttributes: {
+          class: 'code-block',
+        },
+        syntaxHighlighting: true,
+      }),
       Link.configure({
         openOnClick: false,
         enableClickSelection: true,
