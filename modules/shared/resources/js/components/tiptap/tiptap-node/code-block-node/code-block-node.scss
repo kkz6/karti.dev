@@ -2,12 +2,8 @@
 .prose .code-block,
 .code-block {
   position: relative;
-  border-radius: 8px;
-  border: 1px solid hsl(var(--border)) !important;
-  background: hsl(var(--muted) / 0.06);
   overflow: hidden;
   margin: 1.5rem 0;
-
   /* ensure outer border is visible on light/dark */
   box-shadow: 0 0 0 1px hsl(var(--border)) inset;
 
@@ -17,7 +13,6 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    border: 1px solid hsl(var(--border));
     border-radius: 8px;
     /* ensure overlay is behind interactive content */
     z-index: 0;
@@ -41,10 +36,10 @@
     white-space: pre !important;
     overflow-x: auto;
     min-height: 60px;
-    
+
     /* Ensure cursor is visible */
     caret-color: hsl(var(--foreground));
-    
+
     /* Selection styling */
     ::selection {
       background: hsl(var(--primary) / 0.2);
@@ -106,7 +101,7 @@
   .dark & {
     border-color: hsl(var(--border));
     background: hsl(var(--muted) / 0.2);
-    
+
     .code-block-content {
       background: hsl(var(--background));
       color: hsl(var(--foreground));
@@ -119,7 +114,7 @@
   .code-block {
     margin: 1rem 0;
     border-radius: 6px;
-    
+
     .code-block-content {
       padding: 0.75rem !important;
       font-size: 13px !important;
