@@ -1,100 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import 'tailwindcss';
-
 @plugin 'tailwindcss-animate';
 @plugin '@tailwindcss/typography';
-
-/* Keyframe Animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes fadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes zoomIn {
-  from {
-    transform: scale(0.95);
-  }
-  to {
-    transform: scale(1);
-  }
-}
-
-@keyframes zoomOut {
-  from {
-    transform: scale(1);
-  }
-  to {
-    transform: scale(0.95);
-  }
-}
-
-@keyframes zoom {
-  0% {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes slideFromTop {
-  from {
-    transform: translateY(-0.5rem);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideFromRight {
-  from {
-    transform: translateX(0.5rem);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideFromLeft {
-  from {
-    transform: translateX(-0.5rem);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideFromBottom {
-  from {
-    transform: translateY(0.5rem);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
 
 /* Tiptap Editor Styles */
 :root {
@@ -113,7 +20,7 @@
   --tt-border-color: var(--border);
   --tt-cursor-color: var(--primary);
   --tt-selection-color: rgba(157, 138, 255, 0.2);
-  
+
   /* Tiptap Radius */
   --tt-radius-xs: 0.25rem;
   --tt-radius-sm: 0.375rem;
@@ -137,7 +44,7 @@
     html {
         scroll-behavior: smooth;
     }
-    
+
     /* Optional: Add smooth scrolling with custom timing */
     * {
         scroll-behavior: smooth;
@@ -352,6 +259,100 @@
     body {
         @apply bg-background text-foreground;
     }
+}
+
+/* Article Content Code Block Styles */
+.article-content pre.code-block,
+.article-content pre {
+    @apply bg-zinc-900 dark:bg-zinc-800 rounded-lg overflow-hidden my-6;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.article-content pre.code-block code,
+.article-content pre code {
+    @apply text-zinc-100 dark:text-zinc-200 text-sm leading-relaxed block;
+    font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, 'Courier New', monospace;
+    overflow-x: auto;
+    background: transparent !important;
+}
+
+/* Override Prism theme colors for better dark mode support */
+.article-content pre code .token.comment,
+.article-content pre code .token.prolog,
+.article-content pre code .token.doctype,
+.article-content pre code .token.cdata {
+    @apply text-zinc-500 dark:text-zinc-400;
+}
+
+.article-content pre code .token.punctuation {
+    @apply text-zinc-300 dark:text-zinc-400;
+}
+
+.article-content pre code .token.property,
+.article-content pre code .token.tag,
+.article-content pre code .token.boolean,
+.article-content pre code .token.number,
+.article-content pre code .token.constant,
+.article-content pre code .token.symbol,
+.article-content pre code .token.deleted {
+    @apply text-rose-400 dark:text-rose-300;
+}
+
+.article-content pre code .token.selector,
+.article-content pre code .token.attr-name,
+.article-content pre code .token.string,
+.article-content pre code .token.char,
+.article-content pre code .token.builtin,
+.article-content pre code .token.inserted {
+    @apply text-emerald-400 dark:text-emerald-300;
+}
+
+.article-content pre code .token.operator,
+.article-content pre code .token.entity,
+.article-content pre code .token.url,
+.article-content pre code .language-css .token.string,
+.article-content pre code .style .token.string {
+    @apply text-sky-400 dark:text-sky-300;
+}
+
+.article-content pre code .token.atrule,
+.article-content pre code .token.attr-value,
+.article-content pre code .token.keyword {
+    @apply text-purple-400 dark:text-purple-300;
+}
+
+.article-content pre code .token.function,
+.article-content pre code .token.class-name {
+    @apply text-yellow-400 dark:text-yellow-300;
+}
+
+.article-content pre code .token.regex,
+.article-content pre code .token.important,
+.article-content pre code .token.variable {
+    @apply text-orange-400 dark:text-orange-300;
+}
+
+/* Inline code styles */
+.article-content code:not(pre code) {
+    @apply bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 px-1.5 py-0.5 rounded text-sm;
+    font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, 'Courier New', monospace;
+}
+
+/* Code block scrollbar */
+.article-content pre::-webkit-scrollbar {
+    height: 0.5rem;
+}
+
+.article-content pre::-webkit-scrollbar-track {
+    @apply bg-zinc-800 dark:bg-zinc-700;
+}
+
+.article-content pre::-webkit-scrollbar-thumb {
+    @apply bg-zinc-600 dark:bg-zinc-500 rounded;
+}
+
+.article-content pre::-webkit-scrollbar-thumb:hover {
+    @apply bg-zinc-500 dark:bg-zinc-400;
 }
 
 

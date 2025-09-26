@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, Link, router } from '@inertiajs/react';
-import { format } from 'date-fns';
+import { SimpleAssetsField } from '@media/components/Field/SimpleAssetsField';
+import { FormSimpleEditor } from '@shared/components/tiptap';
 import { Button } from '@shared/components/ui/button';
 import { Calendar } from '@shared/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
@@ -10,16 +11,15 @@ import { Popover, PopoverContent, PopoverTrigger } from '@shared/components/ui/p
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Textarea } from '@shared/components/ui/textarea';
-import { FormSimpleEditor } from '@shared/components/tiptap';
-import { SimpleAssetsField } from '@media/components/Field/SimpleAssetsField';
-import AppLayout from '@shared/layouts/app-layout';
-import { type BreadcrumbItem } from '@shared/types';
 import { useSlug } from '@shared/hooks/use-slug';
+import AppLayout from '@shared/layouts/app-layout';
+import { cn } from '@shared/lib/utils';
+import { type BreadcrumbItem } from '@shared/types';
+import { format } from 'date-fns';
 import { CalendarIcon, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { cn } from '@shared/lib/utils';
 
 // Zod schema for article form validation
 const articleSchema = z.object({
@@ -85,11 +85,9 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Blog Management', href: route('admin.blog.index') },
-        { 
-            title: pageTitle, 
-            href: isEditing 
-                ? route('admin.blog.edit', { blog: article.slug || article.id }) 
-                : route('admin.blog.create') 
+        {
+            title: pageTitle,
+            href: isEditing ? route('admin.blog.edit', { blog: article.slug || article.id }) : route('admin.blog.create'),
         },
     ];
 
@@ -119,7 +117,7 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
             form.getValues('slug'),
             article?.title,
             (newTitle) => form.setValue('title', newTitle),
-            (newSlug) => form.setValue('slug', newSlug)
+            (newSlug) => form.setValue('slug', newSlug),
         );
     };
 
@@ -127,11 +125,11 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
         // Format the data for the backend
         const formattedData = {
             ...data,
-            published_at: data.published_at ? format(data.published_at, "yyyy-MM-dd HH:mm:ss") : null,
+            published_at: data.published_at ? format(data.published_at, 'yyyy-MM-dd HH:mm:ss') : null,
         };
 
         if (isEditing) {
-            router.put(route('admin.blog.update', { blog: article.slug || article.id }), formattedData, {
+            router.put(route('admin.blog.update', { blog: article.id }), formattedData, {
                 preserveState: true,
                 preserveScroll: true,
             });
@@ -145,7 +143,7 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
 
     const handleDelete = () => {
         if (!isEditing) return;
-        
+
         if (confirm(`Are you sure you want to delete "${article.title}"?`)) {
             router.delete(route('admin.blog.destroy', { blog: article.slug || article.id }), {
                 onSuccess: () => {
@@ -210,7 +208,7 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
                                 {/* Content Grid */}
                                 <div className="mt-6 grid gap-8 lg:grid-cols-6">
                                     {/* Left column with tab content - 4/6 */}
-                                    <div className="lg:col-span-4 min-w-0">
+                                    <div className="min-w-0 lg:col-span-4">
                                         <TabsContent value="main" className="mt-0 space-y-6">
                                             {/* Basic Information */}
                                             <Card>
@@ -279,7 +277,7 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
                                                                         mode: 'grid',
                                                                         accept: 'image/*',
                                                                         container: 'public',
-                                                                        folder: 'blog/featured-images'
+                                                                        folder: 'blog/featured-images',
                                                                     }}
                                                                     onChange={(assets) => field.onChange(assets)}
                                                                     onError={(error) => console.error('Asset error:', error)}
@@ -435,13 +433,13 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
                                                                         <Button
                                                                             variant="outline"
                                                                             className={cn(
-                                                                                "w-full justify-start text-left font-normal",
-                                                                                !field.value && "text-muted-foreground"
+                                                                                'w-full justify-start text-left font-normal',
+                                                                                !field.value && 'text-muted-foreground',
                                                                             )}
                                                                         >
                                                                             <CalendarIcon className="mr-2 h-4 w-4" />
                                                                             {field.value ? (
-                                                                                format(field.value, "PPP p")
+                                                                                format(field.value, 'PPP p')
                                                                             ) : (
                                                                                 <span>Pick a publish date</span>
                                                                             )}
@@ -456,7 +454,7 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
                                                                         initialFocus
                                                                     />
                                                                     {field.value && (
-                                                                        <div className="p-3 border-t">
+                                                                        <div className="border-t p-3">
                                                                             <Button
                                                                                 variant="outline"
                                                                                 size="sm"

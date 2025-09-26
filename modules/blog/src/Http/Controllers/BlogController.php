@@ -114,7 +114,7 @@ class BlogController extends BaseController
     /**
      * Update the specified article in storage.
      */
-    public function update(ArticleData $dto, Article $article): RedirectResponse
+    public function update(ArticleData $dto, string $article): RedirectResponse
     {
 
         // Process featured image from asset field
@@ -122,23 +122,24 @@ class BlogController extends BaseController
         $featuredImageUrl  = null;
 
         if (! empty($featuredImageData) && is_array($featuredImageData)) {
-            // Extract the URL from the first asset
             $firstAsset = $featuredImageData[0] ?? null;
             if ($firstAsset && isset($firstAsset['url'])) {
                 $featuredImageUrl = $firstAsset['url'];
             }
         }
 
-        $this->articleService->update($article->id, [
-            ...$dto->toArray(),
-            'featured_image' => $featuredImageUrl, // Store as URL string for backward compatibility
+        $articleData = $this->articleService->findOrFail($article);
+
+        $this->articleService->update($article, [
+            ...$dto->except('tags', 'meta_title', 'meta_description', 'article_id')->toArray(),
+            'featured_image' => $featuredImageUrl,
             'published_at'   => $dto->status === 'published'
-                ? ($dto->published_at ?? $article->published_at ?? now())
+                ? ($dto->published_at ?? $articleData->published_at ?? now())
                 : null,
         ]);
 
         if (! empty($dto->tags)) {
-            $article->tags()->sync($dto->tags);
+            $articleData->tags()->sync($dto->tags);
         }
 
         return redirect()
