@@ -25,6 +25,10 @@ import {
 // --- Tiptap Node ---
 import { HorizontalRule } from "@shared/components/tiptap/tiptap-node/horizontal-rule-node/horizontal-rule-node-extension"
 import { ResizableImage } from "@shared/components/tiptap/extensions/resizable-image/resizable-image-extension"
+import { CodeBlock } from "@shared/components/tiptap/tiptap-node/code-block-node"
+import "@shared/components/tiptap/tiptap-ui-primitive/button/button.scss"
+import "@shared/components/tiptap/tiptap-ui-primitive/button/button-colors.scss"
+import "@shared/components/tiptap/tiptap-ui-primitive/toolbar/toolbar.scss"
 import "@shared/components/tiptap/tiptap-node/blockquote-node/blockquote-node.scss"
 import "@shared/components/tiptap/tiptap-node/code-block-node/code-block-node.scss"
 import "@shared/components/tiptap/tiptap-node/horizontal-rule-node/horizontal-rule-node.scss"
@@ -202,12 +206,21 @@ export function FormSimpleEditor({ content: initialContent = '', onChange, place
     extensions: [
       StarterKit.configure({
         horizontalRule: false,
+        codeBlock: false, // Disable default code block to use enhanced version
         link: {
           openOnClick: false,
           enableClickSelection: true,
         },
       }),
       HorizontalRule,
+      CodeBlock.configure({
+        languageClassPrefix: 'language-',
+        defaultLanguage: null,
+        HTMLAttributes: {
+          class: 'code-block',
+        },
+        syntaxHighlighting: true,
+      }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       TaskList,
       TaskItem.configure({ nested: true }),

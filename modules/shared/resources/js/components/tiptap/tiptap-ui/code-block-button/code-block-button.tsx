@@ -7,11 +7,11 @@ import { useTiptapEditor } from "@shared/hooks/use-tiptap-editor"
 import { parseShortcutKeys } from "@shared/lib/tiptap-utils"
 
 // --- Tiptap UI ---
-import type { UseCodeBlockConfig } from "@shared/components/tiptap/tiptap-ui/code-block-button"
+import type { UseCodeBlockConfig } from "./use-code-block"
 import {
   CODE_BLOCK_SHORTCUT_KEY,
   useCodeBlock,
-} from "@shared/components/tiptap/tiptap-ui/code-block-button"
+} from "./use-code-block"
 
 // --- UI Primitives ---
 import type { ButtonProps } from "@shared/components/tiptap/tiptap-ui-primitive/button"

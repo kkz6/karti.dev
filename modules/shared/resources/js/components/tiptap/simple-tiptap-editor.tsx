@@ -5,6 +5,7 @@ import { Underline } from '@tiptap/extension-underline';
 import { Link } from '@tiptap/extension-link';
 import { TextAlign } from '@tiptap/extension-text-align';
 import { Highlight } from '@tiptap/extension-highlight';
+import { CodeBlock } from '@shared/components/tiptap/tiptap-node/code-block-node';
 import { Button } from '@shared/components/ui/button';
 
 interface SimpleTiptapEditorProps {
@@ -17,7 +18,17 @@ interface SimpleTiptapEditorProps {
 export function SimpleTiptapEditor({ content = '', onChange, placeholder = 'Start writing...', className }: SimpleTiptapEditorProps) {
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        codeBlock: false, // Disable default code block to use enhanced version
+      }),
+      CodeBlock.configure({
+        languageClassPrefix: 'language-',
+        defaultLanguage: null,
+        HTMLAttributes: {
+          class: 'code-block',
+        },
+        syntaxHighlighting: true,
+      }),
       Underline,
       Link.configure({
         openOnClick: false,

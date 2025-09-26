@@ -88,7 +88,7 @@ export function toggleCodeBlock(editor: Editor | null): boolean {
     let state = view.state
     let tr = state.tr
 
-    // No selection, find the the cursor position
+    // No selection, find the cursor position
     if (state.selection.empty || state.selection instanceof TextSelection) {
       const pos = findNodePosition({
         editor,
