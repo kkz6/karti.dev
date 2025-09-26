@@ -69,19 +69,6 @@ class BlogServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->registerRoutes();
-        $this->registerResources();
     }
 
-    protected function registerRoutes(): void
-    {
-        Route::middleware(['web'])
-            ->group(__DIR__.'/../../routes/blog-routes.php');
-    }
-
-    protected function registerResources(): void
-    {
-        $this->loadViewsFrom(__DIR__.'/../../resources/views', 'blog');
-        $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
-    }
 }

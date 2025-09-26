@@ -25,20 +25,20 @@ class PhotoRepository extends QueryableRepository implements PhotoRepositoryInte
         $query = $this->model->newQuery();
 
         // Apply search filter
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
-                $q->where('title', 'like', '%' . $filters['search'] . '%')
-                  ->orWhere('description', 'like', '%' . $filters['search'] . '%');
+                $q->where('title', 'like', '%'.$filters['search'].'%')
+                    ->orWhere('description', 'like', '%'.$filters['search'].'%');
             });
         }
 
         // Apply status filter
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
         // Apply category filter
-        if (!empty($filters['category'])) {
+        if (! empty($filters['category'])) {
             $query->whereHas('categories', function ($q) use ($filters) {
                 $q->where('categories.id', $filters['category']);
             });

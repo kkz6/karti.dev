@@ -146,12 +146,6 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             )}
                         </Button>
                         
-                        <div className="text-center text-sm text-muted-foreground">
-                            Don't have an account?{' '}
-                            <TextLink href={route('register')}>
-                                Sign up
-                            </TextLink>
-                        </div>
                     </motion.form>
                 ) : (
                     <motion.div
@@ -261,12 +255,6 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             </Button>
                         </form>
                         
-                        <div className="mt-6 text-center text-sm text-muted-foreground">
-                            Don't have an account?{' '}
-                            <TextLink href={route('register')}>
-                                Sign up
-                            </TextLink>
-                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>

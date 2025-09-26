@@ -17,9 +17,11 @@ class Articles extends Table
     {
         return [
             Columns\TextColumn::make('id', 'ID', stickable: true)
-            ->url(fn(Article $article) => route('admin.blog.edit', ['blog' => $article->id])),
-            Columns\TextColumn::make('title', 'Title', toggleable: false)->searchable(),
-            Columns\TextColumn::make('slug', 'Slug', toggleable: false)->sortable(),
+                ->url(fn (Article $article) => route('admin.blog.edit', ['blog' => $article->id])),
+            Columns\TextColumn::make('title', 'Title', toggleable: false)
+                ->url(fn (Article $article) => route('admin.blog.edit', ['blog' => $article->id]))->searchable(),
+            Columns\TextColumn::make('slug', 'Slug', toggleable: false)
+                ->url(fn (Article $article) => route('admin.blog.edit', ['blog' => $article->id]))->sortable(),
             Columns\TextColumn::make('status', 'Status', toggleable: false),
             Columns\DateColumn::make('created_at', 'Created At', toggleable: false),
             Columns\DateColumn::make('updated_at', 'Updated At', toggleable: false),
@@ -33,12 +35,6 @@ class Articles extends Table
             Filters\TextFilter::make('id', 'ID'),
             Filters\DateFilter::make('created_at'),
             Filters\TrashedFilter::make('deleted_at', 'Trashed'),
-
-            // Example of hidden filter with boolean condition
-            Filters\TextFilter::make('author_email', 'Author Email')->hidden(true),
-
-            // Example of hidden filter with closure condition
-            // Filters\TextFilter::make('meta_title', 'Meta Title')->hidden(fn() => !auth()->user()?->hasRole('admin')),
         ];
     }
 
@@ -47,7 +43,7 @@ class Articles extends Table
         return [
             Action::make(
                 label: 'Delete',
-                handle: fn(Article $article) => $article->delete(),
+                handle: fn (Article $article) => $article->delete(),
                 icon: 'a-arrow-down',
                 variant: Variant::Destructive,
             )

@@ -44,6 +44,11 @@ interface ArticleServiceInterface extends BaseServiceInterface
     public function findBySlug(string $slug): ?Article;
 
     /**
+     * Find article by slug or fail
+     */
+    public function findBySlugOrFail(string $slug): Article;
+
+    /**
      * Publish article
      */
     public function publish(string|int $id): bool;

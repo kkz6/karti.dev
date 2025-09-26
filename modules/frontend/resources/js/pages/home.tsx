@@ -84,7 +84,7 @@ function SocialLink({
 
 function Article({ article }: { article: ArticleData }) {
     return (
-        <Card as="article">
+        <Card as="article" href={`/articles/${article.slug}`}>
             <Card.Title href={`/articles/${article.slug}`}>
                 {article.title}
             </Card.Title>

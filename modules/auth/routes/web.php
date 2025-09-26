@@ -12,14 +12,10 @@ use Modules\Auth\Http\Controllers\PasskeyController;
 use Modules\Auth\Http\Controllers\PasswordController;
 use Modules\Auth\Http\Controllers\PasswordResetLinkController;
 use Modules\Auth\Http\Controllers\ProfileController;
-use Modules\Auth\Http\Controllers\RegisterController;
 use Modules\Auth\Http\Controllers\TwoFactorController;
 use Modules\Auth\Http\Controllers\VerifyEmailController;
 
 Route::middleware(['web', 'guest'])->group(function () {
-    Route::get('register', [RegisterController::class, 'create'])->name('register');
-    Route::post('register', [RegisterController::class, 'store'])->name('register.store');
-
     Route::get('login', [LoginController::class, 'create'])->name('login');
     Route::post('login', [LoginController::class, 'store'])->name('login.store');
 
