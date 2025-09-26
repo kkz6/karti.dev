@@ -24,11 +24,11 @@
     position: relative;
     z-index: 1; /* keep editable area above overlay */
     background: hsl(var(--background));
-    color: hsl(var(--foreground));
+    /* Don't set color here - let Prism handle it */
     font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", Menlo, Courier, monospace !important;
     font-size: 14px !important;
     line-height: 1.5 !important;
-    padding: 0.5rem !important; /* reduce inner padding */
+    padding: 0.5rem !important; /* restore original padding */
     margin: 0 !important;
     border: none !important;
     border-radius: 0 !important;
@@ -47,11 +47,14 @@
 
     /* Remove any default prose styling */
     &.ProseMirror {
-      padding: 1rem !important;
+      padding: 1rem !important; /* restore original prose padding */
       margin: 0 !important;
       border: none !important;
       outline: none !important;
     }
+
+    /* Default text color for non-highlighted content */
+    color: hsl(var(--foreground));
   }
 
   /* Viewer mode (frontend article pages) - when HTML is <pre class="code-block"><code ...> */
@@ -63,7 +66,7 @@
     font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", Menlo, Courier, monospace !important;
     font-size: 14px !important;
     line-height: 1.5 !important;
-    padding: 1rem !important;
+    padding: 1rem !important; /* restore original padding */
     margin: 0 !important;
     border: none !important;
     border-radius: 0 !important;
@@ -97,6 +100,81 @@
     z-index: 2;
   }
 
+  /* Prism syntax highlighting overrides - high specificity */
+  .code-block-content,
+  .prose .code-block-content,
+  .syntax-highlight-overlay {
+    /* Token colors - compatible with both light and dark themes */
+    .token.comment,
+    .token.prolog,
+    .token.doctype,
+    .token.cdata {
+      color: hsl(var(--muted-foreground)) !important;
+      font-style: italic;
+    }
+
+    .token.punctuation {
+      color: hsl(var(--foreground) / 0.8) !important;
+    }
+
+    .token.property,
+    .token.tag,
+    .token.boolean,
+    .token.number,
+    .token.constant,
+    .token.symbol,
+    .token.deleted {
+      color: #ef4444 !important; /* red-500 */
+    }
+
+    .token.selector,
+    .token.attr-name,
+    .token.string,
+    .token.char,
+    .token.builtin,
+    .token.inserted {
+      color: #22c55e !important; /* green-500 */
+    }
+
+    .token.operator,
+    .token.entity,
+    .token.url,
+    .language-css .token.string,
+    .style .token.string {
+      color: hsl(var(--foreground) / 0.9) !important;
+    }
+
+    .token.atrule,
+    .token.attr-value,
+    .token.keyword {
+      color: #8b5cf6 !important; /* violet-500 */
+    }
+
+    .token.function,
+    .token.class-name {
+      color: #3b82f6 !important; /* blue-500 */
+    }
+
+    .token.regex,
+    .token.important,
+    .token.variable {
+      color: #f59e0b !important; /* amber-500 */
+    }
+
+    .token.important,
+    .token.bold {
+      font-weight: bold;
+    }
+
+    .token.italic {
+      font-style: italic;
+    }
+
+    .token.entity {
+      cursor: help;
+    }
+  }
+
   /* Dark mode adjustments */
   .dark & {
     border-color: hsl(var(--border));
@@ -105,6 +183,62 @@
     .code-block-content {
       background: hsl(var(--background));
       color: hsl(var(--foreground));
+
+      /* Enhanced dark mode token colors */
+      .token.comment,
+      .token.prolog,
+      .token.doctype,
+      .token.cdata {
+        color: #6b7280; /* gray-500 */
+      }
+
+      .token.punctuation {
+        color: #9ca3af; /* gray-400 */
+      }
+
+      .token.property,
+      .token.tag,
+      .token.boolean,
+      .token.number,
+      .token.constant,
+      .token.symbol,
+      .token.deleted {
+        color: #f87171; /* red-400 */
+      }
+
+      .token.selector,
+      .token.attr-name,
+      .token.string,
+      .token.char,
+      .token.builtin,
+      .token.inserted {
+        color: #34d399; /* emerald-400 */
+      }
+
+      .token.operator,
+      .token.entity,
+      .token.url,
+      .language-css .token.string,
+      .style .token.string {
+        color: #e5e7eb; /* gray-200 */
+      }
+
+      .token.atrule,
+      .token.attr-value,
+      .token.keyword {
+        color: #a78bfa; /* violet-400 */
+      }
+
+      .token.function,
+      .token.class-name {
+        color: #60a5fa; /* blue-400 */
+      }
+
+      .token.regex,
+      .token.important,
+      .token.variable {
+        color: #fbbf24; /* amber-400 */
+      }
     }
   }
 }

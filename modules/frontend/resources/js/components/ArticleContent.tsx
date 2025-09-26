@@ -1,21 +1,5 @@
-import Prism from 'prismjs';
-import 'prismjs/themes/prism-tomorrow.css';
+import Prism from '@shared/lib/prism-config';
 import { useEffect, useRef } from 'react';
-
-// Core + common
-import 'prismjs/components/prism-bash';
-import 'prismjs/components/prism-css';
-import 'prismjs/components/prism-javascript';
-import 'prismjs/components/prism-json';
-import 'prismjs/components/prism-markup';
-import 'prismjs/components/prism-markup-templating';
-import 'prismjs/components/prism-python';
-
-// Ordered dependencies for TSX
-import 'prismjs/components/prism-jsx';
-import 'prismjs/components/prism-php';
-import 'prismjs/components/prism-tsx';
-import 'prismjs/components/prism-typescript';
 
 interface ArticleContentProps {
     content: string;

@@ -3,7 +3,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { cn } from '@shared/lib/utils';
 import { NodeViewContent, NodeViewProps, NodeViewWrapper } from '@tiptap/react';
 import { Check, ChevronDown, Copy, ListOrdered, Trash2, WrapText } from 'lucide-react';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+
+// Import Prism for syntax highlighting
+import Prism from '@shared/lib/prism-config';
 
 // Language definitions - common programming languages
 const LANGUAGES = [
@@ -48,12 +51,94 @@ const LANGUAGES = [
 export function CodeBlockNodeView({ node, updateAttributes, selected, editor, getPos }: NodeViewProps) {
     const [copied, setCopied] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
+    const codeRef = useRef<HTMLDivElement>(null);
     const language = node.attrs.language || 'plaintext';
     const lineNumbers = !!node.attrs.lineNumbers;
     const wrap = node.attrs.wrap !== false;
 
     // Get the current content
     const content = node.textContent;
+
+    // Apply syntax highlighting using Prism
+    useEffect(() => {
+        if (!codeRef.current || !language || language === 'plaintext') return;
+
+        const timer = setTimeout(() => {
+            try {
+                // Find the NodeViewContent element (try multiple selectors)
+                let nodeViewContent =
+                    codeRef.current?.querySelector('[contenteditable="true"]') ||
+                    codeRef.current?.querySelector('.ProseMirror') ||
+                    codeRef.current?.querySelector('[data-node-view-content]') ||
+                    codeRef.current?.querySelector('.code-block-content');
+
+                if (!nodeViewContent || !content) {
+                    return;
+                }
+
+                // Clean the content - remove any extra whitespace or "Copy" text
+                const cleanContent = content.trim().replace(/\s*Copy\s*$/, '');
+                if (!cleanContent) {
+                    return;
+                }
+
+                // Create a temporary pre/code structure for Prism to process
+                const tempCode = document.createElement('code');
+                tempCode.className = `language-${language}`;
+                tempCode.textContent = cleanContent;
+
+                // Highlight the temporary element
+                Prism.highlightElement(tempCode);
+                const highlightedHTML = tempCode.innerHTML;
+
+                // Check if highlighting actually happened
+                const hasTokens = highlightedHTML.includes('class="token');
+
+                if (!hasTokens) {
+                    return;
+                }
+
+                // Create or update syntax highlight overlay
+                let overlay = codeRef.current?.querySelector('.syntax-highlight-overlay') as HTMLElement;
+
+                if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.className = 'syntax-highlight-overlay';
+                    // Get the computed styles from the editable element to match exactly
+                    const computedStyles = window.getComputedStyle(nodeViewContent as Element);
+                    overlay.style.cssText = `
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        pointer-events: none;
+                        font-family: ${computedStyles.fontFamily};
+                        font-size: ${computedStyles.fontSize};
+                        line-height: ${computedStyles.lineHeight};
+                        padding: ${computedStyles.padding};
+                        white-space: ${computedStyles.whiteSpace};
+                        overflow: hidden;
+                        z-index: 1;
+                    `;
+                    codeRef.current?.appendChild(overlay);
+                }
+
+                // Apply highlighted content to overlay
+                overlay.innerHTML = highlightedHTML;
+
+                // Make the editable content transparent
+                (nodeViewContent as HTMLElement).style.color = 'transparent';
+                (nodeViewContent as HTMLElement).style.caretColor = 'hsl(var(--foreground))';
+                (nodeViewContent as HTMLElement).style.position = 'relative';
+                (nodeViewContent as HTMLElement).style.zIndex = '2';
+            } catch (error) {
+                // Silent fail
+            }
+        }, 150);
+
+        return () => clearTimeout(timer);
+    }, [content, language]);
 
     const handleCopy = async (e: React.MouseEvent) => {
         e.preventDefault();
@@ -119,32 +204,34 @@ export function CodeBlockNodeView({ node, updateAttributes, selected, editor, ge
                     !isHovered && !selected && 'opacity-70',
                 )}
             >
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs font-medium">
-                            {selectedLanguage?.label}
-                            <ChevronDown className="ml-1 h-3 w-3" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="max-h-60 overflow-y-auto">
-                        {LANGUAGES.map((lang) => (
-                            <DropdownMenuItem key={lang.value} onClick={() => handleLanguageChange(lang.value)} className="text-xs">
-                                {lang.label}
-                            </DropdownMenuItem>
-                        ))}
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex items-center">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs font-medium">
+                                {selectedLanguage?.label}
+                                <ChevronDown className="ml-1 h-3 w-3" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="max-h-60 overflow-y-auto">
+                            {LANGUAGES.map((lang) => (
+                                <DropdownMenuItem key={lang.value} onClick={() => handleLanguageChange(lang.value)} className="text-xs">
+                                    {lang.label}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
                 <div className="flex items-center gap-1">
-                    <Button type="button" variant="ghost" size="sm" onClick={toggleLineNumbers} className="h-6 w-6 p-0">
+                    <Button type="button" variant="ghost" size="sm" onClick={toggleLineNumbers} className="h-6 w-6 p-0" title="Toggle line numbers">
                         <ListOrdered className="h-3 w-3" />
                     </Button>
-                    <Button type="button" variant="ghost" size="sm" onClick={toggleWrap} className="h-6 w-6 p-0">
+                    <Button type="button" variant="ghost" size="sm" onClick={toggleWrap} className="h-6 w-6 p-0" title="Toggle word wrap">
                         <WrapText className="h-3 w-3" />
                     </Button>
-                    <Button type="button" variant="ghost" size="sm" onClick={handleCopy} className="h-6 w-6 p-0">
+                    <Button type="button" variant="ghost" size="sm" onClick={handleCopy} className="h-6 w-6 p-0" title="Copy code">
                         {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
                     </Button>
-                    <Button type="button" variant="ghost" size="sm" onClick={handleDelete} className="h-6 w-6 p-0">
+                    <Button type="button" variant="ghost" size="sm" onClick={handleDelete} className="h-6 w-6 p-0" title="Delete code block">
                         <Trash2 className="h-3 w-3" />
                     </Button>
                 </div>
@@ -161,22 +248,24 @@ export function CodeBlockNodeView({ node, updateAttributes, selected, editor, ge
                         ))}
                     </div>
                 )}
-                <NodeViewContent
-                    className={cn(
-                        'code-block-content bg-background text-foreground',
-                        'p-2 font-mono text-sm',
-                        wrap ? 'break-words whitespace-pre-wrap' : 'overflow-x-auto whitespace-pre',
-                        `language-${language}`,
-                    )}
-                    style={{
-                        fontFamily: '"JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", Menlo, Courier, monospace',
-                        fontSize: '14px',
-                        lineHeight: '1.5',
-                        margin: 0,
-                        border: 0,
-                        borderRadius: 0,
-                    }}
-                />
+                <div ref={codeRef} className="relative">
+                    <NodeViewContent
+                        className={cn(
+                            'code-block-content bg-background text-foreground',
+                            'p-2 font-mono text-sm',
+                            wrap ? 'break-words whitespace-pre-wrap' : 'overflow-x-auto whitespace-pre',
+                            `language-${language}`,
+                        )}
+                        style={{
+                            fontFamily: '"JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", Menlo, Courier, monospace',
+                            fontSize: '14px',
+                            lineHeight: '1.5',
+                            margin: 0,
+                            border: 0,
+                            borderRadius: 0,
+                        }}
+                    />
+                </div>
             </div>
         </NodeViewWrapper>
     );
