@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { SimpleAssetsField } from '@media/components/Field/SimpleAssetsField';
+import { SEOFields } from '@seo/components/SeoFields';
 import { FormSimpleEditor } from '@shared/components/tiptap';
 import { Button } from '@shared/components/ui/button';
 import { Calendar } from '@shared/components/ui/calendar';
@@ -16,7 +17,7 @@ import AppLayout from '@shared/layouts/app-layout';
 import { cn } from '@shared/lib/utils';
 import { type BreadcrumbItem } from '@shared/types';
 import { format } from 'date-fns';
-import { CalendarIcon, Save, Trash2 } from 'lucide-react';
+import { CalendarIcon, Save } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -37,6 +38,20 @@ const articleSchema = z.object({
     featured_image: z.array(z.any()).optional(),
     meta_title: z.string().max(60, 'Meta title must be less than 60 characters').optional(),
     meta_description: z.string().max(160, 'Meta description must be less than 160 characters').optional(),
+    seo: z.object({
+        title: z.string().optional(),
+        description: z.string().optional(),
+        author: z.string().optional(),
+        image: z.string().optional(),
+        canonical_url: z.string().optional(),
+        robots: z.string().optional(),
+        type: z.string().optional(),
+        locale: z.string().optional(),
+        site_name: z.string().optional(),
+        twitter_card: z.string().optional(),
+        twitter_site: z.string().optional(),
+        twitter_creator: z.string().optional(),
+    }).optional(),
     published_at: z.date().optional(),
 });
 
@@ -69,6 +84,20 @@ interface Article {
     meta_description?: string;
     category?: Category;
     tags?: Tag[];
+    seo?: {
+        title?: string;
+        description?: string;
+        author?: string;
+        image?: string;
+        canonical_url?: string;
+        robots?: string;
+        type?: string;
+        locale?: string;
+        site_name?: string;
+        twitter_card?: string;
+        twitter_site?: string;
+        twitter_creator?: string;
+    };
 }
 
 interface ArticleFormProps {
@@ -107,6 +136,7 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
             featured_image: article?.featured_image ? [{ url: article.featured_image }] : [],
             meta_title: article?.meta_title || '',
             meta_description: article?.meta_description || '',
+            seo: article?.seo || {},
             published_at: article?.published_at ? new Date(article.published_at) : undefined,
         },
     });
@@ -122,7 +152,6 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
     };
 
     const onSubmit = (data: ArticleFormData) => {
-        // Format the data for the backend
         const formattedData = {
             ...data,
             published_at: data.published_at ? format(data.published_at, 'yyyy-MM-dd HH:mm:ss') : null,
@@ -141,42 +170,18 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
         }
     };
 
-    const handleDelete = () => {
-        if (!isEditing) return;
-
-        if (confirm(`Are you sure you want to delete "${article.title}"?`)) {
-            router.delete(route('admin.blog.destroy', { blog: article.slug || article.id }), {
-                onSuccess: () => {
-                    // Redirect will be handled by the controller
-                },
-            });
-        }
-    };
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${pageTitle}: ${article?.title || 'New Article'}`} />
             <div className="flex h-full flex-col space-y-6 p-8 pt-6">
                 <div className="mx-auto w-full max-w-7xl">
-                    {/* Header with Actions */}
                     <div className="mb-6 flex items-center justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1>
-                        </div>
+                        <h2 className="text-3xl font-bold">{pageTitle}</h2>
                         <div className="flex items-center space-x-4">
                             <Button type="submit" form="article-form" disabled={form.formState.isSubmitting}>
                                 <Save className="mr-2 h-4 w-4" />
                                 {form.formState.isSubmitting ? submittingText : submitText}
                             </Button>
-                            <Button type="button" variant="outline" asChild>
-                                <Link href={route('admin.blog.index')}>Cancel</Link>
-                            </Button>
-                            {isEditing && (
-                                <Button type="button" variant="destructive" onClick={handleDelete}>
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
-                                </Button>
-                            )}
                         </div>
                     </div>
 
@@ -319,48 +324,22 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
                                         </TabsContent>
 
                                         <TabsContent value="seo" className="mt-0 space-y-6">
-                                            <Card>
-                                                <CardHeader>
-                                                    <CardTitle>SEO Settings</CardTitle>
-                                                    <CardDescription>Optimize your content for search engines</CardDescription>
-                                                </CardHeader>
-                                                <CardContent className="space-y-4">
-                                                    <FormField
-                                                        control={form.control}
-                                                        name="meta_title"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>Meta Title</FormLabel>
-                                                                <FormControl>
-                                                                    <Input {...field} placeholder="SEO title for search engines" maxLength={60} />
-                                                                </FormControl>
-                                                                <FormDescription>{(field.value || '').length}/60 characters</FormDescription>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-
-                                                    <FormField
-                                                        control={form.control}
-                                                        name="meta_description"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>Meta Description</FormLabel>
-                                                                <FormControl>
-                                                                    <Textarea
-                                                                        {...field}
-                                                                        placeholder="Brief description for search engine results"
-                                                                        rows={3}
-                                                                        maxLength={160}
-                                                                    />
-                                                                </FormControl>
-                                                                <FormDescription>{(field.value || '').length}/160 characters</FormDescription>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-                                                </CardContent>
-                                            </Card>
+                                            <SEOFields
+                                                data={{
+                                                    seo: form.watch('seo'),
+                                                    meta_title: form.watch('meta_title'),
+                                                    meta_description: form.watch('meta_description')
+                                                }}
+                                                setData={(key, value) => {
+                                                    if (key === 'seo') {
+                                                        form.setValue('seo', value);
+                                                    } else {
+                                                        form.setValue(key as any, value);
+                                                    }
+                                                }}
+                                                errors={form.formState.errors}
+                                                showSlug={false}
+                                            />
                                         </TabsContent>
                                     </div>
 

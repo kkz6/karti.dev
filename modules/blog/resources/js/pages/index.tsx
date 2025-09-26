@@ -58,7 +58,7 @@ export default function Index({ articles, categories }: { articles: TableConfig<
             <Head title="Blog Management" />
             <div className="flex h-full flex-col space-y-4 p-8 pt-6">
                 <div className="flex items-center justify-between space-y-2">
-                    <h2 className="text-3xl font-bold tracking-tight">Blog Management</h2>
+                    <h2 className="text-3xl font-bold">Blog Management</h2>
                     <div className="flex items-center space-x-2">
                         <Button onClick={handleCreateArticle} disabled={categories.length === 0}>
                             Create Article

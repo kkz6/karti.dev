@@ -115,6 +115,7 @@
             "@auth/*": ["./modules/auth/resources/js/*"],
             "@frontend/*": ["./modules/frontend/resources/js/*"],
             "@table/*": ["./modules/table/resources/js/*"],
+            "@seo/*": ["./modules/seo/resources/js/*"],
             "@media/*": ["./modules/media/resources/js/*"]
         },
         "jsx": "react-jsx"

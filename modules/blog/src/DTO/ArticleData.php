@@ -21,6 +21,7 @@ class ArticleData extends Data
         public ?array $featured_image,
         public ?string $meta_title,
         public ?string $meta_description,
+        public ?array $seo,
         public ?string $published_at,
         public ?int $article_id = null, // For update operations
     ) {}
@@ -39,6 +40,19 @@ class ArticleData extends Data
             'featured_image' => ['nullable', 'array'],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
+            'seo' => ['nullable', 'array'],
+            'seo.title' => ['nullable', 'string', 'max:60'],
+            'seo.description' => ['nullable', 'string', 'max:160'],
+            'seo.author' => ['nullable', 'string', 'max:255'],
+            'seo.image' => ['nullable', 'string', 'max:500'],
+            'seo.canonical_url' => ['nullable', 'url', 'max:500'],
+            'seo.robots' => ['nullable', 'string', 'max:255'],
+            'seo.type' => ['nullable', 'string', 'max:50'],
+            'seo.locale' => ['nullable', 'string', 'max:10'],
+            'seo.site_name' => ['nullable', 'string', 'max:255'],
+            'seo.twitter_card' => ['nullable', 'string', 'max:50'],
+            'seo.twitter_site' => ['nullable', 'string', 'max:255'],
+            'seo.twitter_creator' => ['nullable', 'string', 'max:255'],
             'published_at' => ['nullable', 'date'],
         ];
     }

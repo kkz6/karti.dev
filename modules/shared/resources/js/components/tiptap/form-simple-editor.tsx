@@ -1,5 +1,3 @@
-'use client';
-
 import { EditorContent, EditorContext, useEditor } from '@tiptap/react';
 import * as React from 'react';
 
@@ -63,9 +61,6 @@ import { useWindowSize } from '@shared/hooks/use-window-size';
 // --- Components ---
 
 // --- Lib ---
-
-import content from '@shared/components/tiptap-templates/simple/data/content.json';
-
 const MainToolbarContent = ({
     onHighlighterClick,
     onLinkClick,
@@ -203,7 +198,6 @@ export function FormSimpleEditor({ content: initialContent = '', onChange, place
             Subscript,
             Selection,
         ],
-        content: initialContent || content,
         onUpdate: ({ editor }) => {
             onChange?.(editor.getHTML());
         },

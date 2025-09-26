@@ -74,7 +74,7 @@ class BlogController extends BaseController
         }
 
         $article = $this->articleService->create([
-            ...$dto->toArray(),
+            ...$dto->except('seo')->toArray(),
             'featured_image' => $featuredImageUrl, // Store as URL string for backward compatibility
             'user_id'        => Auth::id(),
             'published_at'   => $dto->status === 'published'
@@ -84,6 +84,11 @@ class BlogController extends BaseController
 
         if (! empty($dto->tags)) {
             $article->tags()->sync($dto->tags);
+        }
+
+        // Update SEO data if provided
+        if ($dto->seo) {
+            $article->updateSeo($dto->seo);
         }
 
         return redirect()
@@ -100,6 +105,9 @@ class BlogController extends BaseController
     {
         // Handle both slug and ID for route model binding
         $article = $this->articleService->findOrFail($article);
+
+        // Load SEO relation
+        $article->load('seo');
 
         $categories = $this->categoryService->all(['id', 'name', 'slug']);
         $tags       = $this->tagService->all(['id', 'name', 'slug']);
@@ -131,7 +139,7 @@ class BlogController extends BaseController
         $articleData = $this->articleService->findOrFail($article);
 
         $this->articleService->update($article, [
-            ...$dto->except('tags', 'meta_title', 'meta_description', 'article_id')->toArray(),
+            ...$dto->except('tags', 'meta_title', 'meta_description', 'article_id', 'seo')->toArray(),
             'featured_image' => $featuredImageUrl,
             'published_at'   => $dto->status === 'published'
                 ? ($dto->published_at ?? $articleData->published_at ?? now())
@@ -140,6 +148,11 @@ class BlogController extends BaseController
 
         if (! empty($dto->tags)) {
             $articleData->tags()->sync($dto->tags);
+        }
+
+        // Update SEO data if provided
+        if ($dto->seo) {
+            $articleData->updateSeo($dto->seo);
         }
 
         return redirect()

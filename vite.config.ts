@@ -27,6 +27,7 @@ export default defineConfig({
             '@pages': resolve(__dirname, './modules/pages/resources/js'),
             '@table': resolve(__dirname, './modules/table/resources/js'),
             '@media': resolve(__dirname, './modules/media/resources/js'),
+            '@seo': resolve(__dirname, './modules/seo/resources/js'),
         },
     },
 });
