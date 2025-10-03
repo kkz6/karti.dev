@@ -2,6 +2,7 @@
 
 namespace Modules\Media\Models;
 
+use GuzzleHttp\Psr7\Utils;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -16,7 +17,6 @@ use Modules\Media\Interfaces\TemporaryUrlGeneratorInterface;
 use Modules\Media\Interfaces\UrlGeneratorInterface;
 use Modules\Media\Support\MediaMover;
 use Psr\Http\Message\StreamInterface;
-use GuzzleHttp\Psr7\Utils;
 
 class Media extends Model
 {
@@ -61,7 +61,7 @@ class Media extends Model
     ];
 
     protected $casts = [
-        'size' => 'int',
+        'size'              => 'int',
         'custom_properties' => 'array',
     ];
 
@@ -216,7 +216,7 @@ class Media extends Model
      */
     public function getBasenameAttribute(): string
     {
-        return $this->filename . '.' . $this->extension;
+        return $this->filename.'.'.$this->extension;
     }
 
     /**
@@ -230,16 +230,15 @@ class Media extends Model
     /**
      * Query scope for to find media in a particular directory.
      *
-     * @param string $disk      Filesystem disk to search in
      * @param string $directory Path relative to disk
      * @param bool   $recursive (_optional_) If true, will find media in or under the specified directory
      */
-    public function scopeInDirectory(Builder $q, string $disk, string $directory, bool $recursive = false): void
+    public function scopeInDirectory(Builder $q, string $directory, bool $recursive = false): void
     {
-        $q->where('disk', $disk);
+        $q->where('disk', config('mediable.default_disk'));
         if ($recursive) {
             $directory = str_replace(['%', '_'], ['\%', '\_'], $directory);
-            $q->where('directory', 'like', $directory . '%');
+            $q->where('directory', 'like', $directory.'%');
         } else {
             $q->where('directory', '=', $directory);
         }
@@ -272,9 +271,9 @@ class Media extends Model
      *
      * @param string $path directory, filename and extension
      */
-    public function scopeForPathOnDisk(Builder $q, string $disk, string $path): void
+    public function scopeForPathOnDisk(Builder $q, string $path): void
     {
-        $q->where('disk', $disk)
+        $q->where('disk', config('mediable.default_disk'))
             ->where('directory', File::cleanDirname($path))
             ->where('filename', pathinfo($path, PATHINFO_FILENAME))
             ->where('extension', pathinfo($path, PATHINFO_EXTENSION));

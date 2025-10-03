@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, router } from '@inertiajs/react';
+import { articleSchema, type ArticleFormData, type ArticleFormProps } from '@blog/types';
 import { SimpleAssetsField } from '@media/components/Field/SimpleAssetsField';
 import { SEOFields } from '@seo/components/SeoFields';
 import { FormSimpleEditor } from '@shared/components/tiptap';
@@ -20,93 +21,8 @@ import { format } from 'date-fns';
 import { CalendarIcon, Save } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 
-// Zod schema for article form validation
-const articleSchema = z.object({
-    title: z.string().min(1, 'Title is required').max(255, 'Title must be less than 255 characters'),
-    slug: z
-        .string()
-        .min(1, 'Slug is required')
-        .max(255, 'Slug must be less than 255 characters')
-        .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase and contain only letters, numbers, and hyphens'),
-    content: z.string().min(1, 'Content is required'),
-    excerpt: z.string().optional(),
-    category_id: z.string().min(1, 'Category is required'),
-    tags: z.array(z.number()).optional(),
-    status: z.enum(['draft', 'published', 'archived']),
-    featured_image: z.array(z.any()).optional(),
-    meta_title: z.string().max(60, 'Meta title must be less than 60 characters').optional(),
-    meta_description: z.string().max(160, 'Meta description must be less than 160 characters').optional(),
-    seo: z.object({
-        title: z.string().optional(),
-        description: z.string().optional(),
-        author: z.string().optional(),
-        image: z.string().optional(),
-        canonical_url: z.string().optional(),
-        robots: z.string().optional(),
-        type: z.string().optional(),
-        locale: z.string().optional(),
-        site_name: z.string().optional(),
-        twitter_card: z.string().optional(),
-        twitter_site: z.string().optional(),
-        twitter_creator: z.string().optional(),
-    }).optional(),
-    published_at: z.date().optional(),
-});
-
-type ArticleFormData = z.infer<typeof articleSchema>;
-
-interface Category {
-    id: number;
-    name: string;
-    slug: string;
-}
-
-interface Tag {
-    id: number;
-    name: string;
-    slug: string;
-}
-
-interface Article {
-    id: number;
-    title: string;
-    slug: string;
-    content: string;
-    excerpt?: string;
-    status: 'draft' | 'published' | 'archived';
-    featured_image?: string;
-    published_at?: string;
-    created_at: string;
-    updated_at: string;
-    meta_title?: string;
-    meta_description?: string;
-    category?: Category;
-    tags?: Tag[];
-    seo?: {
-        title?: string;
-        description?: string;
-        author?: string;
-        image?: string;
-        canonical_url?: string;
-        robots?: string;
-        type?: string;
-        locale?: string;
-        site_name?: string;
-        twitter_card?: string;
-        twitter_site?: string;
-        twitter_creator?: string;
-    };
-}
-
-interface ArticleFormProps {
-    article?: Article;
-    categories: Category[];
-    tags?: Tag[];
-}
-
-export default function ArticleForm({ article, categories, tags = [] }: ArticleFormProps) {
+export default function ArticleForm({ article, categories }: ArticleFormProps) {
     const isEditing = !!article;
     const pageTitle = isEditing ? 'Edit Article' : 'Create Article';
     const submitText = isEditing ? 'Update Article' : 'Create Article';
@@ -121,7 +37,7 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
     ];
 
     const [activeTab, setActiveTab] = useState('main');
-    const { handleTitleChange: handleSlugTitleChange } = useSlug();
+    const { generateSlug } = useSlug();
 
     const form = useForm<ArticleFormData>({
         resolver: zodResolver(articleSchema),
@@ -130,7 +46,7 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
             slug: article?.slug || '',
             content: article?.content || '',
             excerpt: article?.excerpt || '',
-            category_id: article?.category?.id.toString() || '',
+            category_id: article?.category_id?.toString() || article?.category?.id?.toString() || '',
             tags: article?.tags?.map((tag) => tag.id) || [],
             status: article?.status || 'draft',
             featured_image: article?.featured_image ? [{ url: article.featured_image }] : [],
@@ -140,16 +56,6 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
             published_at: article?.published_at ? new Date(article.published_at) : undefined,
         },
     });
-
-    const handleTitleChange = (title: string) => {
-        handleSlugTitleChange(
-            title,
-            form.getValues('slug'),
-            article?.title,
-            (newTitle) => form.setValue('title', newTitle),
-            (newSlug) => form.setValue('slug', newSlug),
-        );
-    };
 
     const onSubmit = (data: ArticleFormData) => {
         const formattedData = {
@@ -231,8 +137,8 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
                                                                 <FormControl>
                                                                     <Input
                                                                         {...field}
-                                                                        onChange={(e) => handleTitleChange(e.target.value)}
                                                                         placeholder="Enter article title"
+                                                                        onInput={(event) => form.setValue('slug', generateSlug(event.target.value)) }
                                                                     />
                                                                 </FormControl>
                                                                 <FormMessage />
@@ -247,7 +153,10 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
                                                             <FormItem>
                                                                 <FormLabel>Slug *</FormLabel>
                                                                 <FormControl>
-                                                                    <Input {...field} placeholder="article-slug" />
+                                                                    <Input
+                                                                        {...field}
+                                                                        placeholder="article-slug"
+                                                                    />
                                                                 </FormControl>
                                                                 <FormDescription>Used in URLs. Auto-generated from title.</FormDescription>
                                                                 <FormMessage />
@@ -281,8 +190,7 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
                                                                         max_files: 1,
                                                                         mode: 'grid',
                                                                         accept: 'image/*',
-                                                                        container: 'public',
-                                                                        folder: 'blog/featured-images',
+                                                                        folder: 'blog',
                                                                     }}
                                                                     onChange={(assets) => field.onChange(assets)}
                                                                     onError={(error) => console.error('Asset error:', error)}
@@ -328,7 +236,8 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
                                                 data={{
                                                     seo: form.watch('seo'),
                                                     meta_title: form.watch('meta_title'),
-                                                    meta_description: form.watch('meta_description')
+                                                    meta_description: form.watch('meta_description'),
+                                                    slug: form.watch('slug')
                                                 }}
                                                 setData={(key, value) => {
                                                     if (key === 'seo') {
@@ -343,9 +252,7 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
                                         </TabsContent>
                                     </div>
 
-                                    {/* Right column - fixed - 2/6 */}
                                     <div className="space-y-6 lg:col-span-2">
-                                        {/* Publication Settings */}
                                         <Card>
                                             <CardHeader>
                                                 <CardTitle>Publication Settings</CardTitle>
@@ -358,7 +265,7 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
                                                     render={({ field }) => (
                                                         <FormItem>
                                                             <FormLabel>Category *</FormLabel>
-                                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <Select onValueChange={field.onChange} value={field.value}>
                                                                 <FormControl>
                                                                     <SelectTrigger>
                                                                         <SelectValue placeholder="Select a category" />
@@ -383,7 +290,7 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
                                                     render={({ field }) => (
                                                         <FormItem>
                                                             <FormLabel>Status</FormLabel>
-                                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <Select onValueChange={field.onChange} value={field.value}>
                                                                 <FormControl>
                                                                     <SelectTrigger>
                                                                         <SelectValue />
@@ -430,7 +337,6 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
                                                                         mode="single"
                                                                         selected={field.value}
                                                                         onSelect={field.onChange}
-                                                                        initialFocus
                                                                     />
                                                                     {field.value && (
                                                                         <div className="border-t p-3">

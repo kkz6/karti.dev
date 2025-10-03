@@ -101,13 +101,10 @@ class BlogController extends BaseController
      *
      * @param mixed $article
      */
-    public function edit(string $article): Response
+    public function edit(int|string $article): Response
     {
-        // Handle both slug and ID for route model binding
         $article = $this->articleService->findOrFail($article);
-
-        // Load SEO relation
-        $article->load('seo');
+        $article->load(['category', 'tags', 'seo']);
 
         $categories = $this->categoryService->all(['id', 'name', 'slug']);
         $tags       = $this->tagService->all(['id', 'name', 'slug']);
@@ -136,9 +133,16 @@ class BlogController extends BaseController
             }
         }
 
-        $articleData = $this->articleService->findOrFail($article);
+        // Try to find by slug first, then by ID
+        if (! is_numeric($article)) {
+            $articleData = $this->articleService->findBySlugOrFail($article);
+            $articleId   = $articleData->id;
+        } else {
+            $articleData = $this->articleService->findOrFail($article);
+            $articleId   = $article;
+        }
 
-        $this->articleService->update($article, [
+        $this->articleService->update($articleId, [
             ...$dto->except('tags', 'meta_title', 'meta_description', 'article_id', 'seo')->toArray(),
             'featured_image' => $featuredImageUrl,
             'published_at'   => $dto->status === 'published'

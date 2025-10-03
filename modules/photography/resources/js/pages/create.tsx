@@ -2,6 +2,8 @@ import { Head, useForm } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { SimpleAssetsField } from '@media/components/Field';
 import { MediaAsset } from '@media/types/media';
+import { SEOFields } from '@seo/components/SeoFields';
+import { type SeoData } from '@seo/types/seo-schema';
 import { Button } from '@shared/components/ui/button';
 import { Calendar } from '@shared/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
@@ -39,13 +41,14 @@ export default function Create({ categories }: { categories: Category[] }) {
         slug: '',
         description: '',
         image_ids: [] as string[],
-        cover_image: [] as MediaAsset[],
+        cover_image: '',
         categories: [] as number[],
         status: 'draft',
         featured: false,
         sort_order: 0,
         meta_title: '',
         meta_description: '',
+        seo: {} as SeoData,
         published_at: '',
     });
 
@@ -167,16 +170,15 @@ export default function Create({ categories }: { categories: Category[] }) {
                                                 <div className="grid gap-2">
                                                     <SimpleAssetsField
                                                         name="Cover Image"
-                                                        data={data.cover_image}
+                                                        data={data.cover_image ? [data.cover_image] : []}
                                                         config={{
-                                                            container: 'public',
                                                             folder: '/photography/covers',
                                                             max_files: 1,
                                                             mode: 'grid',
                                                             canEdit: true,
                                                             accept: 'image/*',
                                                         }}
-                                                        onChange={(assets) => setData('cover_image', assets)}
+                                                        onChange={(assets) => setData('cover_image', assets[0] || '')}
                                                         onError={(error) => console.error('Cover image error:', error)}
                                                     />
                                                     {errors.cover_image && <div className="text-sm text-red-600">{errors.cover_image}</div>}
@@ -196,7 +198,6 @@ export default function Create({ categories }: { categories: Category[] }) {
                                                     name="Gallery Images"
                                                     data={data.image_ids}
                                                     config={{
-                                                        container: 'public',
                                                         folder: '/photography/galleries',
                                                         max_files: 50,
                                                         mode: 'grid',
@@ -216,40 +217,19 @@ export default function Create({ categories }: { categories: Category[] }) {
                                     </TabsContent>
 
                                     <TabsContent value="seo" className="mt-0 space-y-6">
-                                        <Card>
-                                            <CardHeader>
-                                                <CardTitle>SEO Settings</CardTitle>
-                                                <CardDescription>Optimize your gallery for search engines</CardDescription>
-                                            </CardHeader>
-                                            <CardContent className="space-y-4">
-                                                <div className="grid gap-2">
-                                                    <Label htmlFor="meta_title">Meta Title</Label>
-                                                    <Input
-                                                        id="meta_title"
-                                                        value={data.meta_title}
-                                                        onChange={(e) => setData('meta_title', e.target.value)}
-                                                        placeholder="SEO title for search engines"
-                                                        maxLength={60}
-                                                    />
-                                                    <p className="text-sm text-muted-foreground">{(data.meta_title || '').length}/60 characters</p>
-                                                    {errors.meta_title && <div className="text-sm text-red-600">{errors.meta_title}</div>}
-                                                </div>
-
-                                                <div className="grid gap-2">
-                                                    <Label htmlFor="meta_description">Meta Description</Label>
-                                                    <Textarea
-                                                        id="meta_description"
-                                                        value={data.meta_description}
-                                                        onChange={(e) => setData('meta_description', e.target.value)}
-                                                        placeholder="SEO description for search engines"
-                                                        rows={3}
-                                                        maxLength={160}
-                                                    />
-                                                    <p className="text-sm text-muted-foreground">{(data.meta_description || '').length}/160 characters</p>
-                                                    {errors.meta_description && <div className="text-sm text-red-600">{errors.meta_description}</div>}
-                                                </div>
-                                            </CardContent>
-                                        </Card>
+                                        <SEOFields
+                                            data={{
+                                                seo: data.seo,
+                                                meta_title: data.meta_title,
+                                                meta_description: data.meta_description,
+                                                slug: data.slug
+                                            }}
+                                            setData={(key, value) => {
+                                                setData(key as any, value);
+                                            }}
+                                            errors={errors}
+                                            showSlug={false}
+                                        />
                                     </TabsContent>
                                 </div>
 

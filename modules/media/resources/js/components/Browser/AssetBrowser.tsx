@@ -264,7 +264,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                 <div className="asset-browser-header shrink-0 bg-gray-50 p-4 dark:bg-gray-800">
                     <div className="mb-4 flex items-center justify-between">
                         <h1 className="flex items-center gap-2 text-xl font-semibold">
-                            {isSearching ? 'Search Results' : restrictNavigation ? folder?.title || folder?.path : container?.title}
+                            {isSearching ? 'Search Results' : folder?.title || folder?.path || path}
                             {loadingAssets && <LoadingGraphic text="" />}
                         </h1>
                     </div>
@@ -402,6 +402,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                             onAssetDownloading={handleAssetDownloading}
                             onAssetDoubleClicked={handleAssetDoubleClicked}
                             onSorted={sortBy}
+                            onFolderDeleted={loadAssets}
                         />
                     ) : (
                         <TableListing
@@ -423,6 +424,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                             onAssetDownloading={handleAssetDownloading}
                             onAssetDoubleClicked={handleAssetDoubleClicked}
                             onSorted={sortBy}
+                            onFolderDeleted={loadAssets}
                         />
                     )}
 

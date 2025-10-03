@@ -1,7 +1,6 @@
 import { MediaAsset } from './media';
 
 export interface AssetFieldConfig {
-    container?: string;
     folder?: string;
     max_files?: number;
     restrict?: boolean;

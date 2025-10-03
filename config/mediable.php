@@ -33,17 +33,7 @@ return [
     /*
      * Filesystem disk to use if none is specified
      */
-    'default_disk' => 's3',
-
-    /*
-     * Filesystems that can be used for media storage
-     *
-     * Uploader will throw an exception if a disk not in this list is selected
-     */
-    'allowed_disks' => [
-        'public',
-        's3',
-    ],
+    'default_disk' => env('FILESYSTEM_DISK', 'local'),
 
     /*
      * The maximum file size in bytes for a single uploaded file

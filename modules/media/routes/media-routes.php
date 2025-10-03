@@ -8,6 +8,7 @@ Route::middleware(['web', 'auth'])->prefix('admin')->group(function () {
     // Media Manager
     Route::get('media-manager', [MediaManagerController::class, 'index'])->name('media-manager');
     Route::post('media-manager/create', [MediaManagerController::class, 'create'])->name('media-manager.create');
+    Route::delete('media-manager/folder', [MediaManagerController::class, 'destroy'])->name('media-manager.destroy');
 
     // Media API routes
     Route::prefix('media')->name('media.')->group(function () {

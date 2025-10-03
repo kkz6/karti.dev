@@ -18,13 +18,6 @@ class MediaServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(
-            dirname(__DIR__) . '/../config/mediable.php',
-            'mediable'
-        );
-
-        $this->mergeConfigFrom(dirname(__DIR__) . '/../config/media-manager.php', 'media-manager');
-
         $this->registerSourceAdapterFactory();
         $this->registerImageManipulator();
         $this->registerUploader();

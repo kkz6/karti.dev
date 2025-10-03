@@ -18,14 +18,14 @@ class MediaManagerException extends Exception
         return new static("Cannot find a filesystem disk named `{$disk}`");
     }
 
-    public static function directoryNotFound($disk, $path)
+    public static function directoryNotFound($path)
     {
-        return new static("Cannot find a directory `{$disk}://{$path}`");
+        return new static("Cannot find a directory `{$path}`");
     }
 
-    public static function directoryAlreadyExists($disk, $path)
+    public static function directoryAlreadyExists($path)
     {
-        return new static("Cannot create directory `{$disk}://{$path}` as another file or directory by that name already exists.");
+        return new static("Cannot create directory `{$path}` as another file or directory by that name already exists.");
     }
 
     public static function fileNotFound($disk, $path)
@@ -33,8 +33,8 @@ class MediaManagerException extends Exception
         return new static("Cannot find a file `{$disk}://{$path}`");
     }
 
-    public static function cannotMoveDirectoryToDestination($disk, $path, $destination)
+    public static function cannotMoveDirectoryToDestination($path, $destination): static
     {
-        return new static("Cannot move directory `{$disk}://{$path}` to `{$disk}://{$destination}`");
+        return new static("Cannot move directory `{$path}` to `{$destination}`");
     }
 }

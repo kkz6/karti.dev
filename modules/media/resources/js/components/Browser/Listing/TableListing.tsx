@@ -6,6 +6,8 @@ import { MediaAsset, MediaFolder } from '../../../types/media';
 import { FileIcon } from '../../Icons/FileIcon';
 import { AssetRow } from './AssetRow';
 import { FolderRow } from './FolderRow';
+import { MediaService } from '../../../services/MediaService';
+import { toast } from 'sonner';
 
 interface TableListingProps {
     container: string;
@@ -26,6 +28,7 @@ interface TableListingProps {
     onAssetDownloading: (assetId: string) => void;
     onAssetDoubleClicked: (asset: MediaAsset) => void;
     onSorted: (field: string) => void;
+    onFolderDeleted?: () => void;
 }
 
 interface Column {
@@ -53,11 +56,14 @@ export const TableListing: React.FC<TableListingProps> = ({
     onAssetDownloading,
     onAssetDoubleClicked,
     onSorted,
+    onFolderDeleted,
 }) => {
     const [deleteModal, setDeleteModal] = useState<boolean>(false);
     const [deleteFolderSelected, setDeleteFolderSelected] = useState<MediaFolder | null>(null);
+    const [deleting, setDeleting] = useState<boolean>(false);
     const [currentSort, setCurrentSort] = useState<string>('title');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+    const mediaService = new MediaService();
 
     const columns: Column[] = [
         {
@@ -120,12 +126,15 @@ export const TableListing: React.FC<TableListingProps> = ({
     const confirmDeleteFolder = async () => {
         if (deleteFolderSelected) {
             try {
-                // Implement folder deletion logic here
-                console.log('Deleting folder:', deleteFolderSelected);
+                setDeleting(true);
+                await mediaService.deleteFolder(deleteFolderSelected.path);
+                toast.success('Folder deleted successfully');
                 setDeleteModal(false);
                 setDeleteFolderSelected(null);
+                onFolderDeleted?.();
             } catch (error) {
-                console.error('Error deleting folder:', error);
+            } finally {
+                setDeleting(false);
             }
         }
     };
@@ -235,11 +244,11 @@ export const TableListing: React.FC<TableListingProps> = ({
                         <p>On clicking confirm the selected item will be deleted. If you don't wish to do it then please press cancel.</p>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={cancelDeleteFolder}>
+                        <Button variant="outline" onClick={cancelDeleteFolder} disabled={deleting}>
                             Cancel
                         </Button>
-                        <Button variant="destructive" onClick={confirmDeleteFolder}>
-                            Delete
+                        <Button variant="destructive" onClick={confirmDeleteFolder} disabled={deleting}>
+                            {deleting ? 'Deleting...' : 'Delete'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

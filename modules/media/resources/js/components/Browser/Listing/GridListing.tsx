@@ -1,9 +1,13 @@
+import { Button } from '@shared/components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
 import { CornerLeftUp } from 'lucide-react';
-import React from 'react';
+import React, { useState } from 'react';
 import { MediaAsset, MediaFolder } from '../../../types/media';
 import { FileIcon } from '../../Icons/FileIcon';
 import { AssetTile } from './AssetTile';
 import { FolderTile } from './FolderTile';
+import { MediaService } from '../../../services/MediaService';
+import { toast } from 'sonner';
 
 interface GridListingProps {
     container: string;
@@ -24,6 +28,7 @@ interface GridListingProps {
     onAssetDownloading: (assetId: string) => void;
     onAssetDoubleClicked: (asset: MediaAsset) => void;
     onSorted: (field: string) => void;
+    onFolderDeleted?: () => void;
 }
 
 export const GridListing: React.FC<GridListingProps> = ({
@@ -45,7 +50,13 @@ export const GridListing: React.FC<GridListingProps> = ({
     onAssetDownloading,
     onAssetDoubleClicked,
     onSorted,
+    onFolderDeleted,
 }) => {
+    const [deleteModal, setDeleteModal] = useState<boolean>(false);
+    const [deleteFolderSelected, setDeleteFolderSelected] = useState<MediaFolder | null>(null);
+    const [deleting, setDeleting] = useState<boolean>(false);
+    const mediaService = new MediaService();
+
     const hasParent = folder?.parent_path !== null;
     const hasResults = assets.length > 0 || subfolders.length > 0;
 
@@ -66,6 +77,32 @@ export const GridListing: React.FC<GridListingProps> = ({
             };
             onFolderSelected(parentFolder);
         }
+    };
+
+    const handleDeleteFolder = (folderToDelete: MediaFolder) => {
+        setDeleteFolderSelected(folderToDelete);
+        setDeleteModal(true);
+    };
+
+    const confirmDeleteFolder = async () => {
+        if (deleteFolderSelected) {
+            try {
+                setDeleting(true);
+                await mediaService.deleteFolder(deleteFolderSelected.path);
+                toast.success('Folder deleted successfully');
+                setDeleteModal(false);
+                setDeleteFolderSelected(null);
+                onFolderDeleted?.();
+            } catch (error) {
+            } finally {
+                setDeleting(false);
+            }
+        }
+    };
+
+    const cancelDeleteFolder = () => {
+        setDeleteModal(false);
+        setDeleteFolderSelected(null);
     };
 
     return (
@@ -97,10 +134,7 @@ export const GridListing: React.FC<GridListingProps> = ({
                     canEdit={canEdit}
                     onSelected={onFolderSelected}
                     onEditing={onFolderEditing}
-                    onDeleting={(folder) => {
-                        // Handle folder deletion
-                        console.log('Delete folder:', folder);
-                    }}
+                    onDeleting={handleDeleteFolder}
                 />
             ))}
 
@@ -118,6 +152,25 @@ export const GridListing: React.FC<GridListingProps> = ({
                     onDoubleClicked={onAssetDoubleClicked}
                 />
             ))}
+
+            <Dialog open={deleteModal} onOpenChange={setDeleteModal}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Delete the folder selected?</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <p>On clicking confirm the selected item will be deleted. If you don't wish to do it then please press cancel.</p>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={cancelDeleteFolder} disabled={deleting}>
+                            Cancel
+                        </Button>
+                        <Button variant="destructive" onClick={confirmDeleteFolder} disabled={deleting}>
+                            {deleting ? 'Deleting...' : 'Delete'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

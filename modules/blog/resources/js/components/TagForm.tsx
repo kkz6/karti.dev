@@ -1,4 +1,6 @@
 import { Head, useForm, router } from '@inertiajs/react';
+import { SEOFields } from '@seo/components/SeoFields';
+import { type SeoData } from '@seo/types/seo-schema';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { Input } from '@shared/components/ui/input';
@@ -18,6 +20,7 @@ interface Tag {
     description?: string;
     meta_title?: string;
     meta_description?: string;
+    seo?: SeoData;
 }
 
 interface TagFormProps {
@@ -50,6 +53,7 @@ export default function TagForm({ tag, mode }: TagFormProps) {
         description: tag?.description || '',
         meta_title: tag?.meta_title || '',
         meta_description: tag?.meta_description || '',
+        seo: tag?.seo || {},
     });
 
     const submit: FormEventHandler = (e) => {
@@ -168,48 +172,19 @@ export default function TagForm({ tag, mode }: TagFormProps) {
                                     </TabsContent>
 
                                     <TabsContent value="seo" className="mt-0 space-y-6">
-                                        <Card>
-                                            <CardHeader>
-                                                <CardTitle>SEO Settings</CardTitle>
-                                                <CardDescription>Optimize your content for search engines</CardDescription>
-                                            </CardHeader>
-                                            <CardContent className="space-y-4">
-                                                <div>
-                                                    <Label htmlFor="meta_title">Meta Title</Label>
-                                                    <Input
-                                                        id="meta_title"
-                                                        value={data.meta_title || ''}
-                                                        onChange={(e) => setData('meta_title', e.target.value)}
-                                                        placeholder="SEO title for search engines"
-                                                        className={errors.meta_title ? 'border-red-500' : ''}
-                                                        maxLength={60}
-                                                    />
-                                                    {errors.meta_title && <p className="mt-1 text-sm text-red-500">{errors.meta_title}</p>}
-                                                    <p className="text-muted-foreground mt-1 text-sm">
-                                                        {(data.meta_title || '').length}/60 characters
-                                                    </p>
-                                                </div>
-
-                                                <div>
-                                                    <Label htmlFor="meta_description">Meta Description</Label>
-                                                    <Textarea
-                                                        id="meta_description"
-                                                        value={data.meta_description || ''}
-                                                        onChange={(e) => setData('meta_description', e.target.value)}
-                                                        placeholder="Brief description for search engine results"
-                                                        rows={3}
-                                                        className={errors.meta_description ? 'border-red-500' : ''}
-                                                        maxLength={160}
-                                                    />
-                                                    {errors.meta_description && (
-                                                        <p className="mt-1 text-sm text-red-500">{errors.meta_description}</p>
-                                                    )}
-                                                    <p className="text-muted-foreground mt-1 text-sm">
-                                                        {(data.meta_description || '').length}/160 characters
-                                                    </p>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
+                                        <SEOFields
+                                            data={{
+                                                seo: data.seo,
+                                                meta_title: data.meta_title,
+                                                meta_description: data.meta_description,
+                                                slug: data.slug
+                                            }}
+                                            setData={(key, value) => {
+                                                setData(key as any, value);
+                                            }}
+                                            errors={errors}
+                                            showSlug={false}
+                                        />
                                     </TabsContent>
                                 </div>
 

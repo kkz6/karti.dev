@@ -116,7 +116,8 @@
             "@frontend/*": ["./modules/frontend/resources/js/*"],
             "@table/*": ["./modules/table/resources/js/*"],
             "@seo/*": ["./modules/seo/resources/js/*"],
-            "@media/*": ["./modules/media/resources/js/*"]
+            "@media/*": ["./modules/media/resources/js/*"],
+            "@blog/*": ["./modules/blog/resources/js/*"]
         },
         "jsx": "react-jsx"
     },

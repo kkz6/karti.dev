@@ -10,11 +10,10 @@ import { MediaAsset } from '@media/types/media';
 import { MediaService } from '@media/services/MediaService';
 
 interface MediaImageButtonProps {
-  text?: string;
   editor?: Editor | null;
 }
 
-export function MediaImageButton({ text = 'Image', editor: providedEditor }: MediaImageButtonProps) {
+export function MediaImageButton({ editor: providedEditor }: MediaImageButtonProps) {
   const { editor } = useTiptapEditor(providedEditor);
   const [showDialog, setShowDialog] = React.useState(false);
   const [selectedAssets, setSelectedAssets] = React.useState<string[]>([]);
@@ -23,7 +22,7 @@ export function MediaImageButton({ text = 'Image', editor: providedEditor }: Med
   const canInsertImage = React.useMemo(() => {
     if (!editor || !editor.isEditable) return false;
     // Check for resizableImage extension first, fallback to regular image
-    return editor.can().setImage?.({ src: '' }) || 
+    return editor.can().setImage?.({ src: '' }) ||
            editor.can().insertContent({ type: 'resizableImage', attrs: { src: '' } });
   }, [editor]);
 
@@ -120,7 +119,6 @@ export function MediaImageButton({ text = 'Image', editor: providedEditor }: Med
         aria-label="Insert image"
       >
         <ImagePlusIcon className="tiptap-button-icon" />
-        {text && <span className="tiptap-button-text">{text}</span>}
       </Button>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
@@ -128,7 +126,7 @@ export function MediaImageButton({ text = 'Image', editor: providedEditor }: Med
           <DialogHeader className="px-4 py-3 border-b flex-shrink-0">
             <DialogTitle>Select Image</DialogTitle>
           </DialogHeader>
-          
+
           <div className="flex-1 overflow-hidden p-0">
             <AssetBrowser
               selectedContainer="public"

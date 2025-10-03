@@ -83,10 +83,6 @@ class MediaManager
             $disk = config('mediable.default_disk');
         }
 
-        if (! in_array($disk, config('mediable.allowed_disks'))) {
-            throw MediaManagerException::diskNotAllowed($disk);
-        }
-
         if (is_null(config("filesystems.disks.{$disk}"))) {
             throw MediaManagerException::diskNotFound($disk);
         }
@@ -98,16 +94,15 @@ class MediaManager
      * Checks for the existence of the passed directory on the specified disk.
      *
      *
-     * @param mixed $disk
-     * @param mixed $directory
+     * @param string $directory
      *
+     * @return string
      * @throws MediaManagerException
      */
-    public function verifyDirectory($disk, $directory): string
+    public function verifyDirectory(string $directory): string
     {
-        $filesystem = Storage::disk($disk);
-        if ($directory && ! $filesystem->exists($directory)) {
-            throw MediaManagerException::directoryNotFound($disk, $directory);
+        if ($directory && ! Storage::exists($directory)) {
+            throw MediaManagerException::directoryNotFound($directory);
         }
 
         return trim($directory, '/');

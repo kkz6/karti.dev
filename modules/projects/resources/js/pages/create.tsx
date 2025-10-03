@@ -1,5 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, Link, router } from '@inertiajs/react';
+import { SEOFields } from '@seo/components/SeoFields';
+import { seoSchema } from '@seo/types/seo-schema';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { Checkbox } from '@shared/components/ui/checkbox';
@@ -37,6 +39,7 @@ const projectSchema = z.object({
     featured: z.boolean(),
     meta_title: z.string().max(60, 'Meta title must be less than 60 characters').optional(),
     meta_description: z.string().max(160, 'Meta description must be less than 160 characters').optional(),
+    seo: seoSchema,
 });
 
 type ProjectFormData = z.infer<typeof projectSchema>;
@@ -69,6 +72,7 @@ export default function Create() {
             featured: false,
             meta_title: '',
             meta_description: '',
+            seo: {},
         },
     });
 
@@ -343,48 +347,23 @@ export default function Create() {
                                         </TabsContent>
 
                                         <TabsContent value="seo" className="mt-0 space-y-6">
-                                            <Card>
-                                                <CardHeader>
-                                                    <CardTitle>SEO Settings</CardTitle>
-                                                    <CardDescription>Optimize your content for search engines</CardDescription>
-                                                </CardHeader>
-                                                <CardContent className="space-y-4">
-                                                    <FormField
-                                                        control={form.control}
-                                                        name="meta_title"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>Meta Title</FormLabel>
-                                                                <FormControl>
-                                                                    <Input {...field} placeholder="SEO title for search engines" maxLength={60} />
-                                                                </FormControl>
-                                                                <FormDescription>{(field.value || '').length}/60 characters</FormDescription>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-
-                                                    <FormField
-                                                        control={form.control}
-                                                        name="meta_description"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>Meta Description</FormLabel>
-                                                                <FormControl>
-                                                                    <Textarea
-                                                                        {...field}
-                                                                        placeholder="Brief description for search engine results"
-                                                                        rows={3}
-                                                                        maxLength={160}
-                                                                    />
-                                                                </FormControl>
-                                                                <FormDescription>{(field.value || '').length}/160 characters</FormDescription>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-                                                </CardContent>
-                                            </Card>
+                                            <SEOFields
+                                                data={{
+                                                    seo: form.watch('seo'),
+                                                    meta_title: form.watch('meta_title'),
+                                                    meta_description: form.watch('meta_description'),
+                                                    slug: form.watch('slug')
+                                                }}
+                                                setData={(key, value) => {
+                                                    if (key === 'seo') {
+                                                        form.setValue('seo', value);
+                                                    } else {
+                                                        form.setValue(key as any, value);
+                                                    }
+                                                }}
+                                                errors={form.formState.errors}
+                                                showSlug={false}
+                                            />
                                         </TabsContent>
                                     </div>
 

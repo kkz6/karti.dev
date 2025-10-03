@@ -43,14 +43,12 @@ class MediaController extends BaseController
     /**
      * @throws MediaManagerException
      */
-    public function index(Request $request, string $path = '')
+    public function index(string $path = '')
     {
-        $diskString = $this->manager->verifyDisk($request->disk);
-        $disk       = Storage::disk($diskString);
-        $path       = $this->manager->verifyDirectory($diskString, $path);
+        $path       = $this->manager->verifyDirectory($path);
 
-        $media          = Media::inDirectory($diskString, $path)->paginate(20)->toArray();
-        $subdirectories = array_diff($disk->directories($path), $this->ignore);
+        $media          = Media::inDirectory($path)->paginate(20)->toArray();
+        $subdirectories = array_diff(Storage::directories($path), $this->ignore);
 
         $key            = trim('root.'.implode('.', explode('/', $path)), "\.");
         $subdirectories = Cache::remember("media.manager.folders.{$key}", 60 * 60 * 24, function () use ($subdirectories) {
@@ -92,20 +90,19 @@ class MediaController extends BaseController
     {
         $media    = is_array($request->file) ? $request->file : [$request->file];
         $data     = collect($request->only(['title', 'alt', 'caption', 'credit']));
-        $disk     = $this->manager->verifyDisk($request->disk);
-        $path     = $this->manager->verifyDirectory($disk, trim($request->path ?? '', '/'));
+        $path     = $this->manager->verifyDirectory(trim($request->path ?? '', '/'));
         $response = [];
 
         foreach ($media as $m) {
             $model = $this->uploader
-                ->toDestination($disk, $path)
+                ->toDirectory($path)
                 ->fromSource($m);
             if ($data->isNotEmpty()) {
                 $model->beforeSave(function (Media $m) use ($data) {
                     $m->fill($data->toArray());
                 });
             }
-            if ($c = Media::inDirectory($disk, $path)->where('filename', $m->getClientOriginalName())->count()) {
+            if ($c = Media::inDirectory($path)->where('filename', $m->getClientOriginalName())->count()) {
                 $model = $model->useFilename("{$m->getClientOriginalName()}_{$c}");
             }
 
@@ -142,8 +139,7 @@ class MediaController extends BaseController
     {
         $valid = $request->validated();
         $media = Media::find($media);
-        $disk  = $this->manager->verifyDisk($valid['disk']);
-        $path  = $this->manager->verifyDirectory($disk, $valid['path'] ?? $media->directory);
+        $path  = $this->manager->verifyDirectory($valid['path'] ?? $media->directory);
 
         // Update metadata fields
         $details = $request->only(['title', 'alt', 'caption', 'credit', 'focus']);
@@ -182,15 +178,14 @@ class MediaController extends BaseController
     public function download($id)
     {
         $media = Media::findOrFail($id);
-        $disk  = Storage::disk($media->disk);
         $path  = $media->getDiskPath();
 
-        if (! $disk->exists($path)) {
+        if (! Storage::exists($path)) {
             abort(404, 'File not found');
         }
 
         $filename = $media->filename.'.'.$media->extension;
-        $contents = $disk->get($path);
+        $contents = Storage::get($path);
 
         return response($contents)
             ->header('Content-Type', $media->mime_type)

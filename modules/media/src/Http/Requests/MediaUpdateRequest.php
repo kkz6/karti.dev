@@ -14,7 +14,6 @@ class MediaUpdateRequest extends FormRequest
     public function rules()
     {
         return [
-            'disk'    => ['string'],
             'path'    => ['string', 'nullable'],
             'rename'  => ['string', 'nullable'],
             'title'   => ['required_without:path', 'string'],

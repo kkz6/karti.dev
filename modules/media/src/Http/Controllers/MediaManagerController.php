@@ -11,9 +11,9 @@ use Modules\Media\Exceptions\MediaManagerException;
 use Modules\Media\Models\Media;
 use Modules\Media\Support\MediaManager;
 
-class MediaManagerController
+readonly class MediaManagerController
 {
-    public function __construct(protected readonly MediaManager $manager) {}
+    public function __construct(protected MediaManager $manager) {}
 
     public function index()
     {
@@ -23,21 +23,16 @@ class MediaManagerController
     /**
      * Create a folder on disk with the given name
      *
-     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
-     *
      * @throws MediaManagerException
      */
     public function create(Request $request)
     {
-        $disk = $this->manager->verifyDisk($request->disk);
         $path = $request->path;
 
-        if (Storage::disk($disk)->exists($path)) {
-            throw MediaManagerException::directoryAlreadyExists($disk, $path);
+        if (Storage::exists($path)) {
+            throw MediaManagerException::directoryAlreadyExists($path);
         }
-
-        Storage::disk($disk)->makeDirectory($path);
-        // Invalidate the cache when a new folder is created.
+        Storage::makeDirectory($path);
         $this->invalidateFolderCache($path);
 
         return response([
@@ -52,50 +47,47 @@ class MediaManagerController
      * Note: An edge case bug exists where if you move a folder from the root, which contains folders with the
      * containing folder's name as substrings for those folders, the action of moving will also rename those subfolders
      * resulting faulty move results
-     *
-     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
-     *
-     * @throws MediaManagerException
+     **
+     * @throws MediaManagerException|\Modules\Media\Exceptions\MediaMoveException
      */
     public function update(Request $request)
     {
-        $disk        = $this->manager->verifyDisk($request->disk);
-        $source      = $this->manager->verifyDirectory($disk, $request->source);
+        $source      = $this->manager->verifyDirectory($request->source);
         $destination = trim($request->destination, '/');
 
         if (str_starts_with($destination, $source)) {
-            throw MediaManagerException::cannotMoveDirectoryToDestination($disk, $source, $destination);
+            throw MediaManagerException::cannotMoveDirectoryToDestination($source, $destination);
         }
 
         $container = collect(explode('/', $source))->last();
         $rename    = $request->rename ?? $container;
         $destination .= '/'.$rename;
 
-        if (Storage::disk($disk)->exists($destination)) {
-            throw MediaManagerException::directoryAlreadyExists($disk, $destination);
+        if (Storage::exists($destination)) {
+            throw MediaManagerException::directoryAlreadyExists($destination);
         }
 
         $moved = collect();
 
         // get a list of directories that need to be created in the destination directory
-        $directories            = Storage::disk($disk)->allDirectories($source);
+        $directories            = Storage::allDirectories($source);
         $destinationDirectories = array_map(function ($directory) use ($source, $destination) {
             return $destination.str_replace($source, '', $directory);
         }, $directories);
         array_unshift($destinationDirectories, $destination);
 
         // check if a directory with the same name as root already exists in the destination directory
-        if (Storage::disk($disk)->exists($destinationDirectories[0])) {
-            throw MediaManagerException::directoryAlreadyExists($disk, $destinationDirectories[0]);
+        if (Storage::exists($destinationDirectories[0])) {
+            throw MediaManagerException::directoryAlreadyExists($destinationDirectories[0]);
         }
 
         // create directories in the destination directory
         foreach ($destinationDirectories as $destinationDirectory) {
-            Storage::disk($disk)->makeDirectory($destinationDirectory);
+            Storage::makeDirectory($destinationDirectory);
         }
 
         // get list of files that need to be moved
-        $files = Media::where('disk', $disk)->where(function (Builder $q) use ($source) {
+        $files = Media::where('disk', config('mediable.default_disk'))->where(function (Builder $q) use ($source) {
             $source = str_replace(['%', '_'], ['\%', '\_'], $source);
             $q->where('directory', $source);
             $q->orWhere('directory', 'like', $source.'/%');
@@ -109,7 +101,7 @@ class MediaManagerController
             });
         }
 
-        Storage::disk($disk)->deleteDirectory($source);
+        Storage::deleteDirectory($source);
         $this->invalidateFolderCache($source);
         $this->invalidateFolderCache($destination);
 
@@ -128,12 +120,11 @@ class MediaManagerController
      */
     public function destroy(Request $request)
     {
-        $disk   = $this->manager->verifyDisk($request->disk);
-        $path   = $this->manager->verifyDirectory($disk, $request->path);
+        $path   = $this->manager->verifyDirectory($request->path);
         $parent = collect(explode('/', $path))->slice(-1)->implode('/');
 
-        Storage::disk($disk)->deleteDirectory($path);
-        Media::where('disk', $disk)->where(function (Builder $q) use ($path) {
+        Storage::deleteDirectory($path);
+        Media::where('disk', config('mediable.default_disk'))->where(function (Builder $q) use ($path) {
             $path = str_replace(['%', '_'], ['\%', '\_'], $path);
             $q->where('directory', $path);
             $q->orWhere('directory', 'like', $path.'/%');

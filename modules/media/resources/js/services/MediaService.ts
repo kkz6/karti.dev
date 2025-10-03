@@ -1,5 +1,6 @@
 import axios, { AxiosResponse } from 'axios';
 import { MediaAsset } from '../types/media';
+import { handleError } from '../utils/errorHandler';
 
 // Types based on the API response structure
 export interface MediaFile {
@@ -29,7 +30,6 @@ export interface MediaApiResponse {
 }
 
 export interface MediaListParams {
-    disk?: string;
     path?: string;
     page?: number;
 }
@@ -94,14 +94,9 @@ export class MediaService {
      */
     async getFiles(params: MediaListParams = {}): Promise<MediaApiResponse> {
         try {
-            // Build URL with path if provided
             const path = params.path && params.path !== '/' ? `/${params.path.replace(/^\//, '')}` : '';
 
-            // Add query parameters
             const queryParams = new URLSearchParams();
-            if (params.disk) {
-                queryParams.append('disk', params.disk);
-            }
             if (params.page) {
                 queryParams.append('page', params.page.toString());
             }
@@ -119,13 +114,11 @@ export class MediaService {
     /**
      * Upload files to the media manager
      */
-    async uploadFiles(files: FileList, uploadPath: string = '', disk: string = 'public'): Promise<any> {
+    async uploadFiles(files: FileList, uploadPath: string = ''): Promise<any> {
         try {
             const formData = new FormData();
-            formData.append('disk', disk);
             formData.append('upload_path', uploadPath);
 
-            // Add all files to the form data
             Array.from(files).forEach((file) => {
                 formData.append('files[]', file);
             });
@@ -137,7 +130,6 @@ export class MediaService {
                 onUploadProgress: (progressEvent) => {
                     if (progressEvent.total) {
                         const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                        // You can emit an event or call a callback here for progress updates
                         console.log(`Upload progress: ${progress}%`);
                     }
                 },
@@ -193,13 +185,12 @@ export class MediaService {
     /**
      * Create a new folder
      */
-    async createFolder(folderName: string, currentPath: string = '/', disk: string = 'public'): Promise<any> {
+    async createFolder(folderName: string, currentPath: string = '/'): Promise<any> {
         try {
             const fullPath = `${currentPath.replace(/\/$/, '')}/${folderName}`.replace(/^\/+/, '');
 
             const response = await axios.post(`${this.baseUrl}/create`, {
                 path: fullPath,
-                disk,
             });
 
             return response.data;
@@ -209,15 +200,29 @@ export class MediaService {
         }
     }
 
+    async deleteFolder(path: string): Promise<any> {
+        try {
+            const response = await axios.delete('/admin/media-manager/folder', {
+                data: {
+                    path,
+                },
+            });
+
+            return response.data;
+        } catch (error) {
+            handleError(error, 'Failed to delete folder');
+            throw error;
+        }
+    }
+
     /**
      * Move files to a different location
      */
-    async moveFiles(mediaIds: number[], destination: string, disk: string = 'public'): Promise<any> {
+    async moveFiles(mediaIds: number[], destination: string): Promise<any> {
         try {
             const response = await axios.post(`${this.baseUrl}/move`, {
                 media_ids: mediaIds,
                 destination,
-                disk,
             });
 
             return response.data;
