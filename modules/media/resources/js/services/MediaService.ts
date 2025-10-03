@@ -253,7 +253,7 @@ export class MediaService {
      */
     async getFileDetails(mediaId: number): Promise<MediaAsset> {
         try {
-            const response: AxiosResponse<MediaAsset> = await axios.post(`${this.baseUrl}/${mediaId}`);
+            const response: AxiosResponse<MediaAsset> = await axios.get(`${this.baseUrl}/show/${mediaId}`);
             return response.data;
         } catch (error) {
             console.error('Error fetching file details:', error);
@@ -266,9 +266,15 @@ export class MediaService {
      */
     async getAssetsByIds(mediaIds: (string | number)[]): Promise<MediaAsset[]> {
         try {
-            const promises = mediaIds.map(id => this.getFileDetails(typeof id === 'string' ? parseInt(id) : id));
-            const results = await Promise.all(promises);
-            return results;
+            const ids = mediaIds.map(id => typeof id === 'string' ? parseInt(id) : id).join(',');
+
+            const response = await axios.get(`${this.baseUrl}/show`, {
+                params: {
+                    ids: ids
+                }
+            });
+
+            return response.data?.data || response.data || [];
         } catch (error) {
             console.error('Error fetching assets by IDs:', error);
             throw new Error(`Failed to fetch assets: ${error instanceof Error ? error.message : 'Unknown error'}`);

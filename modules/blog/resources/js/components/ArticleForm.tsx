@@ -32,7 +32,7 @@ export default function ArticleForm({ article, categories }: ArticleFormProps) {
         { title: 'Blog Management', href: route('admin.blog.index') },
         {
             title: pageTitle,
-            href: isEditing ? route('admin.blog.edit', { blog: article.slug || article.id }) : route('admin.blog.create'),
+            href: isEditing ? route('admin.blog.edit', { blog: article.id }) : route('admin.blog.create'),
         },
     ];
 
@@ -49,7 +49,7 @@ export default function ArticleForm({ article, categories }: ArticleFormProps) {
             category_id: article?.category_id?.toString() || article?.category?.id?.toString() || '',
             tags: article?.tags?.map((tag) => tag.id) || [],
             status: article?.status || 'draft',
-            featured_image: article?.featured_image ? [{ url: article.featured_image }] : [],
+            featured_image: article?.featured_image ? [article.featured_image.toString()] : [],
             meta_title: article?.meta_title || '',
             meta_description: article?.meta_description || '',
             seo: article?.seo || {},

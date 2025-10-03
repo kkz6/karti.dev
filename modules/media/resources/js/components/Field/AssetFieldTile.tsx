@@ -100,7 +100,7 @@ export function AssetFieldTile({
                             {canShowSvg ? (
                                 <div
                                     className="svg-img h-full w-full bg-contain bg-center bg-no-repeat"
-                                    style={{ backgroundImage: `url(${asset.url})` }}
+                                    style={{ backgroundImage: `url(${thumbnailUrl})` }}
                                 />
                             ) : (
                                 <>

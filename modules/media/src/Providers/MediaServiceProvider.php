@@ -7,7 +7,9 @@ use Illuminate\Filesystem\FilesystemManager;
 use Illuminate\Support\ServiceProvider;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Interfaces\DriverInterface;
+use Modules\Media\Exceptions\MediaUpload\ConfigurationException;
 use Modules\Media\SourceAdapters\SourceAdapterFactory;
+use Modules\Media\Support\ImageManipulation;
 use Modules\Media\Support\ImageManipulator;
 use Modules\Media\Support\ImageOptimizer;
 use Modules\Media\Support\MediaMover;
@@ -25,7 +27,31 @@ class MediaServiceProvider extends ServiceProvider
         $this->registerUrlGeneratorFactory();
     }
 
-    public function boot(): void {}
+    /**
+     * @throws ConfigurationException
+     */
+    public function boot(): void
+    {
+        $this->defineImageVariants();
+    }
+
+    /**
+     * @throws ConfigurationException
+     */
+    protected function defineImageVariants(): void
+    {
+        $manipulator = app(ImageManipulator::class);
+        $conversions = config('media-manager.conversions', []);
+
+        foreach ($conversions as $variantName => $width) {
+            $manipulator->defineVariant(
+                $variantName,
+                ImageManipulation::make(function ($image) use ($width) {
+                    $image->scale(width: (int) $width);
+                })
+            );
+        }
+    }
 
     /**
      * Bind an instance of the Source Adapter Factory to the container.

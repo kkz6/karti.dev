@@ -15,11 +15,15 @@ use Modules\Media\Exceptions\MediaUrlException;
 use Modules\Media\Helpers\File;
 use Modules\Media\Interfaces\TemporaryUrlGeneratorInterface;
 use Modules\Media\Interfaces\UrlGeneratorInterface;
+use Modules\Media\Models\Traits\Convertible;
 use Modules\Media\Support\MediaMover;
 use Psr\Http\Message\StreamInterface;
 
 class Media extends Model
 {
+
+    use Convertible;
+
     const TYPE_IMAGE = 'image';
 
     const TYPE_IMAGE_VECTOR = 'vector';

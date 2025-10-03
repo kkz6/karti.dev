@@ -39,7 +39,6 @@ export interface MediaFolder {
     title: string;
     parent_path: string | null;
     parent?: MediaFolder;
-    container_id: string;
     created_at: string;
     updated_at: string;
 }

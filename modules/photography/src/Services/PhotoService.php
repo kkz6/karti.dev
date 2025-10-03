@@ -45,14 +45,22 @@ class PhotoService extends BaseService implements PhotoServiceInterface
     {
         return DB::transaction(function () use ($data) {
             $photoData = $data->toArray();
-            unset($photoData['categories']);
-            
+            unset($photoData['categories'], $photoData['image_ids'], $photoData['cover_image']);
+
             $photo = $this->repository->create($photoData);
-            
+
             if ($data->categories) {
                 $photo->categories()->sync($data->categories);
             }
-            
+
+            if ($data->image_ids) {
+                $photo->syncMedia($data->image_ids, 'gallery');
+            }
+
+            if ($data->cover_image) {
+                $photo->syncMedia([$data->cover_image], 'cover');
+            }
+
             return $photo->fresh(['categories']);
         });
     }
@@ -61,14 +69,22 @@ class PhotoService extends BaseService implements PhotoServiceInterface
     {
         return DB::transaction(function () use ($photo, $data) {
             $photoData = $data->toArray();
-            unset($photoData['categories'], $photoData['photo_id']);
-            
+            unset($photoData['categories'], $photoData['photo_id'], $photoData['image_ids'], $photoData['cover_image']);
+
             $photo = $this->repository->updateByModel($photo, $photoData);
-            
+
             if ($data->categories !== null) {
                 $photo->categories()->sync($data->categories);
             }
-            
+
+            if ($data->image_ids !== null) {
+                $photo->syncMedia($data->image_ids, 'gallery');
+            }
+
+            if ($data->cover_image !== null) {
+                $photo->syncMedia($data->cover_image ? [$data->cover_image] : [], 'cover');
+            }
+
             return $photo->fresh(['categories']);
         });
     }

@@ -17,13 +17,11 @@ class Photos extends Table
     {
         return [
             Columns\TextColumn::make('id', 'ID', stickable: true),
-            Columns\ImageColumn::make('cover_image', 'Cover'),
+            Columns\ImageColumn::make('cover_image_thumbnail', 'Cover'),
             Columns\TextColumn::make('title', 'Title', toggleable: false)->searchable(),
             Columns\TextColumn::make('slug', 'Slug')->searchable(),
-            Columns\TextColumn::make('image_ids', 'Images')->mapAs(function ($state) {
-                $count = is_array($state) ? count($state) : 0;
-
-                return $count.' '.($count === 1 ? 'image' : 'images');
+            Columns\TextColumn::make('image_count', 'Images')->mapAs(function ($state) {
+                return $state.' '.($state === 1 ? 'image' : 'images');
             }),
             Columns\BooleanColumn::make('featured', 'Featured'),
             Columns\NumericColumn::make('sort_order', 'Order')->sortable(),

@@ -2,9 +2,11 @@
 
 namespace Modules\Media\UrlGenerators;
 
+use DateTimeInterface;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Filesystem\Cloud;
 use Illuminate\Filesystem\FilesystemManager;
+use Modules\Media\Interfaces\TemporaryUrlGeneratorInterface;
 
 class S3UrlGenerator extends BaseUrlGenerator implements TemporaryUrlGeneratorInterface
 {
@@ -38,7 +40,7 @@ class S3UrlGenerator extends BaseUrlGenerator implements TemporaryUrlGeneratorIn
         return $filesystem->url($this->media->getDiskPath());
     }
 
-    public function getTemporaryUrl(\DateTimeInterface $expiry): string
+    public function getTemporaryUrl(DateTimeInterface $expiry): string
     {
         $filesystem = $this->filesystem->disk($this->media->disk);
 

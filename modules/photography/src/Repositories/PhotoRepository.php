@@ -86,7 +86,7 @@ class PhotoRepository extends QueryableRepository implements PhotoRepositoryInte
     {
         $photo->update($data);
 
-        return $photo->fresh(['categories']);
+        return $photo->fresh(['categories']) ?? $photo->load('categories');
     }
 
     public function findBySlug(string $slug): ?Photo

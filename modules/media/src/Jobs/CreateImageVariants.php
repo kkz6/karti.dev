@@ -10,6 +10,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Modules\Media\Exceptions\ImageManipulationException;
 use Modules\Media\Models\Media;
+use Modules\Media\Support\ImageManipulator;
 
 class CreateImageVariants implements ShouldQueue
 {

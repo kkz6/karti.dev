@@ -11,7 +11,6 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Modules\Media\DTO\ImageEditorSaveData;
-use Modules\Media\DTO\MediaAssetData;
 use Modules\Media\Exceptions\MediaManagerException;
 use Modules\Media\Exceptions\MediaMoveException;
 use Modules\Media\Exceptions\MediaUpload\ConfigurationException;
@@ -23,6 +22,7 @@ use Modules\Media\Exceptions\MediaUpload\ForbiddenException;
 use Modules\Media\Exceptions\MediaUpload\InvalidHashException;
 use Modules\Media\Http\Requests\MediaStoreRequest;
 use Modules\Media\Http\Requests\MediaUpdateRequest;
+use Modules\Media\Http\Resources\MediaResource;
 use Modules\Media\Models\Media;
 use Modules\Media\Support\MediaManager;
 use Modules\Media\Support\MediaUploader;
@@ -47,7 +47,7 @@ class MediaController extends BaseController
     {
         $path       = $this->manager->verifyDirectory($path);
 
-        $media          = Media::inDirectory($path)->paginate(20)->toArray();
+        $mediaPaginated = Media::inDirectory($path)->whereNull('original_media_id')->with('variants')->paginate(20);
         $subdirectories = array_diff(Storage::directories($path), $this->ignore);
 
         $key            = trim('root.'.implode('.', explode('/', $path)), "\.");
@@ -69,7 +69,11 @@ class MediaController extends BaseController
             return $modified->sortBy('name')->values();
         });
 
-        return response(['subdirectories' => $subdirectories->sortBy('name'), 'media' => $media['data'], 'page_count' => $media['last_page']]);
+        return response([
+            'subdirectories' => $subdirectories->sortBy('name'),
+            'media' => MediaResource::collection($mediaPaginated->items()),
+            'page_count' => $mediaPaginated->lastPage()
+        ]);
     }
 
     /**
@@ -113,29 +117,40 @@ class MediaController extends BaseController
     }
 
     /**
-     * Retrieve details about a specific piece of media.
+     * Retrieve details about a specific piece of media or multiple media items.
      *
      * @param mixed $id
-     *
-     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Request $request, $id = null)
     {
-        $media     = Media::findOrFail($id);
-        $mediaData = MediaAssetData::fromModel($media);
+        $ids = $request->query('ids');
 
-        return response($mediaData->toArray());
+        if ($ids && is_array($ids)) {
+            $media = Media::whereIn('id', $ids)->with('variants')->get();
+
+            return MediaResource::collection($media);
+        }
+
+        if ($ids && is_string($ids)) {
+            $idsArray = explode(',', $ids);
+            $media    = Media::whereIn('id', $idsArray)->with('variants')->get();
+
+            return MediaResource::collection($media);
+        }
+
+        $media = Media::with('variants')->findOrFail($id);
+
+        return new MediaResource($media);
     }
 
     /**
      * Move or rename a specified media entry.
      *
-     * @param mixed $media
      *
      * @throws MediaManagerException
      * @throws MediaMoveException
      */
-    public function update(MediaUpdateRequest $request, $media)
+    public function update(MediaUpdateRequest $request, string $media)
     {
         $valid = $request->validated();
         $media = Media::find($media);
@@ -155,9 +170,8 @@ class MediaController extends BaseController
         $media->save();
 
         $updatedMedia = $media->fresh();
-        $assetData    = MediaAssetData::fromModel($updatedMedia);
 
-        return response(['asset' => $assetData->toArray()]);
+        return response(['asset' => new MediaResource($updatedMedia)]);
     }
 
     /**
@@ -195,14 +209,10 @@ class MediaController extends BaseController
     /**
      * Save edited image from image editor
      *
-     * @throws MediaManagerException
-     * @throws ConfigurationException
-     * @throws FileExistsException
-     * @throws FileNotFoundException
+     * @return ResponseFactory|Response
+     *
      * @throws FileNotSupportedException
-     * @throws FileSizeException
-     * @throws ForbiddenException
-     * @throws InvalidHashException
+     * @throws MediaManagerException
      */
     public function saveEditedImage(ImageEditorSaveData $saveData)
     {
@@ -273,13 +283,10 @@ class MediaController extends BaseController
             'custom_properties' => [],
         ]);
 
-        // Convert to DTO for response
-        $assetData = MediaAssetData::from($media);
-
         return response([
             'success' => true,
             'message' => $saveData->overwrite ? 'Image saved successfully' : 'Image copy saved successfully',
-            'asset'   => $assetData->toArray(),
+            'asset'   => new MediaResource($media),
         ]);
     }
 }

@@ -13,6 +13,7 @@ import { AssetFieldRow } from './AssetFieldRow';
 import { AssetFieldTile } from './AssetFieldTile';
 import { MediaAsset } from '../../types/media';
 import { MediaService } from '../../services/MediaService';
+import { toast } from 'sonner';
 import {
     closestCenter,
     DndContext,
@@ -97,9 +98,24 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
         try {
             setLoading(true);
             const assets = await mediaService.current.getAssetsByIds(ids);
-            const orderedAssets = ids.map(id => assets.find(asset => asset.id === id)).filter(Boolean) as MediaAsset[];
+            const orderedAssets = ids.map(id => assets.find(asset => asset.id.toString() === id.toString())).filter(Boolean) as MediaAsset[];
+
+            if (orderedAssets.length < ids.length) {
+                const missingIds = ids.filter(id => !orderedAssets.find(asset => asset.id.toString() === id.toString()));
+                const isDebugMode = import.meta.env.DEV || window.location.hostname === 'localhost';
+
+                if (isDebugMode) {
+                    console.warn('Some media assets were not found:', missingIds);
+                }
+
+                toast.warning(`Some media assets (IDs: ${missingIds.join(', ')}) no longer exist and have been removed`);
+
+                const validIds = orderedAssets.map(asset => asset.id);
+                updateParentWithIds(validIds);
+            }
+
             setLoadedAssets(orderedAssets);
-            loadedAssetIdsRef.current = ids;
+            loadedAssetIdsRef.current = orderedAssets.map(asset => asset.id);
         } catch (error) {
             console.error('Error loading assets:', error);
             onError?.('Failed to load assets');
@@ -356,19 +372,16 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                                 </>
                             )}
 
-                            {!isEmpty && isSolo && (
+                            {!isEmpty && isSolo && loadedAssets[0] && (
                                 <div className="asset-solo-container p-4">
                                     <div className="w-32">
-                                        {loadedAssets.map((asset) => (
-                                            <AssetFieldTile
-                                                key={asset.id}
-                                                asset={asset}
-                                                readOnly={readOnly}
-                                                canEdit={canEdit}
-                                                onEdit={handleAssetEdit}
-                                                onRemove={handleAssetRemove}
-                                            />
-                                        ))}
+                                        <AssetFieldTile
+                                            asset={loadedAssets[0]}
+                                            readOnly={readOnly}
+                                            canEdit={canEdit}
+                                            onEdit={handleAssetEdit}
+                                            onRemove={handleAssetRemove}
+                                        />
                                     </div>
                                 </div>
                             )}
@@ -533,19 +546,16 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                             </>
                         )}
 
-                        {!isEmpty && isSolo && (
+                        {!isEmpty && isSolo && loadedAssets[0] && (
                             <div className="asset-solo-container p-4">
                                 <div className="w-32">
-                                    {loadedAssets.map((asset) => (
-                                        <AssetFieldTile
-                                            key={asset.id}
-                                            asset={asset}
-                                            readOnly={readOnly}
-                                            canEdit={canEdit}
-                                            onEdit={handleAssetEdit}
-                                            onRemove={handleAssetRemove}
-                                        />
-                                    ))}
+                                    <AssetFieldTile
+                                        asset={loadedAssets[0]}
+                                        readOnly={readOnly}
+                                        canEdit={canEdit}
+                                        onEdit={handleAssetEdit}
+                                        onRemove={handleAssetRemove}
+                                    />
                                 </div>
                             </div>
                         )}

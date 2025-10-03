@@ -78,9 +78,11 @@ export const AssetTile: React.FC<AssetTileProps> = ({
 
     const getThumbnailUrl = () => {
         if (asset.thumbnail_url) {
+            console.log('Using thumbnail_url:', asset.thumbnail_url, 'for asset:', asset.id);
             return asset.thumbnail_url;
         }
         if (asset.is_image) {
+            console.log('No thumbnail, using url:', asset.url, 'for asset:', asset.id);
             return asset.url;
         }
         return null;

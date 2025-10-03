@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Media\Traits;
+namespace Modules\Media\Models\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;

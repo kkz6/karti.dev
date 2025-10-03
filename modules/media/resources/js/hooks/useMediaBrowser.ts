@@ -60,7 +60,7 @@ export const createDefaultServices = (): MediaServices => ({
             mime_type: file.mime_type,
             size: file.size,
             url: file.url,
-            thumbnail_url: file.aggregate_type === 'image' ? file.url : undefined,
+            thumbnail_url: file.aggregate_type === 'image' ? (file.thumbnail_url || file.url) : undefined,
             created_at: file.created_at,
             updated_at: file.updated_at,
             is_image: file.aggregate_type === 'image',

@@ -2,7 +2,7 @@ import Heading from '@shared/components/heading';
 import { Button } from '@shared/components/ui/button';
 import { Separator } from '@shared/components/ui/separator';
 import { cn } from '@shared/lib/utils';
-import { type NavItem } from '@/types';
+import { type NavItem } from '@shared/types';
 import { Link } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
 

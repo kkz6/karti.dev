@@ -2,11 +2,11 @@ import { Button } from '@shared/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
 import { ChevronDown, ChevronUp, CornerLeftUp } from 'lucide-react';
 import React, { useState } from 'react';
-import { MediaAsset, MediaFolder } from '../../../types/media';
-import { FileIcon } from '../../Icons/FileIcon';
+import { MediaAsset, MediaFolder } from '@media/types/media';
+import { FileIcon } from '@media/components';
 import { AssetRow } from './AssetRow';
 import { FolderRow } from './FolderRow';
-import { MediaService } from '../../../services/MediaService';
+import { MediaService } from '@media/services/MediaService';
 import { toast } from 'sonner';
 
 interface TableListingProps {
@@ -110,7 +110,6 @@ export const TableListing: React.FC<TableListingProps> = ({
                 path: folder.parent_path || '/',
                 title: folder.parent_path === '/' || !folder.parent_path ? 'Root' : folder.parent_path.split('/').pop() || folder.parent_path,
                 parent_path: folder.parent_path === '/' || !folder.parent_path ? null : folder.parent_path.split('/').slice(0, -1).join('/') || '/',
-                container_id: folder.container_id,
                 created_at: folder.created_at,
                 updated_at: folder.updated_at,
             };
