@@ -2,7 +2,6 @@
 
 namespace Modules\Photography\Tables;
 
-use Illuminate\Contracts\Database\Eloquent\Builder;
 use Modules\Photography\Models\Photo;
 use Modules\Table\Action;
 use Modules\Table\Columns;
@@ -23,7 +22,8 @@ class Photos extends Table
             Columns\TextColumn::make('slug', 'Slug')->searchable(),
             Columns\TextColumn::make('image_ids', 'Images')->mapAs(function ($state) {
                 $count = is_array($state) ? count($state) : 0;
-                return $count . ' ' . ($count === 1 ? 'image' : 'images');
+
+                return $count.' '.($count === 1 ? 'image' : 'images');
             }),
             Columns\BooleanColumn::make('featured', 'Featured'),
             Columns\NumericColumn::make('sort_order', 'Order')->sortable(),
@@ -49,8 +49,13 @@ class Photos extends Table
     {
         return [
             Action::make(
+                label: 'Edit',
+                url: fn (Photo $photo) => route('admin.photography.edit', $photo),
+                icon: 'pencil',
+            ),
+            Action::make(
                 label: 'Delete',
-                handle: fn(Photo $photo) => $photo->delete(),
+                handle: fn (Photo $photo) => $photo->delete(),
                 icon: 'trash-2',
                 variant: Variant::Destructive,
             )

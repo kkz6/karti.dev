@@ -27,41 +27,74 @@ interface Category {
     slug: string;
 }
 
-export default function Create({ categories }: { categories: Category[] }) {
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Photography', href: route('admin.photography.index') },
-        { title: 'Create Gallery', href: route('admin.photography.create') },
-    ];
+interface Photo {
+    id: number;
+    title: string;
+    slug: string;
+    description?: string;
+    image_ids: number[];
+    cover_image?: string;
+    status: 'draft' | 'published' | 'archived';
+    featured: boolean;
+    sort_order: number;
+    meta_title?: string;
+    meta_description?: string;
+    published_at?: string;
+    categories?: Category[];
+}
+
+interface PageProps {
+    categories: Category[];
+    photo?: Photo;
+}
+
+export default function Create({ categories, photo }: PageProps) {
+    const isEdit = !!photo;
+
+    const breadcrumbs: BreadcrumbItem[] = isEdit
+        ? [
+            { title: 'Photography', href: route('admin.photography.index') },
+            { title: photo.title, href: route('admin.photography.show', { photography: photo.id }) },
+            { title: 'Edit', href: route('admin.photography.edit', { photography: photo.id }) },
+        ]
+        : [
+            { title: 'Photography', href: route('admin.photography.index') },
+            { title: 'Create Gallery', href: route('admin.photography.create') },
+        ];
 
     const [activeTab, setActiveTab] = useState('main');
     const { handleTitleChange: handleSlugTitleChange } = useSlug();
 
-    const { data, setData, post, processing, errors } = useForm({
-        title: '',
-        slug: '',
-        description: '',
-        image_ids: [] as string[],
-        cover_image: '',
-        categories: [] as number[],
-        status: 'draft',
-        featured: false,
-        sort_order: 0,
-        meta_title: '',
-        meta_description: '',
+    const { data, setData, post, put, processing, errors } = useForm({
+        title: photo?.title || '',
+        slug: photo?.slug || '',
+        description: photo?.description || '',
+        image_ids: photo ? (photo.image_ids || []).map(id => id.toString()) : [],
+        cover_image: photo?.cover_image?.toString() || '',
+        categories: photo?.categories?.map((cat) => cat.id) || [],
+        status: photo?.status || 'draft',
+        featured: photo?.featured || false,
+        sort_order: photo?.sort_order || 0,
+        meta_title: photo?.meta_title || '',
+        meta_description: photo?.meta_description || '',
         seo: {} as SeoData,
-        published_at: '',
+        published_at: photo?.published_at || '',
     });
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post(route('admin.photography.store'));
+        if (isEdit) {
+            put(route('admin.photography.update', { photography: photo!.id }));
+        } else {
+            post(route('admin.photography.store'));
+        }
     };
 
     const handleTitleChange = (value: string) => {
         handleSlugTitleChange(
             value,
             data.slug,
-            data.title,
+            isEdit ? photo!.title : data.title,
             (title) => setData('title', title),
             (slug) => setData('slug', slug)
         );
@@ -71,11 +104,11 @@ export default function Create({ categories }: { categories: Category[] }) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Create Photo Gallery" />
+            <Head title={isEdit ? `Edit ${photo!.title}` : "Create Photo Gallery"} />
             <div className="flex h-full flex-col space-y-6 p-8 pt-6">
                 <div className="mx-auto w-full max-w-7xl">
                     <div className="flex items-center justify-between">
-                        <h1 className="text-3xl font-bold tracking-tight">Create Photo Gallery</h1>
+                        <h1 className="text-3xl font-bold tracking-tight">{isEdit ? 'Edit' : 'Create'} Photo Gallery</h1>
                         <div className="flex items-center gap-x-2">
                             <Button
                                 type="button"
@@ -91,7 +124,7 @@ export default function Create({ categories }: { categories: Category[] }) {
                                 form="gallery-form"
                             >
                                 <Save className="mr-2 h-4 w-4" />
-                                {processing ? 'Creating...' : 'Create Gallery'}
+                                {processing ? (isEdit ? 'Updating...' : 'Creating...') : (isEdit ? 'Update Gallery' : 'Create Gallery')}
                             </Button>
                         </div>
                     </div>
@@ -225,7 +258,7 @@ export default function Create({ categories }: { categories: Category[] }) {
                                                 slug: data.slug
                                             }}
                                             setData={(key, value) => {
-                                                setData(key as any, value);
+                                                setData(key as keyof typeof data, value);
                                             }}
                                             errors={errors}
                                             showSlug={false}

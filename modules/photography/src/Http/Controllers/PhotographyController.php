@@ -41,7 +41,7 @@ class PhotographyController extends BaseController
     {
         $categories = $this->categoryService->all(['id', 'name']);
 
-        return Inertia::render('photography::create', [
+        return Inertia::render('photography::createOrEdit', [
             'categories' => $categories,
         ]);
     }
@@ -68,7 +68,7 @@ class PhotographyController extends BaseController
         $photo->load('categories');
         $categories = $this->categoryService->all(['id', 'name']);
 
-        return Inertia::render('photography::edit', [
+        return Inertia::render('photography::createOrEdit', [
             'photo'      => $photo->toArray(),
             'categories' => $categories,
         ]);
