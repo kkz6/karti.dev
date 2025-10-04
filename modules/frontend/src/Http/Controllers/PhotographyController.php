@@ -32,12 +32,14 @@ class PhotographyController extends BaseController
         $featuredPhotos = $this->photoService->getFeatured()
             ->take(5)
             ->map(function ($photo) {
-                // Use the first image from image_ids array, or cover_image as fallback
+                // Use the first image from gallery, or cover_image as fallback
                 $imageUrl = null;
-                if (! empty($photo->image_ids) && is_array($photo->image_ids)) {
-                    $imageUrl = '/storage/images/'.$photo->image_ids[0];
+                $galleryImages = $photo->images;
+                
+                if ($galleryImages->isNotEmpty()) {
+                    $imageUrl = $galleryImages->first()->getUrl();
                 } elseif ($photo->cover_image) {
-                    $imageUrl = $photo->cover_image;
+                    $imageUrl = $photo->cover_image->getUrl();
                 }
 
                 return [
@@ -67,6 +69,18 @@ class PhotographyController extends BaseController
             abort(404);
         }
 
+        // Get image data with both card conversions and full URLs
+        $images = $photo->images->map(function($media) {
+            return [
+                'card_url' => $media->getConversion('card') ?: $media->getUrl(),
+                'full_url' => $media->getUrl(),
+                'alt' => $media->alt ?: 'Gallery image',
+            ];
+        })->toArray();
+        
+        // Get cover image URL if available
+        $coverImageUrl = $photo->cover_image ? $photo->cover_image->getUrl() : '';
+
         return Inertia::render('frontend::photography/show', [
             'photo' => [
                 'slug'        => $photo->slug,
@@ -74,9 +88,9 @@ class PhotographyController extends BaseController
                 'description' => $photo->description,
                 'date'        => $photo->published_at ? $photo->published_at->format('Y-m-d') : null,
                 'categories'  => $photo->categories,
-                'cover_image' => $photo->cover_image,
-                'image_ids'   => $photo->image_ids,
-                'image_count' => $photo->image_count,
+                'cover_image' => $coverImageUrl,
+                'images'      => $images,
+                'image_count' => count($images),
             ],
         ]);
     }

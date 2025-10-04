@@ -2,6 +2,7 @@
 
 namespace Modules\Photography\Tables;
 
+use Modules\Media\Models\Media;
 use Modules\Photography\Models\Photo;
 use Modules\Table\Action;
 use Modules\Table\Columns;
@@ -17,12 +18,8 @@ class Photos extends Table
     {
         return [
             Columns\TextColumn::make('id', 'ID', stickable: true),
-            Columns\ImageColumn::make('cover_image_thumbnail', 'Cover'),
             Columns\TextColumn::make('title', 'Title', toggleable: false)->searchable(),
             Columns\TextColumn::make('slug', 'Slug')->searchable(),
-            Columns\TextColumn::make('image_count', 'Images')->mapAs(function ($state) {
-                return $state.' '.($state === 1 ? 'image' : 'images');
-            }),
             Columns\BooleanColumn::make('featured', 'Featured'),
             Columns\NumericColumn::make('sort_order', 'Order')->sortable(),
             Columns\DateColumn::make('published_at', 'Published'),
@@ -48,7 +45,7 @@ class Photos extends Table
         return [
             Action::make(
                 label: 'Edit',
-                url: fn (Photo $photo) => route('admin.photography.edit', $photo),
+                url: fn (Photo $photo) => route('admin.photography.edit', $photo->id),
                 icon: 'pencil',
             ),
             Action::make(

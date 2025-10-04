@@ -54,14 +54,14 @@ class PhotoService extends BaseService implements PhotoServiceInterface
             }
 
             if ($data->image_ids) {
-                $photo->syncMedia($data->image_ids, 'gallery');
+                $photo->attachMedia($data->image_ids, 'gallery');
             }
 
             if ($data->cover_image) {
-                $photo->syncMedia([$data->cover_image], 'cover');
+                $photo->attachMedia([$data->cover_image], 'cover');
             }
 
-            return $photo->fresh(['categories']);
+            return $photo;
         });
     }
 

@@ -2,9 +2,7 @@
 
 namespace Modules\Photography\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Blog\Models\Category;
@@ -14,7 +12,7 @@ use Modules\Seo\Traits\HasSeo;
 
 class Photo extends Model
 {
-    use HasFactory, SoftDeletes, HasSeo, Mediable;
+    use HasSeo, Mediable, SoftDeletes;
 
     protected $fillable = [
         'title',
@@ -37,8 +35,6 @@ class Photo extends Model
         'featured'   => false,
         'sort_order' => 0,
     ];
-    
-    protected $appends = ['image_count'];
 
     public function categories(): BelongsToMany
     {
@@ -53,30 +49,6 @@ class Photo extends Model
     public function getCoverImageAttribute(): ?Media
     {
         return $this->firstMedia('cover');
-    }
-
-    public function getCoverImageUrlAttribute(): ?string
-    {
-        $coverMedia = $this->cover_image;
-
-        if (! $coverMedia) {
-            return null;
-        }
-
-        return $coverMedia->getUrl();
-    }
-
-    public function getCoverImageThumbnailAttribute(): ?string
-    {
-        $coverMedia = $this->cover_image;
-
-        if (! $coverMedia) {
-            return null;
-        }
-
-        $thumbVariant = $coverMedia->variants->firstWhere('variant_name', 'thumb');
-
-        return $thumbVariant ? $thumbVariant->getUrl() : $coverMedia->getUrl();
     }
 
     public function scopePublished($query)
@@ -97,16 +69,6 @@ class Photo extends Model
 
     public function getRouteKeyName(): string
     {
-        // Use slug for frontend routes, id for admin routes
-        if (request()->is('admin/*')) {
-            return 'id';
-        }
-        
         return 'slug';
-    }
-
-    public function getImageCountAttribute(): int
-    {
-        return $this->images->count();
     }
 }

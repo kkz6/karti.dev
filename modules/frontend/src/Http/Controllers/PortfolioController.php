@@ -56,12 +56,14 @@ class PortfolioController extends BaseController
         $featuredPhotos = $this->photoService->getFeatured()
             ->take(5)
             ->map(function ($photo) {
-                // Use the first image from image_ids array, or cover_image as fallback
+                // Use the first image from gallery, or cover_image as fallback
                 $imageUrl = null;
-                if (!empty($photo->image_ids) && is_array($photo->image_ids)) {
-                    $imageUrl = '/storage/images/' . $photo->image_ids[0];
+                $galleryImages = $photo->images;
+                
+                if ($galleryImages->isNotEmpty()) {
+                    $imageUrl = $galleryImages->first()->getUrl();
                 } elseif ($photo->cover_image) {
-                    $imageUrl = $photo->cover_image;
+                    $imageUrl = $photo->cover_image->getUrl();
                 }
                 
                 return [

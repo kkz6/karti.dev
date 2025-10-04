@@ -54,8 +54,7 @@ class PhotographyController extends BaseController
         $photo = $this->photoService->createPhoto($dto);
 
         return redirect()
-            ->route('admin.photography.edit', $photo)
-            ->with('success', 'Photo gallery created successfully.');
+            ->route('admin.photography.edit', $photo->id);
     }
 
     /**
@@ -65,11 +64,21 @@ class PhotographyController extends BaseController
     {
         $photo = $this->photoService->findOrFail($photo);
 
-        $photo->load('categories');
+        $photo->load(['categories', 'media']);
+
         $categories = $this->categoryService->all(['id', 'name']);
 
+        // Get cover image ID
+        $coverImageId = $photo->cover_image?->id;
+
+        // Get gallery image IDs
+        $imageIds = $photo->images->pluck('id')->toArray();
+
         return Inertia::render('photography::createOrEdit', [
-            'photo'      => $photo->toArray(),
+            'photo'      => array_merge($photo->toArray(), [
+                'cover_image' => $coverImageId,
+                'image_ids'   => $imageIds,
+            ]),
             'categories' => $categories,
         ]);
     }

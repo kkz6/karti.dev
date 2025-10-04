@@ -1,14 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Head, Link } from '@inertiajs/react'
+import { motion, AnimatePresence } from 'framer-motion'
 import PublicLayout from '../../layouts/public-layout'
 import { Container } from '../../components/Container'
-
-interface Photo {
-    src: string
-    alt: string
-    width?: number
-    height?: number
-}
 
 interface PhotographyShowProps {
     photo: {
@@ -18,7 +12,11 @@ interface PhotographyShowProps {
         date: string | null
         categories: any[]
         cover_image: string
-        image_ids: string[]
+        images: Array<{
+            card_url: string
+            full_url: string
+            alt: string
+        }>
         image_count: number
     }
 }
@@ -37,13 +35,7 @@ function ArrowLeftIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 }
 
 export default function PhotographyShow({ photo }: PhotographyShowProps) {
-    // Convert image_ids to photo objects
-    const photos = photo?.image_ids?.length > 0 
-        ? photo.image_ids.map((id, index) => ({
-            src: `/storage/images/${id}`, // Adjust path as needed
-            alt: `${photo.title} - Image ${index + 1}`
-          }))
-        : []
+    const [selectedImage, setSelectedImage] = useState<number | null>(null)
 
     return (
         <>
@@ -60,87 +52,186 @@ export default function PhotographyShow({ photo }: PhotographyShowProps) {
                                 <ArrowLeftIcon className="h-4 w-4 stroke-zinc-500 transition group-hover:stroke-zinc-700 dark:stroke-zinc-500 dark:group-hover:stroke-zinc-400" />
                             </Link>
                             
-                            <header className="flex flex-col">
-                                <h1 className="mt-6 text-4xl font-bold tracking-tight text-zinc-800 dark:text-zinc-100 sm:text-5xl">
-                                    {photo?.title || 'Photography Gallery'}
-                                </h1>
-                                <div className="order-first flex items-center gap-3 text-base text-zinc-400 dark:text-zinc-500">
-                                    {photo?.date && (
-                                        <time dateTime={photo.date}>
-                                            {new Date(photo.date).toLocaleDateString('en-US', {
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric',
-                                            })}
-                                        </time>
+                            <article>
+                                <header className="flex flex-col">
+                                    <motion.h1 
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.6 }}
+                                        className="mt-6 text-4xl font-bold tracking-tight text-zinc-800 dark:text-zinc-100 sm:text-5xl"
+                                    >
+                                        {photo?.title || 'Photography Gallery'}
+                                    </motion.h1>
+                                    <motion.div 
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.6, delay: 0.1 }}
+                                        className="order-first flex items-center text-base text-zinc-400 dark:text-zinc-500"
+                                    >
+                                        <span className="h-4 w-0.5 rounded-full bg-zinc-200 dark:bg-zinc-500" />
+                                        <div className="ml-3 flex items-center gap-4">
+                                            {photo?.date && (
+                                                <time dateTime={photo.date}>
+                                                    {new Date(photo.date).toLocaleDateString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric',
+                                                    })}
+                                                </time>
+                                            )}
+                                            {photo?.image_count && (
+                                                <>
+                                                    <span>•</span>
+                                                    <span>{photo.image_count} images</span>
+                                                </>
+                                            )}
+                                        </div>
+                                    </motion.div>
+                                    {photo?.description && (
+                                        <motion.p 
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.6, delay: 0.2 }}
+                                            className="mt-6 text-base text-zinc-600 dark:text-zinc-400"
+                                        >
+                                            {photo.description}
+                                        </motion.p>
                                     )}
-                                    {photo?.categories && photo.categories.length > 0 && (
-                                        <>
-                                            <span className="h-4 w-0.5 rounded-full bg-zinc-200 dark:bg-zinc-500" />
-                                            <span>{photo.categories.map(cat => cat.name).join(', ')}</span>
-                                        </>
+                                </header>
+                                
+                                <motion.div 
+                                    initial={{ opacity: 0, y: 30 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.6, delay: 0.3 }}
+                                    className="mt-8"
+                                >
+                                    {photo?.images?.length > 0 ? (
+                                        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                                            {photo.images.map((image, index) => (
+                                                <motion.div
+                                                    key={index}
+                                                    initial={{ opacity: 0, y: 50 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ 
+                                                        duration: 0.6, 
+                                                        delay: 0.4 + (index * 0.1),
+                                                        ease: "easeOut"
+                                                    }}
+                                                    whileHover={{ 
+                                                        y: -8,
+                                                        transition: { duration: 0.2 }
+                                                    }}
+                                                    className="group cursor-pointer"
+                                                    onClick={() => setSelectedImage(index)}
+                                                >
+                                                    <div className="relative overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800 shadow-lg">
+                                                        <div className="aspect-[4/5] overflow-hidden">
+                                                            <motion.img
+                                                                src={image.card_url}
+                                                                alt={image.alt}
+                                                                className="h-full w-full object-cover"
+                                                                whileHover={{ scale: 1.05 }}
+                                                                transition={{ duration: 0.4 }}
+                                                                loading="lazy"
+                                                            />
+                                                        </div>
+                                                        <motion.div 
+                                                            className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                                            initial={{ opacity: 0 }}
+                                                            whileHover={{ opacity: 1 }}
+                                                        >
+                                                            <div className="absolute bottom-4 left-4 right-4">
+                                                                <p className="text-white font-medium text-sm">
+                                                                    Image {index + 1}
+                                                                </p>
+                                                                <p className="text-white/80 text-xs">
+                                                                    Click to view full size
+                                                                </p>
+                                                            </div>
+                                                        </motion.div>
+                                                    </div>
+                                                </motion.div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-12">
+                                            <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-2">
+                                                No images in this gallery
+                                            </h3>
+                                            <p className="text-zinc-600 dark:text-zinc-400">
+                                                This gallery doesn't contain any images yet.
+                                            </p>
+                                        </div>
                                     )}
-                                    {photo?.image_count && (
-                                        <>
-                                            <span className="h-4 w-0.5 rounded-full bg-zinc-200 dark:bg-zinc-500" />
-                                            <span>{photo.image_count} images</span>
-                                        </>
-                                    )}
-                                </div>
-                                {photo?.description && (
-                                    <p className="mt-6 text-base text-zinc-600 dark:text-zinc-400">
-                                        {photo.description}
-                                    </p>
-                                )}
-                            </header>
+                                </motion.div>
+                            </article>
                         </div>
                     </div>
-                    
-                    <div className="mt-16 sm:mt-20">
-                        {photos.length > 0 ? (
-                            <>
-                                <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                                    {photos.map((photo, index) => (
-                                        <div
-                                            key={index}
-                                            className="group relative aspect-square overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800"
-                                        >
-                                            <img
-                                                src={photo.src}
-                                                alt={photo.alt}
-                                                className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                                
-                                {/* Full width images section for variety */}
-                                <div className="mt-8 space-y-8">
-                                    {photos.slice(0, 2).map((photo, index) => (
-                                        <div
-                                            key={`full-${index}`}
-                                            className="relative aspect-[16/9] overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800"
-                                        >
-                                            <img
-                                                src={photo.src}
-                                                alt={photo.alt}
-                                                className="absolute inset-0 h-full w-full object-cover"
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                            </>
-                        ) : (
-                            <div className="text-center py-12">
-                                <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-2">
-                                    No images in this gallery
-                                </h3>
-                                <p className="text-zinc-600 dark:text-zinc-400">
-                                    This gallery doesn't contain any images yet.
-                                </p>
-                            </div>
+
+                    {/* Lightbox Modal */}
+                    <AnimatePresence>
+                        {selectedImage !== null && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+                                onClick={() => setSelectedImage(null)}
+                            >
+                                <motion.div
+                                    initial={{ scale: 0.8, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 0.8, opacity: 0 }}
+                                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                                    className="relative max-w-7xl max-h-[90vh] mx-4"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <img
+                                        src={photo.images[selectedImage].full_url}
+                                        alt={photo.images[selectedImage].alt}
+                                        className="max-w-full max-h-full object-contain rounded-lg"
+                                    />
+                                    
+                                    {/* Close button */}
+                                    <button
+                                        onClick={() => setSelectedImage(null)}
+                                        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-zinc-800/80 text-white hover:bg-zinc-700/80 transition-colors flex items-center justify-center"
+                                    >
+                                        ×
+                                    </button>
+                                    
+                                    {/* Navigation */}
+                                    {photo.images.length > 1 && (
+                                        <>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                        setSelectedImage(selectedImage > 0 ? selectedImage - 1 : photo.images.length - 1);
+                                                }}
+                                                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-zinc-800/80 text-white hover:bg-zinc-700/80 transition-colors flex items-center justify-center text-2xl"
+                                            >
+                                                ‹
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                        setSelectedImage(selectedImage < photo.images.length - 1 ? selectedImage + 1 : 0);
+                                                }}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-zinc-800/80 text-white hover:bg-zinc-700/80 transition-colors flex items-center justify-center text-2xl"
+                                            >
+                                                ›
+                                            </button>
+                                        </>
+                                    )}
+                                    
+                                    {/* Image counter */}
+                                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-zinc-800/80 text-white text-sm">
+                                        {selectedImage + 1} / {photo.images.length}
+                                    </div>
+                                </motion.div>
+                            </motion.div>
                         )}
-                    </div>
+                    </AnimatePresence>
                 </Container>
             </PublicLayout>
         </>

@@ -13,8 +13,6 @@ return new class extends Migration
             $table->string('title')->nullable();
             $table->string('slug')->unique();
             $table->text('description')->nullable();
-            $table->json('image_ids')->nullable();
-            $table->string('cover_image')->nullable();
             $table->enum('status', ['draft', 'published', 'archived'])->default('draft');
             $table->boolean('featured')->default(false);
             $table->integer('sort_order')->default(0);
