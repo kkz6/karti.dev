@@ -1,13 +1,12 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { Button } from '@shared/components/ui/button';
 import AppLayout from '@shared/layouts/app-layout';
-import { SharedData, type BreadcrumbItem } from '@shared/types';
-import { InertiaTableWrapper, type Action, type TableConfig } from '@table/components';
-import { Camera, Eye, Image, PlusSquare } from 'lucide-react';
-import { type Category, type PhotoGallery, type PhotoGalleryIndexPageProps } from '../types';
+import { type BreadcrumbItem } from '@shared/types';
+import { type Action, InertiaTableWrapper, type TableConfig } from '@table/components';
+import { Camera, Image, PlusSquare } from 'lucide-react';
+import { type Category, type PhotoGallery } from '../types';
 
 export default function Index({ photos, categories }: { photos: TableConfig<PhotoGallery>; categories: Category[] }) {
-    const { props } = usePage<SharedData>();
     const breadcrumbs: BreadcrumbItem[] = [{ title: 'Photography', href: route('admin.photography.index') }];
 
     const handleCustomAction = async (action: Action, keys: (string | number)[], onFinish?: () => void) => {

@@ -1,9 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { SimpleAssetsField } from '@media/components/Field';
-import { MediaAsset } from '@media/types/media';
 import { SEOFields } from '@seo/components/SeoFields';
-import { type SeoData } from '@seo/types/seo-schema';
 import { Button } from '@shared/components/ui/button';
 import { Calendar } from '@shared/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
@@ -20,7 +18,7 @@ import { type BreadcrumbItem } from '@shared/types';
 import { useSlug } from '@shared/hooks/use-slug';
 import { CalendarIcon, Save } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
-import { type Category, type PhotoGallery, type PhotoGalleryCreateEditPageProps, type PhotoGalleryFormData } from '../types';
+import { type PhotoGalleryCreateEditPageProps, type PhotoGalleryFormData } from '../types';
 
 export default function Create({ categories, photo }: PhotoGalleryCreateEditPageProps) {
     const isEdit = !!photo;
@@ -120,19 +118,19 @@ export default function Create({ categories, photo }: PhotoGalleryCreateEditPage
                     <form id="gallery-form" onSubmit={submit} className="mt-8">
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="border-border text-foreground h-auto gap-2 rounded-none border-b bg-transparent px-0 py-1">
-                                <TabsTrigger 
+                                <TabsTrigger
                                     value="main"
                                     className="hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
                                 >
                                     Main
                                 </TabsTrigger>
-                                <TabsTrigger 
+                                <TabsTrigger
                                     value="images"
                                     className="hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
                                 >
                                     Images
                                 </TabsTrigger>
-                                <TabsTrigger 
+                                <TabsTrigger
                                     value="seo"
                                     className="hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
                                 >
@@ -326,8 +324,8 @@ export default function Create({ categories, photo }: PhotoGalleryCreateEditPage
                                         <CardContent className="space-y-4">
                                             <div className="grid gap-2">
                                                 <Label htmlFor="categories">Category</Label>
-                                                <Select 
-                                                    value={data.categories[0]?.toString() || 'none'} 
+                                                <Select
+                                                    value={data.categories[0]?.toString() || 'none'}
                                                     onValueChange={(value) => setData('categories', value === 'none' ? [] : [parseInt(value)])}
                                                 >
                                                     <SelectTrigger>
