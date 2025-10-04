@@ -26,46 +26,54 @@ interface PhotographyProps {
 
 function PhotoCard({ photo }: { photo: Photo }) {
     return (
-        <Card as="article">
-            <Card.Title href={`/photography/${photo.slug}`}>
-                {photo.title}
-            </Card.Title>
-            {photo.date && (
-                <Card.Eyebrow as="time" dateTime={photo.date} decorate>
-                    {new Date(photo.date).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                    })}
-                </Card.Eyebrow>
-            )}
-            <Card.Description>{photo.description}</Card.Description>
-            <div className="mt-2 flex flex-wrap gap-2 text-sm text-zinc-600 dark:text-zinc-400">
-                <span>{photo.imageCount} images</span>
-                {photo.categories.length > 0 && (
-                    <>
-                        <span>•</span>
-                        <span>{photo.categories.join(', ')}</span>
-                    </>
-                )}
+        <Card as="article" href={`/photography/${photo.slug}`}>
+            <div className="flex gap-6">
+                {/* Cover Image */}
+                <div className="relative z-10 flex-shrink-0">
+                    <div className="relative overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800 shadow-lg">
+                        <div className="h-32 overflow-hidden">
+                            <img
+                                src={photo.coverImage}
+                                alt={photo.title}
+                                className="h-full w-auto object-cover transition-transform group-hover:scale-105"
+                                loading="lazy"
+                            />
+                        </div>
+                    </div>
+                </div>
+                
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                    <Card.Title href={`/photography/${photo.slug}`}>
+                        {photo.title}
+                    </Card.Title>
+                    {photo.date && (
+                        <Card.Eyebrow as="time" dateTime={photo.date} decorate>
+                            {new Date(photo.date).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                            })}
+                        </Card.Eyebrow>
+                    )}
+                    <Card.Description>{photo.description}</Card.Description>
+                    <div className="mt-2 flex flex-wrap gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+                        <span>{photo.imageCount} images</span>
+                        {photo.categories.length > 0 && (
+                            <>
+                                <span>•</span>
+                                <span>{photo.categories.join(', ')}</span>
+                            </>
+                        )}
+                    </div>
+                    <Card.Cta>View photos</Card.Cta>
+                </div>
             </div>
-            <Card.Cta>View photos</Card.Cta>
         </Card>
     )
 }
 
-export default function Photography({ photos = [], featuredPhotos = [] }: PhotographyProps) {
-    // Default featured photos if none provided
-    const defaultFeaturedPhotos = [
-        { src: '/images/photos/image-1.jpg', alt: 'Featured photo 1' },
-        { src: '/images/photos/image-2.jpg', alt: 'Featured photo 2' },
-        { src: '/images/photos/image-3.jpg', alt: 'Featured photo 3' },
-        { src: '/images/photos/image-4.jpg', alt: 'Featured photo 4' },
-        { src: '/images/photos/image-5.jpg', alt: 'Featured photo 5' },
-    ];
-
-    const photosToShow = featuredPhotos.length > 0 ? featuredPhotos : defaultFeaturedPhotos;
-
+export default function Photography({ photos = []}: PhotographyProps) {
     return (
         <>
             <Head title="Photography" />
@@ -80,28 +88,6 @@ export default function Photography({ photos = [], featuredPhotos = [] }: Photog
                         </p>
                     </header>
                 </Container>
-                
-                {/* Featured images section - full width for overflow effect */}
-                <div className="mt-16 sm:mt-20">
-                    <div className="-my-4 flex justify-center gap-5 overflow-hidden py-4 sm:gap-8">
-                        {photosToShow.map((photo, photoIndex) => (
-                            <div
-                                key={photo.src}
-                                className={clsx(
-                                    'relative aspect-[9/10] w-44 flex-none overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800 sm:w-72 sm:rounded-2xl',
-                                    photoIndex % 2 === 0 ? 'rotate-2' : '-rotate-2'
-                                )}
-                            >
-                                <img
-                                    src={photo.src}
-                                    alt={photo.alt}
-                                    sizes="(min-width: 640px) 18rem, 11rem"
-                                    className="absolute inset-0 h-full w-full object-cover"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
                 
                 {/* Photo galleries section */}
                 <Container className="mt-16 sm:mt-20">

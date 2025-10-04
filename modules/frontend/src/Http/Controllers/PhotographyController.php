@@ -22,44 +22,18 @@ class PhotographyController extends BaseController
                     'title'       => $photo->title,
                     'description' => $photo->description,
                     'date'        => $photo->published_at ? $photo->published_at->format('Y-m-d') : null,
-                    'coverImage'  => $photo->cover_image,
-                    'imageCount'  => $photo->image_count,
+                    'coverImage'  => $photo->cover_image?->getUrl(),
+                    'imageCount'  => $photo->images->count(),
                     'categories'  => $photo->categories->pluck('name')->toArray(),
                 ];
             })->toArray();
 
-        // Get featured photos for the hero section
-        $featuredPhotos = $this->photoService->getFeatured()
-            ->take(5)
-            ->map(function ($photo) {
-                // Use the first image from gallery, or cover_image as fallback
-                $imageUrl = null;
-                $galleryImages = $photo->images;
-                
-                if ($galleryImages->isNotEmpty()) {
-                    $imageUrl = $galleryImages->first()->getUrl();
-                } elseif ($photo->cover_image) {
-                    $imageUrl = $photo->cover_image->getUrl();
-                }
-
-                return [
-                    'src' => $imageUrl,
-                    'alt' => $photo->title.' - '.($photo->short_description ?? 'Photography'),
-                ];
-            })
-            ->filter(function ($photo) {
-                return ! empty($photo['src']);
-            })
-            ->values()
-            ->toArray();
-
         return Inertia::render('frontend::photography', [
             'photos'         => $photos,
-            'featuredPhotos' => $featuredPhotos,
         ]);
     }
 
-    public function show($slug): Response
+    public function show(string $slug): Response
     {
         $photo = $this->photoService->getPublished()
             ->where('slug', $slug)
@@ -79,7 +53,7 @@ class PhotographyController extends BaseController
         })->toArray();
         
         // Get cover image URL if available
-        $coverImageUrl = $photo->cover_image ? $photo->cover_image->getUrl() : '';
+        $coverImageUrl = $photo->cover_image?->getUrl() ?? '';
 
         return Inertia::render('frontend::photography/show', [
             'photo' => [
