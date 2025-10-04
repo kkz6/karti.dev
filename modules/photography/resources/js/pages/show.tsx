@@ -5,43 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shar
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
 import { ArrowLeft, Edit, Image, Trash2 } from 'lucide-react';
+import { type PhotoCollection, type PhotoGalleryShowPageProps } from '../types';
 
-interface Category {
-    id: number;
-    name: string;
-    slug: string;
-}
-
-interface Photo {
-    id: number;
-    title?: string;
-    image_path: string;
-    alt_text?: string;
-    sort_order: number;
-    width?: number;
-    height?: number;
-    file_size?: number;
-}
-
-interface PhotoCollection {
-    id: number;
-    title: string;
-    slug: string;
-    description?: string;
-    cover_image?: string;
-    status: 'draft' | 'published' | 'archived';
-    featured: boolean;
-    sort_order: number;
-    meta_title?: string;
-    meta_description?: string;
-    published_at?: string;
-    created_at: string;
-    updated_at: string;
-    categories?: Category[];
-    photos?: Photo[];
-}
-
-export default function Show({ collection }: { collection: PhotoCollection }) {
+export default function Show({ collection }: PhotoGalleryShowPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Photography ', href: route('admin.photography.index') },
         { title: collection.title, href: route('admin.photography.show', { photography: collection.slug }) },
@@ -134,11 +100,11 @@ export default function Show({ collection }: { collection: PhotoCollection }) {
                                     </div>
                                     <div>
                                         <h4 className="font-medium">Created</h4>
-                                        <p className="text-muted-foreground text-sm">{new Date(collection.created_at).toLocaleDateString()}</p>
+                                        <p className="text-muted-foreground text-sm">{collection.created_at ? new Date(collection.created_at).toLocaleDateString() : 'N/A'}</p>
                                     </div>
                                     <div>
                                         <h4 className="font-medium">Updated</h4>
-                                        <p className="text-muted-foreground text-sm">{new Date(collection.updated_at).toLocaleDateString()}</p>
+                                        <p className="text-muted-foreground text-sm">{collection.updated_at ? new Date(collection.updated_at).toLocaleDateString() : 'N/A'}</p>
                                     </div>
                                     {collection.published_at && (
                                         <div>

@@ -71,6 +71,7 @@ class PortfolioController extends BaseController
                     'alt' => $photo->title . ' - Featured photography',
                     'title' => $photo->title,
                     'description' => $photo->short_description ?? substr($photo->description, 0, 50) . '...',
+                    'slug' => $photo->slug,
                 ];
             })
             ->filter(function ($photo) {

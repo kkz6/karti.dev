@@ -4,37 +4,9 @@ import AppLayout from '@shared/layouts/app-layout';
 import { SharedData, type BreadcrumbItem } from '@shared/types';
 import { InertiaTableWrapper, type Action, type TableConfig } from '@table/components';
 import { Camera, Eye, Image, PlusSquare } from 'lucide-react';
+import { type Category, type PhotoGallery, type PhotoGalleryIndexPageProps } from '../types';
 
-// Local interfaces for photography admin
-interface Photo {
-    id: number;
-    title: string;
-    slug: string;
-    description?: string;
-    image_ids: number[];
-    cover_image?: string;
-    status: 'draft' | 'published' | 'archived';
-    featured: boolean;
-    sort_order: number;
-    published_at?: string;
-    created_at: string;
-    updated_at: string;
-    image_count: number;
-    categories?: Array<{
-        id: number;
-        name: string;
-        slug: string;
-    }>;
-    _primary_key: number;
-}
-
-interface Category {
-    id: number;
-    name: string;
-    slug: string;
-}
-
-export default function Index({ photos, categories }: { photos: TableConfig<Photo>; categories: Category[] }) {
+export default function Index({ photos, categories }: { photos: TableConfig<PhotoGallery>; categories: Category[] }) {
     const { props } = usePage<SharedData>();
     const breadcrumbs: BreadcrumbItem[] = [{ title: 'Photography', href: route('admin.photography.index') }];
 

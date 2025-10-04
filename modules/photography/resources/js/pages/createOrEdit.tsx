@@ -13,42 +13,16 @@ import { Popover, PopoverContent, PopoverTrigger } from '@shared/components/ui/p
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components/ui/select';
 import { Switch } from '@shared/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
-import { Textarea } from '@shared/components/ui/textarea';
+import { FormSimpleEditor } from '@shared/components/tiptap/form-simple-editor';
 import { cn } from '@shared/lib/utils';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
 import { useSlug } from '@shared/hooks/use-slug';
 import { CalendarIcon, Save } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
+import { type Category, type PhotoGallery, type PhotoGalleryCreateEditPageProps, type PhotoGalleryFormData } from '../types';
 
-interface Category {
-    id: number;
-    name: string;
-    slug: string;
-}
-
-interface Photo {
-    id: number;
-    title: string;
-    slug: string;
-    description?: string;
-    image_ids: number[];
-    cover_image?: string;
-    status: 'draft' | 'published' | 'archived';
-    featured: boolean;
-    sort_order: number;
-    meta_title?: string;
-    meta_description?: string;
-    published_at?: string;
-    categories?: Category[];
-}
-
-interface PageProps {
-    categories: Category[];
-    photo?: Photo;
-}
-
-export default function Create({ categories, photo }: PageProps) {
+export default function Create({ categories, photo }: PhotoGalleryCreateEditPageProps) {
     const isEdit = !!photo;
 
     const breadcrumbs: BreadcrumbItem[] = isEdit
@@ -65,7 +39,7 @@ export default function Create({ categories, photo }: PageProps) {
     const [activeTab, setActiveTab] = useState('main');
     const { handleTitleChange: handleSlugTitleChange } = useSlug();
 
-    const { data, setData, post, put, processing, errors } = useForm({
+    const { data, setData, post, put, processing, errors } = useForm<PhotoGalleryFormData>({
         title: photo?.title || '',
         slug: photo?.slug || '',
         description: photo?.description || '',
@@ -77,7 +51,21 @@ export default function Create({ categories, photo }: PageProps) {
         sort_order: photo?.sort_order || 0,
         meta_title: photo?.meta_title || '',
         meta_description: photo?.meta_description || '',
-        seo: {} as SeoData,
+        seo: {
+            title: '',
+            description: '',
+            author: '',
+            image: '',
+            canonical_url: '',
+            robots: '',
+            og_title: '',
+            og_description: '',
+            og_image: '',
+            twitter_title: '',
+            twitter_description: '',
+            twitter_image: '',
+            twitter_creator: ''
+        },
         published_at: photo?.published_at || '',
     });
 
@@ -167,9 +155,9 @@ export default function Create({ categories, photo }: PageProps) {
                                                         id="title"
                                                         value={data.title}
                                                         onChange={(e) => handleTitleChange(e.target.value)}
-                                                        error={errors.title}
                                                         placeholder="Enter gallery title"
                                                         required
+                                                        className={errors.title ? 'border-red-500' : ''}
                                                     />
                                                     {errors.title && <div className="text-sm text-red-600">{errors.title}</div>}
                                                 </div>
@@ -180,9 +168,9 @@ export default function Create({ categories, photo }: PageProps) {
                                                         id="slug"
                                                         value={data.slug}
                                                         onChange={(e) => setData('slug', e.target.value)}
-                                                        error={errors.slug}
                                                         placeholder="gallery-slug"
                                                         required
+                                                        className={errors.slug ? 'border-red-500' : ''}
                                                     />
                                                     <p className="text-sm text-muted-foreground">Used in URLs. Auto-generated from title.</p>
                                                     {errors.slug && <div className="text-sm text-red-600">{errors.slug}</div>}
@@ -190,12 +178,10 @@ export default function Create({ categories, photo }: PageProps) {
 
                                                 <div className="grid gap-2">
                                                     <Label htmlFor="description">Description</Label>
-                                                    <Textarea
-                                                        id="description"
-                                                        value={data.description}
-                                                        onChange={(e) => setData('description', e.target.value)}
+                                                    <FormSimpleEditor
+                                                        content={data.description}
+                                                        onChange={(content) => setData('description', content)}
                                                         placeholder="Brief description of the gallery"
-                                                        rows={4}
                                                     />
                                                     {errors.description && <div className="text-sm text-red-600">{errors.description}</div>}
                                                 </div>
@@ -211,7 +197,7 @@ export default function Create({ categories, photo }: PageProps) {
                                                             canEdit: true,
                                                             accept: 'image/*',
                                                         }}
-                                                        onChange={(assets) => setData('cover_image', assets[0] || '')}
+                                                        onChange={(assets) => setData('cover_image', assets[0]?.toString() || '')}
                                                         onError={(error) => console.error('Cover image error:', error)}
                                                     />
                                                     {errors.cover_image && <div className="text-sm text-red-600">{errors.cover_image}</div>}
@@ -237,7 +223,7 @@ export default function Create({ categories, photo }: PageProps) {
                                                         canEdit: true,
                                                         accept: 'image/*',
                                                     }}
-                                                    onChange={(assetIds) => setData('image_ids', assetIds)}
+                                                    onChange={(assetIds) => setData('image_ids', assetIds.map(id => id.toString()))}
                                                     onError={(error) => console.error('Gallery images error:', error)}
                                                     required
                                                 />
@@ -275,7 +261,7 @@ export default function Create({ categories, photo }: PageProps) {
                                         <CardContent className="space-y-4">
                                             <div className="grid gap-2">
                                                 <Label htmlFor="status">Status</Label>
-                                                <Select value={data.status} onValueChange={(value) => setData('status', value)}>
+                                                <Select value={data.status} onValueChange={(value) => setData('status', value as 'draft' | 'published' | 'archived')}>
                                                     <SelectTrigger>
                                                         <SelectValue />
                                                     </SelectTrigger>

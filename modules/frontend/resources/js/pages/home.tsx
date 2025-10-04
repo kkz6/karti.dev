@@ -3,9 +3,8 @@ import { Button } from '@shared/components/ui/button';
 import { Card } from '../components/Card';
 import PublicLayout from '../layouts/public-layout';
 import { Container } from '../components/Container';
-import clsx from 'clsx';
 import React, { useState } from 'react';
-import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface ArticleData {
     slug: string;
@@ -19,6 +18,7 @@ interface FeaturedPhoto {
     alt: string;
     title: string;
     description: string;
+    slug?: string;
 }
 
 interface HomeProps {
@@ -122,146 +122,130 @@ function Newsletter() {
 }
 
 
-function InteractivePhoto({ image, rotation, index }: { image: any; rotation: string; index: number }) {
-    const [isHovered, setIsHovered] = useState(false);
-    const mouseX = useMotionValue(0);
-    const mouseY = useMotionValue(0);
-
-    const rotateX = useTransform(mouseY, [-100, 100], [8, -8]);
-    const rotateY = useTransform(mouseX, [-100, 100], [-8, 8]);
-
-    const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-        if (!isHovered) return;
-        
-        // Prevent tracking during scroll events
-        if (event.buttons !== 0) return; // Mouse button is pressed (scrolling)
-        
-        const rect = event.currentTarget.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        
-        mouseX.set(event.clientX - centerX);
-        mouseY.set(event.clientY - centerY);
-    };
-
-    const handleMouseEnter = () => {
-        setIsHovered(true);
-    };
-
-    const handleMouseLeave = () => {
-        setIsHovered(false);
-        // Smoothly reset to center
-        mouseX.set(0);
-        mouseY.set(0);
-    };
-
-    // Handle scroll events to reset animations
-    React.useEffect(() => {
-        const handleScroll = () => {
-            if (isHovered) {
-                setIsHovered(false);
-                mouseX.set(0);
-                mouseY.set(0);
-            }
-        };
-
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, [isHovered, mouseX, mouseY]);
-
-    return (
-        <motion.div
-            className="flex flex-col items-center justify-center"
-            onMouseMove={handleMouseMove}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-            whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-        >
-            <motion.div
-                className={clsx(
-                    'rounded-2xl bg-gradient-to-br from-zinc-50 via-white to-zinc-100 shadow-lg dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900 overflow-hidden',
-                    rotation,
-                )}
-                style={{
-                    rotateX: isHovered ? rotateX : 0,
-                    rotateY: isHovered ? rotateY : 0,
-                }}
-                whileHover={{ rotate: 0 }}
-                transition={{ 
-                    duration: 0.4, 
-                    ease: "easeOut",
-                    rotateX: { duration: 0.3, ease: "easeOut" },
-                    rotateY: { duration: 0.3, ease: "easeOut" }
-                }}
-            >
-                {/* Image container with padding */}
-                <div className="p-4 flex justify-center">
-                    <div className="relative aspect-[9/10] w-44 flex-none overflow-hidden rounded-xl sm:w-72 sm:rounded-2xl cursor-pointer">
-                        <img src={image.src} alt={image.alt} sizes="(min-width: 640px) 18rem, 11rem" className="absolute inset-0 h-full w-full object-cover" />
-                    </div>
-                </div>
-                
-                {/* Title and Description inside the card */}
-                <div className="px-4 pb-4 text-center">
-                    <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-100 sm:text-base">{image.title}</h3>
-                    <p className="text-xs text-zinc-600 dark:text-zinc-400 sm:text-sm mt-1">{image.description}</p>
-                </div>
-            </motion.div>
-        </motion.div>
-    );
-}
-
-function Photos({ featuredPhotos = [] }: { featuredPhotos?: FeaturedPhoto[] }) {
-    // Default images if no featured photos provided
-    const defaultImages = [
+// Card Stack Component based on motion.dev
+function CardStack({ featuredPhotos = [] }: { featuredPhotos?: FeaturedPhoto[] }) {
+    // Use featured photos or fallback to default data
+    const defaultCards = [
         {
-            src: '/images/photos/image-1.jpg',
-            alt: 'Default photo 1',
-            title: 'Pilot\'s View',
-            description: 'Cockpit controls over water'
+            id: 1,
+            title: "Latest Work",
+            description: "Photography Portfolio",
+            image: "/images/photos/image-1.jpg"
         },
         {
-            src: '/images/photos/image-2.jpg',
-            alt: 'Default photo 2',
-            title: 'Conference Hall',
-            description: 'Speaking at tech event'
+            id: 2,
+            title: "Recent Project", 
+            description: "Web Development",
+            image: "/images/photos/image-2.jpg"
         },
         {
-            src: '/images/photos/image-3.jpg',
-            alt: 'Default photo 3',
-            title: 'Work Station',
-            description: 'Productive workspace setup'
-        },
-        {
-            src: '/images/photos/image-4.jpg',
-            alt: 'Default photo 4',
-            title: 'Mountain Peak',
-            description: 'Adventure in the clouds'
-        },
-        {
-            src: '/images/photos/image-5.jpg',
-            alt: 'Default photo 5',
-            title: 'Space Explorer',
-            description: 'Mars-like landscape'
+            id: 3,
+            title: "Speaking Event",
+            description: "Tech Conference", 
+            image: "/images/photos/image-3.jpg"
         }
     ];
 
-    const images = featuredPhotos.length > 0 ? featuredPhotos : defaultImages;
-    const rotations = ['rotate-2', '-rotate-2', 'rotate-2', 'rotate-2', '-rotate-2'];
+    const photoCards = featuredPhotos.length > 0 
+        ? featuredPhotos.slice(0, 3).map((photo, index) => ({
+            id: index + 1,
+            title: photo.title,
+            description: photo.description,
+            image: photo.src
+        }))
+        : defaultCards;
+
+    const [cards, setCards] = useState(photoCards);
+
+    // Update cards when featuredPhotos changes
+    React.useEffect(() => {
+        const newPhotoCards = featuredPhotos.length > 0 
+            ? featuredPhotos.slice(0, 3).map((photo, index) => ({
+                id: index + 1,
+                title: photo.title,
+                description: photo.description,
+                image: photo.src,
+                slug: photo.slug || '' // Add slug for navigation
+            }))
+            : [];
+        setCards(newPhotoCards);
+    }, [featuredPhotos]);
+
+    // Hide component if no featured photos
+    if (featuredPhotos.length === 0) {
+        return null;
+    }
+
+    const moveToBack = (id: number) => {
+        setCards(prev => {
+            const cardIndex = prev.findIndex(card => card.id === id);
+            if (cardIndex === -1) return prev;
+            
+            const newCards = [...prev];
+            const [movedCard] = newCards.splice(cardIndex, 1);
+            newCards.push(movedCard);
+            return newCards;
+        });
+    };
 
     return (
-        <div className="mt-16 sm:mt-20">
-            <div className="-my-4 flex justify-center gap-5 overflow-hidden py-4 sm:gap-8">
-                {images.map((image, imageIndex) => (
-                    <InteractivePhoto 
-                        key={image.src}
-                        image={image}
-                        rotation={rotations[imageIndex % rotations.length]}
-                        index={imageIndex}
-                    />
-                ))}
-            </div>
+        <div className="relative h-80 w-full max-w-sm mx-auto">
+            {cards.map((card, index) => (
+                <motion.div
+                    key={card.id}
+                    className="absolute inset-0 cursor-pointer"
+                    style={{
+                        zIndex: cards.length - index,
+                    }}
+                    animate={{
+                        scale: 1 - index * 0.05,
+                        y: index * -10,
+                        rotate: index * 2,
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    onDragEnd={(_, info) => {
+                        if (Math.abs(info.offset.x) > 100) {
+                            moveToBack(card.id);
+                        }
+                    }}
+                    onClick={() => {
+                        // Find the original photo data to get the slug
+                        const originalPhoto = featuredPhotos.find(photo => photo.title === card.title);
+                        if (originalPhoto?.slug) {
+                            window.location.href = `/photography/${originalPhoto.slug}`;
+                        }
+                    }}
+                    transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 30,
+                    }}
+                >
+                    <div className="h-full w-full rounded-2xl overflow-hidden shadow-xl bg-zinc-100 dark:bg-zinc-800">
+                        <div className="relative h-full">
+                            <img 
+                                src={card.image} 
+                                alt={card.title}
+                                className="absolute inset-0 h-full w-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent">
+                                <div className="absolute bottom-0 left-0 right-0 p-6">
+                                    <h3 className="text-xl font-bold text-white">{card.title}</h3>
+                                    <p className="mt-2 text-white/90">{card.description}</p>
+                                    <div className="mt-4 text-right">
+                                        <div className="inline-block rounded-lg bg-white/20 px-3 py-1 text-sm text-white">
+                                            Swipe →
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+            ))}
         </div>
     );
 }
@@ -286,7 +270,6 @@ export default function Home({ articles = [], featuredPhotos = [] }: HomeProps) 
                     </div>
                 </div>
             </Container>
-            <Photos featuredPhotos={featuredPhotos} />
             <Container className="mt-24 md:mt-28">
                 <div className="mx-auto grid max-w-xl grid-cols-1 gap-y-20 lg:max-w-none lg:grid-cols-2">
                     <div className="flex flex-col gap-16">
@@ -295,6 +278,7 @@ export default function Home({ articles = [], featuredPhotos = [] }: HomeProps) 
                         ))}
                     </div>
                     <div className="space-y-10 lg:pl-16 xl:pl-24">
+                        <CardStack featuredPhotos={featuredPhotos} />
                         <Newsletter />
                     </div>
                 </div>
