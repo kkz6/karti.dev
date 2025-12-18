@@ -100,18 +100,18 @@ function EmptyState() {
                 <div className="terminal-window-dot red" />
                 <div className="terminal-window-dot yellow" />
                 <div className="terminal-window-dot green" />
-                <span className="ml-3 text-xs font-mono text-muted-foreground">~/travels</span>
+                <span className="ml-3 text-xs font-mono text-muted-foreground">~/gallery</span>
             </div>
             <div className="p-8 text-center">
                 <CameraIcon className="mx-auto h-12 w-12 text-muted-foreground/50" />
                 <h3 className="mt-4 font-display text-lg text-foreground">
-                    No journeys documented yet
+                    No collections yet
                 </h3>
                 <p className="mt-2 font-mono text-sm text-muted-foreground">
-                    <span className="text-primary">$</span> loading adventures...
+                    <span className="text-primary">$</span> loading gallery...
                 </p>
                 <p className="mt-1 font-mono text-sm text-muted-foreground">
-                    Check back soon for travel stories and photographs.
+                    Check back soon for new photographs.
                 </p>
             </div>
         </div>
@@ -129,15 +129,14 @@ export default function Photography({ photos = [] }: PhotographyProps) {
                 <Container className="mt-16 sm:mt-32">
                     <header className="max-w-2xl">
                         <div className="font-mono text-sm text-muted-foreground mb-4">
-                            <span className="text-primary">~</span> ./travels --explore
+                            <span className="text-primary">~</span> ./gallery --view
                         </div>
                         <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight text-foreground">
-                            <span className="text-primary">{'{'}</span> Travel Stories <span className="text-primary">{'}'}</span>
+                            <span className="text-primary">{'{'}</span> Photography <span className="text-primary">{'}'}</span>
                         </h1>
                         <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-                            Documenting my journey across landscapes and cultures. Each collection captures
-                            a moment in time—from the bustling streets of cities to serene natural wonders.
-                            These are the stories I bring back from the road.
+                            A visual journal capturing moments through my lens. From landscapes to street scenes,
+                            each collection tells its own story—freezing time in frames that speak louder than words.
                         </p>
                     </header>
                 </Container>
