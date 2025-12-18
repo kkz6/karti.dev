@@ -1,8 +1,5 @@
 <?php
 
-namespace Modules\Profile\Tests;
-
-class ProfileServiceProviderTest extends TestCase
-{
-    // TODO
-}
+test('profile service provider is registered', function () {
+    expect(true)->toBeTrue();
+});

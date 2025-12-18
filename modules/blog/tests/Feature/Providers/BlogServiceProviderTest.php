@@ -1,8 +1,5 @@
 <?php
 
-namespace Modules\Blog\Tests;
-
-class BlogServiceProviderTest extends TestCase
-{
-    // TODO
-}
+test('blog service provider is registered', function () {
+    expect(app()->bound('Modules\Blog\Providers\BlogServiceProvider'))->toBeTrue();
+});

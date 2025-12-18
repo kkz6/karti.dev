@@ -1,8 +1,5 @@
 <?php
 
-namespace Modules\Frontend\Tests;
-
-class FrontendServiceProviderTest extends TestCase
-{
-    // TODO
-}
+test('frontend service provider is registered', function () {
+    expect(app()->bound('Modules\Frontend\Providers\FrontendServiceProvider'))->toBeTrue();
+});
