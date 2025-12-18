@@ -48,7 +48,7 @@ Card.Link = function CardLink({
   ...props
 }: React.ComponentPropsWithoutRef<typeof Link> & { href: string }) {
   return (
-    <Link href={href} className="group inline-flex items-center hover:text-teal-500 transition-colors" {...props}>
+    <Link href={href} className="group inline-flex items-center hover:text-primary transition-colors" {...props}>
       {children}
     </Link>
   )
@@ -65,7 +65,7 @@ Card.Title = function CardTitle<T extends React.ElementType = 'h2'>({
   const Component = as ?? 'h2'
 
   return (
-    <Component className="text-base font-semibold tracking-tight text-zinc-800 dark:text-zinc-100">
+    <Component className="text-base font-display font-medium tracking-tight text-foreground">
       {href ? <Card.Link href={href}>{children}</Card.Link> : children}
     </Component>
   )
@@ -77,7 +77,7 @@ Card.Description = function CardDescription({
   children: React.ReactNode
 }) {
   return (
-    <p className="relative z-10 mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+    <p className="relative z-10 mt-2 text-sm text-muted-foreground leading-relaxed">
       {children}
     </p>
   )
@@ -87,8 +87,9 @@ Card.Cta = function CardCta({ children }: { children: React.ReactNode }) {
   return (
     <div
       aria-hidden="true"
-      className="relative z-10 mt-4 flex items-center text-sm font-medium text-teal-500 group-hover:text-teal-600 transition-colors"
+      className="relative z-10 mt-4 flex items-center text-sm font-mono text-primary group-hover:text-primary/80 transition-colors"
     >
+      <span className="mr-1 select-none">{'>'}</span>
       {children}
       <ChevronRightIcon className="ml-1 h-4 w-4 stroke-current transition-transform group-hover:translate-x-1" />
     </div>
@@ -111,7 +112,7 @@ Card.Eyebrow = function CardEyebrow<T extends React.ElementType = 'p'>({
     <Component
       className={clsx(
         className,
-        'relative z-10 order-first mb-3 flex items-center text-sm text-zinc-400 dark:text-zinc-500',
+        'relative z-10 order-first mb-3 flex items-center text-sm font-mono text-muted-foreground',
         decorate && 'pl-3.5',
       )}
       {...props}
@@ -121,7 +122,7 @@ Card.Eyebrow = function CardEyebrow<T extends React.ElementType = 'p'>({
           className="absolute inset-y-0 left-0 flex items-center"
           aria-hidden="true"
         >
-          <span className="h-4 w-0.5 rounded-full bg-zinc-200 dark:bg-zinc-500" />
+          <span className="h-4 w-0.5 rounded-full bg-primary/50" />
         </span>
       )}
       {children}

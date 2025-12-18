@@ -47,8 +47,8 @@ function ProjectCard({ project }: { project: Project }) {
             <Card.Description>
                 {project.description}
             </Card.Description>
-            <p className="relative z-10 mt-6 flex items-center text-sm font-medium text-zinc-400 transition group-hover:text-teal-500 dark:text-zinc-200">
-                <LinkIcon className="h-6 w-6 flex-none" />
+            <p className="relative z-10 mt-6 flex items-center text-sm font-mono text-muted-foreground transition group-hover:text-primary">
+                <LinkIcon className="h-5 w-5 flex-none" />
                 <span className="ml-2">{project.link.label}</span>
             </p>
         </Card>

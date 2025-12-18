@@ -71,13 +71,20 @@ function XIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 function SocialLink({
     icon: Icon,
     href,
+    label,
     ...props
 }: React.ComponentPropsWithoutRef<typeof Link> & {
     icon: React.ComponentType<{ className?: string }>;
+    label?: string;
 }) {
     return (
-        <Link className="group -m-1 p-1" href={href} {...props}>
-            <Icon className="h-6 w-6 fill-zinc-500 transition group-hover:fill-zinc-600 dark:fill-zinc-400 dark:group-hover:fill-zinc-300" />
+        <Link
+            className="group flex items-center gap-2 font-mono text-sm text-muted-foreground transition hover:text-primary"
+            href={href}
+            {...props}
+        >
+            <Icon className="h-5 w-5 fill-current" />
+            {label && <span className="hidden sm:inline">{label}</span>}
         </Link>
     );
 }
@@ -99,25 +106,37 @@ function Article({ article }: { article: ArticleData }) {
 
 function Newsletter() {
     return (
-        <form action="/thank-you" method="POST" className="rounded-2xl border border-zinc-100 p-6 dark:border-zinc-700/40">
-            <h2 className="flex text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                <MailIcon className="h-6 w-6 flex-none" />
-                <span className="ml-3">Stay up to date</span>
-            </h2>
-            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">Get notified when I publish something new, and unsubscribe at any time.</p>
-            <div className="mt-6 flex items-center">
-                <input
-                    type="email"
-                    placeholder="Email address"
-                    aria-label="Email address"
-                    required
-                    className="min-w-0 flex-auto appearance-none rounded-md border border-zinc-900/10 bg-white px-3 py-[calc(theme(spacing.2)-1px)] shadow-md shadow-zinc-800/5 placeholder:text-zinc-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 focus:outline-none sm:text-sm dark:border-zinc-700 dark:bg-zinc-700/[0.15] dark:text-zinc-200 dark:placeholder:text-zinc-500 dark:focus:border-teal-400 dark:focus:ring-teal-400/10"
-                />
-                <Button type="submit" className="ml-4 flex-none">
-                    Join
-                </Button>
+        <div className="terminal-window">
+            <div className="terminal-window-header">
+                <div className="terminal-window-dot red" />
+                <div className="terminal-window-dot yellow" />
+                <div className="terminal-window-dot green" />
+                <span className="ml-2 font-mono text-xs text-muted-foreground">subscribe.sh</span>
             </div>
-        </form>
+            <form action="/thank-you" method="POST" className="p-6">
+                <div className="font-mono text-sm">
+                    <p className="text-muted-foreground">
+                        <span className="text-primary">$</span> ./subscribe --notify
+                    </p>
+                    <p className="mt-2 text-foreground/80">
+                        Get notified when I publish something new.
+                    </p>
+                </div>
+                <div className="mt-6 flex items-center gap-2">
+                    <span className="text-primary font-mono">{'>'}</span>
+                    <input
+                        type="email"
+                        placeholder="email@example.com"
+                        aria-label="Email address"
+                        required
+                        className="min-w-0 flex-auto appearance-none bg-transparent border-b border-border px-2 py-1.5 font-mono text-sm placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
+                    />
+                    <Button type="submit" size="sm" className="font-mono">
+                        Enter
+                    </Button>
+                </div>
+            </form>
+        </div>
     );
 }
 
@@ -189,7 +208,7 @@ function CardStack({ featuredPhotos = [] }: { featuredPhotos?: FeaturedPhoto[] }
     };
 
     return (
-        <div className="relative h-80 w-full max-w-sm mx-auto">
+        <div className="relative h-80 w-full">
             {cards.map((card, index) => (
                 <motion.div
                     key={card.id}
@@ -224,19 +243,19 @@ function CardStack({ featuredPhotos = [] }: { featuredPhotos?: FeaturedPhoto[] }
                         damping: 30,
                     }}
                 >
-                    <div className="h-full w-full rounded-2xl overflow-hidden shadow-xl bg-zinc-100 dark:bg-zinc-800">
+                    <div className="h-full w-full rounded-2xl overflow-hidden shadow-xl bg-zinc-100 dark:bg-zinc-800 ring-1 ring-border/20">
                         <div className="relative h-full">
-                            <img 
-                                src={card.image} 
+                            <img
+                                src={card.image}
                                 alt={card.title}
                                 className="absolute inset-0 h-full w-full object-cover"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent">
                                 <div className="absolute bottom-0 left-0 right-0 p-6">
-                                    <h3 className="text-xl font-bold text-white">{card.title}</h3>
-                                    <p className="mt-2 text-white/90">{card.description}</p>
+                                    <h3 className="text-xl font-display font-medium text-white">{card.title}</h3>
+                                    <p className="mt-2 text-white/90 font-mono text-sm">{card.description}</p>
                                     <div className="mt-4 text-right">
-                                        <div className="inline-block rounded-lg bg-white/20 px-3 py-1 text-sm text-white">
+                                        <div className="inline-block rounded-lg glass-subtle px-3 py-1 text-sm font-mono text-white">
                                             Swipe →
                                         </div>
                                     </div>
@@ -255,18 +274,31 @@ export default function Home({ articles = [], featuredPhotos = [] }: HomeProps) 
         <PublicLayout>
             <Head title="Home" />
             <Container className="mt-9">
-                <div className="max-w-2xl">
-                    <h1 className="text-4xl font-bold tracking-tight text-zinc-800 sm:text-5xl dark:text-zinc-100">
-                        Developer, Speaker and Founder of Gigcodes.
+                <div className="max-w-3xl">
+                    <div className="font-mono text-sm text-muted-foreground mb-4">
+                        <span className="text-primary">~</span> ./whoami
+                    </div>
+                    <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight text-foreground">
+                        <span className="text-primary">{'{'}</span>
+                        {' '}Developer, Speaker
+                        <span className="text-primary">{' }'}</span>
                     </h1>
-                    <p className="mt-6 text-base text-zinc-600 dark:text-zinc-400">
-                        I'm Karthick, a software designer and developer based in Bangalore, India. I'm the founder of Gigcodes, where we
-                        develop technologies that empower regular people to explore the world on their own terms. 
-                    </p>
-                    <div className="mt-6 flex gap-6">
-                        <SocialLink href="https://x.com/ikkarti" aria-label="Follow on X" icon={XIcon} />
-                        <SocialLink href="https://github.com/kkz6" aria-label="Follow on GitHub" icon={GitHubIcon} />
-                        <SocialLink href="https://linkedin.com/in/ikkarti" aria-label="Follow on LinkedIn" icon={LinkedInIcon} />
+                    <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-medium tracking-tight text-muted-foreground mt-2">
+                        Founder of <span className="text-primary">Gigcodes</span>
+                    </h2>
+                    <div className="mt-8 font-mono text-sm leading-relaxed text-muted-foreground max-w-2xl">
+                        <p className="flex">
+                            <span className="text-primary mr-2 select-none">{'//'}</span>
+                            <span>
+                                I'm Karthick, a software designer and developer based in Bangalore, India.
+                                I build technologies that empower people to explore the world on their own terms.
+                            </span>
+                        </p>
+                    </div>
+                    <div className="mt-8 flex flex-wrap gap-4 sm:gap-6">
+                        <SocialLink href="https://x.com/ikkarti" aria-label="Follow on X" icon={XIcon} label="@ikkarti" />
+                        <SocialLink href="https://github.com/kkz6" aria-label="Follow on GitHub" icon={GitHubIcon} label="github" />
+                        <SocialLink href="https://linkedin.com/in/ikkarti" aria-label="Follow on LinkedIn" icon={LinkedInIcon} label="linkedin" />
                     </div>
                 </div>
             </Container>

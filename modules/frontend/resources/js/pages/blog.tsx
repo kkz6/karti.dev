@@ -26,17 +26,17 @@ function Article({ article }: { article: Article }) {
             day: 'numeric',
           })}
         </time>
-        <h2 className="text-base font-semibold tracking-tight text-zinc-800 dark:text-zinc-100">
-          <Link href={`/blog/${article.slug}`} className="hover:text-teal-500">
+        <h2 className="text-base font-display font-medium tracking-tight text-foreground">
+          <Link href={`/blog/${article.slug}`} className="hover:text-primary transition-colors">
             {article.title}
           </Link>
         </h2>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mt-2 text-sm text-muted-foreground">
           {article.description}
         </p>
         <Link
           href={`/blog/${article.slug}`}
-          className="relative z-10 mt-4 flex items-center text-sm font-medium text-teal-500"
+          className="relative z-10 mt-4 flex items-center text-sm font-mono text-primary"
         >
           Read article
           <svg
@@ -96,10 +96,10 @@ export default function Blog({ articles = [] }: BlogProps) {
       <Head title="Blog" />
       <Container className="mt-16 sm:mt-32">
         <header className="max-w-2xl">
-          <h1 className="text-4xl font-bold tracking-tight text-zinc-800 dark:text-zinc-100 sm:text-5xl">
+          <h1 className="font-display text-3xl sm:text-4xl font-medium tracking-tight text-foreground">
             Writing on software design, company building, and the aerospace industry.
           </h1>
-          <p className="mt-6 text-base text-zinc-600 dark:text-zinc-400">
+          <p className="mt-6 text-base leading-relaxed text-muted-foreground">
             All of my long-form thoughts on programming, leadership, product design, and more, collected in chronological order.
           </p>
         </header>

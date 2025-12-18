@@ -18,6 +18,7 @@ interface PhotographyShowProps {
             alt: string
         }>
         image_count: number
+        location?: string
     }
 }
 
@@ -34,6 +35,24 @@ function ArrowLeftIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
     )
 }
 
+function MapPinIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
+        </svg>
+    )
+}
+
+function CameraIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+            <circle cx="12" cy="13" r="4" />
+        </svg>
+    )
+}
+
 export default function PhotographyShow({ photo }: PhotographyShowProps) {
     const [selectedImage, setSelectedImage] = useState<number | null>(null)
 
@@ -43,124 +62,137 @@ export default function PhotographyShow({ photo }: PhotographyShowProps) {
             <PublicLayout>
                 <Container className="mt-16 lg:mt-32">
                     <div className="xl:relative">
-                        <div className="mx-auto max-w-2xl">
+                        <div className="mx-auto max-w-4xl">
                             <Link
                                 href="/photography"
                                 aria-label="Go back to photography"
-                                className="group mb-8 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md shadow-zinc-800/5 ring-1 ring-zinc-900/5 transition dark:border dark:border-zinc-700/50 dark:bg-zinc-800 dark:ring-0 dark:ring-white/10 dark:hover:border-zinc-700 dark:hover:ring-white/20 lg:absolute lg:-left-5 lg:-mt-2 lg:mb-0 xl:-top-1.5 xl:left-0 xl:mt-0"
+                                className="group mb-8 flex h-10 w-10 items-center justify-center rounded-xl glass-card transition hover:border-primary/30 lg:absolute lg:-left-5 lg:-mt-2 lg:mb-0 xl:-top-1.5 xl:left-0 xl:mt-0"
                             >
-                                <ArrowLeftIcon className="h-4 w-4 stroke-zinc-500 transition group-hover:stroke-zinc-700 dark:stroke-zinc-500 dark:group-hover:stroke-zinc-400" />
+                                <ArrowLeftIcon className="h-4 w-4 stroke-muted-foreground transition group-hover:stroke-primary" />
                             </Link>
-                            
+
                             <article>
                                 <header className="flex flex-col">
-                                    <motion.h1 
+                                    <div className="font-mono text-sm text-muted-foreground mb-4">
+                                        <span className="text-primary">~</span> ./travels/<span className="text-primary">{photo?.slug || 'gallery'}</span>
+                                    </div>
+
+                                    <div className="flex flex-wrap items-center gap-4 text-sm font-mono text-muted-foreground mb-4">
+                                        <span className="h-4 w-0.5 rounded-full bg-primary/50" />
+                                        {photo?.date && (
+                                            <time dateTime={photo.date}>
+                                                {new Date(photo.date).toLocaleDateString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric',
+                                                })}
+                                            </time>
+                                        )}
+                                        {photo?.image_count && (
+                                            <>
+                                                <span className="text-border">|</span>
+                                                <span className="flex items-center gap-1">
+                                                    <CameraIcon className="h-3.5 w-3.5" />
+                                                    {photo.image_count} shots
+                                                </span>
+                                            </>
+                                        )}
+                                        {photo?.location && (
+                                            <>
+                                                <span className="text-border">|</span>
+                                                <span className="flex items-center gap-1">
+                                                    <MapPinIcon className="h-3.5 w-3.5" />
+                                                    {photo.location}
+                                                </span>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    <motion.h1
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.6 }}
-                                        className="mt-6 text-4xl font-bold tracking-tight text-zinc-800 dark:text-zinc-100 sm:text-5xl"
+                                        className="font-display text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight text-foreground"
                                     >
                                         {photo?.title || 'Photography Gallery'}
                                     </motion.h1>
-                                    <motion.div 
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.6, delay: 0.1 }}
-                                        className="order-first flex items-center text-base text-zinc-400 dark:text-zinc-500"
-                                    >
-                                        <span className="h-4 w-0.5 rounded-full bg-zinc-200 dark:bg-zinc-500" />
-                                        <div className="ml-3 flex items-center gap-4">
-                                            {photo?.date && (
-                                                <time dateTime={photo.date}>
-                                                    {new Date(photo.date).toLocaleDateString('en-US', {
-                                                        year: 'numeric',
-                                                        month: 'long',
-                                                        day: 'numeric',
-                                                    })}
-                                                </time>
-                                            )}
-                                            {photo?.image_count && (
-                                                <>
-                                                    <span>•</span>
-                                                    <span>{photo.image_count} images</span>
-                                                </>
-                                            )}
-                                        </div>
-                                    </motion.div>
+
                                     {photo?.description && (
-                                        <motion.p 
+                                        <motion.p
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            transition={{ duration: 0.6, delay: 0.2 }}
-                                            className="mt-6 text-base text-zinc-600 dark:text-zinc-400"
+                                            transition={{ duration: 0.6, delay: 0.1 }}
+                                            className="mt-6 text-base leading-relaxed text-muted-foreground"
                                         >
                                             {photo.description}
                                         </motion.p>
                                     )}
                                 </header>
-                                
-                                <motion.div 
+
+                                <motion.div
                                     initial={{ opacity: 0, y: 30 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.6, delay: 0.3 }}
-                                    className="mt-8"
+                                    transition={{ duration: 0.6, delay: 0.2 }}
+                                    className="mt-12"
                                 >
                                     {photo?.images?.length > 0 ? (
-                                        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                                             {photo.images.map((image, index) => (
                                                 <motion.div
                                                     key={index}
                                                     initial={{ opacity: 0, y: 50 }}
                                                     animate={{ opacity: 1, y: 0 }}
-                                                    transition={{ 
-                                                        duration: 0.6, 
-                                                        delay: 0.4 + (index * 0.1),
+                                                    transition={{
+                                                        duration: 0.5,
+                                                        delay: 0.3 + (index * 0.05),
                                                         ease: "easeOut"
-                                                    }}
-                                                    whileHover={{ 
-                                                        y: -8,
-                                                        transition: { duration: 0.2 }
                                                     }}
                                                     className="group cursor-pointer"
                                                     onClick={() => setSelectedImage(index)}
                                                 >
-                                                    <div className="relative overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800 shadow-lg">
+                                                    <div className="travel-card overflow-hidden">
                                                         <div className="aspect-[4/5] overflow-hidden">
-                                                            <motion.img
+                                                            <img
                                                                 src={image.card_url}
                                                                 alt={image.alt}
-                                                                className="h-full w-full object-cover"
-                                                                whileHover={{ scale: 1.05 }}
-                                                                transition={{ duration: 0.4 }}
+                                                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                                                                 loading="lazy"
                                                             />
                                                         </div>
-                                                        <motion.div 
-                                                            className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                                                            initial={{ opacity: 0 }}
-                                                            whileHover={{ opacity: 1 }}
-                                                        >
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                                             <div className="absolute bottom-4 left-4 right-4">
-                                                                <p className="text-white font-medium text-sm">
-                                                                    Image {index + 1}
+                                                                <p className="text-white font-mono text-sm">
+                                                                    <span className="text-primary/80">{'>'}</span> Image {index + 1}
                                                                 </p>
-                                                                <p className="text-white/80 text-xs">
-                                                                    Click to view full size
+                                                                <p className="text-white/70 font-mono text-xs mt-1">
+                                                                    Click to expand
                                                                 </p>
                                                             </div>
-                                                        </motion.div>
+                                                        </div>
                                                     </div>
                                                 </motion.div>
                                             ))}
                                         </div>
                                     ) : (
-                                        <div className="text-center py-12">
-                                            <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-2">
-                                                No images in this gallery
-                                            </h3>
-                                            <p className="text-zinc-600 dark:text-zinc-400">
-                                                This gallery doesn't contain any images yet.
-                                            </p>
+                                        <div className="terminal-window">
+                                            <div className="terminal-window-header">
+                                                <div className="terminal-window-dot red" />
+                                                <div className="terminal-window-dot yellow" />
+                                                <div className="terminal-window-dot green" />
+                                                <span className="ml-3 text-xs font-mono text-muted-foreground">~/gallery</span>
+                                            </div>
+                                            <div className="p-8 text-center">
+                                                <CameraIcon className="mx-auto h-12 w-12 text-muted-foreground/50" />
+                                                <h3 className="mt-4 font-display text-lg text-foreground">
+                                                    No images in this gallery
+                                                </h3>
+                                                <p className="mt-2 font-mono text-sm text-muted-foreground">
+                                                    <span className="text-primary">$</span> ls images/
+                                                </p>
+                                                <p className="font-mono text-sm text-muted-foreground">
+                                                    (empty)
+                                                </p>
+                                            </div>
                                         </div>
                                     )}
                                 </motion.div>
@@ -175,13 +207,13 @@ export default function PhotographyShow({ photo }: PhotographyShowProps) {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+                                className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
                                 onClick={() => setSelectedImage(null)}
                             >
                                 <motion.div
-                                    initial={{ scale: 0.8, opacity: 0 }}
+                                    initial={{ scale: 0.9, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
-                                    exit={{ scale: 0.8, opacity: 0 }}
+                                    exit={{ scale: 0.9, opacity: 0 }}
                                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
                                     className="relative max-w-7xl max-h-[90vh] mx-4"
                                     onClick={(e) => e.stopPropagation()}
@@ -189,44 +221,46 @@ export default function PhotographyShow({ photo }: PhotographyShowProps) {
                                     <img
                                         src={photo.images[selectedImage].full_url}
                                         alt={photo.images[selectedImage].alt}
-                                        className="max-w-full max-h-full object-contain rounded-lg"
+                                        className="max-w-full max-h-[85vh] object-contain rounded-lg"
                                     />
-                                    
+
                                     {/* Close button */}
                                     <button
                                         onClick={() => setSelectedImage(null)}
-                                        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-zinc-800/80 text-white hover:bg-zinc-700/80 transition-colors flex items-center justify-center"
+                                        className="absolute top-4 right-4 w-10 h-10 rounded-xl glass-strong text-white hover:text-primary transition-colors flex items-center justify-center font-mono"
                                     >
                                         ×
                                     </button>
-                                    
+
                                     {/* Navigation */}
                                     {photo.images.length > 1 && (
                                         <>
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                        setSelectedImage(selectedImage > 0 ? selectedImage - 1 : photo.images.length - 1);
+                                                    setSelectedImage(selectedImage > 0 ? selectedImage - 1 : photo.images.length - 1);
                                                 }}
-                                                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-zinc-800/80 text-white hover:bg-zinc-700/80 transition-colors flex items-center justify-center text-2xl"
+                                                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-xl glass-strong text-white hover:text-primary transition-colors flex items-center justify-center font-mono text-2xl"
                                             >
                                                 ‹
                                             </button>
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                        setSelectedImage(selectedImage < photo.images.length - 1 ? selectedImage + 1 : 0);
+                                                    setSelectedImage(selectedImage < photo.images.length - 1 ? selectedImage + 1 : 0);
                                                 }}
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-zinc-800/80 text-white hover:bg-zinc-700/80 transition-colors flex items-center justify-center text-2xl"
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-xl glass-strong text-white hover:text-primary transition-colors flex items-center justify-center font-mono text-2xl"
                                             >
                                                 ›
                                             </button>
                                         </>
                                     )}
-                                    
+
                                     {/* Image counter */}
-                                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-zinc-800/80 text-white text-sm">
+                                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl glass-strong text-white font-mono text-sm">
+                                        <span className="text-primary">[</span>
                                         {selectedImage + 1} / {photo.images.length}
+                                        <span className="text-primary">]</span>
                                     </div>
                                 </motion.div>
                             </motion.div>

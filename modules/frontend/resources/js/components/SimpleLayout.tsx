@@ -12,11 +12,11 @@ export function SimpleLayout({
   return (
     <Container className="mt-16 sm:mt-32">
       <header className="max-w-2xl">
-        <h1 className="text-4xl font-bold tracking-tight text-zinc-800 dark:text-zinc-100 sm:text-5xl">
+        <h1 className="font-display text-3xl sm:text-4xl font-medium tracking-tight text-foreground">
           {title}
         </h1>
         {intro && (
-          <p className="mt-6 text-base text-zinc-600 dark:text-zinc-400">
+          <p className="mt-6 text-base leading-relaxed text-muted-foreground">
             {intro}
           </p>
         )}
