@@ -1,4 +1,3 @@
-import { Link } from '@inertiajs/react';
 import { Button } from '@shared/components/ui/button';
 import { motion } from 'framer-motion';
 import React, { useState } from 'react';
@@ -76,19 +75,21 @@ function SocialLink({
     href,
     label,
     ...props
-}: React.ComponentPropsWithoutRef<typeof Link> & {
+}: React.ComponentPropsWithoutRef<'a'> & {
     icon: React.ComponentType<{ className?: string }>;
     label?: string;
 }) {
     return (
-        <Link
-            className="group flex items-center gap-2 font-mono text-sm text-muted-foreground transition hover:text-primary"
+        <a
+            className="group relative z-10 flex items-center gap-2 font-mono text-sm text-muted-foreground transition hover:text-primary"
             href={href}
+            target="_blank"
+            rel="noopener noreferrer"
             {...props}
         >
             <Icon className="h-5 w-5 fill-current" />
             {label && <span className="hidden sm:inline">{label}</span>}
-        </Link>
+        </a>
     );
 }
 

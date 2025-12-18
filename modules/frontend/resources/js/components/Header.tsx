@@ -42,7 +42,7 @@ function NavItem({ href, children }: { href: string; children: React.ReactNode }
 function DesktopNavigation(props: React.ComponentPropsWithoutRef<'nav'>) {
   return (
     <nav {...props}>
-      <ul className="flex items-center gap-1">
+      <ul className="flex items-center gap-1 h-10">
         {navigation.map((item) => (
           <NavItem key={item.href} href={item.href}>
             {item.name}
@@ -96,12 +96,12 @@ export function Header() {
       {/* Sticky Navigation Bar */}
       <div
         ref={headerRef}
-        className="sticky top-0 z-50 pt-4 pb-2 bg-zinc-50/90 dark:bg-zinc-900/90 backdrop-blur-md"
+        className="sticky top-0 z-50 py-3 bg-zinc-50/90 dark:bg-zinc-900/90 backdrop-blur-md"
       >
         <Container>
-          <div className="relative flex gap-4 items-center">
-            <div className="flex flex-1">
-              {/* Show avatar in nav: always on non-home pages, or when scrolled on home page */}
+          <div className="relative flex items-center justify-center py-1">
+            {/* Left: Avatar - absolutely positioned and vertically centered */}
+            <div className="absolute left-0 inset-y-0 flex items-center">
               <div
                 className={clsx(
                   'transition-all duration-300',
@@ -117,7 +117,9 @@ export function Header() {
                 </AvatarContainer>
               </div>
             </div>
-            <div className="flex flex-1 justify-end md:justify-center">
+
+            {/* Center: Navigation - truly centered */}
+            <div className="flex justify-center items-center">
               <div className="block md:hidden">
                 <MobileNavigation className="pointer-events-auto" />
               </div>
@@ -125,7 +127,9 @@ export function Header() {
                 <DesktopNavigation className="pointer-events-auto" />
               </div>
             </div>
-            <div className="flex justify-end md:flex-1">
+
+            {/* Right: Theme toggle - absolutely positioned and vertically centered */}
+            <div className="absolute right-0 inset-y-0 flex items-center">
               <div className="pointer-events-auto">
                 <ThemeToggle />
               </div>

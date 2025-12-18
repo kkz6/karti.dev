@@ -241,13 +241,16 @@ export default function ArticleForm({ article, categories }: ArticleFormProps) {
                                                 }}
                                                 setData={(key, value) => {
                                                     if (key === 'seo') {
-                                                        form.setValue('seo', value);
+                                                        form.setValue('seo', value as Record<string, unknown>);
                                                     } else {
-                                                        form.setValue(key as any, value);
+                                                        form.setValue(key as keyof ArticleFormData, value as string);
                                                     }
                                                 }}
-                                                errors={form.formState.errors}
+                                                errors={form.formState.errors as Record<string, string>}
                                                 showSlug={false}
+                                                fallbackTitle={form.watch('title')}
+                                                fallbackDescription={form.watch('excerpt')}
+                                                fallbackImage={article?.featured_image?.toString()}
                                             />
                                         </TabsContent>
                                     </div>

@@ -5,11 +5,16 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <script>
             (function() {
-                const appearance = '{{ $appearance ?? "system" }}';
+                // Check localStorage first (user preference)
+                const savedTheme = localStorage.getItem('theme');
 
-                if (appearance === 'system') {
+                if (savedTheme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                } else if (savedTheme === 'light') {
+                    document.documentElement.classList.remove('dark');
+                } else {
+                    // No saved preference, check system preference
                     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
                     if (prefersDark) {
                         document.documentElement.classList.add('dark');
                     }

@@ -74,7 +74,7 @@ export default function PhotographyShow({ photo }: PhotographyShowProps) {
                             <article>
                                 <header className="flex flex-col">
                                     <div className="font-mono text-sm text-muted-foreground mb-4">
-                                        <span className="text-primary">~</span> ./travels/<span className="text-primary">{photo?.slug || 'gallery'}</span>
+                                        <span className="text-primary">~</span> ./photography/<span className="text-primary">{photo?.slug || 'gallery'}</span>
                                     </div>
 
                                     <div className="flex flex-wrap items-center gap-4 text-sm font-mono text-muted-foreground mb-4">

@@ -19,15 +19,27 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
         }
     }, [])
 
+    // SVG noise filter with fine grain texture
+    const noiseSvg = `
+        <svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'>
+            <filter id='noise' x='0' y='0'>
+                <feTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/>
+                <feColorMatrix type='saturate' values='0'/>
+            </filter>
+            <rect width='100%' height='100%' filter='url(#noise)' opacity='1'/>
+        </svg>
+    `.replace(/\s+/g, ' ').trim()
+
+    const encodedSvg = encodeURIComponent(noiseSvg)
+
     return (
         <>
-            {/* Noise grain background overlay using CSS */}
+            {/* Film grain noise overlay - subtle on both modes */}
             <div
-                className="fixed inset-0 pointer-events-none z-0 opacity-[0.4] dark:opacity-[0.2] mix-blend-overlay dark:mix-blend-soft-light"
+                className="fixed inset-0 pointer-events-none z-50 opacity-[0.04] dark:opacity-[0.03]"
                 style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                    backgroundImage: `url("data:image/svg+xml,${encodedSvg}")`,
                     backgroundRepeat: 'repeat',
-                    backgroundSize: '256px 256px',
                 }}
             />
 

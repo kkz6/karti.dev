@@ -27,15 +27,17 @@ interface SEOFieldsProps {
         meta_description?: string;
         title?: string;  // Add title to generate slug from
     };
-    setData: (key: string, value: any) => void;
-    errors: any;
+    setData: (key: string, value: string | Record<string, unknown>) => void;
+    errors: Record<string, string>;
     showSlug?: boolean;
     slugLabel?: string;
     slugDescription?: string;
-    originalSlug?: string;  // For tracking if slug was manually edited
+    fallbackTitle?: string;  // Fallback title from parent (e.g., article title)
+    fallbackDescription?: string;  // Fallback description from parent (e.g., article excerpt)
+    fallbackImage?: string;  // Fallback image URL from parent (e.g., featured image)
 }
 
-export function SEOFields({ data, setData, errors, showSlug = true, slugLabel = 'Slug', slugDescription = 'Used in URLs', originalSlug }: SEOFieldsProps) {
+export function SEOFields({ data, setData, errors, showSlug = true, slugLabel = 'Slug', slugDescription = 'Used in URLs', fallbackTitle = '', fallbackDescription = '', fallbackImage = '' }: SEOFieldsProps) {
     const updateSeoData = (field: string, value: string) => {
         const currentSeo = data.seo || {};
         setData('seo', {
@@ -44,10 +46,14 @@ export function SEOFields({ data, setData, errors, showSlug = true, slugLabel = 
         });
     };
 
-    // Fallback to old meta fields for backward compatibility
+    // Actual SEO field values (what's stored in the SEO fields)
     const seoTitle = data.seo?.title || data.meta_title || '';
     const seoDescription = data.seo?.description || data.meta_description || '';
-    const seoImage = data.seo?.image || '';
+
+    // Preview values: use SEO values if set, otherwise fall back to parent values
+    const previewTitle = seoTitle || fallbackTitle;
+    const previewDescription = seoDescription || fallbackDescription;
+    const previewImage = fallbackImage; // Use the featured image from the parent form
 
     // Get site domain for preview
     const siteDomain = window.location.hostname || 'yoursite.com';
@@ -84,12 +90,15 @@ export function SEOFields({ data, setData, errors, showSlug = true, slugLabel = 
                         id="seo_title"
                         value={seoTitle}
                         onChange={(e) => updateSeoData('title', e.target.value)}
-                        placeholder="SEO title for search engines"
+                        placeholder={fallbackTitle || "SEO title for search engines"}
                         className={errors['seo.title'] ? 'border-red-500' : ''}
                         maxLength={60}
                     />
                     {errors['seo.title'] && <p className="mt-1 text-sm text-red-500">{errors['seo.title']}</p>}
-                    <p className="text-muted-foreground mt-1 text-sm">{seoTitle.length}/60 characters</p>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                        {previewTitle.length}/60 characters
+                        {!seoTitle && fallbackTitle && <span className="ml-1">(using article title)</span>}
+                    </p>
                 </div>
 
                 <div>
@@ -98,26 +107,16 @@ export function SEOFields({ data, setData, errors, showSlug = true, slugLabel = 
                         id="seo_description"
                         value={seoDescription}
                         onChange={(e) => updateSeoData('description', e.target.value)}
-                        placeholder="Brief description for search engine results"
+                        placeholder={fallbackDescription || "Brief description for search engine results"}
                         rows={3}
                         className={errors['seo.description'] ? 'border-red-500' : ''}
                         maxLength={160}
                     />
                     {errors['seo.description'] && <p className="mt-1 text-sm text-red-500">{errors['seo.description']}</p>}
-                    <p className="text-muted-foreground mt-1 text-sm">{seoDescription.length}/160 characters</p>
-                </div>
-
-                <div>
-                    <Label htmlFor="seo_image">Social Media Image</Label>
-                    <Input
-                        id="seo_image"
-                        value={data.seo?.image || ''}
-                        onChange={(e) => updateSeoData('image', e.target.value)}
-                        placeholder="URL to image for social media sharing"
-                        className={errors['seo.image'] ? 'border-red-500' : ''}
-                    />
-                    {errors['seo.image'] && <p className="mt-1 text-sm text-red-500">{errors['seo.image']}</p>}
-                    <p className="text-muted-foreground mt-1 text-sm">Recommended: 1200x630px</p>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                        {previewDescription.length}/160 characters
+                        {!seoDescription && fallbackDescription && <span className="ml-1">(using excerpt)</span>}
+                    </p>
                 </div>
 
                 <div>
@@ -170,22 +169,22 @@ export function SEOFields({ data, setData, errors, showSlug = true, slugLabel = 
                                 </div>
                             </div>
                             <h3 className="text-xl text-blue-600 hover:underline">
-                                {seoTitle || 'Page Title - Your Site Name'}
+                                {previewTitle || 'Page Title - Your Site Name'}
                             </h3>
                             <p className="text-sm text-gray-600">
-                                {seoDescription || 'Page description will appear here. This is what users will see in search results.'}
+                                {previewDescription || 'Page description will appear here. This is what users will see in search results.'}
                             </p>
                         </div>
                     </div>
 
                     {/* Social Media Preview */}
-                    {(seoImage || seoTitle || seoDescription) && (
+                    {(previewImage || previewTitle || previewDescription) && (
                         <div className="mt-4">
                             <h4 className="mb-2 text-sm font-medium text-gray-700">Social Media Preview</h4>
                             <div className="overflow-hidden rounded-lg border">
-                                {seoImage ? (
+                                {previewImage ? (
                                     <img
-                                        src={seoImage}
+                                        src={previewImage}
                                         alt="Social preview"
                                         className="h-48 w-full object-cover"
                                         onError={(e) => {
@@ -194,19 +193,19 @@ export function SEOFields({ data, setData, errors, showSlug = true, slugLabel = 
                                         }}
                                     />
                                 ) : null}
-                                <div className={`${seoImage ? 'hidden' : ''} flex h-48 items-center justify-center bg-gray-100`}>
+                                <div className={`${previewImage ? 'hidden' : ''} flex h-48 items-center justify-center bg-gray-100`}>
                                     <div className="text-center">
                                         <Image className="mx-auto h-12 w-12 text-gray-400" />
-                                        <p className="mt-2 text-sm text-gray-500">No image selected</p>
+                                        <p className="mt-2 text-sm text-gray-500">Add a featured image to see preview</p>
                                     </div>
                                 </div>
                                 <div className="bg-gray-50 p-3">
                                     <div className="text-xs uppercase text-gray-500">{siteDomain}</div>
                                     <h3 className="mt-1 font-semibold text-gray-900">
-                                        {seoTitle || 'Page Title'}
+                                        {previewTitle || 'Page Title'}
                                     </h3>
                                     <p className="mt-1 text-sm text-gray-600">
-                                        {seoDescription?.substring(0, 100) || 'Page description...'}
+                                        {previewDescription?.substring(0, 100) || 'Page description...'}
                                     </p>
                                 </div>
                             </div>
