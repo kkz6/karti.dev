@@ -13,6 +13,7 @@
     "devDependencies": {
         "@eslint/js": "^9.19.0",
         "@types/lodash.throttle": "^4.1.9",
+        "@types/marked": "^5.0.2",
         "@types/node": "^22.13.5",
         "@types/qs": "^6.14.0",
         "@types/slug": "^5.0.9",
@@ -89,6 +90,7 @@
         "laravel-vite-plugin": "^2.0",
         "lodash.throttle": "^4.1.1",
         "lucide-react": "^0.475.0",
+        "marked": "^17.0.1",
         "prism-code-editor": "^4.1.0",
         "prismjs": "^1.30.0",
         "react": "^19.0.0",

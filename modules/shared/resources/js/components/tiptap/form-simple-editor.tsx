@@ -1,4 +1,6 @@
+import { DOMParser as ProseMirrorDOMParser } from '@tiptap/pm/model';
 import { EditorContent, EditorContext, useEditor } from '@tiptap/react';
+import { marked } from 'marked';
 import * as React from 'react';
 
 // --- Tiptap Core Extensions ---
@@ -61,6 +63,34 @@ import { useWindowSize } from '@shared/hooks/use-window-size';
 // --- Components ---
 
 // --- Lib ---
+
+// Configure marked for safe HTML output
+marked.setOptions({
+    gfm: true,
+    breaks: true,
+});
+
+// Detect if text looks like markdown
+function looksLikeMarkdown(text: string): boolean {
+    const markdownPatterns = [
+        /^#{1,6}\s+.+$/m, // Headers
+        /\*\*[^*]+\*\*/, // Bold
+        /\*[^*]+\*/, // Italic
+        /~~[^~]+~~/, // Strikethrough
+        /`[^`]+`/, // Inline code
+        /```[\s\S]*?```/, // Code blocks
+        /^\s*[-*+]\s+.+$/m, // Unordered lists
+        /^\s*\d+\.\s+.+$/m, // Ordered lists
+        /^\s*>\s+.+$/m, // Blockquotes
+        /\[.+?\]\(.+?\)/, // Links
+        /!\[.*?\]\(.+?\)/, // Images
+        /^\s*---\s*$/m, // Horizontal rule
+        /^\s*\*\*\*\s*$/m, // Horizontal rule alt
+    ];
+
+    return markdownPatterns.some((pattern) => pattern.test(text));
+}
+
 const MainToolbarContent = ({
     onHighlighterClick,
     onLinkClick,
@@ -162,6 +192,37 @@ export function FormSimpleEditor({ content: initialContent = '', onChange, place
                 autocapitalize: 'off',
                 'aria-label': placeholder || 'Main content area, start typing to enter text.',
                 class: 'simple-editor',
+            },
+            handlePaste: (view, event) => {
+                const clipboardData = event.clipboardData;
+                if (!clipboardData) return false;
+
+                const text = clipboardData.getData('text/plain');
+                const html = clipboardData.getData('text/html');
+
+                // If there's already HTML content, let TipTap handle it normally
+                if (html && html.trim()) return false;
+
+                // Check if the plain text looks like markdown
+                if (text && looksLikeMarkdown(text)) {
+                    event.preventDefault();
+
+                    const htmlContent = marked.parse(text, { async: false }) as string;
+
+                    // Parse HTML into a ProseMirror slice
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = htmlContent;
+
+                    const parser = ProseMirrorDOMParser.fromSchema(view.state.schema);
+                    const parsedSlice = parser.parseSlice(tempDiv);
+
+                    const { tr } = view.state;
+                    view.dispatch(tr.replaceSelection(parsedSlice));
+
+                    return true;
+                }
+
+                return false;
             },
         },
         extensions: [
