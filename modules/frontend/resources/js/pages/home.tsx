@@ -1,10 +1,11 @@
-import { Link , Head } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { Button } from '@shared/components/ui/button';
-import { Card } from '../components/Card';
-import PublicLayout from '../layouts/public-layout';
-import { Container } from '../components/Container';
-import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { Card } from '../components/Card';
+import { Container } from '../components/Container';
+import { SeoHead, type SeoData } from '../components/SeoHead';
+import PublicLayout from '../layouts/public-layout';
 
 interface ArticleData {
     slug: string;
@@ -24,6 +25,8 @@ interface FeaturedPhoto {
 interface HomeProps {
     articles: ArticleData[];
     featuredPhotos?: FeaturedPhoto[];
+    seo?: SeoData;
+    jsonLd?: Record<string, unknown>;
 }
 
 function MailIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
@@ -269,10 +272,10 @@ function CardStack({ featuredPhotos = [] }: { featuredPhotos?: FeaturedPhoto[] }
     );
 }
 
-export default function Home({ articles = [], featuredPhotos = [] }: HomeProps) {
+export default function Home({ articles = [], featuredPhotos = [], seo, jsonLd }: HomeProps) {
     return (
         <PublicLayout>
-            <Head title="Home" />
+            <SeoHead seo={seo} jsonLd={jsonLd} />
             <Container className="mt-9">
                 <div className="max-w-3xl">
                     <div className="font-mono text-sm text-muted-foreground mb-4">

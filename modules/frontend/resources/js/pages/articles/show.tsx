@@ -1,6 +1,6 @@
-import { Head } from '@inertiajs/react';
 import { ArticleContent } from '../../components/ArticleContent';
 import { ArticleLayout } from '../../components/ArticleLayout';
+import { SeoHead, type SeoData } from '../../components/SeoHead';
 import PublicLayout from '../../layouts/public-layout';
 
 interface ArticleProps {
@@ -11,12 +11,14 @@ interface ArticleProps {
         content: string;
         author?: string;
     };
+    seo?: SeoData;
+    jsonLd?: Record<string, unknown>;
 }
 
-export default function ArticleShow({ article }: ArticleProps) {
+export default function ArticleShow({ article, seo, jsonLd }: ArticleProps) {
     return (
         <>
-            <Head title={article.title} />
+            <SeoHead seo={seo} jsonLd={jsonLd} />
             <PublicLayout>
                 <ArticleLayout article={article}>
                     <ArticleContent content={article.content} />

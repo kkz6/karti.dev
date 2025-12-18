@@ -1,8 +1,8 @@
 import React from 'react';
-import { Link, Head } from '@inertiajs/react';
-import PublicLayout from '../../layouts/public-layout';
 import { Card } from '../../components/Card';
+import { SeoHead, type SeoData } from '../../components/SeoHead';
 import { SimpleLayout } from '../../components/SimpleLayout';
+import PublicLayout from '../../layouts/public-layout';
 
 interface Article {
     slug: string;
@@ -13,6 +13,7 @@ interface Article {
 
 interface ArticlesProps {
     articles: Article[];
+    seo?: SeoData;
 }
 
 function Article({ article }: { article: Article }) {
@@ -43,10 +44,10 @@ function Article({ article }: { article: Article }) {
     );
 }
 
-export default function Articles({ articles = [] }: ArticlesProps) {
+export default function Articles({ articles = [], seo }: ArticlesProps) {
     return (
         <>
-            <Head title="Articles" />
+            <SeoHead seo={seo} />
             <PublicLayout>
                 <SimpleLayout
                     title="Writing on software design, company building, and the aerospace industry."
