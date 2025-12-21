@@ -77,7 +77,7 @@ export const ImageControls: React.FC<ImageControlsProps> = ({ dragMode, onOperat
                                 }`}
                                 onClick={() => onOperation(control.op)}
                             >
-                                {processing ? <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-gray-600"></div> : control.icon}
+                                {control.icon}
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent>

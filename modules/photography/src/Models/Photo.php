@@ -5,6 +5,7 @@ namespace Modules\Photography\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 use Modules\Blog\Models\Category;
 use Modules\Media\Models\Media;
 use Modules\Media\Models\Traits\Mediable;
@@ -65,6 +66,15 @@ class Photo extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order')->orderBy('published_at', 'desc');
+    }
+
+    public function getExcerptAttribute(): string
+    {
+        if (empty($this->description)) {
+            return '';
+        }
+
+        return Str::limit(strip_tags($this->description), 160);
     }
 
     public function getRouteKeyName(): string

@@ -43,15 +43,8 @@ export const AssetRow: React.FC<AssetRowProps> = ({
     };
 
     const handleDoubleClick = () => {
-        onDoubleClicked(asset);
-    };
-
-    const handleSingleClick = () => {
-        if (isSelected) {
-            onDeselected(asset.id);
-        } else {
-            onSelected(asset.id);
-        }
+        // Open edit dialog on double-click
+        onEditing(asset.id);
     };
 
     const handleEdit = () => {
@@ -104,7 +97,6 @@ export const AssetRow: React.FC<AssetRowProps> = ({
             <td className="p-3">
                 <div
                     className="flex h-8 w-8 cursor-pointer items-center justify-center overflow-hidden rounded"
-                    onClick={handleSingleClick}
                     onDoubleClick={handleDoubleClick}
                 >
                     {thumbnailUrl ? (
@@ -119,7 +111,6 @@ export const AssetRow: React.FC<AssetRowProps> = ({
             <td className="p-3">
                 <div
                     className="cursor-pointer text-sm font-medium text-gray-900 hover:text-blue-600 dark:text-gray-100 dark:hover:text-blue-400"
-                    onClick={handleSingleClick}
                     onDoubleClick={handleDoubleClick}
                 >
                     {asset.title || asset.filename}

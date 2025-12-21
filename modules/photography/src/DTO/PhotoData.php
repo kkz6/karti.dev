@@ -4,8 +4,36 @@ declare(strict_types=1);
 
 namespace Modules\Photography\DTO;
 
+use Spatie\LaravelData\Attributes\WithCast;
+use Spatie\LaravelData\Casts\Cast;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Support\Creation\CreationContext;
+use Spatie\LaravelData\Support\DataProperty;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
+
+class IntArrayCast implements Cast
+{
+    public function cast(DataProperty $property, mixed $value, array $properties, CreationContext $context): array
+    {
+        if (! is_array($value)) {
+            return [];
+        }
+
+        return array_map(fn ($v) => (int) $v, array_filter($value, fn ($v) => $v !== '' && $v !== null));
+    }
+}
+
+class NullableIntCast implements Cast
+{
+    public function cast(DataProperty $property, mixed $value, array $properties, CreationContext $context): ?int
+    {
+        if ($value === '' || $value === null) {
+            return null;
+        }
+
+        return (int) $value;
+    }
+}
 
 class PhotoData extends Data
 {
@@ -13,7 +41,9 @@ class PhotoData extends Data
         public string $title,
         public string $slug,
         public ?string $description,
+        #[WithCast(IntArrayCast::class)]
         public array $image_ids,
+        #[WithCast(NullableIntCast::class)]
         public ?int $cover_image,
         public string $status,
         public bool $featured,
@@ -39,9 +69,9 @@ class PhotoData extends Data
             'title'        => ['required', 'string', 'max:255'],
             'slug'         => $slugRule,
             'description'  => ['nullable', 'string'],
-            'image_ids'    => ['required', 'array'],
-            'image_ids.*'  => ['integer', 'exists:media,id'],
-            'cover_image'  => ['nullable', 'integer', 'exists:media,id'],
+            'image_ids'    => ['required', 'array', 'min:1'],
+            'image_ids.*'  => ['numeric', 'exists:media,id'],
+            'cover_image'  => ['nullable', 'numeric', 'exists:media,id'],
             'status'       => ['required', 'in:draft,published,archived'],
             'featured'     => ['boolean'],
             'sort_order'   => ['integer', 'min:0'],

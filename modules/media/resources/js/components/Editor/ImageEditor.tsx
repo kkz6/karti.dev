@@ -306,6 +306,71 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
         const cropperImage = cropperImageRef.current;
         if (!cropperSelection || !asset || !cropperImage) return null;
 
+        // Check if filters are applied
+        const hasFilters = Object.keys(camanFilters).length > 0;
+
+        // Get the transformation matrix from cropper
+        const matrix = cropperImage.$getTransform();
+        const hasTransforms = !isIdentityMatrix(matrix);
+        const hasCrop = croppedByUser && !cropperSelection.hidden && cropperSelection.width > 0;
+
+        // If we have filters and no transforms/crop, just return the filtered image directly
+        if (hasFilters && filterProcessorRef.current && !hasTransforms && !hasCrop) {
+            return filterProcessorRef.current.getDataURL(asset.mime_type);
+        }
+
+        // If we have filters with transforms or crop, we need to apply them to the filtered image
+        if (hasFilters && filterProcessorRef.current) {
+            const filteredDataUrl = filterProcessorRef.current.getDataURL(asset.mime_type);
+
+            // Load the filtered image
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            await new Promise<void>((resolve, reject) => {
+                img.onload = () => resolve();
+                img.onerror = reject;
+                img.src = filteredDataUrl;
+            });
+
+            // Create canvas for the final output
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return null;
+
+            // Determine output dimensions based on transforms
+            let outputWidth = img.naturalWidth;
+            let outputHeight = img.naturalHeight;
+
+            // Check for 90/270 degree rotation (swap dimensions)
+            const rotation = Math.atan2(matrix[1], matrix[0]) * (180 / Math.PI);
+            const normalizedRotation = ((rotation % 360) + 360) % 360;
+            if (Math.abs(normalizedRotation - 90) < 1 || Math.abs(normalizedRotation - 270) < 1) {
+                outputWidth = img.naturalHeight;
+                outputHeight = img.naturalWidth;
+            }
+
+            canvas.width = outputWidth;
+            canvas.height = outputHeight;
+
+            if (asset.mime_type?.includes('png')) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            // Apply transformation matrix
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.transform(matrix[0], matrix[1], matrix[2], matrix[3], 0, 0);
+            ctx.translate(-img.naturalWidth / 2, -img.naturalHeight / 2);
+            ctx.drawImage(img, 0, 0);
+            ctx.restore();
+
+            return canvas.toDataURL(asset.mime_type);
+        }
+
+        // No filters - use the original cropper logic
         if (!croppedByUser || cropperSelection.hidden) {
             cropperSelection.hidden = false;
             cropperSelection.x = 0;
@@ -330,7 +395,52 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
         }
 
         return canvas.toDataURL(asset.mime_type);
-    }, [asset, croppedByUser]);
+    }, [asset, croppedByUser, camanFilters]);
+
+    const reloadWithAsset = useCallback(
+        async (newAsset: MediaAsset) => {
+            // Reset state
+            setHasChanged(false);
+            setCroppedByUser(false);
+            setCamanFilters({});
+
+            // Reset cropper transforms
+            const cropperImage = cropperImageRef.current;
+            const cropperSelection = cropperSelectionRef.current;
+            const cropperHandle = cropperHandleRef.current;
+
+            if (cropperImage) {
+                cropperImage.$resetTransform();
+            }
+
+            if (cropperSelection) {
+                cropperSelection.$reset();
+                cropperSelection.hidden = true;
+            }
+
+            if (cropperHandle) {
+                cropperHandle.action = ACTION_MOVE;
+            }
+
+            setDragMode('move');
+
+            // Reload the filter processor with the new image
+            if (filterProcessorRef.current) {
+                // Add cache buster to force reload
+                const cacheBustedUrl = `${newAsset.url}?t=${Date.now()}`;
+                await filterProcessorRef.current.loadImage(cacheBustedUrl);
+                setOriginalImageUrl(cacheBustedUrl);
+            }
+
+            // Update cropper image source with cache buster
+            if (cropperImage) {
+                const cacheBustedUrl = `${newAsset.url}?t=${Date.now()}`;
+                cropperImage.$image.src = cacheBustedUrl;
+                setTimeout(() => centerImage(), 100);
+            }
+        },
+        [centerImage],
+    );
 
     const handleSave = useCallback(async () => {
         if (!asset || !cropperSelectionRef.current) return;
@@ -340,21 +450,27 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
 
         setProcessing(true);
 
-        const response = await axios.post(route('media.image-editor.save'), {
-            data: imageData,
-            path: '',
-            name: asset.filename,
-            mime_type: asset.mime_type,
-            overwrite: true,
-        });
+        try {
+            const response = await axios.post(route('media.image-editor.save'), {
+                data: imageData,
+                path: asset.directory || '',
+                name: asset.filename,
+                mime_type: asset.mime_type,
+                overwrite: true,
+                asset_id: asset.id,
+            });
 
-        if (response.data.success) {
-            onSaved?.(response.data.asset);
-            onClose();
+            if (response.data.success) {
+                onSaved?.(response.data.asset);
+                // Reload the editor with the saved image instead of closing
+                await reloadWithAsset(response.data.asset);
+            }
+        } catch (error) {
+            console.error('Error saving image:', error);
+        } finally {
+            setProcessing(false);
         }
-
-        setProcessing(false);
-    }, [asset, getCropperData, onSaved, onClose]);
+    }, [asset, getCropperData, onSaved, reloadWithAsset]);
 
     const handleSaveAsCopy = useCallback(async () => {
         if (!asset || !cropperSelectionRef.current) return;
@@ -364,27 +480,33 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
 
         setProcessing(true);
 
-        // Generate a new filename for the copy
-        const timestamp = Date.now();
-        const nameWithoutExt = asset.filename.replace(/\.[^/.]+$/, '');
-        const extension = asset.filename.split('.').pop();
-        const newFilename = `${nameWithoutExt}_copy_${timestamp}.${extension}`;
+        try {
+            // Generate a new filename for the copy
+            const timestamp = Date.now();
+            const nameWithoutExt = asset.filename.replace(/\.[^/.]+$/, '');
+            const extension = asset.filename.split('.').pop();
+            const newFilename = `${nameWithoutExt}_copy_${timestamp}.${extension}`;
 
-        const response = await axios.post(route('media.image-editor.save'), {
-            data: imageData,
-            path: '',
-            name: newFilename,
-            mime_type: asset.mime_type,
-            overwrite: false,
-        });
+            const response = await axios.post(route('media.image-editor.save'), {
+                data: imageData,
+                path: asset.directory || '',
+                name: newFilename,
+                mime_type: asset.mime_type,
+                overwrite: false,
+            });
 
-        if (response.data.success) {
-            onSaved?.(response.data.asset);
-            onClose();
+            if (response.data.success) {
+                onSaved?.(response.data.asset);
+                // Reset the editor state but keep the original image
+                // (the copy was saved separately, original is unchanged)
+                setHasChanged(false);
+            }
+        } catch (error) {
+            console.error('Error saving image copy:', error);
+        } finally {
+            setProcessing(false);
         }
-
-        setProcessing(false);
-    }, [asset, getCropperData, onSaved, onClose]);
+    }, [asset, getCropperData, onSaved]);
 
     const toggleDiff = useCallback(async () => {
         if (!showDiff && filterProcessorRef.current) {

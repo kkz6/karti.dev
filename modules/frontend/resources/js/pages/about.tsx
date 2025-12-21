@@ -1,6 +1,7 @@
 import { Container } from '@frontend/components/Container';
+import { SeoHead, SeoData } from '@frontend/components/SeoHead';
 import PublicLayout from '@frontend/layouts/public-layout';
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import React from 'react';
 
 function SocialLink({
@@ -77,12 +78,14 @@ function XIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 
 interface AboutProps {
     portraitImage?: string;
+    seo?: SeoData;
+    jsonLd?: Record<string, unknown>;
 }
 
-export default function About({ portraitImage = '/images/about.jpg' }: AboutProps) {
+export default function About({ portraitImage = '/images/about.jpg', seo, jsonLd }: AboutProps) {
     return (
         <PublicLayout>
-            <Head title="About" />
+            <SeoHead seo={seo} jsonLd={jsonLd} />
             <Container className="mt-16 sm:mt-32">
                 <div className="grid grid-cols-1 gap-y-16 lg:grid-cols-2 lg:grid-rows-[auto_1fr] lg:gap-y-12">
                     <div className="lg:pl-20">

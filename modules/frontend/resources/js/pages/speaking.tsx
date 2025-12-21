@@ -1,8 +1,8 @@
 import { Card } from '@frontend/components/Card';
 import { Section } from '@frontend/components/Section';
 import { SimpleLayout } from '@frontend/components/SimpleLayout';
+import { SeoHead, SeoData } from '@frontend/components/SeoHead';
 import PublicLayout from '@frontend/layouts/public-layout';
-import { Head } from '@inertiajs/react';
 import React from 'react';
 
 interface SpeakingEvent {
@@ -17,6 +17,7 @@ interface SpeakingEvent {
 
 interface SpeakingProps {
     events?: Record<string, SpeakingEvent[]>;
+    seo?: SeoData;
 }
 
 function SpeakingSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -40,7 +41,7 @@ function Appearance({ title, description, event, cta, href }: SpeakingEvent) {
     );
 }
 
-export default function Speaking({ events = {} }: SpeakingProps) {
+export default function Speaking({ events = {}, seo }: SpeakingProps) {
     // Helper function to format event type titles
     const formatEventTypeTitle = (type: string) => {
         switch (type) {
@@ -59,7 +60,7 @@ export default function Speaking({ events = {} }: SpeakingProps) {
 
     return (
         <>
-            <Head title="Speaking" />
+            <SeoHead seo={seo} />
             <PublicLayout>
                 <SimpleLayout
                     title="I've spoken at events all around the world and been interviewed for many podcasts."

@@ -16,6 +16,8 @@ class ImageEditorSaveData extends Data
         #[MapName('mime_type')]
         public string $mimeType,
         public bool $overwrite = false,
+        #[MapName('asset_id')]
+        public ?int $assetId = null,
     ) {}
 
     public static function rules(): array
@@ -26,6 +28,7 @@ class ImageEditorSaveData extends Data
             'name' => ['required', 'string'],
             'mime_type' => ['required', 'string'],
             'overwrite' => ['boolean'],
+            'asset_id' => ['nullable', 'integer'],
         ];
     }
 }

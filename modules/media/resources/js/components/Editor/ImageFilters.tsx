@@ -143,11 +143,7 @@ export const ImageFilters: React.FC<ImageFiltersProps> = ({ processing, reset, a
                                             isFilterActive(filter.filterName) ? 'border border-blue-300 bg-blue-100 text-blue-700' : ''
                                         }`}
                                     >
-                                        {processing ? (
-                                            <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-gray-600"></div>
-                                        ) : (
-                                            filter.icon
-                                        )}
+                                        {filter.icon}
                                     </Button>
                                 </PopoverTrigger>
                             </TooltipTrigger>
@@ -197,7 +193,7 @@ export const ImageFilters: React.FC<ImageFiltersProps> = ({ processing, reset, a
                                 }`}
                                 onClick={() => handleFilterChange(filter.filterName, isFilterActive(filter.filterName) ? null : 1)}
                             >
-                                {processing ? <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-gray-600"></div> : filter.icon}
+                                {filter.icon}
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent>

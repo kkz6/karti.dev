@@ -177,34 +177,34 @@ export function SEOFields({ data, setData, errors, showSlug = true, slugLabel = 
                         </div>
                     </div>
 
-                    {/* Social Media Preview */}
+                    {/* Social Media Preview - Twitter/Facebook Card Style */}
                     {(previewImage || previewTitle || previewDescription) && (
                         <div className="mt-4">
                             <h4 className="mb-2 text-sm font-medium text-gray-700">Social Media Preview</h4>
-                            <div className="overflow-hidden rounded-lg border">
+                            <div className="max-w-md overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                                {/* Image Container */}
                                 {previewImage ? (
-                                    <img
-                                        src={previewImage}
-                                        alt="Social preview"
-                                        className="h-48 w-full object-cover"
-                                        onError={(e) => {
-                                            e.currentTarget.style.display = 'none';
-                                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                                        }}
+                                    <div
+                                        className="h-52 w-full bg-cover bg-center bg-no-repeat"
+                                        style={{ backgroundImage: `url(${previewImage})` }}
+                                        role="img"
+                                        aria-label="Social preview"
                                     />
-                                ) : null}
-                                <div className={`${previewImage ? 'hidden' : ''} flex h-48 items-center justify-center bg-gray-100`}>
-                                    <div className="text-center">
-                                        <Image className="mx-auto h-12 w-12 text-gray-400" />
-                                        <p className="mt-2 text-sm text-gray-500">Add a featured image to see preview</p>
+                                ) : (
+                                    <div className="flex h-40 w-full items-center justify-center bg-gray-100">
+                                        <div className="text-center">
+                                            <Image className="mx-auto h-12 w-12 text-gray-400" />
+                                            <p className="mt-2 text-sm text-gray-500">Add a featured image</p>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="bg-gray-50 p-3">
-                                    <div className="text-xs uppercase text-gray-500">{siteDomain}</div>
-                                    <h3 className="mt-1 font-semibold text-gray-900">
+                                )}
+                                {/* Card Content */}
+                                <div className="p-3">
+                                    <div className="text-xs uppercase tracking-wide text-gray-500">{siteDomain}</div>
+                                    <h3 className="mt-1 line-clamp-2 font-semibold leading-tight text-gray-900">
                                         {previewTitle || 'Page Title'}
                                     </h3>
-                                    <p className="mt-1 text-sm text-gray-600">
+                                    <p className="mt-1 line-clamp-2 text-sm leading-snug text-gray-600">
                                         {previewDescription?.substring(0, 100) || 'Page description...'}
                                     </p>
                                 </div>

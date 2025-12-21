@@ -216,7 +216,6 @@ class MediaController extends BaseController
      */
     public function saveEditedImage(ImageEditorSaveData $saveData)
     {
-
         // Decode base64 image data
         $imageData = $saveData->data;
         if (strpos($imageData, 'data:') === 0) {
@@ -229,35 +228,66 @@ class MediaController extends BaseController
             return response(['success' => false, 'message' => 'Invalid image data'], 400);
         }
 
-        // Verify disk and path
-        $disk = $this->manager->verifyDisk('public'); // Default to public disk
-        $path = $this->manager->verifyDirectory($disk, trim($saveData->path ?? '', '/'));
+        if ($saveData->overwrite && $saveData->assetId) {
+            // When overwriting, update the existing media record
+            $media = Media::find($saveData->assetId);
 
-        // Generate filename if not overwriting
-        $filename = $saveData->name;
-        if (! $saveData->overwrite) {
-            // Check if file exists and generate unique name
-            $diskInstance = Storage::disk($disk);
-            $fullPath     = $path ? $path.'/'.$filename : $filename;
-
-            if ($diskInstance->exists($fullPath)) {
-                $pathInfo  = pathinfo($filename);
-                $basename  = $pathInfo['filename'];
-                $extension = $pathInfo['extension'] ?? '';
-                $counter   = 1;
-
-                do {
-                    $newBasename = $basename.'_'.$counter;
-                    $filename    = $extension ? $newBasename.'.'.$extension : $newBasename;
-                    $fullPath    = $path ? $path.'/'.$filename : $filename;
-                    $counter++;
-                } while ($diskInstance->exists($fullPath));
+            if (! $media) {
+                return response(['success' => false, 'message' => 'Original asset not found'], 404);
             }
+
+            // Use the media's disk and path
+            $diskInstance = Storage::disk($media->disk);
+            $fullPath = $media->getDiskPath();
+
+            // Delete old file if exists
+            if ($diskInstance->exists($fullPath)) {
+                $diskInstance->delete($fullPath);
+            }
+
+            // Save the new file
+            $diskInstance->put($fullPath, $decodedImage);
+
+            // Update the media record
+            $media->update([
+                'size' => strlen($decodedImage),
+            ]);
+
+            return response([
+                'success' => true,
+                'message' => 'Image saved successfully',
+                'asset'   => new MediaResource($media->fresh()),
+            ]);
+        }
+
+        // For new copies, use default disk from config
+        $disk = config('mediable.default_disk');
+        $path = trim($saveData->path ?? '', '/');
+
+        // Verify directory exists if path is specified
+        if ($path) {
+            $path = $this->manager->verifyDirectory($path);
+        }
+
+        $filename = $saveData->name;
+        $diskInstance = Storage::disk($disk);
+        $fullPath = $path ? $path.'/'.$filename : $filename;
+
+        if ($diskInstance->exists($fullPath)) {
+            $pathInfo  = pathinfo($filename);
+            $basename  = $pathInfo['filename'];
+            $extension = $pathInfo['extension'] ?? '';
+            $counter   = 1;
+
+            do {
+                $newBasename = $basename.'_'.$counter;
+                $filename    = $extension ? $newBasename.'.'.$extension : $newBasename;
+                $fullPath    = $path ? $path.'/'.$filename : $filename;
+                $counter++;
+            } while ($diskInstance->exists($fullPath));
         }
 
         // Save the file
-        $diskInstance = Storage::disk($disk);
-        $fullPath     = $path ? $path.'/'.$filename : $filename;
         $diskInstance->put($fullPath, $decodedImage);
 
         // Create media record
@@ -285,7 +315,7 @@ class MediaController extends BaseController
 
         return response([
             'success' => true,
-            'message' => $saveData->overwrite ? 'Image saved successfully' : 'Image copy saved successfully',
+            'message' => 'Image copy saved successfully',
             'asset'   => new MediaResource($media),
         ]);
     }

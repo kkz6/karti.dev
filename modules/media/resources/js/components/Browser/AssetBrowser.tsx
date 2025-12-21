@@ -334,38 +334,38 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                                 <h3 className="font-semibold">
                                     {uploads.some(u => u.status === 'uploading') ? 'Uploading files...' : 'Upload Status'}
                                 </h3>
-                                <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    onClick={() => setUploads([])} 
-                                    className="h-6 w-6 p-0 hover:bg-blue-100 dark:hover:bg-blue-800"
-                                >
-                                    <X className="h-4 w-4" />
-                                </Button>
+                                {uploads.length > 1 && !uploads.some(u => u.status === 'uploading') && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setUploads([])}
+                                        className="h-auto px-2 py-1 text-xs hover:bg-blue-100 dark:hover:bg-blue-800"
+                                    >
+                                        Clear All
+                                    </Button>
+                                )}
                             </div>
                             {uploads.map((upload) => (
                                 <div key={upload.id} className="upload-item mb-2">
-                                    <div className="flex justify-between items-center text-sm">
-                                        <span className="flex-1">{upload.name}</span>
-                                        <div className="flex items-center gap-2">
-                                            {upload.status === 'error' ? (
-                                                <span className="text-red-600 font-medium">Error</span>
-                                            ) : upload.status === 'completed' ? (
-                                                <span className="text-green-600 font-medium">Completed</span>
-                                            ) : (
-                                                <span>{upload.progress}%</span>
-                                            )}
-                                            {(upload.status === 'error' || upload.status === 'completed') && (
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="sm" 
-                                                    onClick={() => setUploads(prev => prev.filter(u => u.id !== upload.id))} 
-                                                    className="h-4 w-4 p-0 hover:bg-blue-100 dark:hover:bg-blue-800"
-                                                >
-                                                    <X className="h-3 w-3" />
-                                                </Button>
-                                            )}
-                                        </div>
+                                    <div className="flex items-center text-sm gap-2">
+                                        <span className="flex-1 truncate">{upload.name}</span>
+                                        {upload.status === 'error' ? (
+                                            <span className="text-red-600 font-medium shrink-0">Error</span>
+                                        ) : upload.status === 'completed' ? (
+                                            <span className="text-green-600 font-medium shrink-0">Completed</span>
+                                        ) : (
+                                            <span className="shrink-0">{upload.progress}%</span>
+                                        )}
+                                        {(upload.status === 'error' || upload.status === 'completed') && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => setUploads(prev => prev.filter(u => u.id !== upload.id))}
+                                                className="h-6 w-6 shrink-0 hover:bg-blue-100 dark:hover:bg-blue-800"
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </Button>
+                                        )}
                                     </div>
                                     {upload.status === 'error' ? (
                                         <div className="text-sm text-red-600 mt-1">{upload.error}</div>

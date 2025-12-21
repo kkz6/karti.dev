@@ -22,7 +22,7 @@ trait HasSeo
             title: $seoModel?->title ?? $this->meta_title ?? $this->title ?? $defaults->title,
             description: $seoModel?->description ?? $this->meta_description ?? $this->description ?? $this->excerpt ?? $defaults->description,
             author: $seoModel?->author ?? $defaults->author,
-            image: $seoModel?->image ?? $this->featured_image ?? $this->cover_image ?? $defaults->image,
+            image: $seoModel?->image ?? $this->featured_image_url ?? $this->featured_image ?? $this->cover_image ?? $defaults->image,
             canonical_url: $seoModel?->canonical_url,
             robots: $seoModel?->robots ?? $defaults->robots,
             type: $seoModel?->type ?? $defaults->type,

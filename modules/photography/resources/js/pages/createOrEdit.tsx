@@ -65,12 +65,13 @@ export default function Create({ categories, photo }: PhotoGalleryCreateEditPage
             twitter_creator: ''
         },
         published_at: photo?.published_at || '',
+        photo_id: photo?.id || null,
     });
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         if (isEdit) {
-            put(route('admin.photography.update', { photography: photo!.id }));
+            put(route('admin.photography.update', { photography: photo!.slug }));
         } else {
             post(route('admin.photography.store'));
         }

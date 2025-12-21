@@ -1,12 +1,12 @@
 import type { MediaAsset } from '@media/types/media';
 import { Alert, AlertDescription } from '@shared/components/ui/alert';
 import { Button } from '@shared/components/ui/button';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
+import { Dialog, DialogContent } from '@shared/components/ui/dialog';
 import { Input } from '@shared/components/ui/input';
 import { Label } from '@shared/components/ui/label';
 import { Textarea } from '@shared/components/ui/textarea';
 import axios from 'axios';
-import { Download, ExternalLink, Save, X } from 'lucide-react';
+import { Download, ExternalLink, Save, Trash2, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { AssetDeleter } from '../Browser/AssetDeleter';
 import { FileIcon } from '../Icons';
@@ -58,8 +58,8 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
 
         setLoading(true);
         try {
-            const response = await axios.post(route('media.show', assetId));
-            const assetData = response.data;
+            const response = await axios.get(route('media.show', assetId));
+            const assetData = response.data.data;
 
             // The DTO already provides all necessary computed properties
             setAsset(assetData);
@@ -172,70 +172,62 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl md:max-w-4xl lg:max-w-5xl">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                        {asset && <FileIcon extension={asset.extension} className="h-5 w-5" />}
-                        {asset?.filename || 'Asset Editor'}
-                    </DialogTitle>
-                </DialogHeader>
-
-                {loading && (
-                    <div className="flex items-center justify-center py-8">
-                        <LoadingGraphic />
-                    </div>
-                )}
-
-                {saving && (
-                    <div className="flex items-center justify-center py-8">
-                        <LoadingGraphic text="Saving..." />
-                    </div>
-                )}
-
-                {errors.length > 0 && (
-                    <Alert className="mb-4">
-                        <AlertDescription>
-                            {errors.map((error, index) => (
-                                <div key={index}>{error}</div>
-                            ))}
-                        </AlertDescription>
-                    </Alert>
-                )}
-
-                {!loading && !saving && asset && (
-                    <div className="space-y-6">
-                        {/* Asset Meta Information */}
-                        <div className="grid grid-cols-1 gap-4 rounded-lg bg-gray-50 p-4 md:grid-cols-2 dark:bg-gray-800">
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                    <FileIcon extension={asset.extension} className="h-4 w-4" />
-                                    <span className="text-sm font-medium">{asset.path}</span>
-                                </div>
-
-                                {isImage && asset.width && asset.height && (
-                                    <div className="text-sm">
-                                        <span className="font-medium">Dimensions:</span> {asset.width} x {asset.height}
-                                    </div>
+            <DialogContent className="flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl md:max-w-4xl lg:max-w-5xl">
+                {/* Sticky Header */}
+                <div className="sticky top-0 z-10 border-b bg-background">
+                    <div className="flex items-center justify-between px-6 py-4">
+                        <div className="flex items-center gap-3">
+                            {asset && <FileIcon extension={asset.extension} className="h-6 w-6" />}
+                            <div className="flex flex-col">
+                                <span className="font-semibold">{asset?.filename || 'Asset Editor'}</span>
+                                {asset && (
+                                    <span className="text-muted-foreground text-xs">
+                                        {asset.path} · {formatFileSize(asset.size)}
+                                        {isImage && asset.width && asset.height && ` · ${asset.width}×${asset.height}`}
+                                    </span>
                                 )}
-
-                                <div className="text-sm">
-                                    <span className="font-medium">Size:</span> {formatFileSize(asset.size)}
-                                </div>
-
-                                <div className="text-sm">
-                                    <span className="font-medium">Last Modified:</span> {formatDate(asset.updated_at)}
-                                </div>
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex items-start justify-end gap-2">
-                                <ActionButton action={handleOpen} icon={ExternalLink} tooltip="Open in new tab" />
-                                <ActionButton action={handleDownload} icon={Download} tooltip="Download" />
-                                {allowDeleting && <ActionButton action={handleDeleteClick} icon={X} tooltip="Delete" variant="destructive" />}
                             </div>
                         </div>
+                        <div className="flex items-center gap-2">
+                            {asset && (
+                                <>
+                                    <ActionButton action={handleOpen} icon={ExternalLink} tooltip="Open in new tab" />
+                                    <ActionButton action={handleDownload} icon={Download} tooltip="Download" />
+                                    {allowDeleting && <ActionButton action={handleDeleteClick} icon={Trash2} tooltip="Delete" variant="destructive" />}
+                                </>
+                            )}
+                            <ActionButton action={onClose} icon={X} tooltip="Close" />
+                        </div>
+                    </div>
+                </div>
 
-                        {/* Preview */}
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto px-6 py-4">
+                    {loading && (
+                        <div className="flex items-center justify-center py-8">
+                            <LoadingGraphic />
+                        </div>
+                    )}
+
+                    {saving && (
+                        <div className="flex items-center justify-center py-8">
+                            <LoadingGraphic text="Saving..." />
+                        </div>
+                    )}
+
+                    {errors.length > 0 && (
+                        <Alert className="mb-4">
+                            <AlertDescription>
+                                {errors.map((error, index) => (
+                                    <div key={index}>{error}</div>
+                                ))}
+                            </AlertDescription>
+                        </Alert>
+                    )}
+
+                    {!loading && !saving && asset && (
+                        <div className="space-y-6">
+                            {/* Preview */}
                         <div className="space-y-4">
                             {isImage && asset.preview && (
                                 <div className="flex justify-center">
@@ -345,19 +337,23 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
                             )}
                         </div>
                     </div>
-                )}
-
-                <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>
-                        Cancel
-                    </Button>
-                    {!loading && asset && (
-                        <Button onClick={handleSave} disabled={saving} className="flex items-center gap-2">
-                            <Save className="h-4 w-4" />
-                            {saving ? 'Saving...' : 'Save'}
-                        </Button>
                     )}
-                </DialogFooter>
+                </div>
+
+                {/* Sticky Footer */}
+                <div className="sticky bottom-0 z-10 border-t bg-background px-6 py-4">
+                    <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={onClose}>
+                            Cancel
+                        </Button>
+                        {!loading && asset && (
+                            <Button onClick={handleSave} disabled={saving} className="flex items-center gap-2">
+                                <Save className="h-4 w-4" />
+                                {saving ? 'Saving...' : 'Save'}
+                            </Button>
+                        )}
+                    </div>
+                </div>
             </DialogContent>
 
             {/* Focal Point Editor */}
@@ -381,8 +377,9 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
                     isOpen={showImageEditor}
                     onClose={() => setShowImageEditor(false)}
                     onSaved={(updatedAsset) => {
+                        // Update the asset in the editor but DON'T close the ImageEditor
+                        // Let the ImageEditor handle its own state (reload with the saved image)
                         setAsset(updatedAsset);
-                        setShowImageEditor(false);
                         if (onSaved) onSaved(updatedAsset);
                     }}
                 />

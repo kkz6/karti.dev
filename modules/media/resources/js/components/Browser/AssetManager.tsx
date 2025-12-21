@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { AssetBrowser } from './AssetBrowser';
 import { AssetMover } from './AssetMover';
 
@@ -7,11 +7,45 @@ interface AssetManagerProps {
     path?: string | null;
 }
 
+/**
+ * Get path from URL query parameter
+ */
+const getPathFromUrl = (): string => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('path') || '/';
+};
+
+/**
+ * Update URL query parameter without page reload
+ */
+const updateUrlPath = (path: string): void => {
+    const url = new URL(window.location.href);
+    if (path === '/' || path === '') {
+        url.searchParams.delete('path');
+    } else {
+        url.searchParams.set('path', path);
+    }
+    window.history.pushState({}, '', url.toString());
+};
+
 export const AssetManager: React.FC<AssetManagerProps> = ({ container = null, path = null }) => {
     const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
     const [showAssetMover, setShowAssetMover] = useState<boolean>(false);
-    const [activePath, setActivePath] = useState<string>(path || '/');
+    // Initialize from URL query param, fallback to prop, then default to '/'
+    const [activePath, setActivePath] = useState<string>(() => getPathFromUrl() || path || '/');
     const [activeContainer, setActiveContainer] = useState<string | null>(container);
+
+    // Listen for browser back/forward navigation
+    useEffect(() => {
+        const handlePopState = () => {
+            const urlPath = getPathFromUrl();
+            setActivePath(urlPath);
+            setSelectedAssets([]);
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, []);
 
     /**
      * When admin has navigated to another folder or container
@@ -19,6 +53,9 @@ export const AssetManager: React.FC<AssetManagerProps> = ({ container = null, pa
     const navigate = useCallback((containerId: string, newPath: string) => {
         setActiveContainer(containerId);
         setActivePath(newPath);
+
+        // Update URL query parameter
+        updateUrlPath(newPath);
 
         // Clear out any selections. It would be confusing to navigate to a different
         // folder and/or container, perform an action, and discover you performed

@@ -60,22 +60,21 @@ class BlogController extends BaseController
      */
     public function store(ArticleData $dto): RedirectResponse
     {
-
-        // Process featured image from asset field
+        // Process featured image from asset field - store the ID
         $featuredImageData = $dto->featured_image ?? [];
-        $featuredImageUrl  = null;
+        $featuredImageId   = null;
 
         if (! empty($featuredImageData) && is_array($featuredImageData)) {
-            // Extract the URL from the first asset
-            $firstAsset = $featuredImageData[0] ?? null;
-            if ($firstAsset && isset($firstAsset['url'])) {
-                $featuredImageUrl = $firstAsset['url'];
+            // The field passes an array of IDs as strings
+            $firstAssetId = $featuredImageData[0] ?? null;
+            if ($firstAssetId) {
+                $featuredImageId = is_numeric($firstAssetId) ? (int) $firstAssetId : $firstAssetId;
             }
         }
 
         $article = $this->articleService->create([
             ...$dto->except('seo')->toArray(),
-            'featured_image' => $featuredImageUrl, // Store as URL string for backward compatibility
+            'featured_image' => $featuredImageId,
             'user_id'        => Auth::id(),
             'published_at'   => $dto->status === 'published'
                 ? ($dto->published_at ?? now())
@@ -104,7 +103,7 @@ class BlogController extends BaseController
     public function edit(int|string $article): Response
     {
         $article = $this->articleService->findOrFail($article);
-        $article->load(['category', 'tags', 'seo']);
+        $article->load(['category', 'tags', 'seo', 'featuredImageMedia']);
 
         $categories = $this->categoryService->all(['id', 'name', 'slug']);
         $tags       = $this->tagService->all(['id', 'name', 'slug']);
@@ -121,15 +120,15 @@ class BlogController extends BaseController
      */
     public function update(ArticleData $dto, string $article): RedirectResponse
     {
-
-        // Process featured image from asset field
+        // Process featured image from asset field - store the ID
         $featuredImageData = $dto->featured_image ?? [];
-        $featuredImageUrl  = null;
+        $featuredImageId   = null;
 
         if (! empty($featuredImageData) && is_array($featuredImageData)) {
-            $firstAsset = $featuredImageData[0] ?? null;
-            if ($firstAsset && isset($firstAsset['url'])) {
-                $featuredImageUrl = $firstAsset['url'];
+            // The field passes an array of IDs as strings
+            $firstAssetId = $featuredImageData[0] ?? null;
+            if ($firstAssetId) {
+                $featuredImageId = is_numeric($firstAssetId) ? (int) $firstAssetId : $firstAssetId;
             }
         }
 
@@ -144,7 +143,7 @@ class BlogController extends BaseController
 
         $this->articleService->update($articleId, [
             ...$dto->except('tags', 'meta_title', 'meta_description', 'article_id', 'seo')->toArray(),
-            'featured_image' => $featuredImageUrl,
+            'featured_image' => $featuredImageId,
             'published_at'   => $dto->status === 'published'
                 ? ($dto->published_at ?? $articleData->published_at ?? now())
                 : null,

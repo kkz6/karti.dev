@@ -79,20 +79,20 @@ export default function ArticleForm({ article, categories }: ArticleFormProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${pageTitle}: ${article?.title || 'New Article'}`} />
-            <div className="flex h-full flex-col space-y-6 p-8 pt-6">
-                <div className="mx-auto w-full max-w-7xl">
-                    <div className="mb-6 flex items-center justify-between">
-                        <h2 className="text-3xl font-bold">{pageTitle}</h2>
-                        <div className="flex items-center space-x-4">
-                            <Button type="submit" form="article-form" disabled={form.formState.isSubmitting}>
-                                <Save className="mr-2 h-4 w-4" />
-                                {form.formState.isSubmitting ? submittingText : submitText}
-                            </Button>
+            <Form {...form}>
+                <form id="article-form" onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col space-y-6 p-8 pt-6">
+                    <div className="mx-auto w-full max-w-7xl">
+                        <div className="mb-6 flex items-center justify-between">
+                            <h2 className="text-3xl font-bold">{pageTitle}</h2>
+                            <div className="flex items-center space-x-4">
+                                <Button type="submit" disabled={form.formState.isSubmitting}>
+                                    <Save className="mr-2 h-4 w-4" />
+                                    {form.formState.isSubmitting ? submittingText : submitText}
+                                </Button>
+                            </div>
                         </div>
-                    </div>
 
-                    <Form {...form}>
-                        <form id="article-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <div className="space-y-6">
                             {/* Tabs Header */}
                             <Tabs defaultValue="main" value={activeTab} onValueChange={setActiveTab} className="w-full">
                                 <TabsList className="border-border text-foreground h-auto gap-2 rounded-none border-b bg-transparent px-0 py-1">
@@ -250,7 +250,7 @@ export default function ArticleForm({ article, categories }: ArticleFormProps) {
                                                 showSlug={false}
                                                 fallbackTitle={form.watch('title')}
                                                 fallbackDescription={form.watch('excerpt')}
-                                                fallbackImage={article?.featured_image?.toString()}
+                                                fallbackImage={article?.featured_image_url}
                                             />
                                         </TabsContent>
                                     </div>
@@ -365,10 +365,10 @@ export default function ArticleForm({ article, categories }: ArticleFormProps) {
                                     </div>
                                 </div>
                             </Tabs>
-                        </form>
-                    </Form>
-                </div>
-            </div>
+                        </div>
+                    </div>
+                </form>
+            </Form>
         </AppLayout>
     );
 }

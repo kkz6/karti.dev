@@ -1,8 +1,9 @@
 import React from 'react';
-import { Link, Head } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import PublicLayout from '../layouts/public-layout';
 import { Card } from '../components/Card';
 import { SimpleLayout } from '../components/SimpleLayout';
+import { SeoHead, SeoData } from '../components/SeoHead';
 
 interface Project {
     name: string;
@@ -16,6 +17,7 @@ interface Project {
 
 interface ProjectsProps {
     projects: Project[];
+    seo?: SeoData;
 }
 
 function LinkIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
@@ -55,11 +57,10 @@ function ProjectCard({ project }: { project: Project }) {
     );
 }
 
-export default function Projects({ projects = [] }: ProjectsProps) {
-
+export default function Projects({ projects = [], seo }: ProjectsProps) {
     return (
         <>
-            <Head title="Projects" />
+            <SeoHead seo={seo} />
             <PublicLayout>
                 <SimpleLayout
                     title="Things I've made trying to put my dent in the universe."

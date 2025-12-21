@@ -145,10 +145,45 @@ class PortfolioController extends BaseController
             'about_title', 'about_description', 'portrait_image', 'author_name', 'author_bio',
         ])->get()->keyBy('key');
 
+        $seoData = new SEOData(
+            title: 'About - ' . config('seo.site_name', config('app.name')),
+            description: 'Learn about Karthick, a software developer and founder based in Bangalore. Building technologies that empower people to explore the world on their own terms.',
+            author: config('seo.author', 'Karthick'),
+            image: $siteSettings->get('portrait_image')?->value ?? config('seo.image'),
+            url: url('/about'),
+            type: 'profile',
+            site_name: config('seo.site_name', config('app.name')),
+            twitter_card: config('seo.twitter.card', 'summary_large_image'),
+            twitter_site: config('seo.twitter.site'),
+            twitter_creator: config('seo.twitter.creator'),
+            robots: config('seo.robots', 'index,follow'),
+            locale: config('seo.locale', 'en_US'),
+        );
+
+        $jsonLd = [
+            '@context'  => 'https://schema.org',
+            '@type'     => 'Person',
+            'name'      => 'Karthick',
+            'url'       => url('/about'),
+            'image'     => $siteSettings->get('portrait_image')?->value ?? config('seo.image'),
+            'jobTitle'  => 'Software Developer & Founder',
+            'worksFor'  => [
+                '@type' => 'Organization',
+                'name'  => config('app.name'),
+            ],
+            'sameAs'    => [
+                'https://x.com/ikkarti',
+                'https://github.com/kkz6',
+                'https://linkedin.com/in/ikkarti',
+            ],
+        ];
+
         return Inertia::render('frontend::about', [
             'portraitImage' => $siteSettings->get('portrait_image')?->value ?? '/images/about.jpg',
             'socialLinks'   => $socialLinks,
             'siteSettings'  => $siteSettings,
+            'seo'           => $this->getSeoArray($seoData),
+            'jsonLd'        => $jsonLd,
         ]);
     }
 
@@ -271,8 +306,24 @@ class PortfolioController extends BaseController
                 ];
             });
 
+        $seoData = new SEOData(
+            title: 'Speaking - ' . config('seo.site_name', config('app.name')),
+            description: 'Karthick has spoken at events around the world and been interviewed for many podcasts. See upcoming and past speaking engagements.',
+            author: config('seo.author', 'Karthick'),
+            image: config('seo.image'),
+            url: url('/speaking'),
+            type: 'website',
+            site_name: config('seo.site_name', config('app.name')),
+            twitter_card: config('seo.twitter.card', 'summary_large_image'),
+            twitter_site: config('seo.twitter.site'),
+            twitter_creator: config('seo.twitter.creator'),
+            robots: config('seo.robots', 'index,follow'),
+            locale: config('seo.locale', 'en_US'),
+        );
+
         return Inertia::render('frontend::speaking', [
             'events' => $events,
+            'seo'    => $this->getSeoArray($seoData),
         ]);
     }
 

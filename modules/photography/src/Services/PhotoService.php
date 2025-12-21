@@ -44,8 +44,15 @@ class PhotoService extends BaseService implements PhotoServiceInterface
     public function createPhoto(PhotoData $data): Photo
     {
         return DB::transaction(function () use ($data) {
-            $photoData = $data->toArray();
-            unset($photoData['categories'], $photoData['image_ids'], $photoData['cover_image']);
+            $photoData = [
+                'title'        => $data->title,
+                'slug'         => $data->slug,
+                'description'  => $data->description,
+                'status'       => $data->status,
+                'featured'     => $data->featured,
+                'sort_order'   => $data->sort_order,
+                'published_at' => $data->published_at,
+            ];
 
             $photo = $this->repository->create($photoData);
 
@@ -68,8 +75,15 @@ class PhotoService extends BaseService implements PhotoServiceInterface
     public function updatePhoto(Photo $photo, PhotoData $data): Photo
     {
         return DB::transaction(function () use ($photo, $data) {
-            $photoData = $data->toArray();
-            unset($photoData['categories'], $photoData['photo_id'], $photoData['image_ids'], $photoData['cover_image']);
+            $photoData = [
+                'title'        => $data->title,
+                'slug'         => $data->slug,
+                'description'  => $data->description,
+                'status'       => $data->status,
+                'featured'     => $data->featured,
+                'sort_order'   => $data->sort_order,
+                'published_at' => $data->published_at,
+            ];
 
             $photo = $this->repository->updateByModel($photo, $photoData);
 

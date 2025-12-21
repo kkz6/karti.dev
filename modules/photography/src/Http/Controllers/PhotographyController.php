@@ -54,28 +54,26 @@ class PhotographyController extends BaseController
         $photo = $this->photoService->createPhoto($dto);
 
         return redirect()
-            ->route('admin.photography.edit', $photo->id);
+            ->route('admin.photography.edit', $photo->slug);
     }
 
     /**
      * Show the form for editing the specified photo gallery.
      */
-    public function edit(string $photo): Response
+    public function edit(Photo $photography): Response
     {
-        $photo = $this->photoService->findOrFail($photo);
-
-        $photo->load(['categories', 'media']);
+        $photography->load(['categories', 'media']);
 
         $categories = $this->categoryService->all(['id', 'name']);
 
         // Get cover image ID
-        $coverImageId = $photo->cover_image?->id;
+        $coverImageId = $photography->cover_image?->id;
 
         // Get gallery image IDs
-        $imageIds = $photo->images->pluck('id')->toArray();
+        $imageIds = $photography->images->pluck('id')->toArray();
 
         return Inertia::render('photography::createOrEdit', [
-            'photo'      => array_merge($photo->toArray(), [
+            'photo'      => array_merge($photography->toArray(), [
                 'cover_image' => $coverImageId,
                 'image_ids'   => $imageIds,
             ]),
@@ -86,21 +84,21 @@ class PhotographyController extends BaseController
     /**
      * Update the specified photo gallery in storage.
      */
-    public function update(PhotoData $dto, Photo $photo): RedirectResponse
+    public function update(PhotoData $dto, Photo $photography): RedirectResponse
     {
-        $this->photoService->updatePhoto($photo, $dto);
+        $this->photoService->updatePhoto($photography, $dto);
 
         return redirect()
-            ->route('admin.photography.edit', $photo)
+            ->route('admin.photography.edit', $photography->slug)
             ->with('success', 'Photo gallery updated successfully.');
     }
 
     /**
      * Remove the specified photo gallery from storage.
      */
-    public function destroy(Photo $photo): RedirectResponse
+    public function destroy(Photo $photography): RedirectResponse
     {
-        $this->photoService->deletePhoto($photo);
+        $this->photoService->deletePhoto($photography);
 
         return redirect()
             ->route('admin.photography.index')

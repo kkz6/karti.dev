@@ -42,15 +42,8 @@ export const AssetTile: React.FC<AssetTileProps> = ({
     };
 
     const handleDoubleClick = () => {
-        onDoubleClicked(asset);
-    };
-
-    const handleSingleClick = () => {
-        if (isSelected) {
-            onDeselected(asset.id);
-        } else {
-            onSelected(asset.id);
-        }
+        // Open edit dialog on double-click
+        onEditing(asset.id);
     };
 
     const handleEdit = () => {
@@ -134,7 +127,6 @@ export const AssetTile: React.FC<AssetTileProps> = ({
                 {/* Thumbnail */}
                 <div
                     className="asset-thumb-container flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-t-lg bg-gray-100 dark:bg-gray-700"
-                    onClick={handleSingleClick}
                     onDoubleClick={handleDoubleClick}
                 >
                     {thumbnailUrl ? (
@@ -149,7 +141,6 @@ export const AssetTile: React.FC<AssetTileProps> = ({
             <div className="asset-meta p-2">
                 <div
                     className="asset-filename mb-1 cursor-pointer truncate text-xs font-medium text-gray-900 hover:text-blue-600 dark:text-gray-100 dark:hover:text-blue-400"
-                    onClick={handleSingleClick}
                     onDoubleClick={handleDoubleClick}
                 >
                     {asset.title || asset.filename}

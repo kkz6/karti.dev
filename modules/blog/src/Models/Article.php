@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Media\Models\Media;
 use Modules\Seo\Traits\HasSeo;
 
 class Article extends Model
@@ -38,6 +39,10 @@ class Article extends Model
         'status' => 'draft',
     ];
 
+    protected $appends = [
+        'featured_image_url',
+    ];
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
@@ -61,6 +66,28 @@ class Article extends Model
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);
+    }
+
+    public function featuredImageMedia(): BelongsTo
+    {
+        return $this->belongsTo(Media::class, 'featured_image');
+    }
+
+    public function getFeaturedImageUrlAttribute(): ?string
+    {
+        if (! $this->featured_image) {
+            return null;
+        }
+
+        // If relationship is loaded, use it
+        if ($this->relationLoaded('featuredImageMedia') && $this->featuredImageMedia) {
+            return $this->featuredImageMedia->url;
+        }
+
+        // Otherwise, query for it
+        $media = Media::find($this->featured_image);
+
+        return $media?->url;
     }
 
     public function scopePublished($query)

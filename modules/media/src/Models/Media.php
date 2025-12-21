@@ -100,7 +100,18 @@ class Media extends Model
     {
         parent::boot();
 
-        // remove file on deletion
+        // Delete variants BEFORE the original is deleted
+        // (must happen before database cascade sets original_media_id to NULL)
+        static::deleting(function (Media $media) {
+            if ($media->isOriginal()) {
+                $variants = $media->variants()->get();
+                foreach ($variants as $variant) {
+                    $variant->delete();
+                }
+            }
+        });
+
+        // Remove file on deletion
         static::deleted(function (Media $media) {
             $media->handleMediaDeletion();
         });
@@ -547,6 +558,7 @@ class Media extends Model
 
     protected function handleMediaDeletion(): void
     {
+        // Delete the file from storage
         $this->storage()->delete($this->getDiskPath());
     }
 

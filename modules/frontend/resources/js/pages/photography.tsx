@@ -1,6 +1,7 @@
-import { Head, Link } from '@inertiajs/react'
+import { Link } from '@inertiajs/react'
 import PublicLayout from '../layouts/public-layout'
 import { Container } from '../components/Container'
+import { SeoHead, SeoData } from '../components/SeoHead'
 import clsx from 'clsx'
 
 interface Photo {
@@ -22,6 +23,7 @@ interface FeaturedPhoto {
 interface PhotographyProps {
     photos?: Photo[];
     featuredPhotos?: FeaturedPhoto[];
+    seo?: SeoData;
 }
 
 function MapPinIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
@@ -118,13 +120,13 @@ function EmptyState() {
     )
 }
 
-export default function Photography({ photos = [] }: PhotographyProps) {
+export default function Photography({ photos = [], seo }: PhotographyProps) {
     const featuredPhotos = photos.slice(0, 2)
     const remainingPhotos = photos.slice(2)
 
     return (
         <>
-            <Head title="Photography" />
+            <SeoHead seo={seo} />
             <PublicLayout>
                 <Container className="mt-16 sm:mt-32">
                     <header className="max-w-2xl">

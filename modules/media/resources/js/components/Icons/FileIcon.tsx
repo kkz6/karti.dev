@@ -1,17 +1,20 @@
 import React from 'react';
 
 interface FileIconProps {
-  extension: string;
+  extension?: string | null;
   className?: string;
   type?: 'svg' | 'div';
 }
 
-export const FileIcon: React.FC<FileIconProps> = ({ 
-  extension, 
-  className = "svg-icon", 
-  type = 'svg' 
+export const FileIcon: React.FC<FileIconProps> = ({
+  extension,
+  className = "svg-icon",
+  type = 'svg'
 }) => {
-  const getFileTypeName = (ext: string): string => {
+  const getFileTypeName = (ext: string | undefined | null): string => {
+    if (!ext) {
+      return "generic";
+    }
     switch (ext.toLowerCase()) {
       case "folder":
         return "folder";

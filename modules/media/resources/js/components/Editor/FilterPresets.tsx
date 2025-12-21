@@ -79,11 +79,7 @@ export const FilterPresets: React.FC<FilterPresetsProps> = ({ processing, camanF
                                             }`}
                                             onClick={() => applyPreset(preset.name)}
                                         >
-                                            {processing ? (
-                                                <div className="h-3 w-3 animate-spin rounded-full border-b-2 border-gray-600 dark:border-gray-400"></div>
-                                            ) : (
-                                                preset.shortName
-                                            )}
+                                            {preset.shortName}
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>

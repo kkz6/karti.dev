@@ -1,8 +1,8 @@
 import { Card } from '@frontend/components/Card';
 import { Section } from '@frontend/components/Section';
 import { SimpleLayout } from '@frontend/components/SimpleLayout';
+import { SeoHead, SeoData } from '@frontend/components/SeoHead';
 import PublicLayout from '@frontend/layouts/public-layout';
-import { Head } from '@inertiajs/react';
 import React from 'react';
 
 interface Tool {
@@ -13,6 +13,7 @@ interface Tool {
 
 interface UsesProps {
     sections?: any[];
+    seo?: SeoData;
 }
 
 function ToolsSection({ children, title }: { children: React.ReactNode; title: string }) {
@@ -36,10 +37,10 @@ function Tool({ title, href, children }: { title: string; href?: string; childre
     );
 }
 
-export default function Uses({ sections = [] }: UsesProps) {
+export default function Uses({ sections = [], seo }: UsesProps) {
     return (
         <>
-            <Head title="Uses" />
+            <SeoHead seo={seo} />
             <PublicLayout>
                 <SimpleLayout
                     title="Software I use, gadgets I love, and other things I recommend."

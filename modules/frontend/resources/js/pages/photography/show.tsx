@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import { Head, Link } from '@inertiajs/react'
+import { Link } from '@inertiajs/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import PublicLayout from '../../layouts/public-layout'
 import { Container } from '../../components/Container'
+import { SeoHead, SeoData } from '../../components/SeoHead'
 
 interface PhotographyShowProps {
     photo: {
@@ -20,6 +21,8 @@ interface PhotographyShowProps {
         image_count: number
         location?: string
     }
+    seo?: SeoData
+    jsonLd?: Record<string, unknown>
 }
 
 function ArrowLeftIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
@@ -53,12 +56,12 @@ function CameraIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
     )
 }
 
-export default function PhotographyShow({ photo }: PhotographyShowProps) {
+export default function PhotographyShow({ photo, seo, jsonLd }: PhotographyShowProps) {
     const [selectedImage, setSelectedImage] = useState<number | null>(null)
 
     return (
         <>
-            <Head title={photo?.title || 'Photography Gallery'} />
+            <SeoHead seo={seo} jsonLd={jsonLd} />
             <PublicLayout>
                 <Container className="mt-16 lg:mt-32">
                     <div className="xl:relative">
@@ -118,14 +121,13 @@ export default function PhotographyShow({ photo }: PhotographyShowProps) {
                                     </motion.h1>
 
                                     {photo?.description && (
-                                        <motion.p
+                                        <motion.div
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ duration: 0.6, delay: 0.1 }}
-                                            className="mt-6 text-base leading-relaxed text-muted-foreground"
-                                        >
-                                            {photo.description}
-                                        </motion.p>
+                                            className="mt-6 text-base leading-relaxed text-muted-foreground prose prose-sm dark:prose-invert max-w-none"
+                                            dangerouslySetInnerHTML={{ __html: photo.description }}
+                                        />
                                     )}
                                 </header>
 

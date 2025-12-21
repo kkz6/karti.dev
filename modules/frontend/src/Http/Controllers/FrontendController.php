@@ -120,13 +120,13 @@ class FrontendController extends BaseController
     public function article(string $slug): Response
     {
         $article = $this->articleService->findBySlugOrFail($slug);
-        $article->load('seo');
+        $article->load(['seo', 'featuredImageMedia']);
 
         $articleUrl   = url("/articles/{$article->slug}");
         $authorName   = $article->author_name ?? $article->user?->name ?? config('seo.author', 'Karthick');
         $publishedAt  = $article->published_at?->toISOString() ?? $article->created_at->toISOString();
         $modifiedAt   = $article->updated_at->toISOString();
-        $featuredImage = $article->featured_image ? url($article->featured_image) : config('seo.image');
+        $featuredImage = $article->featured_image_url ?? config('seo.image');
 
         // Get SEO data from model (uses HasSeo trait)
         $seoData = $article->getDynamicSEOData();

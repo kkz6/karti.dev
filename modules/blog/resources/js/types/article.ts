@@ -7,7 +7,8 @@ export interface Article {
     content: string;
     excerpt?: string;
     status: 'draft' | 'published' | 'archived';
-    featured_image?: string;
+    featured_image?: number | string;
+    featured_image_url?: string;
     published_at?: string;
     created_at: string;
     updated_at: string;

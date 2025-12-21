@@ -71,6 +71,7 @@ export interface PhotoGalleryFormData {
         twitter_creator: string;
     };
     published_at: string;
+    photo_id: number | null;
 }
 
 // Page Props interfaces

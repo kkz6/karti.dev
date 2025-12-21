@@ -308,15 +308,20 @@ export function FormSimpleEditor({ content: initialContent = '', onChange, place
                     )}
                 </Toolbar>
 
-                <EditorContent
-                    editor={editor}
-                    role="presentation"
-                    className="w-full"
+                <div
+                    className="w-full cursor-text"
                     style={{
-                        minHeight: '300px',
+                        minHeight: '200px',
                         padding: '1rem',
                     }}
-                />
+                    onClick={() => editor?.commands.focus()}
+                >
+                    <EditorContent
+                        editor={editor}
+                        role="presentation"
+                        className="simple-editor-content h-full w-full [&_.ProseMirror]:min-h-[168px] [&_.ProseMirror]:outline-none"
+                    />
+                </div>
             </EditorContext.Provider>
         </div>
     );
