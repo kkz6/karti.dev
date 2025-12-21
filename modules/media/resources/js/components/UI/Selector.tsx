@@ -1,7 +1,7 @@
 import { MediaAsset } from '@media/types/media';
 import { Button } from '@shared/components/ui/button';
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
-import { AssetBrowser } from '../Browser';
+import { AssetBrowser } from '../Browser/AssetBrowser';
 
 interface SelectorProps {
     container?: string | null;
