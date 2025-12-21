@@ -15,17 +15,20 @@ class CategoryData extends Data
         public ?string $description,
         public ?string $meta_title,
         public ?string $meta_description,
-        public ?int $category_id = null, // For update operations
+        public ?int $category_id = null,
+        public ?array $seo = null,
     ) {}
 
     public static function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'meta_title' => ['nullable', 'string', 'max:255'],
+            'name'             => ['required', 'string', 'max:255'],
+            'slug'             => ['required', 'string', 'max:255'],
+            'description'      => ['nullable', 'string'],
+            'meta_title'       => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
+            'seo'              => ['nullable', 'array'],
+            'seo.*'            => ['nullable', 'string'],
         ];
     }
 

@@ -15,17 +15,17 @@ class SchemaCollection
 
     public function __construct()
     {
-        $this->schemas = new Collection();
+        $this->schemas = new Collection;
     }
 
     public static function make(): self
     {
-        return new self();
+        return new self;
     }
 
     public static function initialize(): self
     {
-        return new self();
+        return new self;
     }
 
     public function add(Closure|array $schema): self
@@ -37,7 +37,7 @@ class SchemaCollection
 
     public function addArticle(?Closure $callback = null): self
     {
-        $article = new ArticleSchema();
+        $article = new ArticleSchema;
 
         if ($callback) {
             $article = $callback($article, app(SEOData::class));
@@ -50,7 +50,7 @@ class SchemaCollection
 
     public function addBreadcrumbList(?Closure $callback = null): self
     {
-        $breadcrumbs = new BreadcrumbListSchema();
+        $breadcrumbs = new BreadcrumbListSchema;
 
         if ($callback) {
             $breadcrumbs = $callback($breadcrumbs, app(SEOData::class));
@@ -68,7 +68,7 @@ class SchemaCollection
 
     public function addFaqPage(?Closure $callback = null): self
     {
-        $faq = new FaqPageSchema();
+        $faq = new FaqPageSchema;
 
         if ($callback) {
             $faq = $callback($faq, app(SEOData::class));

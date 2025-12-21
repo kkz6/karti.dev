@@ -40,25 +40,11 @@ class CategoryController extends BaseController
      */
     public function store(CategoryData $dto): RedirectResponse
     {
-        $this->categoryService->create($dto->toArray());
+        $this->categoryService->create($dto->except('seo', 'category_id', 'meta_title', 'meta_description')->toArray());
 
         return redirect()
             ->route('admin.categories.index')
             ->with('success', 'Category created successfully.');
-    }
-
-    /**
-     * Display the specified category.
-     */
-    public function show(Category $category): Response
-    {
-        $category->load(['articles' => function ($query) {
-            $query->with('user')->latest()->take(10);
-        }]);
-
-        return Inertia::render('blog::categories/show', [
-            'category' => $category,
-        ]);
     }
 
     /**
@@ -76,7 +62,7 @@ class CategoryController extends BaseController
      */
     public function update(CategoryData $dto, Category $category): RedirectResponse
     {
-        $this->categoryService->update($category->id, $dto->toArray());
+        $this->categoryService->update($category->id, $dto->except('seo', 'category_id', 'meta_title', 'meta_description')->toArray());
 
         return redirect()
             ->route('admin.categories.index')

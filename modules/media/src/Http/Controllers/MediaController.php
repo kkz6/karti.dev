@@ -207,6 +207,40 @@ class MediaController extends BaseController
     }
 
     /**
+     * Move multiple media files to a new directory
+     *
+     * @throws MediaManagerException
+     * @throws MediaMoveException
+     */
+    public function move(Request $request)
+    {
+        $request->validate([
+            'media_ids'   => 'required|array',
+            'media_ids.*' => 'required|integer|exists:media,id',
+            'destination' => 'required|string',
+        ]);
+
+        $mediaIds    = $request->input('media_ids');
+        $destination = $this->manager->verifyDirectory(trim($request->input('destination'), '/'));
+
+        $moved = collect();
+
+        foreach ($mediaIds as $id) {
+            $media = Media::find($id);
+            if ($media && $media->directory !== $destination) {
+                $media->move($destination);
+                $moved->push(new MediaResource($media->fresh()));
+            }
+        }
+
+        return response([
+            'success' => true,
+            'message' => "Moved {$moved->count()} file(s) successfully",
+            'media'   => $moved,
+        ]);
+    }
+
+    /**
      * Save edited image from image editor
      *
      * @return ResponseFactory|Response

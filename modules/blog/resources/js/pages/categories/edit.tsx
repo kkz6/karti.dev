@@ -46,8 +46,7 @@ export default function Edit({ category }: { category: Category }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Blog Management', href: route('admin.blog.index') },
         { title: 'Categories', href: route('admin.categories.index') },
-        { title: category.name, href: route('admin.categories.show', { category: category.slug || category.id }) },
-        { title: 'Edit', href: route('admin.categories.edit', { category: category.slug || category.id }) },
+        { title: category.name, href: route('admin.categories.edit', { category: category.slug || category.id }) },
     ];
 
     const [activeTab, setActiveTab] = useState('main');
@@ -108,7 +107,7 @@ export default function Edit({ category }: { category: Category }) {
                                 {form.formState.isSubmitting ? 'Updating...' : 'Update Category'}
                             </Button>
                             <Button type="button" variant="outline" asChild>
-                                <Link href={route('admin.categories.show', category.id)}>Cancel</Link>
+                                <Link href={route('admin.categories.index')}>Cancel</Link>
                             </Button>
                             <Button type="button" variant="destructive" onClick={handleDelete}>
                                 <Trash2 className="mr-2 h-4 w-4" />

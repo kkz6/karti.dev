@@ -50,7 +50,10 @@ class PhotoData extends Data
         public int $sort_order,
         public ?string $published_at,
         public ?array $categories,
-        public ?int $photo_id = null, // For update operations
+        public ?int $photo_id = null,
+        public ?string $meta_title = null,
+        public ?string $meta_description = null,
+        public ?array $seo = null,
     ) {}
 
     public static function rules(ValidationContext $context): array
@@ -66,19 +69,23 @@ class PhotoData extends Data
         }
 
         return [
-            'title'        => ['required', 'string', 'max:255'],
-            'slug'         => $slugRule,
-            'description'  => ['nullable', 'string'],
-            'image_ids'    => ['required', 'array', 'min:1'],
-            'image_ids.*'  => ['numeric', 'exists:media,id'],
-            'cover_image'  => ['nullable', 'numeric', 'exists:media,id'],
-            'status'       => ['required', 'in:draft,published,archived'],
-            'featured'     => ['boolean'],
-            'sort_order'   => ['integer', 'min:0'],
-            'published_at' => ['nullable', 'date'],
-            'categories'   => ['nullable', 'array'],
-            'categories.*' => ['exists:categories,id'],
-            'photo_id'     => ['nullable', 'integer'],
+            'title'            => ['required', 'string', 'max:255'],
+            'slug'             => $slugRule,
+            'description'      => ['nullable', 'string'],
+            'image_ids'        => ['required', 'array', 'min:1'],
+            'image_ids.*'      => ['numeric', 'exists:media,id'],
+            'cover_image'      => ['nullable', 'numeric', 'exists:media,id'],
+            'status'           => ['required', 'in:draft,published,archived'],
+            'featured'         => ['boolean'],
+            'sort_order'       => ['integer', 'min:0'],
+            'published_at'     => ['nullable', 'date'],
+            'categories'       => ['nullable', 'array'],
+            'categories.*'     => ['exists:categories,id'],
+            'photo_id'         => ['nullable', 'integer'],
+            'meta_title'       => ['nullable', 'string', 'max:60'],
+            'meta_description' => ['nullable', 'string', 'max:160'],
+            'seo'              => ['nullable', 'array'],
+            'seo.*'            => ['nullable', 'string'],
         ];
     }
 

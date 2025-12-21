@@ -23,10 +23,11 @@ class Categories extends Table
     {
         return [
             Columns\TextColumn::make('id', 'ID', stickable: true)
-                ->url(fn (Category $category) => route('admin.categories.show', $category)),
+                ->url(fn (Category $category) => route('admin.categories.edit', $category)),
             Columns\TextColumn::make('name', 'Name', toggleable: false)
                 ->searchable()
-                ->sortable(),
+                ->sortable()
+                ->url(fn (Category $category) => route('admin.categories.edit', $category)),
             Columns\TextColumn::make('slug', 'Slug', toggleable: false)->sortable(),
             Columns\TextColumn::make('articles_count', 'Articles Count')
                 ->sortable(),
@@ -54,12 +55,6 @@ class Categories extends Table
                 label: 'Edit',
                 url: fn (Category $category) => route('admin.categories.edit', $category),
                 icon: 'pencil',
-                variant: Variant::Secondary,
-            ),
-            Action::make(
-                label: 'View',
-                url: fn (Category $category) => route('admin.categories.show', $category),
-                icon: 'eye',
                 variant: Variant::Secondary,
             ),
             Action::make(
