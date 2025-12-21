@@ -24,9 +24,9 @@ const categorySchema = z.object({
         .min(1, 'Slug is required')
         .max(255, 'Slug must be less than 255 characters')
         .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase and contain only letters, numbers, and hyphens'),
-    description: z.string().optional(),
-    meta_title: z.string().max(60, 'Meta title must be less than 60 characters').optional(),
-    meta_description: z.string().max(160, 'Meta description must be less than 160 characters').optional(),
+    description: z.string().nullish(),
+    meta_title: z.string().max(60, 'Meta title must be less than 60 characters').nullish(),
+    meta_description: z.string().max(160, 'Meta description must be less than 160 characters').nullish(),
     seo: seoSchema,
 });
 

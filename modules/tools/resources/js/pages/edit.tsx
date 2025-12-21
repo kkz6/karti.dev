@@ -18,8 +18,8 @@ const toolSchema = z.object({
     tool_category_id: z.string().min(1, 'Category is required'),
     title: z.string().min(1, 'Title is required').max(255, 'Title must be less than 255 characters'),
     description: z.string().min(1, 'Description is required'),
-    url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
-    image: z.string().optional(),
+    url: z.string().url('Must be a valid URL').nullish().or(z.literal('')),
+    image: z.string().nullish(),
     featured: z.boolean(),
     status: z.enum(['active', 'inactive']),
 });
