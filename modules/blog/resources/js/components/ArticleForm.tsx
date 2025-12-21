@@ -57,7 +57,13 @@ export default function ArticleForm({ article, categories }: ArticleFormProps) {
         },
     });
 
+    // Log validation errors for debugging
+    if (Object.keys(form.formState.errors).length > 0) {
+        console.error('Form validation errors:', form.formState.errors);
+    }
+
     const onSubmit = (data: ArticleFormData) => {
+        console.log('Form submitted with data:', data);
         const formattedData = {
             ...data,
             published_at: data.published_at ? format(data.published_at, 'yyyy-MM-dd HH:mm:ss') : null,
@@ -67,20 +73,30 @@ export default function ArticleForm({ article, categories }: ArticleFormProps) {
             router.put(route('admin.blog.update', { blog: article.id }), formattedData, {
                 preserveState: true,
                 preserveScroll: true,
+                onError: (errors) => {
+                    console.error('Server validation errors:', errors);
+                },
             });
         } else {
             router.post(route('admin.blog.store'), formattedData, {
                 preserveState: true,
                 preserveScroll: true,
+                onError: (errors) => {
+                    console.error('Server validation errors:', errors);
+                },
             });
         }
+    };
+
+    const onError = (errors: any) => {
+        console.error('Zod validation errors:', errors);
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${pageTitle}: ${article?.title || 'New Article'}`} />
             <Form {...form}>
-                <form id="article-form" onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col space-y-6 p-8 pt-6">
+                <form id="article-form" onSubmit={form.handleSubmit(onSubmit, onError)} className="flex h-full flex-col space-y-6 p-8 pt-6">
                     <div className="mx-auto w-full max-w-7xl">
                         <div className="mb-6 flex items-center justify-between">
                             <h2 className="text-3xl font-bold">{pageTitle}</h2>
