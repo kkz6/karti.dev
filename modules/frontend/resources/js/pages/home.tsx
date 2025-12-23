@@ -157,19 +157,19 @@ function CardStack({ featuredPhotos = [] }: { featuredPhotos?: FeaturedPhoto[] }
         },
         {
             id: 2,
-            title: "Recent Project", 
+            title: "Recent Project",
             description: "Web Development",
             image: "/images/photos/image-2.jpg"
         },
         {
             id: 3,
             title: "Speaking Event",
-            description: "Tech Conference", 
+            description: "Tech Conference",
             image: "/images/photos/image-3.jpg"
         }
     ];
 
-    const photoCards = featuredPhotos.length > 0 
+    const photoCards = featuredPhotos.length > 0
         ? featuredPhotos.slice(0, 3).map((photo, index) => ({
             id: index + 1,
             title: photo.title,
@@ -182,7 +182,7 @@ function CardStack({ featuredPhotos = [] }: { featuredPhotos?: FeaturedPhoto[] }
 
     // Update cards when featuredPhotos changes
     React.useEffect(() => {
-        const newPhotoCards = featuredPhotos.length > 0 
+        const newPhotoCards = featuredPhotos.length > 0
             ? featuredPhotos.slice(0, 3).map((photo, index) => ({
                 id: index + 1,
                 title: photo.title,
@@ -203,7 +203,7 @@ function CardStack({ featuredPhotos = [] }: { featuredPhotos?: FeaturedPhoto[] }
         setCards(prev => {
             const cardIndex = prev.findIndex(card => card.id === id);
             if (cardIndex === -1) return prev;
-            
+
             const newCards = [...prev];
             const [movedCard] = newCards.splice(cardIndex, 1);
             newCards.push(movedCard);
@@ -282,13 +282,10 @@ export default function Home({ articles = [], featuredPhotos = [], seo, jsonLd }
                     <div className="font-mono text-sm text-muted-foreground mb-4">
                         <span className="text-primary">~</span> ./whoami
                     </div>
-                    <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight text-foreground">
+                    <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight text-foreground">
                         <span className="text-primary">{'{'}</span>
                         {' '}Developer, Speaker
                         <span className="text-primary">{' }'}</span>
-                    </h1>
-                    <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-medium tracking-tight text-muted-foreground mt-2">
-                        Founder of <span className="text-primary">Gigcodes</span>
                     </h2>
                     <div className="mt-8 font-mono text-sm leading-relaxed text-muted-foreground max-w-2xl">
                         <p className="flex">
