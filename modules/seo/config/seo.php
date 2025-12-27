@@ -12,8 +12,8 @@ return [
     */
 
     'title' => env('SEO_TITLE', config('app.name')),
-    'description' => env('SEO_DESCRIPTION', 'A modern web application built with Laravel'),
-    'author' => env('SEO_AUTHOR', 'Your Name'),
+    'description' => env('SEO_DESCRIPTION', 'Software developer and speaker based in Bangalore, India. Building technologies that empower people to explore the world on their own terms.'),
+    'author' => env('SEO_AUTHOR', 'Karthick'),
     'image' => env('SEO_IMAGE', '/images/default-og-image.jpg'),
     'robots' => env('SEO_ROBOTS', 'index,follow'),
     'type' => env('SEO_TYPE', 'website'),
