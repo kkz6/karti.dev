@@ -30,7 +30,7 @@
             html.dark {
                 background-color: rgb(24, 24, 27);
             }
-            
+
             body {
                 background-color: transparent;
             }
@@ -58,6 +58,15 @@
             @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
         @endif
         @inertiaHead
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZB97KEKN54"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-ZB97KEKN54');
+        </script>
     </head>
     <body class="font-sans antialiased">
         @inertia
