@@ -41,8 +41,6 @@
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
-        <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
-
         @routes
         @viteReactRefresh
         @if (count(explode('::', $page['component'])) > 1)
