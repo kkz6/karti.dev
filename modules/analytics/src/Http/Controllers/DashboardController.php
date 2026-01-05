@@ -16,6 +16,7 @@ class DashboardController extends Controller
     {
         $period = $request->get('period', '30d');
         $days = match ($period) {
+            '24h' => 1,
             '7d' => 7,
             '30d' => 30,
             '90d' => 90,
@@ -32,6 +33,18 @@ class DashboardController extends Controller
 
     private function fetchAnalyticsData(int $days): array
     {
+        // Quick pre-flight checks to surface actionable errors
+        $propertyId = config('analytics.property_id');
+        $credentialsPath = config('analytics.service_account_credentials_json');
+
+        if (empty($propertyId)) {
+            return $this->getDemoData($days, 'Missing ANALYTICS_PROPERTY_ID. Set it in your .env to your GA4 Property ID.');
+        }
+
+        if (!is_string($credentialsPath) || !file_exists($credentialsPath)) {
+            return $this->getDemoData($days, 'Google service account credentials not found at '.$credentialsPath);
+        }
+
         try {
             $period = Period::days($days);
 
@@ -41,29 +54,44 @@ class DashboardController extends Controller
             $topReferrers = Analytics::fetchTopReferrers($period, 10);
             $topCountries = Analytics::fetchTopCountries($period, 10);
 
-            $chartData = $visitorsAndPageViews->map(function ($row) {
+            $start = Carbon::now()->subDays($days);
+            $chartData = $visitorsAndPageViews->values()->map(function ($row, $index) use ($start) {
+                $rawDate = data_get($row, 'date');
+                $date = null;
+                if ($rawDate instanceof \DateTimeInterface) {
+                    $date = Carbon::instance(\Carbon\Carbon::parse($rawDate->format('c')));
+                } elseif (is_string($rawDate)) {
+                    if (preg_match('/^\d{8}$/', $rawDate)) {
+                        $date = Carbon::createFromFormat('Ymd', $rawDate);
+                    } else {
+                        $date = Carbon::parse($rawDate);
+                    }
+                }
+                if (!$date) {
+                    $date = $start->copy()->addDays($index);
+                }
+
+                $visitors  = (int) (data_get($row, 'activeUsers') ?? data_get($row, 'visitors') ?? 0);
+                $pageViews = (int) (data_get($row, 'screenPageViews') ?? data_get($row, 'pageViews') ?? 0);
+
                 return [
-                    'date' => $row['date']->format('Y-m-d'),
-                    'visitors' => $row['activeUsers'] ?? $row['visitors'] ?? 0,
-                    'pageViews' => $row['screenPageViews'] ?? $row['pageViews'] ?? 0,
+                    'date'      => $date->format('Y-m-d'),
+                    'visitors'  => $visitors,
+                    'pageViews' => $pageViews,
                 ];
             })->toArray();
 
-            $totalVisitors = $totalVisitorsAndPageViews->first()['activeUsers']
-                ?? $totalVisitorsAndPageViews->first()['visitors']
-                ?? 0;
-            $totalPageViews = $totalVisitorsAndPageViews->first()['screenPageViews']
-                ?? $totalVisitorsAndPageViews->first()['pageViews']
-                ?? 0;
+            $firstTotals = $totalVisitorsAndPageViews->first();
+            $totalVisitors = (int) (data_get($firstTotals, 'activeUsers') ?? data_get($firstTotals, 'visitors') ?? 0);
+            $totalPageViews = (int) (data_get($firstTotals, 'screenPageViews') ?? data_get($firstTotals, 'pageViews') ?? 0);
 
             $previousPeriod = Period::create(
                 Carbon::now()->subDays($days * 2),
                 Carbon::now()->subDays($days + 1)
             );
             $previousTotal = Analytics::fetchTotalVisitorsAndPageViews($previousPeriod);
-            $previousVisitors = $previousTotal->first()['activeUsers']
-                ?? $previousTotal->first()['visitors']
-                ?? 0;
+            $previousFirst = $previousTotal->first();
+            $previousVisitors = (int) (data_get($previousFirst, 'activeUsers') ?? data_get($previousFirst, 'visitors') ?? 0);
 
             $visitorChange = $previousVisitors > 0
                 ? round((($totalVisitors - $previousVisitors) / $previousVisitors) * 100, 1)
@@ -75,32 +103,42 @@ class DashboardController extends Controller
                     'totalVisitors' => $totalVisitors,
                     'totalPageViews' => $totalPageViews,
                     'visitorChange' => $visitorChange,
-                    'avgSessionDuration' => $this->formatDuration($totalVisitorsAndPageViews->first()['averageSessionDuration'] ?? 0),
-                    'bounceRate' => round($totalVisitorsAndPageViews->first()['bounceRate'] ?? 0, 1),
+                    'avgSessionDuration' => $this->formatDuration((float) (data_get($firstTotals, 'averageSessionDuration') ?? 0)),
+                    'bounceRate' => round((float) (data_get($firstTotals, 'bounceRate') ?? 0), 1),
                 ],
                 'mostVisitedPages' => $mostVisitedPages->map(function ($page) {
                     return [
-                        'path' => $page['fullPageUrl'] ?? $page['pagePath'] ?? '/',
-                        'title' => $page['pageTitle'] ?? 'Unknown',
-                        'views' => $page['screenPageViews'] ?? $page['pageViews'] ?? 0,
+                        'path' => (string) (data_get($page, 'fullPageUrl') ?? data_get($page, 'pagePath') ?? '/'),
+                        'title' => (string) (data_get($page, 'pageTitle') ?? 'Unknown'),
+                        'views' => (int) (data_get($page, 'screenPageViews') ?? data_get($page, 'pageViews') ?? 0),
                     ];
                 })->take(5)->toArray(),
                 'topReferrers' => $topReferrers->map(function ($referrer) {
                     return [
-                        'source' => $referrer['pageReferrer'] ?? 'Direct',
-                        'sessions' => $referrer['screenPageViews'] ?? $referrer['pageViews'] ?? 0,
+                        'source' => (string) (data_get($referrer, 'pageReferrer') ?? 'Direct'),
+                        'sessions' => (int) (data_get($referrer, 'screenPageViews') ?? data_get($referrer, 'pageViews') ?? 0),
                     ];
                 })->take(5)->toArray(),
                 'topCountries' => $topCountries->map(function ($country) {
+                    $nameOrCode = (string) (
+                        data_get($country, 'country')
+                        ?? data_get($country, 'countryName')
+                        ?? data_get($country, 'countryId')
+                        ?? 'Unknown'
+                    );
                     return [
-                        'country' => $country['country'] ?? 'Unknown',
-                        'sessions' => $country['activeUsers'] ?? 0,
+                        'country' => $nameOrCode,
+                        'sessions' => (int) (data_get($country, 'activeUsers') ?? 0),
                     ];
                 })->take(5)->toArray(),
                 'configured' => true,
             ];
-        } catch (\Exception $e) {
-            return $this->getDemoData($days);
+        } catch (\Throwable $e) {
+            // Log the root cause so we can diagnose quickly
+            logger()->error('Analytics fetch failed: '.$e->getMessage(), [
+                'exception' => $e,
+            ]);
+            return $this->getDemoData($days, $e->getMessage());
         }
     }
 
@@ -112,7 +150,7 @@ class DashboardController extends Controller
         return sprintf('%d:%02d', $minutes, $remainingSeconds);
     }
 
-    private function getDemoData(int $days): array
+    private function getDemoData(int $days, ?string $error = null): array
     {
         $chartData = [];
         $startDate = Carbon::now()->subDays($days);
@@ -160,6 +198,7 @@ class DashboardController extends Controller
                 ['country' => 'Canada', 'sessions' => (int) (943 * $multiplier)],
             ],
             'configured' => false,
+            'error' => $error,
         ];
     }
 }

@@ -19,9 +19,10 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-type TimeRange = '7d' | '30d' | '90d';
+ type TimeRange = '24h' | '7d' | '30d' | '90d';
 
-const timeRangeLabels: Record<TimeRange, string> = {
+ const timeRangeLabels: Record<TimeRange, string> = {
+     '24h': 'Last 24 hours',
     '7d': 'Last 7 days',
     '30d': 'Last 30 days',
     '90d': 'Last 3 months',
@@ -275,15 +276,26 @@ const countryToCode: Record<string, string> = {
 };
 
 function getCountryFlag(country: string): string {
-    const code = countryToCode[country];
-    if (!code) {
-        return '🌍';
+    // If already a 2-letter code, use it directly
+    const trimmed = (country || '').trim();
+    if (/^[A-Za-z]{2}$/.test(trimmed)) {
+        const directCodePoints = trimmed
+            .toUpperCase()
+            .split('')
+            .map((char) => 127397 + char.charCodeAt(0));
+        return String.fromCodePoint(...directCodePoints);
     }
-    const codePoints = code
-        .toUpperCase()
-        .split('')
-        .map((char) => 127397 + char.charCodeAt(0));
-    return String.fromCodePoint(...codePoints);
+    // Try mapping a known country name to its code
+    const code = countryToCode[trimmed];
+    if (code) {
+        const codePoints = code
+            .toUpperCase()
+            .split('')
+            .map((char) => 127397 + char.charCodeAt(0));
+        return String.fromCodePoint(...codePoints);
+    }
+    // Fallback globe
+    return '🌍';
 }
 
 function CountriesList({ countries }: { countries: TopCountry[] }) {
@@ -393,7 +405,12 @@ export default function Dashboard({ analytics, period }: DashboardProps) {
 
                 {!analytics.configured && (
                     <div className="rounded-md border border-amber-200/50 bg-amber-50/50 px-3 py-2 text-sm text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
-                        Analytics not configured. Showing demo data.
+                        <div>Analytics not configured. Showing demo data.</div>
+                        {analytics.error && (
+                            <div className="mt-1 text-xs opacity-80">
+                                {analytics.error}
+                            </div>
+                        )}
                     </div>
                 )}
 
