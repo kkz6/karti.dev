@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use src\Models\User;
+use Modules\Auth\Models\User;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
@@ -20,5 +20,8 @@ class DatabaseSeeder extends Seeder
             'name'  => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        // Seed tools and categories for the Uses page
+        $this->call(\Modules\Tools\Database\Seeders\ToolsSeeder::class);
     }
 }
