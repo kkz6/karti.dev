@@ -14,6 +14,16 @@ function ChevronRightIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
   )
 }
 
+function isExternalUrl(href?: string): boolean {
+  if (!href) return false
+  return (
+    href.startsWith('http://') ||
+    href.startsWith('https://') ||
+    href.startsWith('mailto:') ||
+    href.startsWith('tel:')
+  )
+}
+
 export function Card<T extends React.ElementType = 'div'>({
   as,
   className,
@@ -30,13 +40,22 @@ export function Card<T extends React.ElementType = 'div'>({
     <Component
       className={clsx(className, 'group relative flex flex-col items-start')}
     >
-      {href && (
-        <Link
-          href={href}
-          className="absolute inset-0 z-20"
-          aria-hidden="true"
-        />
-      )}
+      {href &&
+        (isExternalUrl(href) ? (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute inset-0 z-20"
+            aria-hidden="true"
+          />
+        ) : (
+          <Link
+            href={href}
+            className="absolute inset-0 z-20"
+            aria-hidden="true"
+          />
+        ))}
       {children}
     </Component>
   )
@@ -47,6 +66,18 @@ Card.Link = function CardLink({
   href,
   ...props
 }: React.ComponentPropsWithoutRef<typeof Link> & { href: string }) {
+  if (isExternalUrl(href)) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group inline-flex items-center hover:text-primary transition-colors"
+      >
+        {children}
+      </a>
+    )
+  }
   return (
     <Link href={href} className="group inline-flex items-center hover:text-primary transition-colors" {...props}>
       {children}
