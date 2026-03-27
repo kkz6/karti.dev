@@ -13,6 +13,7 @@ const navigation = [
   { name: 'Speaking', href: '/speaking' },
   { name: 'Photography', href: '/photography' },
   { name: 'Uses', href: '/uses' },
+  { name: 'Upwork', href: '/upwork' },
 ]
 
 function NavItem({ href, children }: { href: string; children: React.ReactNode }) {

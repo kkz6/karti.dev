@@ -28,6 +28,21 @@ return [
         'key' => env('RESEND_KEY'),
     ],
 
+    'calcom' => [
+        'api_key'       => env('CALCOM_API_KEY', ''),
+        'event_type_id' => env('CALCOM_EVENT_TYPE_ID', ''),
+        'api_version'   => '2024-09-04',
+        'base_url'      => 'https://api.cal.com/v2',
+    ],
+
+    'dodo_payments' => [
+        'api_key'                 => env('DODO_PAYMENTS_API_KEY', ''),
+        'product_id'              => env('DODO_PAYMENTS_UPWORK_PRODUCT_ID', ''),
+        'webhook_key'             => env('DODO_PAYMENTS_WEBHOOK_KEY', ''),
+        'upwork_consultation_url' => env('DODO_PAYMENTS_UPWORK_CONSULTATION_URL', '#'),
+        'contact_email'           => env('DODO_PAYMENTS_CONTACT_EMAIL', ''),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

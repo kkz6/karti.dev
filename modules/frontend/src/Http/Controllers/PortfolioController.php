@@ -329,6 +329,48 @@ class PortfolioController extends BaseController
 
 
 
+    public function upworkConsultation()
+    {
+        $seoData = new SEOData(
+            title: 'Upwork Consultation - ' . config('seo.site_name', config('app.name')),
+            description: 'Book a 1-on-1 Upwork consultation. Learn how to set up your profile, write winning proposals, land jobs, and navigate taxes — all in 1 hour.',
+            author: config('seo.author', 'Karthick'),
+            image: config('seo.image'),
+            url: url('/upwork'),
+            type: 'website',
+            site_name: config('seo.site_name', config('app.name')),
+            twitter_card: config('seo.twitter.card', 'summary_large_image'),
+            twitter_site: config('seo.twitter.site'),
+            twitter_creator: config('seo.twitter.creator'),
+            robots: config('seo.robots', 'index,follow'),
+            locale: config('seo.locale', 'en_US'),
+        );
+
+        $jsonLd = [
+            '@context'    => 'https://schema.org',
+            '@type'       => 'Service',
+            'name'        => 'Upwork Consultation',
+            'provider'    => [
+                '@type' => 'Person',
+                'name'  => 'Karthick',
+                'url'   => url('/'),
+            ],
+            'description' => 'One-on-one Upwork consultation covering profile setup, proposal writing, job hunting, tax guidance, and platform best practices.',
+            'url'         => url('/upwork'),
+            'offers'      => [
+                '@type'         => 'Offer',
+                'price'         => '1000',
+                'priceCurrency' => 'INR',
+            ],
+        ];
+
+        return Inertia::render('frontend::upwork-consultation', [
+            'seo'          => $this->getSeoArray($seoData),
+            'jsonLd'       => $jsonLd,
+            'contactEmail' => config('services.dodo_payments.contact_email', SiteSetting::where('key', 'contact_email')->value('value') ?? ''),
+        ]);
+    }
+
     public function contact()
     {
         $socialLinks  = SocialLink::active()->ordered()->get();
