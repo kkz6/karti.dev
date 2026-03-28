@@ -31,7 +31,7 @@ interface Project {
 export default function Show({ project }: { project: Project }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Projects', href: route('admin.projects.index') },
-        { title: project.title, href: route('admin.projects.show', project.id) },
+        { title: project.title, href: route('admin.projects.show', project.slug) },
     ];
 
     const statusColors = {
@@ -78,7 +78,7 @@ export default function Show({ project }: { project: Project }) {
                             </Button>
                         )}
                         <Button asChild>
-                            <Link href={route('admin.projects.edit', project.id)}>
+                            <Link href={route('admin.projects.edit', project.slug)}>
                                 <Edit className="mr-2 h-4 w-4" />
                                 Edit Project
                             </Link>

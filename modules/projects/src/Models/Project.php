@@ -12,40 +12,37 @@ class Project extends Model
     use HasFactory, SoftDeletes, HasSeo;
 
     protected $fillable = [
-        'name',
         'title',
         'slug',
         'description',
-        'long_description',
         'short_description',
-        'content',
-        'logo',
+        'client',
         'featured_image',
-        'link_url',
-        'link_label',
         'project_url',
         'github_url',
-        'demo_url',
         'technologies',
         'images',
+        'start_date',
+        'end_date',
         'status',
         'featured',
-        'is_internal',
         'sort_order',
+        'meta_title',
+        'meta_description',
     ];
 
     protected $casts = [
         'technologies' => 'array',
         'images' => 'array',
         'featured' => 'boolean',
-        'is_internal' => 'boolean',
         'sort_order' => 'integer',
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
     protected $attributes = [
-        'status' => 'active',
+        'status' => 'published',
         'featured' => false,
-        'is_internal' => false,
         'sort_order' => 0,
         'technologies' => '[]',
         'images' => '[]',
@@ -53,12 +50,7 @@ class Project extends Model
 
     public function scopePublished($query)
     {
-        return $query->where('status', 'active');
-    }
-
-    public function scopeActive($query)
-    {
-        return $query->where('status', 'active');
+        return $query->where('status', 'published');
     }
 
     public function scopeFeatured($query)
@@ -69,16 +61,6 @@ class Project extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order')->orderBy('created_at', 'desc');
-    }
-
-    public function scopeInternal($query)
-    {
-        return $query->where('is_internal', true);
-    }
-
-    public function scopeExternal($query)
-    {
-        return $query->where('is_internal', false);
     }
 
     public function getRouteKeyName(): string

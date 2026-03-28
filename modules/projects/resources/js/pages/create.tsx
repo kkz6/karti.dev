@@ -114,6 +114,11 @@ export default function Create() {
         router.post(route('admin.projects.store'), data, {
             preserveState: true,
             preserveScroll: true,
+            onError: (errors) => {
+                Object.entries(errors).forEach(([key, message]) => {
+                    form.setError(key as keyof ProjectFormData, { type: 'server', message });
+                });
+            },
         });
     };
 

@@ -58,8 +58,8 @@ interface SpeakingEvent {
 export default function Edit({ event }: { event: SpeakingEvent }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Speaking Events', href: route('admin.speaking.index') },
-        { title: event.title, href: route('admin.speaking.show', event.id) },
-        { title: 'Edit', href: route('admin.speaking.edit', event.id) },
+        { title: event.title, href: route('admin.speaking.show', event.slug) },
+        { title: 'Edit', href: route('admin.speaking.edit', event.slug) },
     ];
 
     const [activeTab, setActiveTab] = useState('main');
@@ -84,15 +84,20 @@ export default function Edit({ event }: { event: SpeakingEvent }) {
     });
 
     const onSubmit = (data: SpeakingEventFormData) => {
-        router.put(route('admin.speaking.update', event.id), data, {
+        router.put(route('admin.speaking.update', event.slug), data, {
             preserveState: true,
             preserveScroll: true,
+            onError: (errors) => {
+                Object.entries(errors).forEach(([key, message]) => {
+                    form.setError(key as keyof SpeakingEventFormData, { type: 'server', message });
+                });
+            },
         });
     };
 
     const handleDelete = () => {
         if (confirm(`Are you sure you want to delete "${event.title}"?`)) {
-            router.delete(route('admin.speaking.destroy', event.id), {
+            router.delete(route('admin.speaking.destroy', event.slug), {
                 onSuccess: () => {
                     // Redirect will be handled by the controller
                 },
@@ -116,7 +121,7 @@ export default function Edit({ event }: { event: SpeakingEvent }) {
                                 {form.formState.isSubmitting ? 'Updating...' : 'Update Event'}
                             </Button>
                             <Button type="button" variant="outline" asChild>
-                                <Link href={route('admin.speaking.show', event.id)}>Cancel</Link>
+                                <Link href={route('admin.speaking.show', event.slug)}>Cancel</Link>
                             </Button>
                             <Button type="button" variant="destructive" onClick={handleDelete}>
                                 <Trash2 className="mr-2 h-4 w-4" />

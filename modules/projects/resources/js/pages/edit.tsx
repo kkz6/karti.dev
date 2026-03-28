@@ -64,8 +64,8 @@ interface Project {
 export default function Edit({ project }: { project: Project }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Projects', href: route('admin.projects.index') },
-        { title: project.title, href: route('admin.projects.show', project.id) },
-        { title: 'Edit', href: route('admin.projects.edit', project.id) },
+        { title: project.title, href: route('admin.projects.show', project.slug) },
+        { title: 'Edit', href: route('admin.projects.edit', project.slug) },
     ];
 
     const [activeTab, setActiveTab] = useState('main');
@@ -110,15 +110,20 @@ export default function Edit({ project }: { project: Project }) {
     };
 
     const onSubmit = (data: ProjectFormData) => {
-        router.put(route('admin.projects.update', project.id), data, {
+        router.put(route('admin.projects.update', project.slug), data, {
             preserveState: true,
             preserveScroll: true,
+            onError: (errors) => {
+                Object.entries(errors).forEach(([key, message]) => {
+                    form.setError(key as keyof ProjectFormData, { type: 'server', message });
+                });
+            },
         });
     };
 
     const handleDelete = () => {
         if (confirm(`Are you sure you want to delete "${project.title}"?`)) {
-            router.delete(route('admin.projects.destroy', project.id), {
+            router.delete(route('admin.projects.destroy', project.slug), {
                 onSuccess: () => {
                     // Redirect will be handled by the controller
                 },
@@ -142,7 +147,7 @@ export default function Edit({ project }: { project: Project }) {
                                 {form.formState.isSubmitting ? 'Updating...' : 'Update Project'}
                             </Button>
                             <Button type="button" variant="outline" asChild>
-                                <Link href={route('admin.projects.show', project.id)}>Cancel</Link>
+                                <Link href={route('admin.projects.show', project.slug)}>Cancel</Link>
                             </Button>
                             <Button type="button" variant="destructive" onClick={handleDelete}>
                                 <Trash2 className="mr-2 h-4 w-4" />

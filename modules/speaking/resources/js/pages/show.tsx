@@ -28,7 +28,7 @@ interface SpeakingEvent {
 export default function Show({ event }: { event: SpeakingEvent }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Speaking Events', href: route('admin.speaking.index') },
-        { title: event.title, href: route('admin.speaking.show', event.id) },
+        { title: event.title, href: route('admin.speaking.show', event.slug) },
     ];
 
     const eventTypeColors = {
@@ -86,7 +86,7 @@ export default function Show({ event }: { event: SpeakingEvent }) {
                             </Button>
                         )}
                         <Button asChild>
-                            <Link href={route('admin.speaking.edit', event.id)}>
+                            <Link href={route('admin.speaking.edit', event.slug)}>
                                 <Edit className="mr-2 h-4 w-4" />
                                 Edit Event
                             </Link>
