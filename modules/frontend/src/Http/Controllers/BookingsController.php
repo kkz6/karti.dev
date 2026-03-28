@@ -77,6 +77,9 @@ class BookingsController extends BaseController
         // Create Dodo payment
         $dodo = new DodoClient(
             bearerToken: config('services.dodo_payments.api_key'),
+            baseUrl: config('services.dodo_payments.test_mode')
+                ? 'https://test.dodopayments.com'
+                : 'https://live.dodopayments.com',
         );
 
         $payment = $dodo->payments->create(
