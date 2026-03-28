@@ -1,3 +1,4 @@
+import { Head } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Container } from '../components/Container';
 import PublicLayout from '../layouts/public-layout';
@@ -37,6 +38,7 @@ export default function BookingConfirmed({
 
     return (
         <PublicLayout>
+            <Head title="Booking Confirmed" />
             <Container className="mt-9 mb-24">
                 <div className="max-w-2xl mx-auto">
                     {hasBooking ? (

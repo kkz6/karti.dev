@@ -53,7 +53,7 @@ class CalComService
     /** @return array<string, mixed> */
     public function createBooking(string $slotStart, string $name, string $email, string $timezone, array $metadata = []): array
     {
-        $response = $this->client()->post('bookings', [
+        $response = $this->client('2024-08-13')->post('bookings', [
             'start'       => $slotStart,
             'eventTypeId' => $this->eventTypeId,
             'attendee'    => [
@@ -67,12 +67,12 @@ class CalComService
         return $response->json('data', []);
     }
 
-    private function client(): PendingRequest
+    private function client(?string $apiVersion = null): PendingRequest
     {
         return Http::baseUrl($this->baseUrl)
             ->withHeaders([
                 'Authorization'   => "Bearer {$this->apiKey}",
-                'cal-api-version' => $this->apiVersion,
+                'cal-api-version' => $apiVersion ?? $this->apiVersion,
             ])
             ->acceptJson()
             ->throw();
