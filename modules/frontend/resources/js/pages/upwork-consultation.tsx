@@ -613,10 +613,6 @@ function ConfirmStep({
         setError('');
 
         try {
-            // Reserve the slot first
-            await axios.post('/upwork/reserve-slot', { slot_start: slot.start });
-
-            // Create payment
             const { data } = await axios.post('/upwork/create-payment', {
                 name: formData.name,
                 email: formData.email,

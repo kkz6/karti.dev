@@ -19,7 +19,6 @@ Route::middleware(['web'])->group(function () {
 
     // Upwork booking flow
     Route::get('/upwork/slots', [BookingsController::class, 'getSlots'])->name('upwork.slots');
-    Route::post('/upwork/reserve-slot', [BookingsController::class, 'reserveSlot'])->name('upwork.reserveSlot');
     Route::post('/upwork/create-payment', [BookingsController::class, 'createPayment'])->name('upwork.createPayment');
     Route::get('/upwork/booking-confirmed', [BookingsController::class, 'bookingConfirmed'])->name('upwork.bookingConfirmed');
 });

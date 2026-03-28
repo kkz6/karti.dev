@@ -38,23 +38,6 @@ class BookingsController extends BaseController
         return response()->json(['slots' => $slots]);
     }
 
-    public function reserveSlot(Request $request): JsonResponse
-    {
-        $request->validate([
-            'slot_start' => ['required', 'string'],
-        ]);
-
-        $reservation = $this->calComService->reserveSlot(
-            $request->input('slot_start'),
-        );
-
-        session([
-            'booking_reservation_uid' => $reservation['reservationUid'] ?? null,
-        ]);
-
-        return response()->json(['reservation' => $reservation]);
-    }
-
     public function createPayment(Request $request): JsonResponse
     {
         $request->validate([
@@ -70,6 +53,13 @@ class BookingsController extends BaseController
         $email     = $request->input('email');
         $slotStart = $request->input('slot_start');
         $timezone  = $request->input('timezone');
+
+        // Try to reserve the slot (best-effort, non-blocking)
+        try {
+            $this->calComService->reserveSlot($slotStart);
+        } catch (\Exception $e) {
+            report($e);
+        }
 
         session([
             'booking_name'       => $name,
@@ -133,7 +123,7 @@ class BookingsController extends BaseController
             session()->forget([
                 'booking_name', 'booking_email', 'booking_profession',
                 'booking_message', 'booking_slot_start', 'booking_timezone',
-                'booking_payment_id', 'booking_reservation_uid',
+                'booking_payment_id',
             ]);
         }
 
