@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Frontend\Http\Controllers;
 
+use Carbon\Carbon;
 use Dodopayments\Client as DodoClient;
 use Dodopayments\Payments\BillingAddress;
 use Dodopayments\Payments\NewCustomer;
@@ -69,7 +70,7 @@ class BookingsController extends BaseController
             'message'         => $request->input('message', ''),
             'timezone'        => $request->input('timezone'),
             'slot_start'      => $slotStart,
-            'slot_end'        => date('c', strtotime($slotStart) + 3600),
+            'slot_end'        => Carbon::parse($slotStart)->addHour()->toISOString(),
             'status'          => 'pending',
             'reservation_uid' => $reservationUid,
         ]);
