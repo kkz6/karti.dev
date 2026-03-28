@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Container } from '../components/Container';
@@ -25,7 +26,6 @@ interface SlotRange {
 type Step = 'landing' | 'calendar' | 'confirm';
 
 const PRICE = '1,000';
-const CSRF_TOKEN = () => document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
 
 function useTypingAnimation(lines: unknown[], startDelay = 0) {
     const [visibleLines, setVisibleLines] = useState<number>(0);
@@ -449,22 +449,18 @@ function CalendarStep({
         end.setDate(end.getDate() + 7);
 
         try {
-            const params = new URLSearchParams({
-                start_date: start.toISOString(),
-                end_date: end.toISOString(),
-                timezone,
+            const { data } = await axios.get('/upwork/slots', {
+                params: {
+                    start_date: start.toISOString(),
+                    end_date: end.toISOString(),
+                    timezone,
+                },
             });
-
-            const res = await fetch(`/upwork/slots?${params}`);
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.message || 'Failed to load slots');
-            }
 
             setSlots(data.slots || {});
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : 'Something went wrong');
+            const message = axios.isAxiosError(err) ? err.response?.data?.message : null;
+            setError(message || 'Failed to load slots');
         } finally {
             setLoading(false);
         }
@@ -618,37 +614,17 @@ function ConfirmStep({
 
         try {
             // Reserve the slot first
-            await fetch('/upwork/reserve-slot', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': CSRF_TOKEN(),
-                },
-                body: JSON.stringify({ slot_start: slot.start }),
-            });
+            await axios.post('/upwork/reserve-slot', { slot_start: slot.start });
 
             // Create payment
-            const res = await fetch('/upwork/create-payment', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': CSRF_TOKEN(),
-                },
-                body: JSON.stringify({
-                    name: formData.name,
-                    email: formData.email,
-                    profession: formData.profession,
-                    message: formData.message,
-                    slot_start: slot.start,
-                    timezone,
-                }),
+            const { data } = await axios.post('/upwork/create-payment', {
+                name: formData.name,
+                email: formData.email,
+                profession: formData.profession,
+                message: formData.message,
+                slot_start: slot.start,
+                timezone,
             });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.message || 'Payment creation failed');
-            }
 
             if (data.payment_link) {
                 window.location.href = data.payment_link;
@@ -656,7 +632,8 @@ function ConfirmStep({
                 throw new Error('No payment link received');
             }
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : 'Something went wrong');
+            const message = axios.isAxiosError(err) ? err.response?.data?.message : null;
+            setError(message || 'Something went wrong');
             setLoading(false);
         }
     };
