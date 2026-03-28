@@ -486,10 +486,10 @@ function CalendarStep({
 
     return (
         <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -30 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
         >
             <div className="flex items-center justify-between mb-6">
                 <h2 className="font-display text-lg font-medium text-foreground">
@@ -640,10 +640,10 @@ function ConfirmStep({
 
     return (
         <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -30 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
         >
             <div className="flex items-center justify-between mb-6">
                 <h2 className="font-display text-lg font-medium text-foreground">
