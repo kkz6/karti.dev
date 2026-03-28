@@ -7,7 +7,6 @@ namespace Modules\Frontend\Http\Controllers;
 use Dodopayments\Client as DodoClient;
 use Dodopayments\Payments\BillingAddress;
 use Dodopayments\Payments\NewCustomer;
-use Dodopayments\Payments\PaymentCreateParams;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -81,24 +80,22 @@ class BookingsController extends BaseController
         );
 
         $payment = $dodo->payments->create(
-            PaymentCreateParams::with(
-                billing: BillingAddress::with(country: 'IN'),
-                customer: NewCustomer::with(
-                    email: $request->input('email'),
-                    name: $request->input('name'),
-                ),
-                productCart: [
-                    ['product_id' => config('services.dodo_payments.product_id'), 'quantity' => 1],
-                ],
-                paymentLink: true,
-                returnURL: route('upwork.bookingConfirmed', ['booking' => $booking->id]),
-                redirectImmediately: true,
-                metadata: [
-                    'booking_id' => (string) $booking->id,
-                    'slot_start' => $slotStart,
-                    'timezone'   => $request->input('timezone'),
-                ],
+            billing: BillingAddress::with(country: 'IN'),
+            customer: NewCustomer::with(
+                email: $request->input('email'),
+                name: $request->input('name'),
             ),
+            productCart: [
+                ['product_id' => config('services.dodo_payments.product_id'), 'quantity' => 1],
+            ],
+            paymentLink: true,
+            returnURL: route('upwork.bookingConfirmed', ['booking' => $booking->id]),
+            redirectImmediately: true,
+            metadata: [
+                'booking_id' => (string) $booking->id,
+                'slot_start' => $slotStart,
+                'timezone'   => $request->input('timezone'),
+            ],
         );
 
         $booking->update([
