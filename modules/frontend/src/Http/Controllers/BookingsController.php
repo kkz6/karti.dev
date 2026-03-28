@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
+use Modules\Frontend\Models\ConsultationBooking;
 use Modules\Frontend\Services\CalComService;
 use Modules\Shared\Http\Controllers\BaseController;
 
@@ -49,27 +50,32 @@ class BookingsController extends BaseController
             'timezone'   => ['required', 'string'],
         ]);
 
-        $name      = $request->input('name');
-        $email     = $request->input('email');
         $slotStart = $request->input('slot_start');
-        $timezone  = $request->input('timezone');
 
-        // Try to reserve the slot (best-effort, non-blocking)
+        // Try to reserve the slot on Cal.com (best-effort)
+        $reservationUid = null;
+
         try {
-            $this->calComService->reserveSlot($slotStart);
+            $reservation = $this->calComService->reserveSlot($slotStart);
+            $reservationUid = $reservation['reservationUid'] ?? null;
         } catch (\Exception $e) {
             report($e);
         }
 
-        session([
-            'booking_name'       => $name,
-            'booking_email'      => $email,
-            'booking_profession' => $request->input('profession'),
-            'booking_message'    => $request->input('message', ''),
-            'booking_slot_start' => $slotStart,
-            'booking_timezone'   => $timezone,
+        // Create booking record in DB as pending
+        $booking = ConsultationBooking::create([
+            'name'            => $request->input('name'),
+            'email'           => $request->input('email'),
+            'profession'      => $request->input('profession'),
+            'message'         => $request->input('message', ''),
+            'timezone'        => $request->input('timezone'),
+            'slot_start'      => $slotStart,
+            'slot_end'        => date('c', strtotime($slotStart) + 3600),
+            'status'          => 'pending',
+            'reservation_uid' => $reservationUid,
         ]);
 
+        // Create Dodo payment
         $dodo = new DodoClient(
             bearerToken: config('services.dodo_payments.api_key'),
         );
@@ -77,63 +83,74 @@ class BookingsController extends BaseController
         $payment = $dodo->payments->create(
             PaymentCreateParams::with(
                 billing: BillingAddress::with(country: 'IN'),
-                customer: NewCustomer::with(email: $email, name: $name),
+                customer: NewCustomer::with(
+                    email: $request->input('email'),
+                    name: $request->input('name'),
+                ),
                 productCart: [
                     ['product_id' => config('services.dodo_payments.product_id'), 'quantity' => 1],
                 ],
                 paymentLink: true,
-                returnURL: route('upwork.bookingConfirmed'),
+                returnURL: route('upwork.bookingConfirmed', ['booking' => $booking->id]),
                 redirectImmediately: true,
                 metadata: [
+                    'booking_id' => (string) $booking->id,
                     'slot_start' => $slotStart,
-                    'timezone'   => $timezone,
-                    'profession' => $request->input('profession'),
+                    'timezone'   => $request->input('timezone'),
                 ],
             ),
         );
 
-        session(['booking_payment_id' => $payment->paymentID]);
+        $booking->update([
+            'payment_id'   => $payment->paymentID,
+            'payment_link' => $payment->paymentLink,
+        ]);
 
         return response()->json(['payment_link' => $payment->paymentLink]);
     }
 
     public function bookingConfirmed(Request $request): InertiaResponse
     {
-        $name      = session('booking_name');
-        $email     = session('booking_email');
-        $slotStart = session('booking_slot_start');
-        $timezone  = session('booking_timezone');
-        $paymentId = session('booking_payment_id');
+        $booking = ConsultationBooking::find($request->query('booking'));
 
-        $bookingDetails = null;
-
-        if ($name && $email && $slotStart && $timezone) {
-            try {
-                $bookingDetails = $this->calComService->createBooking(
-                    $slotStart,
-                    $name,
-                    $email,
-                    $timezone,
-                    ['payment_id' => $paymentId ?? ''],
-                );
-            } catch (\Exception $e) {
-                report($e);
-            }
-
-            session()->forget([
-                'booking_name', 'booking_email', 'booking_profession',
-                'booking_message', 'booking_slot_start', 'booking_timezone',
-                'booking_payment_id',
+        if (! $booking || ! $booking->isPending()) {
+            return Inertia::render('frontend::upwork-booking-confirmed', [
+                'booking'   => null,
+                'name'      => $booking?->name,
+                'email'     => $booking?->email,
+                'slotStart' => $booking?->slot_start?->toISOString(),
+                'timezone'  => $booking?->timezone,
+                'paymentId' => $booking?->payment_id,
+                'alreadyConfirmed' => $booking?->isConfirmed(),
             ]);
         }
 
+        // Confirm the Cal.com booking
+        $calcomData = null;
+        $calcomBookingUid = null;
+
+        try {
+            $calcomData = $this->calComService->createBooking(
+                $booking->slot_start->toISOString(),
+                $booking->name,
+                $booking->email,
+                $booking->timezone,
+                ['payment_id' => $booking->payment_id ?? '', 'booking_id' => (string) $booking->id],
+            );
+            $calcomBookingUid = $calcomData['uid'] ?? null;
+        } catch (\Exception $e) {
+            report($e);
+        }
+
+        $booking->markConfirmed($calcomBookingUid, $calcomData);
+
         return Inertia::render('frontend::upwork-booking-confirmed', [
-            'booking'   => $bookingDetails,
-            'name'      => $name,
-            'email'     => $email,
-            'slotStart' => $slotStart,
-            'timezone'  => $timezone,
-            'paymentId' => $paymentId,
+            'booking'   => $calcomData,
+            'name'      => $booking->name,
+            'email'     => $booking->email,
+            'slotStart' => $booking->slot_start->toISOString(),
+            'timezone'  => $booking->timezone,
+            'paymentId' => $booking->payment_id,
         ]);
     }
 }
