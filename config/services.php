@@ -38,7 +38,6 @@ return [
     'dodo_payments' => [
         'api_key'                 => env('DODO_PAYMENTS_API_KEY', ''),
         'product_id'              => env('DODO_PAYMENTS_UPWORK_PRODUCT_ID', ''),
-        'webhook_key'             => env('DODO_PAYMENTS_WEBHOOK_KEY', ''),
         'upwork_consultation_url' => env('DODO_PAYMENTS_UPWORK_CONSULTATION_URL', '#'),
         'contact_email'           => env('DODO_PAYMENTS_CONTACT_EMAIL', ''),
     ],

@@ -82,7 +82,6 @@ class BookingsController extends BaseController
 
         $dodo = new DodoClient(
             bearerToken: config('services.dodo_payments.api_key'),
-            webhookKey: config('services.dodo_payments.webhook_key'),
         );
 
         $payment = $dodo->payments->create(
