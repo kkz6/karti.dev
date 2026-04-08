@@ -77,10 +77,12 @@ export default function Create() {
     });
 
     const handleTitleChange = (title: string) => {
-        form.setValue('title', title);
-        // Auto-generate slug from title
+        const previousTitle = form.getValues('title');
         const currentSlug = form.getValues('slug');
-        if (!currentSlug || currentSlug === generateSlug(form.watch('title'))) {
+
+        form.setValue('title', title);
+
+        if (!currentSlug || currentSlug === generateSlug(previousTitle)) {
             form.setValue('slug', generateSlug(title));
         }
     };
