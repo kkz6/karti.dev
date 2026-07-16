@@ -1,6 +1,6 @@
 name: Central Security Scan
 
-# Central workflow baseline: advisory-community-rules
+# Central workflow baseline: advisory-community-rules-actions-enabled
 
 on:
   pull_request:
