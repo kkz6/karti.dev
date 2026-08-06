@@ -7,7 +7,10 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card"
       className={cn(
-        "bg-card text-card-foreground flex flex-col rounded-lg border shadow-sm",
+        "bg-card text-card-foreground flex flex-col rounded-xl border shadow-sm",
+        // Lit top edge — reads as a surface rather than a flat rectangle
+        "shadow-[inset_0_1px_0_0_oklch(1_0_0/0.55),var(--shadow-sm)]",
+        "dark:shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05),var(--shadow-md)]",
         className
       )}
       {...props}

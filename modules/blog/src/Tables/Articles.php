@@ -44,7 +44,7 @@ class Articles extends Table
             Action::make(
                 label: 'Delete',
                 handle: fn (Article $article) => $article->delete(),
-                icon: 'a-arrow-down',
+                icon: 'trash-2',
                 variant: Variant::Destructive,
             )
                 ->confirm()

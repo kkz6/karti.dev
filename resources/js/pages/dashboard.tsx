@@ -87,17 +87,19 @@ function MetricItem({
     const isPositive = change !== undefined && change >= 0;
 
     return (
-        <div className="flex flex-col gap-0.5">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</span>
+        <div className="flex flex-col gap-2 rounded-xl border bg-card p-4 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.55),var(--shadow-sm)] transition-colors duration-200 hover:border-primary/25 dark:shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05),var(--shadow-md)]">
+            <span className="text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-muted-foreground">{label}</span>
             <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-semibold tabular-nums">
+                <span className="text-3xl font-semibold tabular-nums tracking-[-0.02em]">
                     {typeof value === 'number' ? value.toLocaleString() : value}
                     {suffix && <span className="text-base font-normal text-muted-foreground">{suffix}</span>}
                 </span>
                 {change !== undefined && (
                     <span className={cn(
-                        "flex items-center gap-0.5 text-xs font-medium",
-                        isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+                        "flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[0.6875rem] font-medium tabular-nums",
+                        isPositive
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            : "bg-red-500/10 text-red-600 dark:text-red-400"
                     )}>
                         {isPositive ? <TrendingUpIcon className="size-3" /> : <TrendingDownIcon className="size-3" />}
                         {isPositive ? '+' : ''}{change}%
@@ -108,14 +110,16 @@ function MetricItem({
     );
 }
 
+// The palette tokens are oklch(), so they're used directly — wrapping them in
+// hsl() produced an invalid colour and the bars fell back to black.
 const chartConfig = {
     visitors: {
         label: 'Visitors',
-        color: 'hsl(var(--chart-1))',
+        color: 'var(--chart-1)',
     },
     pageViews: {
         label: 'Page Views',
-        color: 'hsl(var(--chart-2))',
+        color: 'var(--chart-2)',
     },
 } satisfies ChartConfig;
 
@@ -148,7 +152,7 @@ function VisitorsChart({ data, metric }: { data: ChartDataPoint[]; metric: 'visi
                     width={50}
                 />
                 <ChartTooltip
-                    cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
+                    cursor={{ fill: 'color-mix(in oklab, var(--muted) 45%, transparent)' }}
                     content={
                         <ChartTooltipContent
                             labelFormatter={(value) => {
