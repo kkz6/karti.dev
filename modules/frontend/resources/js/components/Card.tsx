@@ -38,7 +38,7 @@ export function Card<T extends React.ElementType = 'div'>({
 
   return (
     <Component
-      className={clsx(className, 'group relative flex flex-col items-start')}
+      className={clsx(className, 'group surface-card relative flex flex-col items-start')}
     >
       {href &&
         (isExternalUrl(href) ? (
@@ -96,7 +96,7 @@ Card.Title = function CardTitle<T extends React.ElementType = 'h2'>({
   const Component = as ?? 'h2'
 
   return (
-    <Component className="text-base font-display font-medium tracking-tight text-foreground">
+    <Component className="font-display text-lg font-semibold tracking-[-0.015em] text-foreground transition-colors duration-200 group-hover:text-primary">
       {href ? <Card.Link href={href}>{children}</Card.Link> : children}
     </Component>
   )
@@ -108,7 +108,7 @@ Card.Description = function CardDescription({
   children: React.ReactNode
 }) {
   return (
-    <p className="relative z-10 mt-2 text-sm text-muted-foreground leading-relaxed">
+    <p className="prose-measure relative z-10 mt-2.5 text-[0.9375rem] leading-relaxed text-muted-foreground">
       {children}
     </p>
   )
@@ -118,11 +118,10 @@ Card.Cta = function CardCta({ children }: { children: React.ReactNode }) {
   return (
     <div
       aria-hidden="true"
-      className="relative z-10 mt-4 flex items-center text-sm font-mono text-primary group-hover:text-primary/80 transition-colors"
+      className="relative z-10 mt-5 flex items-center font-mono text-sm text-primary transition-colors"
     >
-      <span className="mr-1 select-none">{'>'}</span>
       {children}
-      <ChevronRightIcon className="ml-1 h-4 w-4 stroke-current transition-transform group-hover:translate-x-1" />
+      <ChevronRightIcon className="ml-1 h-4 w-4 stroke-current transition-transform duration-300 ease-out group-hover:translate-x-1" />
     </div>
   )
 }
@@ -143,7 +142,7 @@ Card.Eyebrow = function CardEyebrow<T extends React.ElementType = 'p'>({
     <Component
       className={clsx(
         className,
-        'relative z-10 order-first mb-3 flex items-center text-sm font-mono text-muted-foreground',
+        'relative z-10 order-first mb-3 flex items-center font-mono text-xs tracking-[0.06em] text-muted-foreground',
         decorate && 'pl-3.5',
       )}
       {...props}

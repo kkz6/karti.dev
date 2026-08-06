@@ -1,4 +1,5 @@
 import { Card } from '@frontend/components/Card';
+import { Reveal } from '@frontend/components/Reveal';
 import { Section } from '@frontend/components/Section';
 import { SimpleLayout } from '@frontend/components/SimpleLayout';
 import { SeoHead, SeoData } from '@frontend/components/SeoHead';
@@ -23,21 +24,23 @@ interface SpeakingProps {
 function SpeakingSection({ title, children }: { title: string; children: React.ReactNode }) {
     return (
         <Section title={title}>
-            <div className="space-y-16">{children}</div>
+            <Reveal className="space-y-12">{children}</Reveal>
         </Section>
     );
 }
 
 function Appearance({ title, description, event, cta, href }: SpeakingEvent) {
     return (
-        <Card as="article">
-            <Card.Title as="h3" href={href}>
-                {title}
-            </Card.Title>
-            <Card.Eyebrow decorate>{event}</Card.Eyebrow>
-            <Card.Description>{description}</Card.Description>
-            <Card.Cta>{cta}</Card.Cta>
-        </Card>
+        <Reveal.Item as="article">
+            <Card as="div" href={href}>
+                <Card.Title as="h3" href={href}>
+                    {title}
+                </Card.Title>
+                <Card.Eyebrow decorate>{event}</Card.Eyebrow>
+                <Card.Description>{description}</Card.Description>
+                <Card.Cta>{cta}</Card.Cta>
+            </Card>
+        </Reveal.Item>
     );
 }
 
@@ -63,10 +66,11 @@ export default function Speaking({ events = {}, seo }: SpeakingProps) {
             <SeoHead seo={seo} />
             <PublicLayout>
                 <SimpleLayout
-                    title="I've spoken at events all around the world and been interviewed for many podcasts."
-                    intro="One of my favorite ways to share my ideas is live on stage, where there's so much more communication bandwidth than there is in writing, and I love podcast interviews because they give me the opportunity to answer questions instead of just present my opinions."
+                    eyebrow="speaking"
+                    title="Talks, podcasts, and the occasional workshop."
+                    intro="One of my favourite ways to share ideas is live on stage — there's far more bandwidth there than in writing. I like podcast interviews for the same reason: I get to answer real questions instead of just presenting opinions."
                 >
-                    <div className="space-y-20">
+                    <div className="space-y-24">
                         {Object.keys(events).length > 0 ? (
                             Object.entries(events).map(([eventType, typeEvents]) => (
                                 <SpeakingSection key={eventType} title={formatEventTypeTitle(eventType)}>
@@ -83,8 +87,24 @@ export default function Speaking({ events = {}, seo }: SpeakingProps) {
                                 </SpeakingSection>
                             ))
                         ) : (
-                            <div className="text-center py-12">
-                                <p className="text-lg text-gray-500">No speaking events available at the moment.</p>
+                            <div className="rounded-2xl border border-dashed border-border px-6 py-20 text-center">
+                                <p className="font-mono text-sm text-primary">./speaking --upcoming</p>
+                                <p className="mt-4 font-display text-xl font-semibold text-foreground">
+                                    Nothing on the calendar right now
+                                </p>
+                                <p className="mx-auto mt-3 max-w-md text-[0.9375rem] leading-relaxed text-muted-foreground">
+                                    Past talks are being written up. If you're organising an event and want me on the
+                                    lineup, get in touch.
+                                </p>
+                                <a
+                                    href="mailto:karthick@gigcodes.com"
+                                    className="group mt-8 inline-flex items-center gap-1.5 rounded-full border border-border px-5 py-2.5 font-mono text-sm text-foreground transition-colors duration-200 hover:border-primary/40 hover:text-primary"
+                                >
+                                    Invite me to speak
+                                    <span aria-hidden="true" className="transition-transform duration-300 ease-out group-hover:translate-x-1">
+                                        &rarr;
+                                    </span>
+                                </a>
                             </div>
                         )}
                     </div>

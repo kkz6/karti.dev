@@ -1,7 +1,8 @@
-import React from 'react';
-import { Card } from '../../components/Card';
+import { Link } from '@inertiajs/react';
+import { Reveal } from '../../components/Reveal';
 import { SeoHead, type SeoData } from '../../components/SeoHead';
 import { SimpleLayout } from '../../components/SimpleLayout';
+import { useSpotlight } from '../../components/useSpotlight';
 import PublicLayout from '../../layouts/public-layout';
 
 interface Article {
@@ -16,58 +17,68 @@ interface ArticlesProps {
     seo?: SeoData;
 }
 
-function Article({ article }: { article: Article }) {
+function ArticleRow({ article }: { article: Article }) {
+    const { onPointerMove } = useSpotlight<HTMLAnchorElement>();
+
     return (
-        <article className="md:grid md:grid-cols-4 md:items-baseline">
-            <Card as="div" className="md:col-span-3" href={`/articles/${article.slug}`}>
-                <Card.Title href={`/articles/${article.slug}`}>
-                    {article.title}
-                </Card.Title>
-                <Card.Eyebrow as="time" dateTime={article.date} className="md:hidden" decorate>
-                    {new Date(article.date).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                    })}
-                </Card.Eyebrow>
-                <Card.Description>{article.description}</Card.Description>
-                <Card.Cta>Read article</Card.Cta>
-            </Card>
-            <Card.Eyebrow as="time" dateTime={article.date} className="mt-1 hidden md:block">
+        <Link
+            href={`/articles/${article.slug}`}
+            onPointerMove={onPointerMove}
+            className="spotlight group grid grid-cols-1 gap-x-8 gap-y-3 rounded-2xl px-5 py-8 sm:grid-cols-[10rem_1fr] sm:px-7"
+        >
+            <time dateTime={article.date} className="font-mono text-xs tracking-[0.06em] text-muted-foreground sm:pt-1.5">
                 {new Date(article.date).toLocaleDateString('en-US', {
                     year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
+                    month: 'short',
+                    day: '2-digit',
                 })}
-            </Card.Eyebrow>
-        </article>
+            </time>
+
+            <div>
+                <h2 className="font-display text-xl font-semibold tracking-[-0.02em] text-foreground transition-colors duration-200 group-hover:text-primary">
+                    {article.title}
+                </h2>
+                <p className="prose-measure mt-2.5 text-[0.9375rem] leading-relaxed text-muted-foreground">
+                    {article.description}
+                </p>
+                <span className="mt-4 inline-flex items-center gap-1.5 font-mono text-sm text-primary">
+                    Read article
+                    <span aria-hidden="true" className="transition-transform duration-300 ease-out group-hover:translate-x-1">
+                        &rarr;
+                    </span>
+                </span>
+            </div>
+        </Link>
     );
 }
 
 export default function Articles({ articles = [], seo }: ArticlesProps) {
     return (
-        <>
+        <PublicLayout>
             <SeoHead seo={seo} />
-            <PublicLayout>
-                <SimpleLayout
-                    title="Writing on software design, company building, and the aerospace industry."
-                    intro="All of my long-form thoughts on programming, leadership, product design, and more, collected in chronological order."
-                >
-                    <div className="md:border-l md:border-zinc-100 md:pl-6 md:dark:border-zinc-700/40">
-                        <div className="flex max-w-3xl flex-col space-y-16">
-                            {articles.length > 0 ? (
-                                articles.map((article) => (
-                                    <Article key={article.slug} article={article} />
-                                ))
-                            ) : (
-                                <p className="text-zinc-600 dark:text-zinc-400">
-                                    No articles published yet.
-                                </p>
-                            )}
-                        </div>
+            <SimpleLayout
+                eyebrow="writing"
+                title="Notes on building software, and what I learn doing it."
+                intro="Long-form thoughts on programming, product design, hardware, and the occasional detour — collected in chronological order."
+            >
+                {articles.length > 0 ? (
+                    <Reveal className="divide-y divide-border/60 border-y border-border/60">
+                        {articles.map((article) => (
+                            <Reveal.Item key={article.slug} as="article">
+                                <ArticleRow article={article} />
+                            </Reveal.Item>
+                        ))}
+                    </Reveal>
+                ) : (
+                    <div className="rounded-2xl border border-dashed border-border px-6 py-20 text-center">
+                        <p className="font-mono text-sm text-primary">ls ./articles</p>
+                        <p className="mt-4 font-display text-xl font-semibold text-foreground">Nothing published yet</p>
+                        <p className="mx-auto mt-3 max-w-md text-[0.9375rem] leading-relaxed text-muted-foreground">
+                            The first piece is in progress. Check back soon.
+                        </p>
                     </div>
-                </SimpleLayout>
-            </PublicLayout>
-        </>
+                )}
+            </SimpleLayout>
+        </PublicLayout>
     );
 }

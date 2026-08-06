@@ -1,9 +1,11 @@
+import { Card } from '@frontend/components/Card';
+import { Container } from '@frontend/components/Container';
+import { Reveal } from '@frontend/components/Reveal';
+import { SeoHead, SeoData } from '@frontend/components/SeoHead';
+import { SimpleLayout } from '@frontend/components/SimpleLayout';
+import { useSpotlight } from '@frontend/components/useSpotlight';
+import PublicLayout from '@frontend/layouts/public-layout';
 import React from 'react';
-import { Link } from '@inertiajs/react';
-import PublicLayout from '../layouts/public-layout';
-import { Card } from '../components/Card';
-import { SimpleLayout } from '../components/SimpleLayout';
-import { SeoHead, SeoData } from '../components/SeoHead';
 
 interface Project {
     name: string;
@@ -32,26 +34,37 @@ function LinkIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 }
 
 function ProjectCard({ project }: { project: Project }) {
+    const { onPointerMove } = useSpotlight<HTMLElement>();
+
     return (
-        <Card as="li">
-            <div className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md shadow-zinc-800/5 ring-1 ring-zinc-900/5 dark:border dark:border-zinc-700/50 dark:bg-zinc-800 dark:ring-0">
-                <img
-                    src={project.logo}
-                    alt=""
-                    className="h-8 w-8"
-                />
+        <Card
+            as="article"
+            href={project.link.href}
+            onPointerMove={onPointerMove}
+            className="spotlight h-full rounded-3xl surface-elevated p-6 transition-transform duration-300 ease-out hover:-translate-y-1"
+        >
+            <div className="relative z-10 flex h-11 w-11 items-center justify-center rounded-xl bg-background ring-1 ring-border/70">
+                {project.logo ? (
+                    <img src={project.logo} alt="" className="h-7 w-7 object-contain" />
+                ) : (
+                    <span aria-hidden="true" className="font-mono text-sm text-muted-foreground">
+                        {project.name.charAt(0)}
+                    </span>
+                )}
             </div>
-            <h2 className="mt-6 text-base font-semibold text-zinc-800 dark:text-zinc-100">
-                <Card.Link href={project.link.href}>
-                    {project.name}
-                </Card.Link>
+
+            <h2 className="relative z-10 mt-6 font-display text-lg font-semibold tracking-[-0.015em] text-foreground transition-colors duration-200 group-hover:text-primary">
+                {project.name}
             </h2>
-            <Card.Description>
+
+            <p className="relative z-10 mt-2.5 flex-auto text-[0.9375rem] leading-relaxed text-muted-foreground">
                 {project.description}
-            </Card.Description>
-            <p className="relative z-10 mt-6 flex items-center text-sm font-mono text-muted-foreground transition group-hover:text-primary">
-                <LinkIcon className="h-5 w-5 flex-none" />
-                <span className="ml-2">{project.link.label}</span>
+            </p>
+
+            {/* Pinned to the bottom so CTAs line up across cards of differing height */}
+            <p className="relative z-10 mt-6 flex items-center gap-2 font-mono text-sm text-muted-foreground transition-colors duration-200 group-hover:text-primary">
+                <LinkIcon className="h-4 w-4 flex-none" />
+                <span>{project.link.label}</span>
             </p>
         </Card>
     );
@@ -59,34 +72,49 @@ function ProjectCard({ project }: { project: Project }) {
 
 export default function Projects({ projects = [], seo }: ProjectsProps) {
     return (
-        <>
+        <PublicLayout>
             <SeoHead seo={seo} />
-            <PublicLayout>
-                <SimpleLayout
-                    title="Things I've made trying to put my dent in the universe."
-                    intro="I've worked on tons of little projects over the years but these are the ones that I'm most proud of. Many of them are open-source, so if you see something that piques your interest, check out the code and contribute if you have ideas for how it can be improved."
-                >
-                    {projects.length > 0 ? (
-                        <ul
-                            role="list"
-                            className="grid grid-cols-1 gap-x-12 gap-y-16 sm:grid-cols-2 lg:grid-cols-3"
-                        >
-                            {projects.map((project) => (
-                                <ProjectCard key={project.name} project={project} />
-                            ))}
-                        </ul>
-                    ) : (
-                        <div className="text-center py-12">
-                            <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-2">
-                                No projects available yet
-                            </h3>
-                            <p className="text-zinc-600 dark:text-zinc-400">
-                                Check back soon for new projects and work.
+            <SimpleLayout
+                eyebrow="projects"
+                title="Things I've built, broken, and shipped anyway."
+                intro="A mix of client work, open source, and side projects that started as a weekend idea. Several are open-source — if something looks useful, the code is a click away."
+            >
+                {projects.length > 0 ? (
+                    <Reveal
+                        className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+                        stagger={0.06}
+                    >
+                        {projects.map((project) => (
+                            <Reveal.Item key={project.name} className="h-full">
+                                <ProjectCard project={project} />
+                            </Reveal.Item>
+                        ))}
+                    </Reveal>
+                ) : (
+                    <Container className="px-0">
+                        <div className="rounded-3xl border border-dashed border-border px-6 py-20 text-center">
+                            <p className="font-mono text-sm text-primary">./projects --list</p>
+                            <p className="mt-4 font-display text-xl font-semibold text-foreground">
+                                No projects published yet
                             </p>
+                            <p className="mx-auto mt-3 max-w-md text-[0.9375rem] leading-relaxed text-muted-foreground">
+                                Work in progress. In the meantime, most of what I build ends up on GitHub first.
+                            </p>
+                            <a
+                                href="https://github.com/kkz6"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group mt-8 inline-flex items-center gap-1.5 rounded-full border border-border px-5 py-2.5 font-mono text-sm text-foreground transition-colors duration-200 hover:border-primary/40 hover:text-primary"
+                            >
+                                Browse GitHub
+                                <span aria-hidden="true" className="transition-transform duration-300 ease-out group-hover:translate-x-1">
+                                    &rarr;
+                                </span>
+                            </a>
                         </div>
-                    )}
-                </SimpleLayout>
-            </PublicLayout>
-        </>
+                    </Container>
+                )}
+            </SimpleLayout>
+        </PublicLayout>
     );
 }

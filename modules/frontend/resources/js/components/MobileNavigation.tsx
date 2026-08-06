@@ -6,12 +6,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 const navigation = [
   { name: 'About', href: '/about' },
+  { name: 'Consulting', href: '/consulting' },
   { name: 'Articles', href: '/articles' },
   { name: 'Projects', href: '/projects' },
   { name: 'Speaking', href: '/speaking' },
   { name: 'Photography', href: '/photography' },
   { name: 'Uses', href: '/uses' },
-  { name: 'Upwork', href: '/upwork' },
 ]
 
 function MobileNavItem({

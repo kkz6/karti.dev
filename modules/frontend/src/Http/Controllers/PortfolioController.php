@@ -329,14 +329,14 @@ class PortfolioController extends BaseController
 
 
 
-    public function upworkConsultation()
+    public function consulting()
     {
         $seoData = new SEOData(
-            title: 'Upwork Consultation - ' . config('seo.site_name', config('app.name')),
-            description: 'Book a 1-on-1 Upwork consultation. Learn how to set up your profile, write winning proposals, land jobs, and navigate taxes — all in 1 hour.',
+            title: 'Consulting - ' . config('seo.site_name', config('app.name')),
+            description: 'Visa consultations, home automation, and network design. One-on-one help getting a visa application right or building a home that runs itself.',
             author: config('seo.author', 'Karthick'),
             image: config('seo.image'),
-            url: url('/upwork'),
+            url: url('/consulting'),
             type: 'website',
             site_name: config('seo.site_name', config('app.name')),
             twitter_card: config('seo.twitter.card', 'summary_large_image'),
@@ -347,27 +347,32 @@ class PortfolioController extends BaseController
         );
 
         $jsonLd = [
-            '@context'    => 'https://schema.org',
-            '@type'       => 'Service',
-            'name'        => 'Upwork Consultation',
-            'provider'    => [
+            '@context'          => 'https://schema.org',
+            '@type'             => 'ProfessionalService',
+            'name'              => 'Karthick — Consulting',
+            'provider'          => [
                 '@type' => 'Person',
                 'name'  => 'Karthick',
                 'url'   => url('/'),
             ],
-            'description' => 'One-on-one Upwork consultation covering profile setup, proposal writing, job hunting, tax guidance, and platform best practices.',
-            'url'         => url('/upwork'),
-            'offers'      => [
-                '@type'         => 'Offer',
-                'price'         => '1000',
-                'priceCurrency' => 'INR',
+            'description'       => 'Visa consultations, home automation design, and home or office network consulting.',
+            'url'               => url('/consulting'),
+            'areaServed'        => 'Worldwide',
+            'hasOfferCatalog'   => [
+                '@type'           => 'OfferCatalog',
+                'name'            => 'Consulting services',
+                'itemListElement' => [
+                    ['@type' => 'Offer', 'itemOffered' => ['@type' => 'Service', 'name' => 'Visa consultation']],
+                    ['@type' => 'Offer', 'itemOffered' => ['@type' => 'Service', 'name' => 'Home automation consulting']],
+                    ['@type' => 'Offer', 'itemOffered' => ['@type' => 'Service', 'name' => 'Network design consulting']],
+                ],
             ],
         ];
 
-        return Inertia::render('frontend::upwork-consultation', [
+        return Inertia::render('frontend::consulting', [
             'seo'          => $this->getSeoArray($seoData),
             'jsonLd'       => $jsonLd,
-            'contactEmail' => config('services.dodo_payments.contact_email', SiteSetting::where('key', 'contact_email')->value('value') ?? ''),
+            'contactEmail' => SiteSetting::where('key', 'contact_email')->value('value') ?: 'karthick@gigcodes.com',
         ]);
     }
 

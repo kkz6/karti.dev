@@ -38,14 +38,11 @@ export function ArticleLayout({
           </Link>
           <article>
             <header className="flex flex-col">
-              <div className="order-first font-mono text-sm text-muted-foreground mb-4">
-                <span className="text-primary">~</span> ./articles/<span className="text-primary">read</span>
-              </div>
               <time
                 dateTime={article.date}
-                className="flex items-center text-sm font-mono text-muted-foreground mb-4"
+                className="order-first mb-5 flex items-center font-mono text-xs tracking-[0.06em] text-muted-foreground"
               >
-                <span className="h-4 w-0.5 rounded-full bg-primary/50" />
+                <span aria-hidden="true" className="h-4 w-0.5 rounded-full bg-primary/50" />
                 <span className="ml-3">
                   {new Date(article.date).toLocaleDateString('en-US', {
                     year: 'numeric',
@@ -54,14 +51,29 @@ export function ArticleLayout({
                   })}
                 </span>
               </time>
-              <h1 className="font-display text-3xl sm:text-4xl font-medium tracking-tight text-foreground">
+              <h1 className="display-2 text-foreground">
                 {article.title}
               </h1>
+              {article.description && (
+                <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
+                  {article.description}
+                </p>
+              )}
             </header>
-            <div className="mt-8 prose prose-zinc dark:prose-invert prose-headings:font-display prose-headings:font-medium prose-a:text-primary prose-code:font-mono">
+            <div className="mt-10 border-t border-border/60 pt-10 prose prose-zinc dark:prose-invert prose-lg prose-headings:font-display prose-headings:font-semibold prose-headings:tracking-[-0.02em] prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-code:font-mono prose-img:rounded-xl">
               {children}
             </div>
           </article>
+
+          <div className="mt-16 border-t border-border/60 pt-8">
+            <Link
+              href="/articles"
+              className="group inline-flex items-center gap-2 font-mono text-sm text-muted-foreground transition-colors duration-200 hover:text-primary"
+            >
+              <ArrowLeftIcon className="h-4 w-4 stroke-current transition-transform duration-300 ease-out group-hover:-translate-x-1" />
+              All articles
+            </Link>
+          </div>
         </div>
       </div>
     </Container>

@@ -9,7 +9,7 @@ export function AvatarContainer({
     <div
       className={clsx(
         className,
-        'h-10 w-10 rounded-full bg-white/90 p-0.5 shadow-lg shadow-zinc-800/5 ring-1 ring-zinc-900/5 backdrop-blur dark:bg-zinc-800/90 dark:ring-white/10'
+        'h-10 w-10 rounded-full bg-card/80 p-0.5 shadow-md ring-1 ring-border/60 backdrop-blur transition-shadow duration-200 hover:ring-primary/30'
       )}
       {...props}
     />
@@ -31,11 +31,11 @@ export function Avatar({
     >
       <img
         src="/images/avatar.png"
-        alt=""
-        sizes={large ? '4rem' : '2.25rem'}
+        alt="Karthick"
+        sizes={large ? '5rem' : '2.25rem'}
         className={clsx(
-          'rounded-full bg-zinc-100 object-cover dark:bg-zinc-800',
-          large ? 'h-16 w-16' : 'h-9 w-9'
+          'rounded-full bg-muted object-cover ring-1 ring-border/60 transition-transform duration-300 ease-out hover:scale-[1.03]',
+          large ? 'h-20 w-20 shadow-lg' : 'h-9 w-9'
         )}
         onError={(e) => {
           const target = e.target as HTMLImageElement

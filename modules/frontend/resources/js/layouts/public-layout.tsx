@@ -1,58 +1,64 @@
 import { useEffect, type ReactNode } from 'react'
+import { CursorGlow } from '../components/CursorGlow'
 import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
+import { PageTransition } from '../components/PageTransition'
+import { ScrollProgress } from '../components/ScrollProgress'
 
 interface PublicLayoutProps {
     children: ReactNode
 }
 
+// Fine-grain film noise, inlined so it costs no request
+const noiseSvg = `
+    <svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'>
+        <filter id='noise' x='0' y='0'>
+            <feTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/>
+            <feColorMatrix type='saturate' values='0'/>
+        </filter>
+        <rect width='100%' height='100%' filter='url(#noise)' opacity='1'/>
+    </svg>
+`.replace(/\s+/g, ' ').trim()
+
+const noiseUrl = `url("data:image/svg+xml,${encodeURIComponent(noiseSvg)}")`
+
 export default function PublicLayout({ children }: PublicLayoutProps) {
     useEffect(() => {
-        // Check for dark mode preference on mount
-        const isDark = localStorage.getItem('theme') === 'dark' || 
-            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)
-        
-        if (isDark) {
-            document.documentElement.classList.add('dark')
-        } else {
-            document.documentElement.classList.remove('dark')
-        }
+        const stored = localStorage.getItem('theme')
+        const isDark = stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)
+
+        document.documentElement.classList.toggle('dark', isDark)
     }, [])
 
-    // SVG noise filter with fine grain texture
-    const noiseSvg = `
-        <svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'>
-            <filter id='noise' x='0' y='0'>
-                <feTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/>
-                <feColorMatrix type='saturate' values='0'/>
-            </filter>
-            <rect width='100%' height='100%' filter='url(#noise)' opacity='1'/>
-        </svg>
-    `.replace(/\s+/g, ' ').trim()
-
-    const encodedSvg = encodeURIComponent(noiseSvg)
-
     return (
-        <>
-            {/* Film grain noise overlay - subtle on both modes */}
+        <div className="relative flex min-h-dvh w-full flex-col bg-background">
+            <a href="#main" className="skip-link">
+                Skip to content
+            </a>
+
+            <ScrollProgress />
+            <CursorGlow />
+
+            {/* Film grain, sits above content but never intercepts pointer events */}
             <div
-                className="fixed inset-0 pointer-events-none z-50 opacity-[0.04] dark:opacity-[0.03]"
-                style={{
-                    backgroundImage: `url("data:image/svg+xml,${encodedSvg}")`,
-                    backgroundRepeat: 'repeat',
-                }}
+                aria-hidden="true"
+                className="pointer-events-none fixed inset-0 z-[70] opacity-[0.035] dark:opacity-[0.028]"
+                style={{ backgroundImage: noiseUrl, backgroundRepeat: 'repeat' }}
             />
 
-            <div className="fixed inset-0 flex justify-center sm:px-8">
-                <div className="flex w-full max-w-7xl lg:px-8">
-                    <div className="w-full bg-transparent" />
-                </div>
-            </div>
-            <div className="relative flex min-h-screen w-full flex-col bg-zinc-50 dark:bg-zinc-900">
-                <Header />
-                <main className="flex-auto">{children}</main>
-                <Footer />
-            </div>
-        </>
+            {/* Drifting mesh so the top of the page never reads as flat charcoal */}
+            <div
+                aria-hidden="true"
+                className="mesh-ambient pointer-events-none fixed inset-x-0 top-0 z-0 h-[42rem] opacity-70 dark:opacity-50"
+            />
+
+            <Header />
+
+            <main id="main" className="relative z-10 flex-auto">
+                <PageTransition>{children}</PageTransition>
+            </main>
+
+            <Footer />
+        </div>
     )
 }

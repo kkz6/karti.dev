@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Space+Grotesk:wght@400..700&family=JetBrains+Mono:wght@400..700&display=swap');
 @import 'tailwindcss';
 @import './_variables.scss';
 @plugin 'tailwindcss-animate';
@@ -56,21 +56,30 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Smooth scrolling for the entire website */
 @layer base {
     html {
         scroll-behavior: smooth;
+        scroll-padding-top: 6rem;
     }
 
-    /* Optional: Add smooth scrolling with custom timing */
-    * {
-        scroll-behavior: smooth;
+    @media (prefers-reduced-motion: reduce) {
+        html {
+            scroll-behavior: auto;
+        }
+
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
     }
 }
 
 @theme {
-    --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-    --font-display: 'JetBrains Mono', ui-monospace, monospace;
+    --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-display: 'Space Grotesk', 'Geist', ui-sans-serif, system-ui, sans-serif;
 
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
@@ -127,95 +136,107 @@
     --card-foreground: oklch(0.25 0.02 155);
     --popover: oklch(0.98 0.005 155);
     --popover-foreground: oklch(0.25 0.02 155);
-    --primary: oklch(0.55 0.17 155);
+    --primary: oklch(0.52 0.13 155);
     --primary-foreground: oklch(0.98 0 0);
-    --secondary: oklch(0.95 0.01 155);
-    --secondary-foreground: oklch(0.35 0.05 155);
-    --muted: oklch(0.95 0.01 155);
-    --muted-foreground: oklch(0.50 0.03 155);
-    --accent: oklch(0.92 0.03 155);
-    --accent-foreground: oklch(0.35 0.10 155);
+    --secondary: oklch(0.95 0.008 155);
+    --secondary-foreground: oklch(0.35 0.04 155);
+    --muted: oklch(0.95 0.008 155);
+    --muted-foreground: oklch(0.52 0.018 155);
+    --accent: oklch(0.93 0.022 155);
+    --accent-foreground: oklch(0.35 0.08 155);
     --destructive: oklch(0.6368 0.2078 25.3313);
     --destructive-foreground: oklch(1.0000 0 0);
     --border: oklch(0.88 0.02 155);
     --input: oklch(0.88 0.02 155);
-    --ring: oklch(0.55 0.17 155);
-    --chart-1: oklch(0.55 0.17 155);
-    --chart-2: oklch(0.50 0.15 155);
-    --chart-3: oklch(0.45 0.13 155);
-    --chart-4: oklch(0.40 0.11 155);
-    --chart-5: oklch(0.35 0.09 155);
-    --sidebar: oklch(0.95 0.01 155);
+    --ring: oklch(0.52 0.13 155);
+    --chart-1: oklch(0.52 0.13 155);
+    --chart-2: oklch(0.48 0.115 155);
+    --chart-3: oklch(0.44 0.10 155);
+    --chart-4: oklch(0.40 0.085 155);
+    --chart-5: oklch(0.35 0.07 155);
+    --sidebar: oklch(0.95 0.008 155);
     --sidebar-foreground: oklch(0.25 0.02 155);
-    --sidebar-primary: oklch(0.55 0.17 155);
+    --sidebar-primary: oklch(0.52 0.13 155);
     --sidebar-primary-foreground: oklch(0.98 0 0);
-    --sidebar-accent: oklch(0.92 0.03 155);
-    --sidebar-accent-foreground: oklch(0.35 0.10 155);
+    --sidebar-accent: oklch(0.93 0.022 155);
+    --sidebar-accent-foreground: oklch(0.35 0.08 155);
     --sidebar-border: oklch(0.88 0.02 155);
-    --sidebar-ring: oklch(0.55 0.17 155);
-    --font-sans: 'IBM Plex Sans', sans-serif;
-    --font-serif: Source Serif 4, serif;
-    --font-mono: JetBrains Mono, monospace;
-    --font-display: JetBrains Mono, monospace;
+    --sidebar-ring: oklch(0.52 0.13 155);
+    --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+    --font-serif: 'Geist', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    --font-display: 'Space Grotesk', 'Geist', ui-sans-serif, system-ui, sans-serif;
     --radius: 0.375rem;
-    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
-    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
-    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 2px 4px -1px hsl(0 0% 0% / 0.10);
-    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 4px 6px -1px hsl(0 0% 0% / 0.10);
-    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 8px 10px -1px hsl(0 0% 0% / 0.10);
-    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+
+    /* Shadows tinted with the palette hue rather than pure black */
+    --shadow-2xs: 0 1px 2px 0px oklch(0.25 0.03 155 / 0.04);
+    --shadow-xs: 0 1px 3px 0px oklch(0.25 0.03 155 / 0.05);
+    --shadow-sm: 0 1px 3px 0px oklch(0.25 0.03 155 / 0.07), 0 1px 2px -1px oklch(0.25 0.03 155 / 0.06);
+    --shadow: 0 1px 3px 0px oklch(0.25 0.03 155 / 0.08), 0 1px 2px -1px oklch(0.25 0.03 155 / 0.06);
+    --shadow-md: 0 4px 6px -1px oklch(0.25 0.03 155 / 0.08), 0 2px 4px -2px oklch(0.25 0.03 155 / 0.06);
+    --shadow-lg: 0 10px 20px -5px oklch(0.25 0.03 155 / 0.10), 0 4px 8px -4px oklch(0.25 0.03 155 / 0.06);
+    --shadow-xl: 0 20px 32px -8px oklch(0.25 0.03 155 / 0.12), 0 8px 12px -6px oklch(0.25 0.03 155 / 0.07);
+    --shadow-2xl: 0 32px 56px -12px oklch(0.25 0.03 155 / 0.20);
     --tracking-normal: 0em;
     --spacing: 0.25rem;
+
+    /* z-index scale */
+    --z-base: 0;
+    --z-raised: 10;
+    --z-sticky: 30;
+    --z-nav: 40;
+    --z-overlay: 60;
+    --z-grain: 70;
 }
 
 .dark {
-    --background: oklch(0.13 0.01 155);
-    --foreground: oklch(0.75 0.08 155);
-    --card: oklch(0.16 0.015 155);
-    --card-foreground: oklch(0.75 0.08 155);
-    --popover: oklch(0.16 0.015 155);
-    --popover-foreground: oklch(0.75 0.08 155);
-    --primary: oklch(0.72 0.19 150);
-    --primary-foreground: oklch(0.13 0.01 155);
-    --secondary: oklch(0.20 0.02 155);
-    --secondary-foreground: oklch(0.75 0.08 155);
-    --muted: oklch(0.20 0.02 155);
-    --muted-foreground: oklch(0.55 0.05 155);
-    --accent: oklch(0.25 0.05 155);
-    --accent-foreground: oklch(0.72 0.15 150);
+    --background: oklch(0.145 0.008 155);
+    --foreground: oklch(0.92 0.008 155);
+    --card: oklch(0.175 0.010 155);
+    --card-foreground: oklch(0.92 0.008 155);
+    --popover: oklch(0.175 0.010 155);
+    --popover-foreground: oklch(0.92 0.008 155);
+    --primary: oklch(0.78 0.145 152);
+    --primary-foreground: oklch(0.145 0.008 155);
+    --secondary: oklch(0.22 0.012 155);
+    --secondary-foreground: oklch(0.92 0.008 155);
+    --muted: oklch(0.22 0.012 155);
+    --muted-foreground: oklch(0.66 0.014 155);
+    --accent: oklch(0.26 0.030 155);
+    --accent-foreground: oklch(0.82 0.12 152);
     --destructive: oklch(0.6368 0.2078 25.3313);
     --destructive-foreground: oklch(1.0000 0 0);
-    --border: oklch(0.25 0.03 155);
-    --input: oklch(0.25 0.03 155);
-    --ring: oklch(0.72 0.19 150);
-    --chart-1: oklch(0.72 0.19 150);
-    --chart-2: oklch(0.65 0.17 150);
-    --chart-3: oklch(0.58 0.15 150);
-    --chart-4: oklch(0.51 0.13 150);
-    --chart-5: oklch(0.44 0.11 150);
-    --sidebar: oklch(0.13 0.01 155);
-    --sidebar-foreground: oklch(0.75 0.08 155);
-    --sidebar-primary: oklch(0.72 0.19 150);
-    --sidebar-primary-foreground: oklch(0.13 0.01 155);
-    --sidebar-accent: oklch(0.25 0.05 155);
-    --sidebar-accent-foreground: oklch(0.72 0.15 150);
-    --sidebar-border: oklch(0.25 0.03 155);
-    --sidebar-ring: oklch(0.72 0.19 150);
-    --font-sans: 'IBM Plex Sans', sans-serif;
-    --font-serif: Source Serif 4, serif;
-    --font-mono: JetBrains Mono, monospace;
-    --font-display: JetBrains Mono, monospace;
+    --border: oklch(0.26 0.014 155);
+    --input: oklch(0.26 0.014 155);
+    --ring: oklch(0.78 0.145 152);
+    --chart-1: oklch(0.78 0.145 152);
+    --chart-2: oklch(0.70 0.13 152);
+    --chart-3: oklch(0.62 0.115 152);
+    --chart-4: oklch(0.54 0.10 152);
+    --chart-5: oklch(0.46 0.085 152);
+    --sidebar: oklch(0.145 0.008 155);
+    --sidebar-foreground: oklch(0.92 0.008 155);
+    --sidebar-primary: oklch(0.78 0.145 152);
+    --sidebar-primary-foreground: oklch(0.145 0.008 155);
+    --sidebar-accent: oklch(0.26 0.030 155);
+    --sidebar-accent-foreground: oklch(0.82 0.12 152);
+    --sidebar-border: oklch(0.26 0.014 155);
+    --sidebar-ring: oklch(0.78 0.145 152);
+    --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+    --font-serif: 'Geist', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    --font-display: 'Space Grotesk', 'Geist', ui-sans-serif, system-ui, sans-serif;
     --radius: 0.375rem;
-    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
-    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
-    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 2px 4px -1px hsl(0 0% 0% / 0.10);
-    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 4px 6px -1px hsl(0 0% 0% / 0.10);
-    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 8px 10px -1px hsl(0 0% 0% / 0.10);
-    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+
+    /* Deeper, hue-tinted shadows for the dark surface */
+    --shadow-2xs: 0 1px 2px 0px oklch(0 0 0 / 0.20);
+    --shadow-xs: 0 1px 3px 0px oklch(0 0 0 / 0.25);
+    --shadow-sm: 0 1px 3px 0px oklch(0 0 0 / 0.30), 0 1px 2px -1px oklch(0 0 0 / 0.24);
+    --shadow: 0 2px 4px 0px oklch(0 0 0 / 0.32), 0 1px 2px -1px oklch(0 0 0 / 0.24);
+    --shadow-md: 0 4px 8px -1px oklch(0 0 0 / 0.36), 0 2px 4px -2px oklch(0 0 0 / 0.28);
+    --shadow-lg: 0 12px 24px -6px oklch(0 0 0 / 0.45), 0 4px 8px -4px oklch(0 0 0 / 0.30);
+    --shadow-xl: 0 24px 40px -10px oklch(0 0 0 / 0.55), 0 8px 14px -6px oklch(0 0 0 / 0.35);
+    --shadow-2xl: 0 36px 64px -14px oklch(0 0 0 / 0.65);
 }
 
 @theme inline {
@@ -278,10 +299,52 @@
 
     body {
         @apply bg-background text-foreground;
+        font-synthesis-weight: none;
+        text-rendering: optimizeLegibility;
+    }
+
+    /* Display headings: tight tracking, no orphans */
+    h1, h2, h3 {
+        text-wrap: balance;
+    }
+
+    p {
+        text-wrap: pretty;
+    }
+
+    /* Tabular figures wherever numbers are compared vertically */
+    time,
+    [data-numeric] {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /*
+     * Keyboard focus for plain elements only. Anything carrying data-slot is a
+     * UI-kit component that already defines its own focus ring — layering this
+     * on top pushed a second, detached ring outside inputs and buttons.
+     */
+    a:focus-visible,
+    summary:focus-visible,
+    [tabindex]:not([tabindex='-1']):not([data-slot]):focus-visible {
+        outline: 2px solid color-mix(in oklab, var(--ring) 70%, transparent);
+        outline-offset: 2px;
+        border-radius: var(--radius-sm);
     }
 }
 
-/* Terminal Aesthetic Styles */
+/* Skip link — visible only once focused */
+.skip-link {
+    @apply sr-only;
+}
+
+.skip-link:focus-visible {
+    @apply not-sr-only fixed left-4 top-4 z-[70] rounded-md bg-primary px-4 py-2 font-mono text-sm text-primary-foreground shadow-lg;
+}
+
+/*
+ * Terminal accents. Monospace is a signal here, not the body typeface —
+ * reserve these for labels, metadata, prompts and code.
+ */
 .terminal-text {
     font-family: 'JetBrains Mono', ui-monospace, monospace;
     letter-spacing: -0.02em;
@@ -291,6 +354,224 @@
     font-family: 'JetBrains Mono', ui-monospace, monospace;
     font-weight: 500;
     letter-spacing: -0.03em;
+}
+
+/* Oversized hero type — big, but capped so the line doesn't sprawl on wide screens */
+.display-hero {
+    @apply font-display font-semibold tracking-[-0.035em] leading-[1];
+    font-size: clamp(2.75rem, 1.4rem + 4.6vw, 5rem);
+}
+
+/* Display scale — Geist tightened up so headlines carry weight */
+.display-1 {
+    @apply font-display font-semibold tracking-[-0.035em] leading-[1.05];
+    font-size: clamp(2.5rem, 1.2rem + 4.2vw, 4.5rem);
+}
+
+.display-2 {
+    @apply font-display font-semibold tracking-[-0.03em] leading-[1.1];
+    font-size: clamp(2rem, 1.1rem + 2.8vw, 3.25rem);
+}
+
+.display-3 {
+    @apply font-display font-semibold tracking-[-0.022em] leading-[1.15];
+    font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2rem);
+}
+
+/* Small uppercase-free label — lowercase mono with positive tracking */
+.label-mono {
+    @apply font-mono text-xs tracking-[0.08em] text-muted-foreground;
+}
+
+/* Measure cap for long-form reading */
+.prose-measure {
+    max-width: 68ch;
+}
+
+/*
+ * Elevated surface: a hairline border plus a lit top edge. The inset highlight
+ * is what makes a panel read as a physical surface rather than a flat div.
+ */
+.surface-elevated {
+    background: color-mix(in oklab, var(--card) 88%, transparent);
+    border: 1px solid var(--border);
+    box-shadow:
+        inset 0 1px 0 0 oklch(1 0 0 / 0.6),
+        var(--shadow-md);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .surface-elevated {
+    background: color-mix(in oklab, var(--card) 72%, transparent);
+    box-shadow:
+        inset 0 1px 0 0 oklch(1 0 0 / 0.07),
+        var(--shadow-lg);
+}
+
+/* Ambient mesh — several soft lobes instead of one flat radial */
+.mesh-ambient {
+    background:
+        radial-gradient(ellipse 70% 45% at 12% 0%, color-mix(in oklab, var(--primary) 16%, transparent), transparent 62%),
+        radial-gradient(ellipse 55% 40% at 88% 8%, color-mix(in oklab, var(--primary) 10%, transparent), transparent 66%),
+        radial-gradient(ellipse 95% 55% at 50% 0%, color-mix(in oklab, var(--accent) 85%, transparent), transparent 72%);
+    animation: meshDrift 28s ease-in-out infinite alternate;
+}
+
+@keyframes meshDrift {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to { transform: translate3d(-2%, 1.5%, 0) scale(1.06); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mesh-ambient {
+        animation: none;
+    }
+}
+
+/* Soft edge between sections — replaces a hard 1px rule */
+.edge-fade {
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border) 15%, var(--border) 85%, transparent);
+}
+
+/*
+ * Spotlight border — the card edge lights up under the cursor.
+ * --mx/--my are written by the pointer handler in useSpotlight().
+ */
+.spotlight {
+    position: relative;
+    isolation: isolate;
+}
+
+.spotlight::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: radial-gradient(
+        16rem circle at var(--mx, 50%) var(--my, 0%),
+        var(--primary),
+        transparent 70%
+    );
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+}
+
+.spotlight::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(
+        20rem circle at var(--mx, 50%) var(--my, 0%),
+        var(--accent),
+        transparent 65%
+    );
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.spotlight:hover::before,
+.spotlight:focus-within::before {
+    opacity: 0.9;
+}
+
+.spotlight:hover::after,
+.spotlight:focus-within::after {
+    opacity: 0.5;
+}
+
+/* Faint engineering grid, used behind hero and band sections */
+.grid-field {
+    background-image:
+        linear-gradient(to right, var(--border) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+    background-size: 3.5rem 3.5rem;
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 30%, transparent 75%);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 30%, transparent 75%);
+}
+
+/* Edge-to-edge section that escapes the container's max-width */
+.full-bleed {
+    width: 100vw;
+    margin-inline: calc(50% - 50vw);
+}
+
+/* Continuous horizontal marquee */
+@keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+.marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee 42s linear infinite;
+}
+
+.marquee:hover .marquee-track {
+    animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .marquee-track {
+        animation: none;
+    }
+}
+
+/* Scroll hint that drifts down and fades */
+@keyframes scrollCue {
+    0%   { transform: translateY(0); opacity: 0; }
+    35%  { opacity: 1; }
+    100% { transform: translateY(14px); opacity: 0; }
+}
+
+.scroll-cue-dot {
+    animation: scrollCue 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scroll-cue-dot {
+        animation: none;
+        opacity: 1;
+    }
+}
+
+/* Slow rotation of the dashed orbit ring in the hero diagram */
+@keyframes orbitDash {
+    to { stroke-dashoffset: -200; }
+}
+
+.orbit-dash {
+    animation: orbitDash 24s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .orbit-dash {
+        animation: none;
+    }
+}
+
+/* Blinking caret for the live status line */
+.caret::after {
+    content: '';
+    display: inline-block;
+    width: 0.5em;
+    height: 1em;
+    margin-left: 0.15em;
+    translate: 0 0.15em;
+    background: var(--primary);
+    animation: blink 1.1s step-end infinite;
 }
 
 .terminal-prompt::before {
@@ -309,29 +590,49 @@
 
 /* Terminal window styling */
 .terminal-window {
-    @apply bg-card border border-border rounded-lg overflow-hidden;
-    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.1);
+    @apply bg-card border border-border rounded-xl overflow-hidden;
+    box-shadow: var(--shadow-lg);
 }
 
 .terminal-window-header {
-    @apply flex items-center gap-2 px-4 py-2 bg-muted/50 border-b border-border;
+    @apply flex items-center gap-2 px-4 py-2.5 bg-muted/60 border-b border-border;
 }
 
 .terminal-window-dot {
-    @apply w-3 h-3 rounded-full;
+    @apply w-2.5 h-2.5 rounded-full;
 }
 
-.terminal-window-dot.red { @apply bg-red-500; }
-.terminal-window-dot.yellow { @apply bg-yellow-500; }
-.terminal-window-dot.green { @apply bg-primary; }
+.terminal-window-dot.red { @apply bg-red-400/80; }
+.terminal-window-dot.yellow { @apply bg-amber-400/80; }
+.terminal-window-dot.green { @apply bg-primary/80; }
+
+/*
+ * Card surface used across article / project / talk listings.
+ * No border + no shadow by default — elevation appears only on hover,
+ * so a list of these reads as text, not as a wall of boxes.
+ */
+.surface-card {
+    @apply relative rounded-xl transition-[background-color,box-shadow,transform] duration-300 ease-out;
+}
+
+.surface-card::before {
+    content: '';
+    @apply absolute -inset-x-4 -inset-y-5 -z-10 rounded-2xl opacity-0 transition-opacity duration-300;
+    background: var(--accent);
+}
+
+.group:hover > .surface-card::before,
+.surface-card:hover::before {
+    @apply opacity-100;
+}
 
 /* Glow effect for primary color elements */
 .glow-primary {
-    text-shadow: 0 0 10px oklch(0.72 0.19 150 / 0.5);
+    text-shadow: 0 0 12px oklch(0.78 0.145 152 / 0.35);
 }
 
 .dark .glow-primary {
-    text-shadow: 0 0 20px oklch(0.72 0.19 150 / 0.7), 0 0 40px oklch(0.72 0.19 150 / 0.3);
+    text-shadow: 0 0 20px oklch(0.78 0.145 152 / 0.5), 0 0 44px oklch(0.78 0.145 152 / 0.2);
 }
 
 /* Subtle scanline effect for dark mode */
@@ -343,11 +644,11 @@
         0deg,
         transparent,
         transparent 2px,
-        rgba(0, 0, 0, 0.03) 2px,
-        rgba(0, 0, 0, 0.03) 4px
+        oklch(0 0 0 / 0.02) 2px,
+        oklch(0 0 0 / 0.02) 4px
     );
     pointer-events: none;
-    z-index: 9999;
+    z-index: var(--z-grain);
 }
 
 /* Article Content Code Block Styles */
@@ -596,10 +897,10 @@
 
 @keyframes glowPulse {
     0%, 100% {
-        box-shadow: 0 0 5px oklch(0.55 0.17 155 / 0.3), 0 0 15px oklch(0.55 0.17 155 / 0.1);
+        box-shadow: 0 0 5px oklch(0.52 0.13 155 / 0.25), 0 0 15px oklch(0.52 0.13 155 / 0.08);
     }
     50% {
-        box-shadow: 0 0 10px oklch(0.55 0.17 155 / 0.5), 0 0 30px oklch(0.55 0.17 155 / 0.2);
+        box-shadow: 0 0 10px oklch(0.52 0.13 155 / 0.4), 0 0 30px oklch(0.52 0.13 155 / 0.15);
     }
 }
 
@@ -609,10 +910,10 @@
 
 @keyframes glowPulseDark {
     0%, 100% {
-        box-shadow: 0 0 5px oklch(0.72 0.19 150 / 0.3), 0 0 15px oklch(0.72 0.19 150 / 0.1);
+        box-shadow: 0 0 5px oklch(0.78 0.145 152 / 0.25), 0 0 15px oklch(0.78 0.145 152 / 0.08);
     }
     50% {
-        box-shadow: 0 0 10px oklch(0.72 0.19 150 / 0.5), 0 0 30px oklch(0.72 0.19 150 / 0.2);
+        box-shadow: 0 0 10px oklch(0.78 0.145 152 / 0.4), 0 0 30px oklch(0.78 0.145 152 / 0.15);
     }
 }
 

@@ -1,4 +1,5 @@
 import { Card } from '@frontend/components/Card';
+import { Reveal } from '@frontend/components/Reveal';
 import { Section } from '@frontend/components/Section';
 import { SimpleLayout } from '@frontend/components/SimpleLayout';
 import { SeoHead, SeoData } from '@frontend/components/SeoHead';
@@ -19,21 +20,21 @@ interface UsesProps {
 function ToolsSection({ children, title }: { children: React.ReactNode; title: string }) {
     return (
         <Section title={title}>
-            <ul role="list" className="space-y-16">
-                {children}
-            </ul>
+            <Reveal className="space-y-10">{children}</Reveal>
         </Section>
     );
 }
 
 function Tool({ title, href, children }: { title: string; href?: string; children: React.ReactNode }) {
     return (
-        <Card as="li">
-            <Card.Title as="h3" href={href}>
-                {title}
-            </Card.Title>
-            <Card.Description>{children}</Card.Description>
-        </Card>
+        <Reveal.Item>
+            <Card as="div" href={href}>
+                <Card.Title as="h3" href={href}>
+                    {title}
+                </Card.Title>
+                <Card.Description>{children}</Card.Description>
+            </Card>
+        </Reveal.Item>
     );
 }
 
@@ -43,10 +44,11 @@ export default function Uses({ sections = [], seo }: UsesProps) {
             <SeoHead seo={seo} />
             <PublicLayout>
                 <SimpleLayout
-                    title="Software I use, gadgets I love, and other things I recommend."
-                    intro="I get asked a lot about the things I use to build software, stay productive, or buy to fool myself into thinking I'm being productive when I'm really just procrastinating. Here's a big list of all of my favorite stuff."
+                    eyebrow="uses"
+                    title="The tools I reach for every day."
+                    intro="I get asked a lot about what I use to build software and stay productive — and what I buy to convince myself I'm being productive when I'm really just procrastinating. Here's the current list."
                 >
-                    <div className="space-y-20">
+                    <div className="space-y-24">
                         {sections.length > 0 ? (
                             sections.map((section) => (
                                 <ToolsSection key={section.title} title={section.title}>
@@ -58,12 +60,13 @@ export default function Uses({ sections = [], seo }: UsesProps) {
                                 </ToolsSection>
                             ))
                         ) : (
-                            <div className="text-center py-12">
-                                <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-2">
-                                    No tools or recommendations yet
-                                </h3>
-                                <p className="text-zinc-600 dark:text-zinc-400">
-                                    Check back soon for my favorite tools and recommendations.
+                            <div className="rounded-2xl border border-dashed border-border px-6 py-20 text-center">
+                                <p className="font-mono text-sm text-primary">cat ~/.setup</p>
+                                <p className="mt-4 font-display text-xl font-semibold text-foreground">
+                                    The list isn't written up yet
+                                </p>
+                                <p className="mx-auto mt-3 max-w-md text-[0.9375rem] leading-relaxed text-muted-foreground">
+                                    Editor config, keyboard, camera bag and the rest are on their way here.
                                 </p>
                             </div>
                         )}

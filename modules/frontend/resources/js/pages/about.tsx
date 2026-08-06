@@ -1,7 +1,7 @@
 import { Container } from '@frontend/components/Container';
-import { SeoHead, SeoData } from '@frontend/components/SeoHead';
+import { Reveal } from '@frontend/components/Reveal';
+import { SeoData, SeoHead } from '@frontend/components/SeoHead';
 import PublicLayout from '@frontend/layouts/public-layout';
-import { Link } from '@inertiajs/react';
 import React from 'react';
 
 function SocialLink({
@@ -19,10 +19,14 @@ function SocialLink({
         <li className={className ? className + ' flex' : 'flex'}>
             <a
                 href={href}
-                className="group flex items-center text-sm font-mono text-muted-foreground transition hover:text-primary"
+                target={href.startsWith('mailto:') ? undefined : '_blank'}
+                rel="noopener noreferrer"
+                className="group flex items-center font-mono text-sm text-muted-foreground transition-colors duration-200 hover:text-primary"
             >
                 <Icon className="h-5 w-5 flex-none fill-current" />
-                <span className="ml-3">{children}</span>
+                <span className="ml-3 border-b border-transparent transition-colors duration-200 group-hover:border-primary/40">
+                    {children}
+                </span>
             </a>
         </li>
     );
@@ -51,15 +55,6 @@ function GitHubIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
     );
 }
 
-function InstagramIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
-    return (
-        <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
-            <path d="M12 3c-2.444 0-2.75.01-3.71.054-.959.044-1.613.196-2.185.418A4.412 4.412 0 0 0 4.51 4.511c-.5.5-.809 1.002-1.039 1.594-.222.572-.374 1.226-.418 2.184C3.01 9.25 3 9.556 3 12s.01 2.75.054 3.71c.044.959.196 1.613.418 2.185.23.592.538 1.094 1.039 1.595.5.5 1.002.808 1.594 1.038.572.222 1.226.374 2.184.418C9.25 20.99 9.556 21 12 21s2.75-.01 3.71-.054c.959-.044 1.613-.196 2.185-.419a4.412 4.412 0 0 0 1.595-1.038c.5-.5.808-1.003 1.038-1.595.222-.572.374-1.226.418-2.184.044-.96.054-1.267.054-3.71s-.01-2.75-.054-3.71c-.044-.959-.196-1.613-.419-2.185A4.412 4.412 0 0 0 19.49 4.51c-.5-.5-1.003-.809-1.595-1.039-.572-.222-1.226-.374-2.184-.418C14.75 3.01 14.444 3 12 3Zm0 1.622c2.403 0 2.688.009 3.637.052.877.04 1.354.187 1.67.31.421.163.72.358 1.036.673.315.315.51.615.673 1.035.123.317.27.794.31 1.671.043.95.052 1.234.052 3.637s-.009 2.688-.052 3.637c-.04.877-.187 1.354-.31 1.67-.163.421-.358.72-.673 1.036a2.79 2.79 0 0 1-1.035.673c-.317.123-.794.27-1.671.31-.95.043-1.234.052-3.637.052s-2.688-.009-3.637-.052c-.877-.04-1.354-.187-1.67-.31a2.789 2.789 0 0 1-1.036-.673 2.79 2.79 0 0 1-.673-1.035c-.123-.317-.27-.794-.31-1.671-.043-.95-.052-1.234-.052-3.637s.009-2.688.052-3.637c.04-.877.187-1.354.31-1.67.163-.421.358-.72.673-1.036.315-.315.615-.51 1.035-.673.317-.123.794-.27 1.671-.31.95-.043 1.234-.052 3.637-.052Z" />
-            <path d="M12 15a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm0-7.622a4.622 4.622 0 1 0 0 9.244 4.622 4.622 0 0 0 0-9.244Zm5.884-.182a1.08 1.08 0 1 1-2.16 0 1.08 1.08 0 0 1 2.16 0Z" />
-        </svg>
-    );
-}
-
 function LinkedInIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
     return (
         <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
@@ -82,74 +77,119 @@ interface AboutProps {
     jsonLd?: Record<string, unknown>;
 }
 
+const facts = [
+    { label: 'based in', value: 'Bangalore, India' },
+    { label: 'builds', value: 'Software & hardware' },
+    { label: 'consults on', value: 'Visas, homes, networks' },
+    { label: 'hosts', value: 'An Airbnb in Madurai' },
+];
+
 export default function About({ portraitImage = '/images/about.jpg', seo, jsonLd }: AboutProps) {
     return (
         <PublicLayout>
             <SeoHead seo={seo} jsonLd={jsonLd} />
-            <Container className="mt-16 sm:mt-32">
-                <div className="grid grid-cols-1 gap-y-16 lg:grid-cols-2 lg:grid-rows-[auto_1fr] lg:gap-y-12">
-                    <div className="lg:pl-20">
-                        <div className="max-w-xs px-2.5 lg:max-w-none">
-                            <img
-                                src={portraitImage}
-                                alt=""
-                                sizes="(min-width: 1024px) 32rem, 20rem"
-                                className="aspect-square rotate-3 rounded-2xl bg-zinc-100 object-cover dark:bg-zinc-800"
-                            />
+
+            <Container className="mt-16 sm:mt-24">
+                <div className="grid grid-cols-1 gap-y-16 lg:grid-cols-12 lg:gap-x-16">
+                    {/* Portrait sticks alongside the copy on wide screens */}
+                    <div className="lg:order-last lg:col-span-5">
+                        <div className="lg:sticky lg:top-28">
+                            <div className="relative max-w-xs lg:max-w-none">
+                                <div
+                                    aria-hidden="true"
+                                    className="absolute -inset-3 -z-10 rounded-3xl border border-border/70"
+                                />
+                                <img
+                                    src={portraitImage}
+                                    alt="Karthick speaking at a meetup"
+                                    sizes="(min-width: 1024px) 28rem, 20rem"
+                                    className="aspect-4/5 w-full rounded-2xl bg-muted object-cover shadow-xl"
+                                />
+                            </div>
+
+                            <dl className="mt-10 space-y-5 border-t border-border/70 pt-8">
+                                {facts.map((fact) => (
+                                    <div key={fact.label} className="flex items-baseline justify-between gap-4">
+                                        <dt className="label-mono">{fact.label}</dt>
+                                        <dd className="text-right text-sm font-medium text-foreground">{fact.value}</dd>
+                                    </div>
+                                ))}
+                            </dl>
+
+                            <ul role="list" className="mt-8 space-y-4 border-t border-border/70 pt-8">
+                                <SocialLink href="https://x.com/ikkarti" icon={XIcon}>
+                                    Follow on X
+                                </SocialLink>
+                                <SocialLink href="https://github.com/kkz6" icon={GitHubIcon}>
+                                    Follow on GitHub
+                                </SocialLink>
+                                <SocialLink href="https://linkedin.com/in/ikkarti" icon={LinkedInIcon}>
+                                    Follow on LinkedIn
+                                </SocialLink>
+                                <SocialLink href="mailto:karthick@gigcodes.com" icon={MailIcon} className="pt-2">
+                                    karthick@gigcodes.com
+                                </SocialLink>
+                            </ul>
                         </div>
                     </div>
-                    <div className="lg:order-first lg:row-span-2">
-                        <h1 className="font-display text-3xl sm:text-4xl font-medium tracking-tight text-foreground">
-                            I'm Karthick. I live in Bangalore, where I design the future.
+
+                    <div className="lg:col-span-7">
+                        <p className="label-mono mb-5 flex items-center gap-2">
+                            <span aria-hidden="true" className="h-px w-6 bg-primary/50" />
+                            about
+                        </p>
+
+                        <h1 className="display-2 text-foreground">
+                            I've been building software for as long as I can remember.
                         </h1>
-                        <div className="mt-6 space-y-7 text-base leading-relaxed text-muted-foreground">
-                            <p>
-                                I've loved developing software for as long as I can remember. There's something magical about turning ideas into 
-                                working code that can solve real problems and make people's lives better. What makes my journey unique is that 
-                                I've combined this passion with my love for travel.
+
+                        <Reveal className="prose-measure mt-10 space-y-7 text-lg leading-relaxed text-muted-foreground">
+                            <Reveal.Item>
+                                <p>
+                                    There's something magical about turning ideas into working code that can solve real
+                                    problems and make people's lives better. What makes my journey unique is that I've
+                                    combined this passion with my love for travel.
+                                </p>
+                            </Reveal.Item>
+                            <Reveal.Item>
+                                <p>
+                                    My car has become my mobile office. I can work from anywhere — parked by a scenic
+                                    mountain view, near the ocean, or in a bustling city. That freedom has let me
+                                    experience different places while continuing to build and create.
+                                </p>
+                            </Reveal.Item>
+                            <Reveal.Item>
+                                <p>
+                                    I'm planning more overseas travel, with a mission to understand people better and
+                                    develop software that truly serves their needs. The best solutions come from
+                                    understanding diverse perspectives and the real-world challenges people face across
+                                    different cultures and environments.
+                                </p>
+                            </Reveal.Item>
+                            <Reveal.Item>
+                                <p>
+                                    I also work on personal projects with a focus on keeping costs as low as possible, so
+                                    I can put useful tools in the hands of other developers, travellers, and anyone who
+                                    dares to dream big. I love connecting software with hardware through
+                                    microcontrollers — bridging the digital and physical brings new possibilities into
+                                    the world.
+                                </p>
+                            </Reveal.Item>
+                            <Reveal.Item>
+                                <p>
+                                    And yes, I absolutely love rockets. The engineering precision, the ambitious goals,
+                                    and the sheer audacity of reaching for the stars resonate deeply with how I approach
+                                    both development and life.
+                                </p>
+                            </Reveal.Item>
+                        </Reveal>
+
+                        <blockquote className="mt-14 border-l-2 border-primary/50 pl-6">
+                            <p className="font-display text-xl font-medium leading-relaxed tracking-[-0.015em] text-foreground">
+                                The best solutions come from understanding the real problems people face — not the ones
+                                we imagine from a desk.
                             </p>
-                            <p>
-                                My car and I have been attached for a very long time now, and it's become my mobile office. I can work from 
-                                anywhere, anytime — whether it's parked by a scenic mountain view, near the ocean, or in a bustling city. 
-                                This freedom has allowed me to experience different cultures while continuing to build and create.
-                            </p>
-                            <p>
-                                Now I'm planning for more overseas travel, with a mission to understand people better and develop software 
-                                that truly serves their needs. I believe the best solutions come from understanding diverse perspectives and 
-                                real-world challenges that people face across different cultures and environments.
-                            </p>
-                            <p>
-                                I'm also working on personal projects with a focus on keeping costs as low as possible, so I can provide 
-                                valuable tools to other developers, travelers, and anyone who dares to dream big. I love connecting software 
-                                with hardware through microcontrollers, constantly bringing exciting new possibilities into the world by 
-                                bridging the digital and physical realms.
-                            </p>
-                            <p>
-                                And yes, I absolutely love rockets — there's something about the engineering precision, the ambitious goals, 
-                                and the sheer audacity of reaching for the stars that resonates deeply with my approach to both development 
-                                and life.
-                            </p>
-                        </div>
-                    </div>
-                    <div className="lg:pl-20">
-                        <ul role="list">
-                            <SocialLink href="https://x.com/ikkarti" icon={XIcon}>
-                                Follow on X
-                            </SocialLink>
-                            <SocialLink href="https://github.com/kkz6" icon={GitHubIcon} className="mt-4">
-                                Follow on GitHub
-                            </SocialLink>
-                            <SocialLink href="https://linkedin.com/in/ikkarti" icon={LinkedInIcon} className="mt-4">
-                                Follow on LinkedIn
-                            </SocialLink>
-                            <SocialLink
-                                href="mailto:karthick@gigcodes.com"
-                                icon={MailIcon}
-                                className="mt-8 border-t border-zinc-100 pt-8 dark:border-zinc-700/40"
-                            >
-                                karthick@gigcodes.com
-                            </SocialLink>
-                        </ul>
+                        </blockquote>
                     </div>
                 </div>
             </Container>
