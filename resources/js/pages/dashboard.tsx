@@ -130,7 +130,7 @@ function VisitorsChart({ data, metric }: { data: ChartDataPoint[]; metric: 'visi
     };
 
     return (
-        <ChartContainer config={config} className="h-[280px] w-full">
+        <ChartContainer config={config} className="h-[220px] w-full">
             <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border/50" />
                 <XAxis
@@ -169,7 +169,10 @@ function VisitorsChart({ data, metric }: { data: ChartDataPoint[]; metric: 'visi
                 <Bar
                     dataKey={metric}
                     fill={`var(--color-${metric})`}
-                    radius={[2, 2, 0, 0]}
+                    radius={[3, 3, 0, 0]}
+                    maxBarSize={44}
+                    minPointSize={2}
+                    isAnimationActive={false}
                 />
             </BarChart>
         </ChartContainer>
