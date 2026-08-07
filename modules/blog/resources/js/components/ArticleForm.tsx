@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Textarea } from '@shared/components/ui/textarea';
 import { useSlug } from '@shared/hooks/use-slug';
+import { PageHeader } from '@shared/components/page-header';
 import AppLayout from '@shared/layouts/app-layout';
 import { cn } from '@shared/lib/utils';
 import { type BreadcrumbItem } from '@shared/types';
@@ -96,17 +97,19 @@ export default function ArticleForm({ article, categories }: ArticleFormProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${pageTitle}: ${article?.title || 'New Article'}`} />
             <Form {...form}>
-                <form id="article-form" onSubmit={form.handleSubmit(onSubmit, onError)} className="flex h-full flex-col space-y-6 p-8 pt-6">
+                <form id="article-form" onSubmit={form.handleSubmit(onSubmit, onError)} className="flex h-full flex-col space-y-6 p-4 md:p-6">
                     <div className="mx-auto w-full max-w-7xl">
-                        <div className="mb-6 flex items-center justify-between">
-                            <h2 className="text-3xl font-bold">{pageTitle}</h2>
-                            <div className="flex items-center space-x-4">
+                        <PageHeader
+                            className="mb-6"
+                            eyebrow="articles"
+                            title={pageTitle}
+                            actions={
                                 <Button type="submit" disabled={form.formState.isSubmitting}>
                                     <Save className="mr-2 h-4 w-4" />
                                     {form.formState.isSubmitting ? submittingText : submitText}
                                 </Button>
-                            </div>
-                        </div>
+                            }
+                        />
 
                         <div className="space-y-6">
                             {/* Tabs Header */}

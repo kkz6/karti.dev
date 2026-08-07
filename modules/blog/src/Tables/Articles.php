@@ -22,7 +22,12 @@ class Articles extends Table
                 ->url(fn (Article $article) => route('admin.blog.edit', ['blog' => $article->id]))->searchable(),
             Columns\TextColumn::make('slug', 'Slug', toggleable: false)
                 ->url(fn (Article $article) => route('admin.blog.edit', ['blog' => $article->id]))->sortable(),
-            Columns\TextColumn::make('status', 'Status', toggleable: false),
+            Columns\BadgeColumn::make('status', 'Status', toggleable: false)
+                ->variant([
+                    'published' => Variant::Success,
+                    'draft'     => Variant::Warning,
+                    'archived'  => Variant::Secondary,
+                ]),
             Columns\DateColumn::make('created_at', 'Created At', toggleable: false),
             Columns\DateColumn::make('updated_at', 'Updated At', toggleable: false),
             Columns\ActionColumn::new(),
