@@ -4,6 +4,7 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@shared/components/ui/chart';
+import { PageHeader } from '@shared/components/page-header';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@shared/components/ui/tooltip';
@@ -390,22 +391,26 @@ export default function Dashboard({ analytics, period }: DashboardProps) {
             <Head title="Dashboard" />
             <div className="flex flex-1 flex-col gap-4 p-4 md:gap-6 md:p-6">
                 {/* Header */}
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <h1 className="text-xl font-semibold">Analytics</h1>
-                    <div className="flex items-center gap-2">
-                        <CalendarIcon className="size-4 text-muted-foreground" />
-                        <Select value={period} onValueChange={(v) => handlePeriodChange(v as TimeRange)} disabled={isLoading}>
-                            <SelectTrigger className="h-8 w-[140px] text-sm">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {Object.entries(timeRangeLabels).map(([value, label]) => (
-                                    <SelectItem key={value} value={value}>{label}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
+                <PageHeader
+                    eyebrow="overview"
+                    title="Analytics"
+                    description="Traffic to the public site, refreshed from your analytics provider."
+                    actions={
+                        <div className="flex items-center gap-2">
+                            <CalendarIcon className="size-4 text-muted-foreground" />
+                            <Select value={period} onValueChange={(v) => handlePeriodChange(v as TimeRange)} disabled={isLoading}>
+                                <SelectTrigger className="h-8 w-[140px] text-sm">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Object.entries(timeRangeLabels).map(([value, label]) => (
+                                        <SelectItem key={value} value={value}>{label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    }
+                />
 
                 {!analytics.configured && (
                     <div className="rounded-md border border-amber-200/50 bg-amber-50/50 px-3 py-2 text-sm text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">

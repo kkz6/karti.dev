@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { Button } from '@shared/components/ui/button';
+import { PageHeader } from '@shared/components/page-header';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
 import { InertiaTableWrapper, type Action, type TableConfig } from '@table/components';
@@ -56,15 +57,17 @@ export default function Index({ articles, categories }: { articles: TableConfig<
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Blog Management" />
-            <div className="flex h-full flex-col space-y-4 p-8 pt-6">
-                <div className="flex items-center justify-between space-y-2">
-                    <h2 className="text-3xl font-bold">Blog Management</h2>
-                    <div className="flex items-center space-x-2">
+            <div className="flex h-full flex-col gap-6 p-4 md:p-6">
+                <PageHeader
+                    eyebrow="content"
+                    title="Articles"
+                    description="Write, edit and publish posts. Drafts stay hidden from the public site until you publish them."
+                    actions={
                         <Button onClick={handleCreateArticle} disabled={categories.length === 0}>
-                            Create Article
+                            Create article
                         </Button>
-                    </div>
-                </div>
+                    }
+                />
 
                 <InertiaTableWrapper
                     resource={articles}
