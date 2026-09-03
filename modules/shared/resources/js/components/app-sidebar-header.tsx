@@ -8,7 +8,7 @@ import { ArrowUpRight } from 'lucide-react';
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItemType[] }) {
     return (
-        <header className="bg-background/80 sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b px-4 backdrop-blur-md transition-[height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-6">
+        <header className="bg-background/80 sticky top-0 z-30 flex h-[var(--app-header-height,3.5rem)] shrink-0 items-center gap-3 border-b px-4 backdrop-blur-md transition-[height] ease-linear md:px-6">
             <SidebarTrigger className="-ml-1.5" />
 
             <Separator orientation="vertical" className="!h-4" />

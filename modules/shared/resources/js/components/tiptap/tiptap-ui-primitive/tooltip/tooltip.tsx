@@ -210,6 +210,7 @@ export const TooltipContent = React.forwardRef<
       ref={ref}
       style={{
         ...context.floatingStyles,
+        visibility: context.isPositioned ? "visible" : "hidden",
         ...style,
       }}
       {...context.getFloatingProps(props)}

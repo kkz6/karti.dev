@@ -1,12 +1,12 @@
 .tiptap-tooltip {
-  --tt-tooltip-bg: var(--tt-gray-light-900);
-  --tt-tooltip-text: var(--white);
-  --tt-kbd: var(--tt-gray-dark-a-400);
+  --tt-tooltip-bg: var(--tt-gray-light-900, var(--foreground));
+  --tt-tooltip-text: var(--white, var(--background));
+  --tt-kbd: var(--tt-gray-dark-a-400, var(--background));
 
   .dark & {
-    --tt-tooltip-bg: var(--white);
-    --tt-tooltip-text: var(--tt-gray-light-600);
-    --tt-kbd: var(--tt-gray-light-a-400);
+    --tt-tooltip-bg: var(--white, var(--foreground));
+    --tt-tooltip-text: var(--tt-gray-light-600, var(--background));
+    --tt-kbd: var(--tt-gray-light-a-400, var(--background));
   }
 }
 

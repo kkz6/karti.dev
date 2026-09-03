@@ -117,6 +117,7 @@ export function MediaImageButton({ editor: providedEditor }: MediaImageButtonPro
         data-style="ghost"
         onClick={() => setShowDialog(true)}
         aria-label="Insert image"
+        tooltip="Insert image"
       >
         <ImagePlusIcon className="tiptap-button-icon" />
       </Button>

@@ -33,6 +33,7 @@ import '@shared/components/tiptap/tiptap-node/paragraph-node/paragraph-node.scss
 import '@shared/components/tiptap/tiptap-ui-primitive/button/button-colors.scss';
 import '@shared/components/tiptap/tiptap-ui-primitive/button/button.scss';
 import '@shared/components/tiptap/tiptap-ui-primitive/toolbar/toolbar.scss';
+import '@shared/components/tiptap/form-simple-editor.scss';
 
 // --- Tiptap UI ---
 import { BlockquoteButton } from '@shared/components/tiptap/tiptap-ui/blockquote-button';
@@ -56,9 +57,8 @@ import { HighlighterIcon } from '@shared/components/tiptap/tiptap-icons/highligh
 import { LinkIcon } from '@shared/components/tiptap/tiptap-icons/link-icon';
 
 // --- Hooks ---
-import { useCursorVisibility } from '@shared/hooks/use-cursor-visibility';
 import { useIsMobile } from '@shared/hooks/use-mobile';
-import { useWindowSize } from '@shared/hooks/use-window-size';
+import { useTiptapEditor } from '@shared/hooks/use-tiptap-editor';
 
 // --- Components ---
 
@@ -100,6 +100,8 @@ const MainToolbarContent = ({
     onLinkClick: () => void;
     isMobile: boolean;
 }) => {
+    const { editor } = useTiptapEditor();
+
     return (
         <>
             <ToolbarGroup>
@@ -110,8 +112,8 @@ const MainToolbarContent = ({
             <ToolbarSeparator />
 
             <ToolbarGroup>
-                <HeadingDropdownMenu levels={[1, 2, 3, 4]} portal={isMobile} />
-                <ListDropdownMenu types={['bulletList', 'orderedList', 'taskList']} portal={isMobile} />
+                <HeadingDropdownMenu levels={[1, 2, 3, 4]} portal />
+                <ListDropdownMenu types={['bulletList', 'orderedList', 'taskList']} portal />
                 <BlockquoteButton />
                 <CodeBlockButton />
             </ToolbarGroup>
@@ -124,8 +126,12 @@ const MainToolbarContent = ({
                 <MarkButton type="strike" />
                 <MarkButton type="code" />
                 <MarkButton type="underline" />
-                {!isMobile ? <ColorHighlightPopover /> : <ColorHighlightPopoverButton onClick={onHighlighterClick} />}
-                {!isMobile ? <LinkPopover /> : <LinkButton onClick={onLinkClick} />}
+                {!isMobile ? (
+                    <ColorHighlightPopover />
+                ) : (
+                    <ColorHighlightPopoverButton onClick={onHighlighterClick} aria-pressed={editor?.isActive('highlight') ?? false} />
+                )}
+                {!isMobile ? <LinkPopover /> : <LinkButton onClick={onLinkClick} aria-pressed={editor?.isActive('link') ?? false} />}
             </ToolbarGroup>
 
             <ToolbarSeparator />
@@ -147,7 +153,7 @@ const MainToolbarContent = ({
             <ToolbarSeparator />
 
             <ToolbarGroup>
-                <MediaImageButton text="" />
+                <MediaImageButton />
             </ToolbarGroup>
 
             <Spacer />
@@ -158,7 +164,7 @@ const MainToolbarContent = ({
 const MobileToolbarContent = ({ type, onBack }: { type: 'highlighter' | 'link'; onBack: () => void }) => (
     <>
         <ToolbarGroup>
-            <Button data-style="ghost" onClick={onBack}>
+            <Button type="button" data-style="ghost" onClick={onBack} aria-label="Back to formatting" tooltip="Back to formatting">
                 <ArrowLeftIcon className="tiptap-button-icon" />
                 {type === 'highlighter' ? <HighlighterIcon className="tiptap-button-icon" /> : <LinkIcon className="tiptap-button-icon" />}
             </Button>
@@ -178,9 +184,7 @@ interface FormSimpleEditorProps {
 
 export function FormSimpleEditor({ content: initialContent = '', onChange, placeholder }: FormSimpleEditorProps) {
     const isMobile = useIsMobile();
-    const { height } = useWindowSize();
     const [mobileView, setMobileView] = React.useState<'main' | 'highlighter' | 'link'>('main');
-    const toolbarRef = React.useRef<HTMLDivElement>(null);
 
     const editor = useEditor({
         immediatelyRender: false,
@@ -264,11 +268,6 @@ export function FormSimpleEditor({ content: initialContent = '', onChange, place
         },
     });
 
-    const rect = useCursorVisibility({
-        editor,
-        overlayHeight: toolbarRef.current?.getBoundingClientRect().height ?? 0,
-    });
-
     React.useEffect(() => {
         if (!isMobile && mobileView !== 'main') {
             setMobileView('main');
@@ -282,21 +281,9 @@ export function FormSimpleEditor({ content: initialContent = '', onChange, place
     }, [initialContent, editor]);
 
     return (
-        <div className="border-input w-full overflow-hidden rounded-md border">
+        <div className="form-simple-editor border-input w-full rounded-md border">
             <EditorContext.Provider value={{ editor }}>
-                <Toolbar
-                    ref={toolbarRef}
-                    className="w-full flex-nowrap gap-0.5 overflow-x-auto shadow-sm"
-                    style={{
-                        flexWrap: 'nowrap',
-                        whiteSpace: 'nowrap',
-                        ...(isMobile
-                            ? {
-                                  bottom: `calc(100% - ${height - rect.y}px)`,
-                              }
-                            : {}),
-                    }}
-                >
+                <Toolbar aria-label="Text formatting">
                     {mobileView === 'main' ? (
                         <MainToolbarContent
                             onHighlighterClick={() => setMobileView('highlighter')}
@@ -309,7 +296,7 @@ export function FormSimpleEditor({ content: initialContent = '', onChange, place
                 </Toolbar>
 
                 <div
-                    className="w-full cursor-text"
+                    className="w-full cursor-text overflow-hidden rounded-b-md"
                     style={{
                         minHeight: '200px',
                         padding: '1rem',

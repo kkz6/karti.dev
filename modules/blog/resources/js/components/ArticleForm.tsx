@@ -228,7 +228,7 @@ export default function ArticleForm({ article, categories }: ArticleFormProps) {
                                                     <CardTitle>Article Content</CardTitle>
                                                     <CardDescription>Write the main content of your article</CardDescription>
                                                 </CardHeader>
-                                                <CardContent className="w-full overflow-hidden">
+                                                <CardContent className="w-full">
                                                     <FormField
                                                         control={form.control}
                                                         name="content"
