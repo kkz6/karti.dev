@@ -66,7 +66,7 @@ export const HeadingDropdownMenu = React.forwardRef<
 
     const handleOpenChange = React.useCallback(
       (open: boolean) => {
-        if (!editor || !canToggle) return
+        if (open && (!editor || !canToggle)) return
         setIsOpen(open)
         onOpenChange?.(open)
       },
@@ -78,7 +78,7 @@ export const HeadingDropdownMenu = React.forwardRef<
     }
 
     return (
-      <DropdownMenu modal open={isOpen} onOpenChange={handleOpenChange}>
+      <DropdownMenu modal={false} open={isOpen} onOpenChange={handleOpenChange}>
         <DropdownMenuTrigger asChild>
           <Button
             type="button"
