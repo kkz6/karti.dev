@@ -18,9 +18,9 @@ class MediaManagerException extends Exception
         return new static("Cannot find a filesystem disk named `{$disk}`");
     }
 
-    public static function directoryNotFound($path)
+    public static function directoryNotFound(string $path): MediaDirectoryNotFoundException
     {
-        return new static("Cannot find a directory `{$path}`");
+        return new MediaDirectoryNotFoundException("Cannot find a directory `{$path}`");
     }
 
     public static function directoryAlreadyExists($path)

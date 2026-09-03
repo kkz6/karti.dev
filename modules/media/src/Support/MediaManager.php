@@ -101,11 +101,13 @@ class MediaManager
      */
     public function verifyDirectory(string $directory): string
     {
-        if ($directory && ! Storage::exists($directory)) {
+        $directory = trim($directory, '/');
+
+        if ($directory !== '' && ! Storage::directoryExists($directory)) {
             throw MediaManagerException::directoryNotFound($directory);
         }
 
-        return trim($directory, '/');
+        return $directory;
     }
 
     public static function ignoreRoutes()

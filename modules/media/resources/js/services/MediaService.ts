@@ -253,8 +253,8 @@ export class MediaService {
      */
     async getFileDetails(mediaId: number): Promise<MediaAsset> {
         try {
-            const response: AxiosResponse<MediaAsset> = await axios.get(`${this.baseUrl}/show/${mediaId}`);
-            return response.data;
+            const response: AxiosResponse<{ data: MediaAsset }> = await axios.get(`${this.baseUrl}/show/${mediaId}`);
+            return response.data.data;
         } catch (error) {
             console.error('Error fetching file details:', error);
             throw new Error(`Failed to fetch file details: ${error instanceof Error ? error.message : 'Unknown error'}`);

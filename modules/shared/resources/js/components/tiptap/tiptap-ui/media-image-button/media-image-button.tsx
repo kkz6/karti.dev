@@ -78,27 +78,7 @@ export function MediaImageButton({ editor: providedEditor }: MediaImageButtonPro
         const assetId = selectedAssets[0];
         const assetData = await mediaService.current.getFileDetails(parseInt(assetId));
         if (assetData) {
-          // Convert MediaFile to MediaAsset format
-          const asset: MediaAsset = {
-            id: assetData.id.toString(),
-            disk: assetData.disk,
-            directory: assetData.directory,
-            filename: assetData.filename,
-            extension: assetData.extension,
-            mime_type: assetData.mime_type,
-            aggregate_type: assetData.aggregate_type,
-            size: assetData.size,
-            created_at: assetData.created_at,
-            updated_at: assetData.updated_at,
-            url: assetData.url,
-            container_id: assetData.disk,
-            is_image: assetData.aggregate_type === 'image',
-            is_audio: assetData.aggregate_type === 'audio',
-            is_video: assetData.aggregate_type === 'video',
-            path: `${assetData.directory}/${assetData.filename}`,
-            formatted_size: `${(assetData.size / 1024).toFixed(2)} KB`,
-          };
-          handleInsertImage(asset);
+          handleInsertImage(assetData);
         }
       } catch (error) {
         console.error('Error fetching asset data:', error);
@@ -131,7 +111,7 @@ export function MediaImageButton({ editor: providedEditor }: MediaImageButtonPro
           <div className="flex-1 overflow-hidden p-0">
             <AssetBrowser
               selectedContainer="public"
-              selectedPath="blog/content-images"
+              selectedPath="/"
               selectedAssets={selectedAssets}
               maxFiles={1}
               canEdit={true}

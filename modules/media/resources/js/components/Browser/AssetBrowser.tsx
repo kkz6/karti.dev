@@ -57,6 +57,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
         displayMode,
         uploads,
         loadingAssets,
+        loadError,
         initialized,
         loading,
         isEmpty,
@@ -82,7 +83,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
         // Refs
         uploaderRef,
         elementRef,
-    } = useMediaBrowser(selectedContainer, selectedPath);
+    } = useMediaBrowser(selectedContainer, selectedPath, undefined, restrictNavigation);
 
     const [showAssetDeleter, setShowAssetDeleter] = useState<boolean>(false);
     const [assetsToBeDeleted, setAssetsToBeDeleted] = useState<MediaAsset[]>([]);
@@ -218,6 +219,24 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
     };
 
     const maxFilesReached = maxFiles && selectedAssets.length >= maxFiles;
+
+    if (loadError) {
+        return (
+            <div role="alert" className="flex h-64 flex-col items-center justify-center gap-4 p-6 text-center">
+                <p className="text-muted-foreground">{loadError}</p>
+                <div className="flex gap-2">
+                    <Button type="button" variant="outline" onClick={() => loadAssets()}>
+                        Try again
+                    </Button>
+                    {!restrictNavigation && container && path !== '/' && (
+                        <Button type="button" onClick={() => navigate(container.id, '/')}>
+                            Open media library
+                        </Button>
+                    )}
+                </div>
+            </div>
+        );
+    }
 
     if (!initialized) {
         return (

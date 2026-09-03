@@ -1,4 +1,6 @@
+import axios from 'axios';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import {
     DisplayMode,
     MediaAsset,
@@ -22,8 +24,6 @@ interface MediaServices {
     deleteFilesService: (params: { ids: string[] }) => Promise<{ success: boolean }>;
     downloadAssetService: (assetId: string) => Promise<void>;
 }
-
-import axios from 'axios';
 
 // Default service implementation using axios API calls
 export const createDefaultServices = (): MediaServices => ({
@@ -53,8 +53,9 @@ export const createDefaultServices = (): MediaServices => ({
 
         // Transform media to assets format
         const assets: MediaAsset[] = media.map((file: any) => ({
+            ...file,
             id: file.id.toString(),
-            title: file.basename || file.filename,
+            title: file.title || file.basename || file.filename,
             filename: file.filename,
             extension: file.extension,
             mime_type: file.mime_type,
@@ -152,7 +153,14 @@ export const createDefaultServices = (): MediaServices => ({
     },
 });
 
-export function useMediaBrowser(initialContainer: string | null, initialPath: string | null, services: MediaServices = createDefaultServices()) {
+const defaultServices = createDefaultServices();
+
+export function useMediaBrowser(
+    initialContainer: string | null,
+    initialPath: string | null,
+    services: MediaServices = defaultServices,
+    restrictNavigation = false,
+) {
     // State
     const [containers, setContainers] = useState<Record<string, MediaContainer>>({});
     const [container, setContainer] = useState<MediaContainer | null>(null);
@@ -173,11 +181,13 @@ export function useMediaBrowser(initialContainer: string | null, initialPath: st
     const [loadingContainers, setLoadingContainers] = useState<boolean>(true);
     const [loadingAssets, setLoadingAssets] = useState<boolean>(true);
     const [initializedAssets, setInitializedAssets] = useState<boolean>(false);
+    const [loadError, setLoadError] = useState<string | null>(null);
     const [draggingFile, setDraggingFile] = useState<boolean>(false);
 
     // Refs
     const uploaderRef = useRef<any>(null);
     const elementRef = useRef<HTMLDivElement>(null);
+    const assetRequestId = useRef(0);
 
     // Initialize containers (no API call needed, using default container)
     const initializeContainers = useCallback(() => {
@@ -199,7 +209,9 @@ export function useMediaBrowser(initialContainer: string | null, initialPath: st
     const loadAssets = useCallback(async () => {
         if (!container) return;
 
+        const requestId = ++assetRequestId.current;
         setLoadingAssets(true);
+        setLoadError(null);
         try {
             const response = await services.loadFilesService({
                 container: container.id,
@@ -210,6 +222,8 @@ export function useMediaBrowser(initialContainer: string | null, initialPath: st
                 path_uuid: pathUuid || undefined,
             });
 
+            if (requestId !== assetRequestId.current) return;
+
             setAssets(response.data.data.assets);
             setFolders(response.data.data.folders);
             setFolder(response.data.data.folder);
@@ -219,10 +233,30 @@ export function useMediaBrowser(initialContainer: string | null, initialPath: st
             setInitializedAssets(true);
             setIsSearching(false);
         } catch (error) {
+            if (requestId !== assetRequestId.current) return;
+
+            const missingDirectory =
+                axios.isAxiosError(error) && error.response?.status === 404 && error.response?.data?.code === 'directory_not_found';
+
+            setAssets([]);
+            setFolders([]);
+            setSelectedAssets([]);
+
+            if (missingDirectory && path !== '/' && !restrictNavigation) {
+                setPath('/');
+                setPathUuid(null);
+                setSelectedPage(1);
+                setSearchTerm('');
+                setIsSearching(false);
+                toast.info('That folder is no longer available. Showing the media library.');
+                return;
+            }
+
             console.error('Error loading assets:', error);
+            setLoadError(missingDirectory ? 'This media folder is no longer available.' : 'Unable to load media. Please try again.');
             setLoadingAssets(false);
         }
-    }, [container, path, selectedPage, sort, sortOrder, pathUuid, services]);
+    }, [container, path, selectedPage, sort, sortOrder, pathUuid, services, restrictNavigation]);
 
     // Search assets
     const search = useCallback(async () => {
@@ -292,6 +326,8 @@ export function useMediaBrowser(initialContainer: string | null, initialPath: st
             if (containers[containerId]) {
                 setContainer(containers[containerId]);
                 setPath(newPath);
+                setPathUuid(null);
+                setSelectedPage(1);
                 setSelectedAssets([]);
             }
         },
@@ -394,11 +430,12 @@ export function useMediaBrowser(initialContainer: string | null, initialPath: st
     }, [initializeContainers]);
 
     useEffect(() => {
-        if (container) {
-            loadAssets();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [container, path, selectedPage, sort, sortOrder, pathUuid]);
+        loadAssets();
+
+        return () => {
+            assetRequestId.current += 1;
+        };
+    }, [loadAssets]);
 
     useEffect(() => {
         if (searchTerm.length >= 3) {
@@ -438,6 +475,7 @@ export function useMediaBrowser(initialContainer: string | null, initialPath: st
         loadingContainers,
         loadingAssets,
         initializedAssets,
+        loadError,
         draggingFile,
         // Computed
         initialized,
