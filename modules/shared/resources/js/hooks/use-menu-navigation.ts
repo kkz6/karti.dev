@@ -43,7 +43,8 @@ interface MenuNavigationOptions<T> {
 /**
  * Hook that implements keyboard navigation for dropdown menus and command palettes.
  *
- * Handles arrow keys, tab, home/end, enter for selection, and escape to close.
+ * Handles arrow keys, home/end, enter, and escape while preserving native Tab
+ * and text-field input.
  * Works with both Tiptap editors and regular DOM elements.
  *
  * @param options - Configuration options for the menu navigation
@@ -65,7 +66,16 @@ export function useMenuNavigation<T>({
 
   React.useEffect(() => {
     const handleKeyboardNavigation = (event: KeyboardEvent) => {
-      if (!items.length) return false
+      if (event.defaultPrevented || !items.length) return false
+
+      const target = event.target
+      if (
+        !editor &&
+        target instanceof HTMLElement &&
+        target.closest('input, textarea, select, [contenteditable="true"]')
+      ) {
+        return false
+      }
 
       const moveNext = () =>
         setSelectedIndex((currentIndex) => {
@@ -108,16 +118,6 @@ export function useMenuNavigation<T>({
           return true
         }
 
-        case "Tab": {
-          event.preventDefault()
-          if (event.shiftKey) {
-            movePrev()
-          } else {
-            moveNext()
-          }
-          return true
-        }
-
         case "Home": {
           event.preventDefault()
           setSelectedIndex(0)
@@ -132,6 +132,10 @@ export function useMenuNavigation<T>({
 
         case "Enter": {
           if (event.isComposing) return false
+          if (
+            target instanceof HTMLElement &&
+            target.closest('button, [role="button"], [role="menuitem"]')
+          ) return false
           event.preventDefault()
           if (selectedIndex !== -1 && items[selectedIndex]) {
             onSelect?.(items[selectedIndex])
@@ -140,6 +144,7 @@ export function useMenuNavigation<T>({
         }
 
         case "Escape": {
+          if (!onClose) return false
           event.preventDefault()
           onClose?.()
           return true
@@ -159,14 +164,10 @@ export function useMenuNavigation<T>({
     }
 
     if (targetElement) {
-      targetElement.addEventListener("keydown", handleKeyboardNavigation, true)
+      targetElement.addEventListener("keydown", handleKeyboardNavigation)
 
       return () => {
-        targetElement?.removeEventListener(
-          "keydown",
-          handleKeyboardNavigation,
-          true
-        )
+        targetElement?.removeEventListener("keydown", handleKeyboardNavigation)
       }
     }
 

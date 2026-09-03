@@ -1,15 +1,5 @@
 :root {
   /****************** 
-  Basics
-  ******************/
-
-  overflow-wrap: break-word;
-  text-size-adjust: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  /****************** 
   Colors variables
   ******************/
 
@@ -160,15 +150,6 @@
   --tt-accent-contrast: 8%;
   --tt-destructive-contrast: 8%;
   --tt-foreground-contrast: 8%;
-
-  &,
-  *,
-  ::before,
-  ::after {
-    box-sizing: border-box;
-    transition: none var(--tt-transition-duration-default)
-      var(--tt-transition-easing-default);
-  }
 }
 
 :root {
@@ -275,8 +256,8 @@
 
 .dark {
   --tt-color-highlight-yellow: #6b6524;
-  --tt-color-highlight-green: #509568;
-  --tt-color-highlight-blue: #6e92aa;
+  --tt-color-highlight-green: #2d5b40;
+  --tt-color-highlight-blue: #31516b;
   --tt-color-highlight-purple: #583e74;
   --tt-color-highlight-red: #743e42;
   --tt-color-highlight-gray: rgb(47, 47, 47);

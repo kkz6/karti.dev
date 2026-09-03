@@ -149,7 +149,8 @@ const LinkMain: React.FC<LinkMainProps> = ({
             <Button
               type="button"
               onClick={setLink}
-              title="Apply link"
+              aria-label="Apply link"
+              tooltip="Apply link"
               disabled={!url && !isActive}
               data-style="ghost"
             >
@@ -163,7 +164,8 @@ const LinkMain: React.FC<LinkMainProps> = ({
             <Button
               type="button"
               onClick={openLink}
-              title="Open in new window"
+              aria-label="Open in new window"
+              tooltip="Open in new window"
               disabled={!url && !isActive}
               data-style="ghost"
             >
@@ -173,7 +175,8 @@ const LinkMain: React.FC<LinkMainProps> = ({
             <Button
               type="button"
               onClick={removeLink}
-              title="Remove link"
+              aria-label="Remove link"
+              tooltip="Remove link"
               disabled={!url && !isActive}
               data-style="ghost"
             >

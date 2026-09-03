@@ -118,12 +118,13 @@ export function useLinkHandler(props: LinkHandlerProps) {
 
     const { selection } = editor.state
     const isEmpty = selection.empty
+    const isEditingLink = isLinkActive(editor)
 
     let chain = editor.chain().focus()
 
     chain = chain.extendMarkRange("link").setLink({ href: url })
 
-    if (isEmpty) {
+    if (isEmpty && !isEditingLink) {
       chain = chain.insertContent({ type: "text", text: url })
     }
 
