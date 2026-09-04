@@ -190,6 +190,7 @@ export const TableListing: React.FC<TableListingProps> = ({
                                     </td>
                                     <td className="p-3">
                                         <button
+                                            type="button"
                                             onDoubleClick={handleParentSelect}
                                             className="cursor-pointer text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                                         >

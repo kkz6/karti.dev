@@ -339,6 +339,7 @@ export default function ArticleForm({ article, categories }: ArticleFormProps) {
                                                                 <PopoverTrigger asChild>
                                                                     <FormControl>
                                                                         <Button
+                                                                            type="button"
                                                                             variant="outline"
                                                                             className={cn(
                                                                                 'w-full justify-start text-left font-normal',
@@ -363,6 +364,7 @@ export default function ArticleForm({ article, categories }: ArticleFormProps) {
                                                                     {field.value && (
                                                                         <div className="border-t p-3">
                                                                             <Button
+                                                                                type="button"
                                                                                 variant="outline"
                                                                                 size="sm"
                                                                                 className="w-full"

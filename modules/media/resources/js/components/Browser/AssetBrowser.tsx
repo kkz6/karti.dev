@@ -271,7 +271,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                             key={c.id}
                             className={`sidebar-item cursor-pointer rounded p-2 hover:bg-gray-100 dark:hover:bg-gray-700 ${container?.id === c.id ? 'bg-gray-200 dark:bg-gray-600' : ''}`}
                         >
-                            <button onClick={() => selectContainer(c.id)} className="w-full text-left">
+                            <button type="button" onClick={() => selectContainer(c.id)} className="w-full text-left">
                                 {c.title}
                             </button>
                         </div>

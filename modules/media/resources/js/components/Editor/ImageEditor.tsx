@@ -706,6 +706,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                                         </div>
 
                                         <button
+                                            type="button"
                                             onClick={() => setShowDiff(false)}
                                             className="bg-opacity-80 hover:bg-opacity-100 absolute top-4 right-4 rounded-full bg-black p-2 text-white transition-all duration-200"
                                         >

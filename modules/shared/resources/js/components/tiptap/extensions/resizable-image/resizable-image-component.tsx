@@ -144,6 +144,7 @@ export const ResizableImageComponent: React.FC<NodeViewProps> = ({
           <div className="image-controls">
             <div className="control-group">
               <Button
+                type="button"
                 size="sm"
                 variant="ghost"
                 onClick={() => handleAlignment('left')}
@@ -153,6 +154,7 @@ export const ResizableImageComponent: React.FC<NodeViewProps> = ({
                 <AlignLeft className="w-4 h-4" />
               </Button>
               <Button
+                type="button"
                 size="sm"
                 variant="ghost"
                 onClick={() => handleAlignment('center')}
@@ -162,6 +164,7 @@ export const ResizableImageComponent: React.FC<NodeViewProps> = ({
                 <AlignCenter className="w-4 h-4" />
               </Button>
               <Button
+                type="button"
                 size="sm"
                 variant="ghost"
                 onClick={() => handleAlignment('right')}
@@ -174,6 +177,7 @@ export const ResizableImageComponent: React.FC<NodeViewProps> = ({
             
             <div className="control-group">
               <Button
+                type="button"
                 size="sm"
                 variant="ghost"
                 onClick={handleRotate}
@@ -182,6 +186,7 @@ export const ResizableImageComponent: React.FC<NodeViewProps> = ({
                 <RotateCw className="w-4 h-4" />
               </Button>
               <Button
+                type="button"
                 size="sm"
                 variant="ghost"
                 onClick={handleFitToContainer}
@@ -190,6 +195,7 @@ export const ResizableImageComponent: React.FC<NodeViewProps> = ({
                 <Maximize2 className="w-4 h-4" />
               </Button>
               <Button
+                type="button"
                 size="sm"
                 variant="ghost"
                 onClick={handleResetSize}
@@ -201,6 +207,7 @@ export const ResizableImageComponent: React.FC<NodeViewProps> = ({
 
             <div className="control-group">
               <Button
+                type="button"
                 size="sm"
                 variant="ghost"
                 onClick={deleteNode}

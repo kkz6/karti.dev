@@ -69,6 +69,7 @@ export const SaveDropdown: React.FC<SaveDropdownProps> = ({ onSave, onSaveAsCopy
                 {isOpen && (
                     <div className="ring-opacity-5 absolute right-0 bottom-full z-50 mb-2 w-48 origin-bottom-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black focus:outline-none dark:bg-gray-800 dark:ring-gray-700">
                         <button
+                            type="button"
                             onClick={handleSaveClick}
                             disabled={!hasChanges}
                             className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-200 dark:hover:bg-gray-700"
@@ -77,6 +78,7 @@ export const SaveDropdown: React.FC<SaveDropdownProps> = ({ onSave, onSaveAsCopy
                             Save
                         </button>
                         <button
+                            type="button"
                             onClick={handleSaveAsCopyClick}
                             className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                         >

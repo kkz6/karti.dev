@@ -67,6 +67,7 @@ export function AssetFieldRow({
 
                 {showFilename && (
                     <button
+                        type="button"
                         className="ml-2 flex-1 truncate text-left text-sm"
                         aria-label="Edit Asset"
                         onClick={handleEdit}

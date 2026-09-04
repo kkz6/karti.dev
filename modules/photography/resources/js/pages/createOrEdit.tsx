@@ -278,6 +278,7 @@ export default function Create({ categories, photo }: PhotoGalleryCreateEditPage
                                                 <Popover>
                                                     <PopoverTrigger asChild>
                                                         <Button
+                                                            type="button"
                                                             variant="outline"
                                                             className={cn(
                                                                 "w-full justify-start text-left font-normal",
@@ -302,6 +303,7 @@ export default function Create({ categories, photo }: PhotoGalleryCreateEditPage
                                                         {publishedDate && (
                                                             <div className="p-3 border-t">
                                                                 <Button
+                                                                    type="button"
                                                                     variant="ghost"
                                                                     size="sm"
                                                                     className="w-full"
