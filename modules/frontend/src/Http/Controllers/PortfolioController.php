@@ -229,7 +229,7 @@ class PortfolioController extends BaseController
     public function showArticle($slug)
     {
         $article = Article::published()
-            ->with(['categories', 'tags', 'seo', 'comments' => function ($query) {
+            ->with(['categories', 'tags', 'seo', 'featuredImageMedia', 'comments' => function ($query) {
                 $query->approved()->latest();
             }])
             ->where('slug', $slug)
@@ -239,13 +239,16 @@ class PortfolioController extends BaseController
             abort(404);
         }
 
-        $articleUrl    = url("/articles/{$article->slug}");
-        $authorName    = $article->author_name ?? config('seo.author', 'Karthick');
-        $publishedAt   = $article->published_at->toISOString();
-        $modifiedAt    = $article->updated_at->toISOString();
-        $featuredImage = $article->featured_image ? url($article->featured_image) : config('seo.image');
+        $articleUrl  = route('articles.show', ['slug' => $article->slug]);
+        $authorName  = $article->author_name ?? config('seo.author', 'Karthick');
+        $publishedAt = $article->published_at->toISOString();
+        $modifiedAt  = $article->updated_at->toISOString();
 
-        $seoData = $article->getDynamicSEOData();
+        $seoData       = $article->getDynamicSEOData();
+        $seoData->type = 'article';
+
+        $canonicalUrl  = $seoData->url ?? $articleUrl;
+        $featuredImage = $seoData->image ? url($seoData->image) : null;
 
         $jsonLd = [
             '@context'      => 'https://schema.org',
@@ -253,7 +256,7 @@ class PortfolioController extends BaseController
             'headline'      => $seoData->title ?? $article->title,
             'description'   => $seoData->description ?? $article->excerpt,
             'image'         => $featuredImage,
-            'url'           => $articleUrl,
+            'url'           => $canonicalUrl,
             'datePublished' => $publishedAt,
             'dateModified'  => $modifiedAt,
             'author'        => [
@@ -268,7 +271,7 @@ class PortfolioController extends BaseController
             ],
             'mainEntityOfPage' => [
                 '@type' => 'WebPage',
-                '@id'   => $articleUrl,
+                '@id'   => $canonicalUrl,
             ],
         ];
 

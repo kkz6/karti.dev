@@ -58,7 +58,7 @@ export function SEOFields({ data, setData, errors, showSlug = true, slugLabel = 
     // Get site domain for preview
     const siteDomain = window.location.hostname || 'yoursite.com';
     const baseUrl = window.location.origin || `https://${siteDomain}`;
-    const siteUrl = data.slug ? `${baseUrl}/blog/${data.slug}` : `${baseUrl}/blog/your-article-url`;
+    const siteUrl = data.slug ? `${baseUrl}/articles/${data.slug}` : `${baseUrl}/articles/your-article-url`;
 
     return (
         <div className="space-y-6">

@@ -106,6 +106,11 @@ class Article extends Model
         return 'slug';
     }
 
+    public function getCanonicalUrl(): string
+    {
+        return route('articles.show', ['slug' => $this->slug]);
+    }
+
     public function getExcerptAttribute($value): string
     {
         if ($value) {

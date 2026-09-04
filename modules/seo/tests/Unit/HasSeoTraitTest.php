@@ -117,3 +117,14 @@ test('getCanonicalUrl returns url based on slug', function () {
 
     expect($canonicalUrl)->toContain('test-category');
 });
+
+test('custom canonical URL takes precedence in dynamic SEO data', function () {
+    $category = Category::factory()->create([
+        'slug' => 'test-category',
+    ]);
+    $category->updateSeo([
+        'canonical_url' => 'https://example.com/custom-category',
+    ]);
+
+    expect($category->fresh()->getDynamicSEOData()->url)->toBe('https://example.com/custom-category');
+});

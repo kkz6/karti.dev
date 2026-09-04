@@ -31,7 +31,7 @@ trait HasSeo
             twitter_card: $seoModel?->twitter_card ?? $defaults->twitter_card,
             twitter_site: $seoModel?->twitter_site ?? $defaults->twitter_site,
             twitter_creator: $seoModel?->twitter_creator ?? $defaults->twitter_creator,
-            url: $this->getCanonicalUrl(),
+            url: $seoModel?->canonical_url ?? $this->getCanonicalUrl(),
         );
     }
 

@@ -36,7 +36,14 @@
             }
         </style>
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        @if (is_array(data_get($page, 'props.seo')))
+            @include('partials.seo', [
+                'seo' => data_get($page, 'props.seo'),
+                'jsonLd' => data_get($page, 'props.jsonLd'),
+            ])
+        @else
+            <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        @endif
 
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
