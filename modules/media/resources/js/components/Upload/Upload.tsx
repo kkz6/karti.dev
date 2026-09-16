@@ -16,12 +16,12 @@ export function Upload({ upload, onClear }: UploadProps) {
     const Icon = failed ? CircleAlert : completed ? CircleCheck : FileUp;
 
     return (
-        <li className="upload-row grid grid-cols-[2rem_minmax(0,1fr)_auto] items-start gap-x-3 px-4 py-4 sm:px-5">
+        <li className="upload-row grid grid-cols-[1.25rem_minmax(0,1fr)_auto] items-start gap-x-3 px-4 py-3 sm:px-5">
             <div
                 className={cn(
-                    'bg-muted text-muted-foreground flex size-8 items-center justify-center rounded-md',
-                    failed && 'bg-destructive/10 text-destructive',
-                    completed && 'bg-primary/10 text-primary',
+                    'text-muted-foreground flex h-6 items-center justify-center',
+                    failed && 'text-destructive',
+                    completed && 'text-primary',
                 )}
             >
                 <Icon className="size-4" aria-hidden="true" />

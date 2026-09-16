@@ -4,6 +4,19 @@ import test from 'node:test';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
+test('upload feedback is integrated with the browser instead of nested in a card', () => {
+    const listing = read('../resources/js/components/Upload/Uploads.tsx');
+    const row = read('../resources/js/components/Upload/Upload.tsx');
+    assert.match(listing, /asset-upload-listing border-border text-foreground border-b/);
+    assert.doesNotMatch(listing, /rounded-lg|bg-card|sm:m-5|m-4|bg-muted\/30/);
+    assert.match(listing, /uploads.length === 1 && 'sr-only'/);
+    assert.match(listing, /Dismiss all/);
+    assert.match(row, /role="progressbar"/);
+    assert.match(row, /role=\{failed \? 'alert'/);
+    assert.match(row, /Dismiss \$\{upload.name\} upload status/);
+    assert.doesNotMatch(row, /bg-destructive\/10|bg-primary\/10/);
+});
+
 test('folder editor uses a clear label and example without duplicated helper copy', () => {
     const editor = read('../resources/js/components/Browser/Navigation/FolderEditor.tsx');
     assert.match(editor, /<Label htmlFor="basename">Folder name<\/Label>/);

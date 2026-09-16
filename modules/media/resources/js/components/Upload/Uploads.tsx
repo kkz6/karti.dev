@@ -1,4 +1,5 @@
 import { Button } from '@shared/components/ui/button';
+import { cn } from '@shared/lib/utils';
 import { useId } from 'react';
 import type { MediaUpload } from '../../types/media';
 import { Upload } from './Upload';
@@ -26,11 +27,16 @@ export function Uploads({ uploads, onClearUpload, onClearAll }: UploadsProps) {
     return (
         <section
             aria-labelledby={headingId}
-            className="asset-upload-listing bg-card text-card-foreground m-4 overflow-hidden rounded-lg border sm:m-5"
+            className="asset-upload-listing border-border text-foreground border-b"
         >
-            <header className="bg-muted/30 flex min-h-12 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b px-4 py-3 sm:px-5">
+            <header
+                className={cn(
+                    'flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 pt-3 sm:px-5',
+                    uploads.length === 1 && 'sr-only',
+                )}
+            >
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                    <h3 id={headingId} className="text-sm font-semibold">
+                    <h3 id={headingId} className="text-muted-foreground text-xs font-medium">
                         Uploads
                     </h3>
                     <p role="status" className="text-muted-foreground text-xs">
@@ -43,7 +49,7 @@ export function Uploads({ uploads, onClearUpload, onClearAll }: UploadsProps) {
                     </Button>
                 )}
             </header>
-            <ul className="max-h-72 divide-y overflow-y-auto overscroll-contain">
+            <ul className="divide-border/60 max-h-72 divide-y overflow-y-auto overscroll-contain">
                 {uploads.map((upload) => (
                     <Upload key={upload.id} upload={upload} onClear={onClearUpload ? () => onClearUpload(upload.id) : undefined} />
                 ))}
