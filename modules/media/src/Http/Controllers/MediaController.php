@@ -20,6 +20,7 @@ use Modules\Media\Exceptions\MediaUpload\FileNotSupportedException;
 use Modules\Media\Exceptions\MediaUpload\FileSizeException;
 use Modules\Media\Exceptions\MediaUpload\ForbiddenException;
 use Modules\Media\Exceptions\MediaUpload\InvalidHashException;
+use Modules\Media\Exceptions\MediaUploadException;
 use Modules\Media\Http\Requests\MediaStoreRequest;
 use Modules\Media\Http\Requests\MediaUpdateRequest;
 use Modules\Media\Http\Resources\MediaResource;
@@ -97,20 +98,32 @@ class MediaController extends BaseController
         $path     = $this->manager->verifyDirectory(trim($request->path ?? '', '/'));
         $response = [];
 
-        foreach ($media as $m) {
-            $model = $this->uploader
-                ->toDirectory($path)
-                ->fromSource($m);
-            if ($data->isNotEmpty()) {
-                $model->beforeSave(function (Media $m) use ($data) {
-                    $m->fill($data->toArray());
-                });
-            }
-            if ($c = Media::inDirectory($path)->where('filename', $m->getClientOriginalName())->count()) {
-                $model = $model->useFilename("{$m->getClientOriginalName()}_{$c}");
-            }
+        try {
+            foreach ($media as $m) {
+                $model = $this->uploader
+                    ->toDirectory($path)
+                    ->fromSource($m);
 
-            $response[] = $model->upload();
+                if ($data->isNotEmpty()) {
+                    $model->beforeSave(function (Media $m) use ($data) {
+                        $m->fill($data->toArray());
+                    });
+                }
+
+                $response[] = $model->upload();
+            }
+        } catch (FileExistsException) {
+            return response()->json([
+                'message' => "A file named '{$m->getClientOriginalName()}' already exists in this folder.",
+            ], 409);
+        } catch (FileSizeException) {
+            return response()->json([
+                'message' => 'This file exceeds the 25 MB upload limit.',
+            ], 413);
+        } catch (MediaUploadException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ], 422);
         }
 
         return response($response);

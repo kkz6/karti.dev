@@ -15,7 +15,11 @@ interface UploaderProps {
 export interface UploaderRef {
     browse: () => void;
     upload: (file: File) => void;
+    clear: (uploadId: string) => void;
+    clearAll: () => void;
 }
+
+const MAX_UPLOAD_SIZE = 25 * 1024 * 1024;
 
 export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
     ({ container = null, path = null, onUploadComplete, onError, onUpdated }, ref) => {
@@ -45,10 +49,12 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
         const upload = useCallback(
             async (file: File) => {
                 const uuid = generateId();
-                const maxFileSize = 10 * 1024 * 1024;
-
-                if (file.size > maxFileSize) {
-                    const errorMessage = `File "${file.name}" is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum file size is 10MB.`;
+                if (file.size > MAX_UPLOAD_SIZE) {
+                    const errorMessage = `File "${file.name}" is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum file size is 25 MB.`;
+                    setUploads((prev) => [
+                        ...prev,
+                        { id: uuid, name: file.name, progress: 0, status: 'error' as const, error: errorMessage },
+                    ]);
                     onError?.(errorMessage);
                     return;
                 }
@@ -98,17 +104,15 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
                         setUploads((prev) => prev.map((u) => (u.id === uuid ? { ...u, status: 'error' as const, error: 'Upload failed' } : u)));
                         onError?.('Upload failed');
                         
-                        // Keep error visible for 8 seconds
-                        setTimeout(() => {
-                            setUploads((prev) => prev.filter((u) => u.id !== uuid));
-                        }, 8000);
                     }
                 } catch (error: any) {
                     let errorMessage = 'Network error';
 
                     if (error.response) {
                         if (error.response.status === 413) {
-                            errorMessage = 'File size is too large. Please choose a smaller file.';
+                            errorMessage = error.response.data?.message || 'This file exceeds the 25 MB upload limit.';
+                        } else if (error.response.status === 409) {
+                            errorMessage = error.response.data?.message || `A file named "${file.name}" already exists in this folder.`;
                         } else if (error.response.status === 422) {
                             errorMessage = error.response.data?.message || 'Invalid file type or format';
                         } else if (error.response.status >= 500) {
@@ -121,16 +125,20 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
                     setUploads((prev) => prev.map((u) => (u.id === uuid ? { ...u, status: 'error' as const, error: errorMessage } : u)));
                     onError?.(errorMessage);
                     
-                    // Keep error visible for 8 seconds
-                    setTimeout(() => {
-                        setUploads((prev) => prev.filter((u) => u.id !== uuid));
-                    }, 8000);
                 }
             },
             [container, path, onUploadComplete, onError, uploads],
         );
 
-        React.useImperativeHandle(ref, () => ({ browse, upload }));
+        const clear = useCallback((uploadId: string) => {
+            setUploads((prev) => prev.filter((upload) => upload.id !== uploadId));
+        }, []);
+
+        const clearAll = useCallback(() => {
+            setUploads([]);
+        }, []);
+
+        React.useImperativeHandle(ref, () => ({ browse, upload, clear, clearAll }), [browse, clear, clearAll, upload]);
 
         useEffect(() => {
             onUpdated?.(uploads);

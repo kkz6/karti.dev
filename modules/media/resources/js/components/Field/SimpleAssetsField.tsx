@@ -3,7 +3,7 @@ import { FormControl, FormItem, FormLabel, FormMessage } from '@shared/component
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
 import { cn } from '@shared/lib/utils';
 import { FolderOpen, GripVertical, Upload } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { AssetFieldProps, AssetUpload, DisplayMode } from '../../types/asset-field';
 import { AssetBrowser, AssetEditor, LoadingGraphic } from '@media/components';
@@ -153,13 +153,13 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
         updateParentWithIds(newIds);
     };
 
-    const handleUploadsUpdated = (newUploads: AssetUpload[]) => {
+    const handleUploadsUpdated = useCallback((newUploads: AssetUpload[]) => {
         setUploads(newUploads);
-    };
+    }, []);
 
-    const clearUpload = (uploadId: string) => {
-        setUploads(prev => prev.filter(upload => upload.id !== uploadId));
-    };
+    const clearUpload = useCallback((uploadId: string) => {
+        uploaderRef.current?.clear(uploadId);
+    }, []);
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();

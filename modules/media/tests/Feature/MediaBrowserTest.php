@@ -100,3 +100,45 @@ it('uploads to the library root without a pre-created content folder', function 
     ]);
     Storage::disk('public')->assertExists('photo.jpg');
 });
+
+it('accepts a three megabyte file upload', function () {
+    $this->post('/admin/media', [
+        'disk' => 'public',
+        'path' => '/',
+        'file' => UploadedFile::fake()->image('three-megabyte.jpg')->size(3 * 1024),
+    ])->assertOk();
+
+    $this->assertDatabaseHas('media', [
+        'disk'      => 'public',
+        'directory' => '',
+        'filename'  => 'three-megabyte',
+        'extension' => 'jpg',
+        'size'      => 3 * 1024 * 1024,
+    ]);
+});
+
+it('reports a useful error when a file name already exists in the folder', function () {
+    $this->post('/admin/media', [
+        'disk' => 'public',
+        'path' => '/',
+        'file' => UploadedFile::fake()->image('duplicate.jpg'),
+    ])->assertOk();
+
+    $this->post('/admin/media', [
+        'disk' => 'public',
+        'path' => '/',
+        'file' => UploadedFile::fake()->image('duplicate.jpg'),
+    ])
+        ->assertConflict()
+        ->assertJsonPath('message', "A file named 'duplicate.jpg' already exists in this folder.");
+});
+
+it('reports the upload limit when a file is too large', function () {
+    $this->post('/admin/media', [
+        'disk' => 'public',
+        'path' => '/',
+        'file' => UploadedFile::fake()->image('too-large.jpg')->size(26 * 1024),
+    ])
+        ->assertStatus(413)
+        ->assertJsonPath('message', 'This file exceeds the 25 MB upload limit.');
+});

@@ -38,7 +38,7 @@ return [
     /*
      * The maximum file size in bytes for a single uploaded file
      */
-    'max_size' => 1024 * 1024 * 10,
+    'max_size' => 1024 * 1024 * 25,
 
     /*
      * What to do if a duplicate file is uploaded.
@@ -49,7 +49,7 @@ return [
      * * `'replace'` : the old file and media model is deleted
      * * `'error'`: an Exception is thrown
      */
-    'on_duplicate' => MediaUploader::ON_DUPLICATE_INCREMENT,
+    'on_duplicate' => MediaUploader::ON_DUPLICATE_ERROR,
 
     /*
      * Reject files unless both their mime and extension are recognized and both match a single aggregate type

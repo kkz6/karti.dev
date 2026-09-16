@@ -164,6 +164,10 @@ export function AssetsField({ name, data = [], config = {}, required = false, re
         setUploads(newUploads);
     }, []);
 
+    const clearUpload = useCallback((uploadId: string) => {
+        uploaderRef.current?.clear(uploadId);
+    }, []);
+
     const handleUploadError = useCallback(
         (error: string) => {
             onError?.(error);
@@ -251,7 +255,7 @@ export function AssetsField({ name, data = [], config = {}, required = false, re
                             )}
 
                             {/* Upload progress */}
-                            {uploads.length > 0 && <Uploads uploads={uploads} />}
+                            {uploads.length > 0 && <Uploads uploads={uploads} onClearUpload={clearUpload} />}
 
                             {/* Asset display */}
                             {expanded && !soloAsset && (

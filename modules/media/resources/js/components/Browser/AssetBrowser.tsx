@@ -1,7 +1,7 @@
 import { Button } from '@shared/components/ui/button';
 import { Input } from '@shared/components/ui/input';
 import { Toggle } from '@shared/components/ui/toggle';
-import { Grid, List, Search, X } from 'lucide-react';
+import { AlertCircle, Grid, List, Search, UploadCloud, X } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useMediaBrowser } from '../../hooks/useMediaBrowser';
@@ -102,17 +102,35 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
-        setDraggingFile(true);
+
+        if (canEdit) {
+            setDraggingFile(true);
+        }
     };
 
     const handleDragLeave = (e: React.DragEvent) => {
         e.preventDefault();
-        setDraggingFile(false);
+
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+            setDraggingFile(false);
+        }
     };
 
     const handleDrop = (e: React.DragEvent) => {
         dropFile(e);
     };
+
+    const clearUpload = useCallback((uploadId: string) => {
+        uploaderRef.current?.clear(uploadId);
+    }, [uploaderRef]);
+
+    const clearUploads = useCallback(() => {
+        uploaderRef.current?.clearAll();
+    }, [uploaderRef]);
+
+    const handleUploadsUpdated = useCallback((updatedUploads: typeof uploads) => {
+        setUploads(updatedUploads);
+    }, [setUploads]);
 
     const handleAssetSelected = useCallback(
         (assetId: string) => {
@@ -250,19 +268,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
         <div
             ref={elementRef}
             className="asset-browser relative flex h-full"
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
         >
-            {canEdit && draggingFile && (
-                <div className="drag-notification bg-opacity-90 fixed inset-0 z-50 flex items-center justify-center bg-blue-50 dark:bg-blue-900">
-                    <div className="text-center">
-                        <div className="mb-4 text-4xl">📁</div>
-                        <h3 className="text-lg font-semibold">Drop to Upload</h3>
-                    </div>
-                </div>
-            )}
-
             {showSidebar && (
                 <div className="asset-browser-sidebar w-64 bg-gray-50 p-4 dark:bg-gray-800">
                     <h4 className="mb-4 font-semibold">Containers</h4>
@@ -345,11 +351,27 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                 </div>
 
                 {/* Scrollable Content Area */}
-                <div className="asset-browser-content flex-1 overflow-y-auto pb-20">
+                <div
+                    className="asset-browser-content relative flex-1 overflow-y-auto pb-20"
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                >
+                    {canEdit && draggingFile && (
+                        <div className="pointer-events-none absolute inset-3 z-20 flex items-center justify-center rounded-xl border-2 border-dashed border-primary/60 bg-primary/5 p-6 text-center">
+                            <div className="rounded-full bg-background p-3 shadow-sm">
+                                <UploadCloud className="h-7 w-7 text-primary" />
+                            </div>
+                            <div className="ml-3 text-left">
+                                <p className="font-semibold text-foreground">Drop files to upload</p>
+                                <p className="text-muted-foreground text-sm">Release to add them to this folder.</p>
+                            </div>
+                        </div>
+                    )}
                     {/* Upload Progress */}
                     {uploads.length > 0 && (
-                        <div className="uploads-section bg-blue-50 p-4 dark:bg-blue-900">
-                            <div className="flex justify-between items-center mb-2">
+                        <div className="uploads-section border-b bg-card p-4">
+                            <div className="mb-3 flex items-center justify-between">
                                 <h3 className="font-semibold">
                                     {uploads.some(u => u.status === 'uploading') ? 'Uploading files...' : 'Upload Status'}
                                 </h3>
@@ -357,19 +379,25 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => setUploads([])}
-                                        className="h-auto px-2 py-1 text-xs hover:bg-blue-100 dark:hover:bg-blue-800"
+                                        onClick={clearUploads}
+                                        className="h-auto px-2 py-1 text-xs"
                                     >
                                         Clear All
                                     </Button>
                                 )}
                             </div>
                             {uploads.map((upload) => (
-                                <div key={upload.id} className="upload-item mb-2">
-                                    <div className="flex items-center text-sm gap-2">
-                                        <span className="flex-1 truncate">{upload.name}</span>
+                                <div
+                                    key={upload.id}
+                                    className={`upload-item mb-2 rounded-lg border p-3 last:mb-0 ${
+                                        upload.status === 'error' ? 'border-destructive/25 bg-destructive/5' : 'border-border bg-background'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-2 text-sm">
+                                        {upload.status === 'error' && <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />}
+                                        <span className="flex-1 truncate font-medium">{upload.name}</span>
                                         {upload.status === 'error' ? (
-                                            <span className="text-red-600 font-medium shrink-0">Error</span>
+                                            <span className="shrink-0 font-medium text-destructive">Could not upload</span>
                                         ) : upload.status === 'completed' ? (
                                             <span className="text-green-600 font-medium shrink-0">Completed</span>
                                         ) : (
@@ -379,20 +407,22 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={() => setUploads(prev => prev.filter(u => u.id !== upload.id))}
-                                                className="h-6 w-6 shrink-0 hover:bg-blue-100 dark:hover:bg-blue-800"
+                                                type="button"
+                                                onClick={() => clearUpload(upload.id)}
+                                                aria-label={`Dismiss ${upload.name} upload status`}
+                                                className="h-6 w-6 shrink-0"
                                             >
                                                 <X className="h-4 w-4" />
                                             </Button>
                                         )}
                                     </div>
                                     {upload.status === 'error' ? (
-                                        <div className="text-sm text-red-600 mt-1">{upload.error}</div>
+                                        <div className="mt-1 text-sm text-destructive">{upload.error}</div>
                                     ) : upload.status === 'completed' ? (
                                         <div className="text-sm text-green-600 mt-1">Upload completed successfully</div>
                                     ) : (
                                         <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
-                                            <div className="h-2 rounded-full bg-blue-600 transition-all" style={{ width: `${upload.progress}%` }} />
+                                            <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${upload.progress}%` }} />
                                         </div>
                                     )}
                                 </div>
@@ -518,9 +548,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                     loadAssets(); // Reload assets after upload
                     // Don't clear uploads here - let them clear naturally after showing success state
                 }}
-                onUpdated={(uploads) => {
-                    setUploads(uploads);
-                }}
+                onUpdated={handleUploadsUpdated}
                 onError={(error) => {
                     // Show error toast
                     toast.error(error);
