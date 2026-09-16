@@ -9,6 +9,7 @@ import {
     SidebarMenuSub,
     SidebarMenuSubButton,
     SidebarMenuSubItem,
+    useSidebar,
 } from '@shared/components/ui/sidebar';
 import { type NavGroup, type NavItem, type SharedData } from '@shared/types';
 import { ChevronRight } from 'lucide-react';
@@ -62,9 +63,11 @@ function isRouteActive(currentRouteName: string | null, itemHref: string): boole
 function NavigationItems({ items }: { items: NavItem[] }) {
     const page = usePage<SharedData>();
     const currentRouteName = page.props.route?.name;
+    const { isMobile, state, setOpen } = useSidebar();
+    const rowClassName = 'gap-2 rounded-md px-2 before:hidden';
 
     return (
-        <SidebarMenu>
+        <SidebarMenu className="gap-1">
             {items.map((item) => {
                 const isActive =
                     isRouteActive(currentRouteName, item.href) ||
@@ -76,21 +79,31 @@ function NavigationItems({ items }: { items: NavItem[] }) {
                         <Collapsible key={`${item.title}-${isActive}`} asChild defaultOpen={isActive}>
                             <SidebarMenuItem className="group/collapsible">
                                 <CollapsibleTrigger asChild>
-                                    <SidebarMenuButton isActive={isActive} tooltip={{ children: item.title }}>
+                                    <SidebarMenuButton
+                                        isActive={isActive}
+                                        tooltip={{ children: item.title }}
+                                        className={rowClassName}
+                                        onClick={(event) => {
+                                            if (!isMobile && state === 'collapsed') {
+                                                // Reveal an already-open submenu without toggling it closed.
+                                                if (event.currentTarget.getAttribute('aria-expanded') === 'true') event.preventDefault();
+                                                setOpen(true);
+                                            }
+                                        }}
+                                    >
                                         {item.icon && <item.icon />}
                                         <span>{item.title}</span>
-                                        <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                        <ChevronRight className="ml-auto transition-transform duration-200 group-data-[collapsible=icon]:hidden group-data-[state=open]/collapsible:rotate-90" />
                                     </SidebarMenuButton>
                                 </CollapsibleTrigger>
                                 <CollapsibleContent>
-                                    <SidebarMenuSub>
+                                    <SidebarMenuSub className="my-1 mr-0 ml-4 gap-0.5 pr-0 pl-3">
                                         {item.items?.map((subItem) => {
                                             const subItemActive = isRouteActive(currentRouteName, subItem.href);
                                             return (
                                                 <SidebarMenuSubItem key={subItem.title}>
                                                     <SidebarMenuSubButton asChild isActive={subItemActive}>
-                                                        <Link href={subItem.href} prefetch>
-                                                            {subItem.icon && <subItem.icon />}
+                                                        <Link href={subItem.href} prefetch aria-current={subItemActive ? 'page' : undefined}>
                                                             <span>{subItem.title}</span>
                                                         </Link>
                                                     </SidebarMenuSubButton>
@@ -106,7 +119,7 @@ function NavigationItems({ items }: { items: NavItem[] }) {
 
                 return (
                     <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild isActive={isActive} tooltip={{ children: item.title }}>
+                        <SidebarMenuButton asChild isActive={isActive} tooltip={{ children: item.title }} className={rowClassName}>
                             <Link href={item.href} prefetch aria-current={isActive ? 'page' : undefined}>
                                 {item.icon && <item.icon />}
                                 <span>{item.title}</span>
@@ -121,11 +134,11 @@ function NavigationItems({ items }: { items: NavItem[] }) {
 
 export function NavMain({ groups = [] }: { groups: NavGroup[] }) {
     return (
-        <nav aria-label="Main navigation" className="space-y-4">
+        <nav aria-label="Main navigation" className="space-y-6 group-data-[collapsible=icon]:space-y-4">
             {groups.map((group) => (
-                <SidebarGroup key={group.title} className="px-2 py-0">
-                    {group.title !== 'Workspace' && (
-                        <SidebarGroupLabel className="text-sidebar-foreground text-xs font-medium tracking-normal normal-case">
+                <SidebarGroup key={group.title} className="px-3 py-0 group-data-[collapsible=icon]:px-2">
+                    {group.title !== 'Workspace' && !(group.items.length === 1 && group.items[0].title === group.title) && (
+                        <SidebarGroupLabel className="text-sidebar-foreground mb-1 h-6 px-2 text-xs font-medium tracking-normal normal-case group-data-[collapsible=icon]:-mt-6 group-data-[collapsible=icon]:mb-0">
                             {group.title}
                         </SidebarGroupLabel>
                     )}

@@ -4,8 +4,8 @@ import { mainNavGroups } from '@shared/config/navigation';
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" position="relative" className="border-r-0">
-            <SidebarContent className="pt-5 pb-4">
+        <Sidebar collapsible="icon" position="relative">
+            <SidebarContent className="py-4">
                 <NavMain groups={mainNavGroups} />
             </SidebarContent>
         </Sidebar>

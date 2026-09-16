@@ -9,7 +9,7 @@ import { SidebarTrigger } from '@shared/components/ui/sidebar';
 import { UserMenuContent } from '@shared/components/user-menu-content';
 import { useInitials } from '@shared/hooks/use-initials';
 import { type BreadcrumbItem, type SharedData } from '@shared/types';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Menu } from 'lucide-react';
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItem[] }) {
     const { auth } = usePage<SharedData>().props;
@@ -24,15 +24,17 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
                 Skip to content
             </a>
             <div className="flex min-w-0 items-center gap-3">
-                <SidebarTrigger className="text-white/65 hover:bg-white/10 hover:text-white" />
+                <SidebarTrigger className="text-white/65 hover:bg-white/10 hover:text-white">
+                    <Menu />
+                </SidebarTrigger>
 
                 <Link
                     href="/dashboard"
                     prefetch
                     className="flex shrink-0 items-center gap-2 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
                 >
-                    <img src="/images/avatar.png" alt="" className="size-7 rounded-sm object-cover" />
-                    <span className="text-sm font-semibold tracking-tight">karti.dev</span>
+                    <img src="/images/avatar.png" alt="" className="size-6 rounded-sm object-cover" />
+                    <span className="text-sm font-medium">karti.dev</span>
                 </Link>
 
                 <Separator orientation="vertical" className="hidden !h-5 bg-white/15 sm:block" />
