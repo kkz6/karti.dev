@@ -126,6 +126,8 @@ test('invalid disposable and honeypot submissions do not create records', functi
 ]);
 
 test('form timestamp rejects instantaneous and expired submissions', function () {
+    $this->freezeTime();
+
     foreach ([now(), now()->subDays(2)] as $started) {
         $this->post(route('newsletter.subscribe'), array_replace($this->payload, [
             'started_at' => Crypt::encryptString((string) $started->timestamp),
