@@ -2,7 +2,6 @@
 
 namespace Modules\Photography\Tables;
 
-use Modules\Media\Models\Media;
 use Modules\Photography\Models\Photo;
 use Modules\Table\Action;
 use Modules\Table\Columns;
@@ -17,8 +16,11 @@ class Photos extends Table
     public function columns(): array
     {
         return [
-            Columns\TextColumn::make('id', 'ID', stickable: true),
-            Columns\TextColumn::make('title', 'Title', toggleable: false)->searchable(),
+            Columns\TextColumn::make('id', 'ID', stickable: true)
+                ->url(fn (Photo $photo) => route('admin.photography.show', $photo->id)),
+            Columns\TextColumn::make('title', 'Title', toggleable: false)
+                ->url(fn (Photo $photo) => route('admin.photography.show', $photo->id))
+                ->searchable(),
             Columns\TextColumn::make('slug', 'Slug')->searchable(),
             Columns\BooleanColumn::make('featured', 'Featured'),
             Columns\NumericColumn::make('sort_order', 'Order')->sortable(),

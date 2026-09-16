@@ -81,4 +81,22 @@ class Photo extends Model
     {
         return 'slug';
     }
+
+    /**
+     * Resolve admin links generated with a numeric ID while retaining slug URLs.
+     *
+     * @param mixed       $value
+     * @param string|null $field
+     */
+    public function resolveRouteBinding($value, $field = null): ?Model
+    {
+        if ($field === null && ctype_digit((string) $value)) {
+            return $this->newQuery()->find($value)
+                ?? $this->newQuery()->where($this->getRouteKeyName(), $value)->first();
+        }
+
+        return $this->newQuery()
+            ->where($field ?? $this->getRouteKeyName(), $value)
+            ->first();
+    }
 }

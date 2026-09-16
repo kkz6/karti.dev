@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shar
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
 import { ArrowLeft, Edit, Image, Trash2 } from 'lucide-react';
-import { type PhotoCollection, type PhotoGalleryShowPageProps } from '../types';
+import { type PhotoGalleryShowPageProps } from '../types';
 
 export default function Show({ collection }: PhotoGalleryShowPageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
@@ -18,20 +18,13 @@ export default function Show({ collection }: PhotoGalleryShowPageProps) {
     };
 
     const handleManagePhotos = () => {
-        window.location.href = route('admin.photography.photos.index', collection.id);
+        window.location.href = route('admin.photography.edit', { photography: collection.id });
     };
 
     const handleDelete = () => {
         if (confirm('Are you sure you want to delete this collection? This action cannot be undone.')) {
             router.delete(route('admin.photography.destroy', { photography: collection.slug }));
         }
-    };
-
-    const formatBytes = (bytes?: number) => {
-        if (!bytes) return '—';
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(1024));
-        return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
     };
 
     const getStatusColor = (status: string) => {
@@ -63,7 +56,7 @@ export default function Show({ collection }: PhotoGalleryShowPageProps) {
                     <div className="flex items-center space-x-2">
                         <Button variant="outline" onClick={handleManagePhotos}>
                             <Image className="mr-2 h-4 w-4" />
-                            Manage Photos ({collection.photos?.length || 0})
+                            Manage Gallery ({collection.photos?.length || 0})
                         </Button>
                         <Button variant="outline" onClick={handleEdit}>
                             <Edit className="mr-2 h-4 w-4" />
@@ -192,7 +185,7 @@ export default function Show({ collection }: PhotoGalleryShowPageProps) {
                                 )}
                                 <Button className="mt-4 w-full" variant="outline" onClick={handleManagePhotos}>
                                     <Image className="mr-2 h-4 w-4" />
-                                    Manage Photos
+                                    Manage Gallery
                                 </Button>
                             </CardContent>
                         </Card>

@@ -61,10 +61,13 @@ class HandleInertiaRequests extends Middleware
                 if (File::exists($appLangPath)) {
                     $translations = $translations->merge(
                         collect(File::allFiles($appLangPath))
-                            ->flatMap(fn ($file) => Arr::dot(
-                                File::getRequire($file->getRealPath()),
-                                $file->getBasename('.'.$file->getExtension()).'.'
-                            ))
+                            ->flatMap(function ($file) {
+                                $translation = File::getRequire($file->getRealPath());
+
+                                return is_array($translation)
+                                    ? Arr::dot($translation, $file->getBasename('.'.$file->getExtension()).'.')
+                                    : [];
+                            })
                     );
                 }
 
@@ -77,10 +80,13 @@ class HandleInertiaRequests extends Middleware
                         if (File::exists($moduleLangPath)) {
                             $translations = $translations->merge(
                                 collect(File::allFiles($moduleLangPath))
-                                    ->flatMap(fn ($file) => Arr::dot(
-                                        File::getRequire($file->getRealPath()),
-                                        basename($module).'.'.$file->getBasename('.'.$file->getExtension()).'.'
-                                    ))
+                                    ->flatMap(function ($file) use ($module) {
+                                        $translation = File::getRequire($file->getRealPath());
+
+                                        return is_array($translation)
+                                            ? Arr::dot($translation, basename($module).'.'.$file->getBasename('.'.$file->getExtension()).'.')
+                                            : [];
+                                    })
                             );
                         }
                     }

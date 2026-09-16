@@ -2,28 +2,12 @@ import { Head } from '@inertiajs/react';
 import { Button } from '@shared/components/ui/button';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
-import { type Action, InertiaTableWrapper, type TableConfig } from '@table/components';
+import { InertiaTableWrapper, type TableConfig } from '@table/components';
 import { Camera, Image, PlusSquare } from 'lucide-react';
-import { type Category, type PhotoGallery } from '../types';
+import { type PhotoGallery } from '../types';
 
-export default function Index({ photos, categories }: { photos: TableConfig<PhotoGallery>; categories: Category[] }) {
+export default function Index({ photos }: { photos: TableConfig<PhotoGallery> }) {
     const breadcrumbs: BreadcrumbItem[] = [{ title: 'Photography', href: route('admin.photography.index') }];
-
-    const handleCustomAction = async (action: Action, keys: (string | number)[], onFinish?: () => void) => {
-        const photoId = typeof keys[0] === 'string' ? parseInt(keys[0]) : keys[0];
-        const photo = photos.results?.data?.find((item) => item._primary_key === photoId);
-
-        if (photo) {
-            if (action.id === 'edit') {
-                window.location.href = route('admin.photography.edit', { photography: photo.id });
-            }
-            if (action.id === 'show') {
-                window.location.href = route('admin.photography.show', { photography: photo.id });
-            }
-        }
-
-        if (onFinish) onFinish();
-    };
 
     const handleCreateGallery = () => {
         window.location.href = route('admin.photography.create');
@@ -54,7 +38,6 @@ export default function Index({ photos, categories }: { photos: TableConfig<Phot
                             onClick: handleCreateGallery,
                         },
                     }}
-                    onCustomAction={handleCustomAction}
                 />
             </div>
         </AppLayout>

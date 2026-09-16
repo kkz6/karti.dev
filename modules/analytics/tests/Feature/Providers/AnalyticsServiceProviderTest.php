@@ -1,8 +1,10 @@
 <?php
 
-namespace Modules\Analytics\Tests;
+use Modules\Analytics\Providers\AnalyticsServiceProvider;
 
-class AnalyticsServiceProviderTest extends TestCase
-{
-	// TODO
-}
+test('analytics service provider is registered', function () {
+    expect(app()->getLoadedProviders())
+        ->toHaveKey(AnalyticsServiceProvider::class)
+        ->and(app()->getLoadedProviders()[AnalyticsServiceProvider::class])
+        ->toBeTrue();
+});

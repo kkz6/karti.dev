@@ -2,6 +2,8 @@
  * Common types for the Photography module
  */
 
+import { type TableConfig } from '@table/components';
+
 export interface Category {
     id: number;
     name: string;
@@ -81,7 +83,7 @@ export interface PhotoGalleryCreateEditPageProps {
 }
 
 export interface PhotoGalleryIndexPageProps {
-    photos: any; // TableConfig<PhotoGallery> - keeping as any to avoid table dependencies
+    photos: TableConfig<PhotoGallery>;
     categories: Category[];
 }
 
