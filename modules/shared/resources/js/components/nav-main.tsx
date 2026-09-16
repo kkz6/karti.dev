@@ -73,10 +73,10 @@ function NavigationItems({ items }: { items: NavItem[] }) {
 
                 if (hasSubItems) {
                     return (
-                        <Collapsible key={item.title} asChild defaultOpen={isActive}>
-                            <SidebarMenuItem>
+                        <Collapsible key={`${item.title}-${isActive}`} asChild defaultOpen={isActive}>
+                            <SidebarMenuItem className="group/collapsible">
                                 <CollapsibleTrigger asChild>
-                                    <SidebarMenuButton tooltip={{ children: item.title }}>
+                                    <SidebarMenuButton isActive={isActive} tooltip={{ children: item.title }}>
                                         {item.icon && <item.icon />}
                                         <span>{item.title}</span>
                                         <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -107,7 +107,7 @@ function NavigationItems({ items }: { items: NavItem[] }) {
                 return (
                     <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton asChild isActive={isActive} tooltip={{ children: item.title }}>
-                            <Link href={item.href} prefetch>
+                            <Link href={item.href} prefetch aria-current={isActive ? 'page' : undefined}>
                                 {item.icon && <item.icon />}
                                 <span>{item.title}</span>
                             </Link>
@@ -124,7 +124,11 @@ export function NavMain({ groups = [] }: { groups: NavGroup[] }) {
         <nav aria-label="Main navigation" className="space-y-4">
             {groups.map((group) => (
                 <SidebarGroup key={group.title} className="px-2 py-0">
-                    {group.title !== 'Workspace' && <SidebarGroupLabel>{group.title}</SidebarGroupLabel>}
+                    {group.title !== 'Workspace' && (
+                        <SidebarGroupLabel className="text-sidebar-foreground text-xs font-medium tracking-normal normal-case">
+                            {group.title}
+                        </SidebarGroupLabel>
+                    )}
                     <NavigationItems items={group.items} />
                 </SidebarGroup>
             ))}

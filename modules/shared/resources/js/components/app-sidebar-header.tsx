@@ -1,4 +1,4 @@
-import { usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import AppearanceToggleDropdown from '@shared/components/appearance-dropdown';
 import { Breadcrumbs } from '@shared/components/breadcrumbs';
 import { Avatar, AvatarFallback, AvatarImage } from '@shared/components/ui/avatar';
@@ -16,14 +16,29 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
     const getInitials = useInitials();
 
     return (
-        <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center border-b border-white/10 bg-[#202124] px-3 text-white shadow-sm transition-[height] md:px-4">
+        <header className="relative z-30 flex h-14 shrink-0 items-center gap-4 bg-[#252528] px-3 text-white md:px-4">
+            <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-40 focus:bg-white focus:p-2 focus:text-black"
+            >
+                Skip to content
+            </a>
             <div className="flex min-w-0 items-center gap-3">
                 <SidebarTrigger className="text-white/65 hover:bg-white/10 hover:text-white" />
+
+                <Link
+                    href="/dashboard"
+                    prefetch
+                    className="flex shrink-0 items-center gap-2 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                >
+                    <img src="/images/avatar.png" alt="" className="size-7 rounded-sm object-cover" />
+                    <span className="text-sm font-semibold tracking-tight">karti.dev</span>
+                </Link>
 
                 <Separator orientation="vertical" className="hidden !h-5 bg-white/15 sm:block" />
 
                 {breadcrumbs.length > 0 && (
-                    <div className="hidden min-w-0 md:block [&_[data-slot=breadcrumb-link]]:text-white/60 [&_[data-slot=breadcrumb-link]]:hover:text-white [&_[data-slot=breadcrumb-list]]:text-white/45 [&_[data-slot=breadcrumb-page]]:text-white [&_[data-slot=breadcrumb-separator]]:text-white/30">
+                    <div className="hidden min-w-0 overflow-hidden md:block [&_[data-slot=breadcrumb-link]]:text-white/70 [&_[data-slot=breadcrumb-link]]:hover:text-white [&_[data-slot=breadcrumb-list]]:flex-nowrap [&_[data-slot=breadcrumb-list]]:whitespace-nowrap [&_[data-slot=breadcrumb-list]]:text-white/60 [&_[data-slot=breadcrumb-page]]:text-white [&_[data-slot=breadcrumb-separator]]:text-white/40">
                         <Breadcrumbs breadcrumbs={breadcrumbs} />
                     </div>
                 )}

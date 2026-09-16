@@ -241,6 +241,29 @@
     --shadow-2xl: 0 36px 64px -14px oklch(0 0 0 / 0.65);
 }
 
+/* The admin shell has a neutral navigation pane and a distinct content surface. */
+.admin-workspace {
+    --sidebar: #f4f4f5;
+    --sidebar-foreground: #45454d;
+    --sidebar-accent: #e7e7e9;
+    --sidebar-accent-foreground: #252528;
+    --sidebar-border: #dedee2;
+    --background: #f7f7f8;
+    --card: #ffffff;
+    --border: #e4e4e7;
+}
+
+.dark .admin-workspace {
+    --sidebar: #202023;
+    --sidebar-foreground: #d4d4d8;
+    --sidebar-accent: #303034;
+    --sidebar-accent-foreground: #fafafa;
+    --sidebar-border: #38383d;
+    --background: #202023;
+    --card: #27272a;
+    --border: #38383d;
+}
+
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
@@ -929,4 +952,3 @@
     @apply bg-background text-foreground;
   }
 }
-
