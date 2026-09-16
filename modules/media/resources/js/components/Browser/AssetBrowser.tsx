@@ -267,7 +267,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
     return (
         <div
             ref={elementRef}
-            className="asset-browser relative flex h-full"
+            className="asset-browser relative flex h-full overflow-hidden"
         >
             {showSidebar && (
                 <div className="asset-browser-sidebar w-64 bg-gray-50 p-4 dark:bg-gray-800">
@@ -352,22 +352,11 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
 
                 {/* Scrollable Content Area */}
                 <div
-                    className="asset-browser-content relative flex-1 overflow-y-auto pb-20"
+                    className="asset-browser-content flex-1 overflow-y-auto pb-20"
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
                 >
-                    {canEdit && draggingFile && (
-                        <div className="pointer-events-none absolute inset-3 z-20 flex items-center justify-center rounded-xl border-2 border-dashed border-primary/60 bg-primary/5 p-6 text-center">
-                            <div className="rounded-full bg-background p-3 shadow-sm">
-                                <UploadCloud className="h-7 w-7 text-primary" />
-                            </div>
-                            <div className="ml-3 text-left">
-                                <p className="font-semibold text-foreground">Drop files to upload</p>
-                                <p className="text-muted-foreground text-sm">Release to add them to this folder.</p>
-                            </div>
-                        </div>
-                    )}
                     {/* Upload Progress */}
                     {uploads.length > 0 && (
                         <div className="uploads-section border-b bg-card p-4">
@@ -494,6 +483,18 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                     </div>
                 )}
             </div>
+
+            {canEdit && draggingFile && (
+                <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center border-2 border-dotted border-primary/80 bg-card/95 p-6 text-center backdrop-blur-[1px]">
+                    <div className="rounded-full bg-background p-3 shadow-sm">
+                        <UploadCloud className="h-7 w-7 text-primary" />
+                    </div>
+                    <div className="ml-3 text-left">
+                        <p className="font-semibold text-foreground">Drop files to upload</p>
+                        <p className="text-muted-foreground text-sm">Release to add them to this folder.</p>
+                    </div>
+                </div>
+            )}
 
             {/* Asset Deleter */}
             {showAssetDeleter && (
