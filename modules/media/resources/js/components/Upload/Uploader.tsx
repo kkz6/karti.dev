@@ -21,6 +21,35 @@ export interface UploaderRef {
 
 const MAX_UPLOAD_SIZE = 25 * 1024 * 1024;
 
+function uploadErrorMessage(error: unknown): string {
+    if (!axios.isAxiosError(error)) {
+        return error instanceof Error ? error.message : 'The upload could not be completed.';
+    }
+
+    const { response } = error;
+    const data = response?.data;
+
+    if (data && typeof data === 'object') {
+        if (typeof data.message === 'string' && data.message.trim()) {
+            return data.message;
+        }
+
+        if (data.errors && typeof data.errors === 'object') {
+            const validationMessage = Object.values(data.errors).flat().find((message): message is string => typeof message === 'string');
+
+            if (validationMessage) {
+                return validationMessage;
+            }
+        }
+    }
+
+    if (typeof data === 'string' && data.trim() && !data.trimStart().startsWith('<')) {
+        return data;
+    }
+
+    return `Upload failed${response?.status ? ` (HTTP ${response.status})` : ''}: ${error.message}`;
+}
+
 export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
     ({ container = null, path = null, onUploadComplete, onError, onUpdated }, ref) => {
         const fileInputRef = useRef<HTMLInputElement>(null);
@@ -105,22 +134,8 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
                         onError?.('Upload failed');
                         
                     }
-                } catch (error: any) {
-                    let errorMessage = 'Network error';
-
-                    if (error.response) {
-                        if (error.response.status === 413) {
-                            errorMessage = error.response.data?.message || 'This file exceeds the 25 MB upload limit.';
-                        } else if (error.response.status === 409) {
-                            errorMessage = error.response.data?.message || `A file named "${file.name}" already exists in this folder.`;
-                        } else if (error.response.status === 422) {
-                            errorMessage = error.response.data?.message || 'Invalid file type or format';
-                        } else if (error.response.status >= 500) {
-                            errorMessage = 'Server error occurred during upload. Please try again.';
-                        } else {
-                            errorMessage = error.response.data?.message || 'Upload failed';
-                        }
-                    }
+                } catch (error: unknown) {
+                    const errorMessage = uploadErrorMessage(error);
 
                     setUploads((prev) => prev.map((u) => (u.id === uuid ? { ...u, status: 'error' as const, error: errorMessage } : u)));
                     onError?.(errorMessage);

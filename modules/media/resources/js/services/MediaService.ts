@@ -142,12 +142,17 @@ export class MediaService {
             let errorMessage = 'Failed to upload files';
 
             if (error.response) {
-                if (error.response.status === 413) {
-                    errorMessage = 'File size is too large. Please choose a smaller file.';
-                } else if (error.response.data?.message) {
-                    errorMessage = error.response.data.message;
+                const responseData = error.response.data;
+
+                if (responseData?.message) {
+                    errorMessage = responseData.message;
+                } else if (responseData?.errors) {
+                    const validationMessage = Object.values(responseData.errors).flat().find((message): message is string => typeof message === 'string');
+                    errorMessage = validationMessage || errorMessage;
+                } else if (typeof responseData === 'string' && !responseData.trimStart().startsWith('<')) {
+                    errorMessage = responseData;
                 } else {
-                    errorMessage = `Upload failed (${error.response.status})`;
+                    errorMessage = `Upload failed (${error.response.status}): ${error.message}`;
                 }
             } else if (error instanceof Error) {
                 errorMessage = error.message;
