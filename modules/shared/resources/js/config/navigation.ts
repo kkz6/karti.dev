@@ -1,4 +1,4 @@
-import { type NavItem } from '@shared/types';
+import { type NavGroup, type NavItem } from '@shared/types';
 import { Camera, Files, FileText, Folder, FolderOpen, LayoutGrid, Mic, Tags, Wrench } from 'lucide-react';
 
 /**
@@ -57,5 +57,20 @@ export const mainNavItems: NavItem[] = [
         title: 'Tools',
         href: route('admin.tools.index'),
         icon: Wrench,
+    },
+];
+
+export const mainNavGroups: NavGroup[] = [
+    {
+        title: 'Workspace',
+        items: mainNavItems.filter((item) => item.title === 'Dashboard'),
+    },
+    {
+        title: 'Content',
+        items: mainNavItems.filter((item) => ['Articles', 'Photography', 'Media Manager', 'Projects', 'Speaking'].includes(item.title)),
+    },
+    {
+        title: 'Tools',
+        items: mainNavItems.filter((item) => item.title === 'Tools'),
     },
 ];
