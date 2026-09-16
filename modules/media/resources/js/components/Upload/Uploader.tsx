@@ -21,7 +21,7 @@ export interface UploaderRef {
 
 const MAX_UPLOAD_SIZE = 25 * 1024 * 1024;
 
-function uploadErrorMessage(error: unknown): string {
+function uploadErrorMessage(error: unknown, file: File): string {
     if (!axios.isAxiosError(error)) {
         return error instanceof Error ? error.message : 'The upload could not be completed.';
     }
@@ -45,6 +45,10 @@ function uploadErrorMessage(error: unknown): string {
 
     if (typeof data === 'string' && data.trim() && !data.trimStart().startsWith('<')) {
         return data;
+    }
+
+    if (response?.status === 413) {
+        return `File "${file.name}" (${(file.size / 1024 / 1024).toFixed(1)} MB) exceeds the server upload limit.`;
     }
 
     return `Upload failed${response?.status ? ` (HTTP ${response.status})` : ''}: ${error.message}`;
@@ -135,7 +139,7 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
                         
                     }
                 } catch (error: unknown) {
-                    const errorMessage = uploadErrorMessage(error);
+                    const errorMessage = uploadErrorMessage(error, file);
 
                     setUploads((prev) => prev.map((u) => (u.id === uuid ? { ...u, status: 'error' as const, error: errorMessage } : u)));
                     onError?.(errorMessage);

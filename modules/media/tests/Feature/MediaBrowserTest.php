@@ -142,3 +142,21 @@ it('reports the upload limit when a file is too large', function () {
         ->assertStatus(413)
         ->assertJsonPath('message', 'This file exceeds the 25 MB upload limit.');
 });
+
+it('reports the PHP upload limit when PHP rejects a file before validation', function () {
+    $file = new UploadedFile(
+        UploadedFile::fake()->image('php-limit.jpg')->getPathname(),
+        'php-limit.jpg',
+        'image/jpeg',
+        UPLOAD_ERR_INI_SIZE,
+        true,
+    );
+
+    $this->post('/admin/media', [
+        'disk' => 'public',
+        'path' => '/',
+        'file' => $file,
+    ])
+        ->assertStatus(413)
+        ->assertJsonPath('message', sprintf('This file exceeds the server upload limit of %s.', ini_get('upload_max_filesize')));
+});
