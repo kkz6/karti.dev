@@ -26,48 +26,53 @@ export const Upload: React.FC<UploadProps> = ({ extension, basename, percent, er
     const status = getStatus();
 
     return (
-        <tr className={`upload-row ${status}`}>
-            <td className="column-status p-2">
+        <tr className={`upload-row ${status} ${status === 'error' ? 'bg-destructive/5' : 'bg-card'}`}>
+            <td className="column-status px-4 py-3">
                 {status === 'error' ? (
-                    <AlertCircle className="h-4 w-4 text-red-500" />
+                    <AlertCircle className="h-5 w-5 text-destructive" />
                 ) : status === 'completed' ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-5 w-5 text-green-600" />
                 ) : (
                     <LoadingGraphic text="" />
                 )}
             </td>
 
-            <td className="column-thumbnail p-2">
+            <td className="column-thumbnail py-3 pr-3">
                 <div className="flex h-8 w-8 items-center justify-center">
                     <FileIcon extension={extension} className="h-6 w-6" />
                 </div>
             </td>
 
-            <td className="column-filename p-2">
+            <td className="column-filename py-3 pr-4">
                 <span className="filename font-medium">{basename}</span>
             </td>
 
             {status === 'error' ? (
-                <td className="column-error p-2 text-sm text-red-600">{error}</td>
+                <td className="column-error py-3 pr-4 text-sm text-destructive">{error}</td>
             ) : status === 'completed' ? (
-                <td className="column-progress p-2 text-sm text-green-600 font-medium">Upload completed successfully</td>
+                <td className="column-progress py-3 pr-4 text-sm font-medium text-green-600">Upload completed successfully</td>
             ) : (
-                <td className="column-progress p-2">
-                    <div className="w-full rounded-full bg-gray-200">
+                <td className="column-progress py-3 pr-4">
+                    <div className="h-1 w-full bg-muted">
                         <div
-                            className="rounded-full bg-blue-600 p-0.5 text-center text-xs leading-none font-medium text-blue-100 transition-all"
+                            className="h-1 bg-primary transition-all"
                             style={{ width: `${percent}%` }}
-                        >
-                            {percent}%
-                        </div>
+                        />
                     </div>
                 </td>
             )}
 
-            <td className="w-8 p-2">
+            <td className="w-12 px-3 py-3">
                 {status === 'error' && (
-                    <Button variant="ghost" size="sm" onClick={onClear} className="h-6 w-6 p-0 hover:bg-red-100">
-                        <X className="h-4 w-4 text-red-500" />
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        type="button"
+                        onClick={onClear}
+                        aria-label={`Dismiss ${basename} upload error`}
+                        className="h-8 w-8 rounded-none hover:bg-destructive/10"
+                    >
+                        <X className="h-4 w-4 text-destructive" />
                     </Button>
                 )}
             </td>

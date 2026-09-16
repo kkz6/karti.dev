@@ -13,10 +13,7 @@ export const Uploads: React.FC<UploadsProps> = ({ uploads, onClearUpload }) => {
   }
 
   return (
-    <div className="asset-upload-listing bg-white border border-gray-200 rounded-lg overflow-hidden">
-      <div className="asset-upload-listing-header bg-gray-50 px-4 py-2 border-b">
-        <h6 className="font-semibold text-gray-900">Upload</h6>
-      </div>
+    <div className="asset-upload-listing border-border border-y bg-card">
       <div className="overflow-x-auto">
         <table className="w-full">
           <tbody>
