@@ -64,7 +64,7 @@ const ModalModal = ({ active, onClickOutside, children, sticky, initialFocusRef 
         ? React.cloneElement(footer, {
               children: React.Children.map(footer.props.children, (child, index) => {
                   if (index === 0 && React.isValidElement(child)) {
-                      return React.cloneElement(child as React.ReactElement<any>, {
+                      return React.cloneElement(child as React.ReactElement<{ ref?: React.Ref<HTMLElement> }>, {
                           ref: focusRef,
                       });
                   }

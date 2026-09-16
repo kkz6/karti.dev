@@ -1,5 +1,6 @@
 <?php
 
 test('blog service provider is registered', function () {
-    expect(app()->bound('Modules\Blog\Providers\BlogServiceProvider'))->toBeTrue();
+    expect(app()->getProvider(\Modules\Blog\Providers\BlogServiceProvider::class))
+        ->toBeInstanceOf(\Modules\Blog\Providers\BlogServiceProvider::class);
 });

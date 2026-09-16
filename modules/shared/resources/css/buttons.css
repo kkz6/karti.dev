@@ -1,0 +1,71 @@
+/* One action size throughout admin, including dialogs portaled to body.
+ * Public-site CTAs and specialised field/calendar/editor widgets stay untouched.
+ * The marker also covers anchors and AlertDialog actions using buttonVariants(). */
+body:has(.admin-workspace) {
+    --action-height: var(--control-height);
+    --action-padding: 0.75rem;
+    --action-gap: 0.5rem;
+    --action-font-size: 0.875rem;
+    --action-radius: calc(var(--radius) - 2px);
+}
+
+body:has(.admin-workspace) .ui-button:not(.ui-control, .ui-button-link, [data-slot='calendar'] *, [data-slot='editor-toolbar'] *, [role='toolbar'] *),
+.admin-workspace .it-row-actions > :is(a, button),
+.admin-workspace .it-row-actions-dropdown {
+    box-sizing: border-box;
+    height: var(--action-height);
+    min-height: var(--action-height);
+    flex-shrink: 0;
+    gap: var(--action-gap);
+    padding: 0 var(--action-padding);
+    border-width: 1px;
+    border-style: solid;
+    border-radius: var(--action-radius);
+    font-size: var(--action-font-size);
+    font-weight: 500;
+    line-height: 1.25rem;
+}
+
+body:has(.admin-workspace) .ui-button-icon:not([data-slot='calendar'] *, [data-slot='editor-toolbar'] *, [role='toolbar'] *),
+.admin-workspace .it-row-actions-dropdown {
+    width: var(--action-height);
+    padding-inline: 0;
+}
+
+body:has(.admin-workspace) .ui-button:not(.ui-control, .ui-button-outline, .ui-button-destructive-outline, .it-row-actions > *, [data-slot='calendar'] *, [data-slot='editor-toolbar'] *, [role='toolbar'] *) {
+    border-color: transparent;
+}
+
+/* Legacy icons carry margins in addition to gap; do not double that spacing. */
+body:has(.admin-workspace) .ui-button:not(.ui-control, [data-slot='calendar'] *, [data-slot='editor-toolbar'] *, [role='toolbar'] *) > svg,
+.admin-workspace .it-row-actions > :is(a, button) > svg {
+    width: 1rem;
+    height: 1rem;
+    margin-inline: 0;
+}
+
+body:has(.admin-workspace) :is(.ui-button-outline, .ui-button-destructive-outline) {
+    border-color: var(--input);
+    background: var(--card);
+}
+
+body:has(.admin-workspace) .ui-button-outline:not(:disabled, [aria-disabled='true']):hover {
+    background: var(--accent);
+}
+
+body:has(.admin-workspace) .ui-button-destructive-outline:not(:disabled, [aria-disabled='true']):hover {
+    background: color-mix(in oklab, var(--destructive) 8%, var(--card));
+    border-color: color-mix(in oklab, var(--destructive) 35%, var(--input));
+    color: var(--destructive);
+}
+
+/* Split actions are one joined control, not two separately rounded buttons. */
+body:has(.admin-workspace) .editor-save-group > .ui-button:first-child {
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+}
+body:has(.admin-workspace) .editor-save-group > .ui-button:last-child {
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+    border-inline-start-color: color-mix(in oklab, var(--primary-foreground) 25%, transparent);
+}

@@ -42,10 +42,13 @@ class TagController extends BaseController
      */
     public function store(TagData $dto): RedirectResponse
     {
-        $this->tagService->create($dto->toArray());
+        $tag = $this->tagService->create($dto->only('name', 'slug', 'description')->toArray());
+        if ($dto->seo !== null) {
+            $tag->updateSeo($dto->seo);
+        }
 
         return redirect()
-            ->route('admin.tags.index')
+            ->route('admin.tags.edit', $tag->id)
             ->with('success', 'Tag created successfully.');
     }
 
@@ -57,7 +60,7 @@ class TagController extends BaseController
         $tagData = $this->tagService->findOrFail($tag);
 
         return Inertia::render('blog::tags/edit', [
-            'tag' => $tagData,
+            'tag' => $tagData->load('seo'),
         ]);
     }
 
@@ -66,10 +69,14 @@ class TagController extends BaseController
      */
     public function update(TagData $dto, string $tag): RedirectResponse
     {
-        $this->tagService->update($tag, $dto->toArray());
+        $tagData = $this->tagService->findOrFail($tag);
+        $this->tagService->update($tag, $dto->only('name', 'slug', 'description')->toArray());
+        if ($dto->seo !== null) {
+            $tagData->updateSeo($dto->seo);
+        }
 
         return redirect()
-            ->route('admin.tags.index')
+            ->route('admin.tags.edit', $tagData->id)
             ->with('success', 'Tag updated successfully.');
     }
 

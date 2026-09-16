@@ -1,5 +1,5 @@
 import { DOMParser as ProseMirrorDOMParser } from '@tiptap/pm/model';
-import { EditorContent, EditorContext, useEditor } from '@tiptap/react';
+import { EditorContent, EditorContext, useEditor, useEditorState } from '@tiptap/react';
 import { marked } from 'marked';
 import * as React from 'react';
 
@@ -10,7 +10,7 @@ import { Subscript } from '@tiptap/extension-subscript';
 import { Superscript } from '@tiptap/extension-superscript';
 import { TextAlign } from '@tiptap/extension-text-align';
 import { Typography } from '@tiptap/extension-typography';
-import { Selection } from '@tiptap/extensions';
+import { Placeholder, Selection } from '@tiptap/extensions';
 import { StarterKit } from '@tiptap/starter-kit';
 
 // --- UI Primitives ---
@@ -21,6 +21,7 @@ import { Toolbar, ToolbarGroup, ToolbarSeparator } from '@shared/components/tipt
 // --- Tiptap Node ---
 import { ResizableImage } from '@shared/components/tiptap/extensions/resizable-image/resizable-image-extension';
 import '@shared/components/tiptap/extensions/resizable-image/resizable-image.scss';
+import '@shared/components/tiptap/form-simple-editor.scss';
 import '@shared/components/tiptap/tiptap-node/blockquote-node/blockquote-node.scss';
 import { CodeBlock } from '@shared/components/tiptap/tiptap-node/code-block-node';
 import '@shared/components/tiptap/tiptap-node/code-block-node/code-block-node.scss';
@@ -33,7 +34,6 @@ import '@shared/components/tiptap/tiptap-node/paragraph-node/paragraph-node.scss
 import '@shared/components/tiptap/tiptap-ui-primitive/button/button-colors.scss';
 import '@shared/components/tiptap/tiptap-ui-primitive/button/button.scss';
 import '@shared/components/tiptap/tiptap-ui-primitive/toolbar/toolbar.scss';
-import '@shared/components/tiptap/form-simple-editor.scss';
 
 // --- Tiptap UI ---
 import { BlockquoteButton } from '@shared/components/tiptap/tiptap-ui/blockquote-button';
@@ -59,6 +59,7 @@ import { LinkIcon } from '@shared/components/tiptap/tiptap-icons/link-icon';
 // --- Hooks ---
 import { useIsMobile } from '@shared/hooks/use-mobile';
 import { useTiptapEditor } from '@shared/hooks/use-tiptap-editor';
+import { getEditorReadingStats } from '@shared/lib/editor-reading-stats';
 
 // --- Components ---
 
@@ -185,6 +186,39 @@ interface FormSimpleEditorProps {
 export function FormSimpleEditor({ content: initialContent = '', onChange, placeholder }: FormSimpleEditorProps) {
     const isMobile = useIsMobile();
     const [mobileView, setMobileView] = React.useState<'main' | 'highlighter' | 'link'>('main');
+    const editorContainerRef = React.useRef<HTMLDivElement>(null);
+    const toolbarRef = React.useRef<HTMLDivElement>(null);
+    const [toolbarStuck, setToolbarStuck] = React.useState(false);
+
+    React.useEffect(() => {
+        let frame: number | null = null;
+        const updateStickyState = () => {
+            frame = null;
+            const container = editorContainerRef.current;
+            const toolbar = toolbarRef.current;
+            if (!container || !toolbar) return;
+
+            const naturalTop = container.getBoundingClientRect().top + container.clientTop;
+            setToolbarStuck(toolbar.getBoundingClientRect().top > naturalTop + 0.5);
+        };
+        const scheduleUpdate = () => {
+            if (frame === null) frame = requestAnimationFrame(updateStickyState);
+        };
+
+        // Capture nested admin scroll areas as well as document scrolling.
+        document.addEventListener('scroll', scheduleUpdate, { capture: true, passive: true });
+        window.addEventListener('resize', scheduleUpdate);
+        const observer = new ResizeObserver(scheduleUpdate);
+        if (editorContainerRef.current) observer.observe(editorContainerRef.current);
+        updateStickyState();
+
+        return () => {
+            document.removeEventListener('scroll', scheduleUpdate, true);
+            window.removeEventListener('resize', scheduleUpdate);
+            observer.disconnect();
+            if (frame !== null) cancelAnimationFrame(frame);
+        };
+    }, []);
 
     const editor = useEditor({
         immediatelyRender: false,
@@ -262,11 +296,18 @@ export function FormSimpleEditor({ content: initialContent = '', onChange, place
             Superscript,
             Subscript,
             Selection,
+            Placeholder.configure({ placeholder: placeholder || 'Start writing…' }),
         ],
         onUpdate: ({ editor }) => {
             onChange?.(editor.getHTML());
         },
     });
+
+    const readingStats =
+        useEditorState({
+            editor,
+            selector: ({ editor }) => getEditorReadingStats(editor?.getText() ?? ''),
+        }) ?? getEditorReadingStats('');
 
     React.useEffect(() => {
         if (!isMobile && mobileView !== 'main') {
@@ -281,9 +322,9 @@ export function FormSimpleEditor({ content: initialContent = '', onChange, place
     }, [initialContent, editor]);
 
     return (
-        <div className="form-simple-editor border-input w-full rounded-md border">
+        <div ref={editorContainerRef} className="form-simple-editor w-full rounded-lg border">
             <EditorContext.Provider value={{ editor }}>
-                <Toolbar aria-label="Text formatting">
+                <Toolbar ref={toolbarRef} aria-label="Text formatting" data-stuck={toolbarStuck}>
                     {mobileView === 'main' ? (
                         <MainToolbarContent
                             onHighlighterClick={() => setMobileView('highlighter')}
@@ -295,19 +336,14 @@ export function FormSimpleEditor({ content: initialContent = '', onChange, place
                     )}
                 </Toolbar>
 
-                <div
-                    className="w-full cursor-text overflow-hidden rounded-b-md"
-                    style={{
-                        minHeight: '200px',
-                        padding: '1rem',
-                    }}
-                    onClick={() => editor?.commands.focus()}
-                >
-                    <EditorContent
-                        editor={editor}
-                        role="presentation"
-                        className="simple-editor-content h-full w-full [&_.ProseMirror]:min-h-[168px] [&_.ProseMirror]:outline-none"
-                    />
+                <div className="form-simple-editor__body w-full cursor-text" onClick={() => editor?.commands.focus()}>
+                    <EditorContent editor={editor} role="presentation" className="simple-editor-content h-full w-full" />
+                </div>
+                <div className="form-simple-editor__footer">
+                    <span title="Estimated at 200 words per minute">{readingStats.readingTime} reading time</span>
+                    <span>
+                        {readingStats.words.toLocaleString()} {readingStats.words === 1 ? 'word' : 'words'}
+                    </span>
                 </div>
             </EditorContext.Provider>
         </div>

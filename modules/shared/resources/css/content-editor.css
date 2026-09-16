@@ -1,0 +1,130 @@
+/* Shared content-editing canvas. Keep media dialogs and nested widgets untouched. */
+.admin-workspace #main-content:has(.content-editor .tiptap-toolbar[data-stuck='true']) {
+    /* Let sticky editor toolbars meet the header without the shell's top gutter. */
+    margin-top: 0;
+}
+
+.content-index {
+    width: 100%;
+    padding: 1.5rem 1.5rem 3rem;
+}
+.content-editor {
+    --editor-panel-padding: 1.5rem;
+    width: 100%;
+    max-width: 1440px;
+    margin-inline: auto;
+    padding: 2rem 1.5rem 3rem;
+}
+
+.content-editor-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+    align-items: start;
+    margin-top: 1.5rem;
+}
+
+.content-editor-main,
+.content-editor-aside {
+    min-width: 0;
+}
+
+.content-editor .form-simple-editor {
+    min-width: 0;
+    max-width: 100%;
+}
+.content-editor-main > *,
+.content-editor-aside > * + * {
+    margin-top: 1.5rem;
+}
+.content-editor-main > :first-child {
+    margin-top: 0;
+}
+.content-editor-main > [data-slot='tabs-content'] {
+    margin-top: 0;
+}
+
+.content-editor-tabs > [data-slot='tabs-list'] {
+    display: flex;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 1rem;
+    height: auto;
+    padding: 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--border);
+    background: transparent;
+}
+
+.content-editor-tabs > [data-slot='tabs-list'] > [data-slot='tabs-trigger'] {
+    flex: none;
+    border: 0;
+    border-radius: 0;
+    padding: 0.75rem 0.5rem;
+    box-shadow: none;
+    background: transparent;
+    color: var(--muted-foreground);
+}
+.content-editor-tabs > [data-slot='tabs-list'] > [data-slot='tabs-trigger'][data-state='active'] {
+    color: var(--foreground);
+    box-shadow: inset 0 -2px var(--foreground);
+}
+.content-editor-tabs > [data-slot='tabs-list'] > [data-slot='tabs-trigger']::after {
+    display: none;
+}
+
+.content-editor-panel,
+.content-editor-card,
+.content-editor-main > [data-slot='tabs-content'] > [data-slot='card'],
+.content-editor-main > [data-slot='card'],
+.content-editor-aside > [data-slot='card'] {
+    gap: 0;
+    padding-block: 0;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--card);
+    box-shadow: 0 0 0 5px var(--editor-panel-ring, color-mix(in srgb, var(--sidebar) 85%, transparent));
+}
+.content-editor-panel,
+.content-editor-card > [data-slot='card-content'],
+.content-editor-main > [data-slot='tabs-content'] > [data-slot='card'] > [data-slot='card-content'],
+.content-editor-main > [data-slot='card'] > [data-slot='card-content'],
+.content-editor-aside > [data-slot='card'] > [data-slot='card-content'] {
+    padding: var(--editor-panel-padding, 1.5rem);
+}
+
+.content-editor-card > [data-slot='card-header'],
+.content-editor-main > [data-slot='tabs-content'] > [data-slot='card'] > [data-slot='card-header'],
+.content-editor-main > [data-slot='card'] > [data-slot='card-header'],
+.content-editor-aside > [data-slot='card'] > [data-slot='card-header'] {
+    padding: 1.25rem var(--editor-panel-padding, 1.5rem) 0;
+}
+
+@media (min-width: 1024px) {
+    .content-index {
+        padding: 1.5rem 3rem 4rem;
+    }
+    .content-editor {
+        padding: 2.5rem 3rem 4rem;
+    }
+    .content-editor-grid {
+        grid-template-columns: minmax(0, 1fr) 18rem;
+    }
+}
+@media (min-width: 1536px) {
+    .content-editor-grid {
+        grid-template-columns: minmax(0, 1fr) 20rem;
+    }
+}
+@media (max-width: 639px) {
+    .content-index {
+        padding: 1rem 1rem 2rem;
+    }
+    .content-editor {
+        --editor-panel-padding: 1rem;
+        padding: 1.25rem 1rem 2rem;
+    }
+    .content-editor-panel {
+        padding: 1rem;
+    }
+}

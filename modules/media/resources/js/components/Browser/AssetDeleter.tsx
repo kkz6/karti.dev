@@ -61,9 +61,9 @@ export const AssetDeleter: React.FC<AssetDeleterProps> = ({ assets, isOpen, onDe
             // Call success callback with deleted asset IDs
             onDeleted(assets.map((asset) => asset.id));
             onClosed();
-        } catch (error: any) {
+        } catch (error) {
             setIsDeleting(false);
-            const errorMessage = error.response?.data?.message || error.message || 'Failed to delete assets';
+            const errorMessage = (axios.isAxiosError<{ message?: string }>(error) && error.response?.data?.message) || (error instanceof Error ? error.message : 'Failed to delete assets');
             setErrors([errorMessage]);
         }
     };

@@ -1,6 +1,5 @@
 import { MediaFolder } from '@media/types/media';
-import { Button } from '@shared/components/ui/button';
-import { ChevronRight, Folder } from 'lucide-react';
+import { ChevronRight, FolderOpen } from 'lucide-react';
 import React from 'react';
 
 interface BreadcrumbsProps {
@@ -10,7 +9,7 @@ interface BreadcrumbsProps {
     onNavigated: (folder: MediaFolder) => void;
 }
 
-export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ path, folder, folders, onNavigated }) => {
+export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ path, folder, onNavigated }) => {
     const getPathParts = (): string[] => {
         const parts = ['/'];
         if (path === '/' || path === null || !folder) {
@@ -60,7 +59,6 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ path, folder, folders,
             path: selectedPath,
             title: selectedPath === '/' ? 'Root' : pathParts[partIndex],
             parent_path: parentPath,
-            container_id: folder?.container_id || '',
             created_at: '',
             updated_at: '',
         };
@@ -71,16 +69,29 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ path, folder, folders,
     const pathParts = getPathParts();
 
     return (
-        <div className="breadcrumbs flex items-center bg-gray-50 p-4 dark:bg-gray-800">
-            {pathParts.map((part, index) => (
-                <React.Fragment key={index}>
-                    {index > 0 && <ChevronRight className="mx-0.5 h-4 w-4 text-gray-400" />}
-                    <Button variant="ghost" size="sm" onClick={() => selectFolder(index)} className="flex items-center gap-1 px-2 text-sm">
-                        <Folder className="h-4 w-4" />
-                        {part === '/' ? 'Root' : part}
-                    </Button>
-                </React.Fragment>
-            ))}
-        </div>
+        <nav aria-label="Media folders" className="breadcrumbs min-w-0">
+            <ol className="flex min-h-7 flex-wrap items-center gap-x-1 gap-y-1 text-xs">
+                {pathParts.map((part, index) => (
+                    <li key={index} className="flex max-w-full min-w-0 items-center gap-1">
+                        {index > 0 && <ChevronRight className="text-muted-foreground/60 size-3 shrink-0" aria-hidden="true" />}
+                        {index === pathParts.length - 1 ? (
+                            <span aria-current="page" className="text-foreground inline-flex min-w-0 items-center gap-2 px-1.5 py-1 font-medium">
+                                {index === 0 && <FolderOpen className="text-muted-foreground size-3.5 shrink-0" aria-hidden="true" />}
+                                <span className="break-all">{part === '/' ? 'All files' : part}</span>
+                            </span>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => selectFolder(index)}
+                                className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring inline-flex min-w-0 items-center gap-2 rounded px-1.5 py-1 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                            >
+                                {index === 0 && <FolderOpen className="size-3.5 shrink-0" aria-hidden="true" />}
+                                <span className="break-all">{part === '/' ? 'All files' : part}</span>
+                            </button>
+                        )}
+                    </li>
+                ))}
+            </ol>
+        </nav>
     );
 };

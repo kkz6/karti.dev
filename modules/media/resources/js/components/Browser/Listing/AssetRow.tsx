@@ -1,11 +1,10 @@
 import { Button } from '@shared/components/ui/button';
 import { Checkbox } from '@shared/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
-import { Download, Edit, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Download, Edit, ImageOff, MoreHorizontal, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { MediaAsset } from '../../../types/media';
 import { FileIcon } from '../../Icons/FileIcon';
-import { ActionButton } from '../../UI/ActionButton';
 
 interface AssetRowProps {
     asset: MediaAsset;
@@ -31,6 +30,7 @@ export const AssetRow: React.FC<AssetRowProps> = ({
     onDoubleClicked,
 }) => {
     const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
+    const [failedThumbnail, setFailedThumbnail] = useState<string | null>(null);
 
     const isSelected = selectedAssets.includes(asset.id);
 
@@ -87,20 +87,21 @@ export const AssetRow: React.FC<AssetRowProps> = ({
     const thumbnailUrl = getThumbnailUrl();
 
     return (
-        <tr className="border-b border-gray-100 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700">
+        <tr data-selected={isSelected} className="border-border hover:bg-accent border-b">
             {/* Checkbox */}
             <td className="p-3">
-                <Checkbox checked={isSelected} onCheckedChange={handleCheckboxChange} />
+                <div className="media-selection-control flex size-8 items-center justify-center">
+                    <Checkbox aria-label={`Select ${asset.filename}`} checked={isSelected} onCheckedChange={handleCheckboxChange} />
+                </div>
             </td>
 
             {/* Thumbnail */}
             <td className="p-3">
-                <div
-                    className="flex h-8 w-8 cursor-pointer items-center justify-center overflow-hidden rounded"
-                    onDoubleClick={handleDoubleClick}
-                >
-                    {thumbnailUrl ? (
-                        <img src={thumbnailUrl} alt={asset.title} className="h-full w-full object-cover" />
+                <div className="flex h-8 w-8 cursor-pointer items-center justify-center overflow-hidden rounded" onDoubleClick={handleDoubleClick}>
+                    {thumbnailUrl && failedThumbnail !== thumbnailUrl ? (
+                        <img src={thumbnailUrl} alt="" onError={() => setFailedThumbnail(thumbnailUrl)} className="h-full w-full object-cover" />
+                    ) : asset.is_image ? (
+                        <ImageOff className="text-muted-foreground size-4" aria-label="Preview unavailable" />
                     ) : (
                         <FileIcon extension={asset.extension} className="h-6 w-6" />
                     )}
@@ -109,40 +110,43 @@ export const AssetRow: React.FC<AssetRowProps> = ({
 
             {/* Title */}
             <td className="p-3">
-                <div
-                    className="cursor-pointer text-sm font-medium text-gray-900 hover:text-blue-600 dark:text-gray-100 dark:hover:text-blue-400"
-                    onDoubleClick={handleDoubleClick}
+                <button
+                    type="button"
+                    className="text-foreground hover:text-primary focus-visible:outline-ring block max-w-full truncate text-left text-sm font-medium focus-visible:outline-2"
+                    onClick={() => (canEdit ? handleEdit() : onDoubleClicked(asset))}
                 >
                     {asset.title || asset.filename}
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">{asset.extension.toUpperCase()}</div>
+                </button>
+                <div className="text-muted-foreground text-xs">{asset.extension.toUpperCase()}</div>
             </td>
 
             {/* File Size */}
-            <td className="hidden p-3 text-sm text-gray-600 md:table-cell dark:text-gray-400">{formatFileSize(asset.size)}</td>
+            <td className="text-muted-foreground hidden p-3 text-sm md:table-cell">{formatFileSize(asset.size)}</td>
 
             {/* Date Modified */}
-            <td className="hidden p-3 text-sm text-gray-600 md:table-cell dark:text-gray-400">{formatDate(asset.updated_at)}</td>
-
-            {/* Direct Action Buttons */}
-            <td className="hidden p-3 md:table-cell">
-                {canEdit && (
-                    <div className="flex items-center gap-1">
-                        <ActionButton action={handleEdit} icon={Edit} tooltip="Edit" variant="ghost" />
-                        <ActionButton action={handleDelete} icon={Trash2} tooltip="Delete" variant="ghost" />
-                    </div>
-                )}
-            </td>
+            <td className="text-muted-foreground hidden p-3 text-sm md:table-cell">{formatDate(asset.updated_at)}</td>
 
             {/* More Actions */}
             <td className="p-3">
                 <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <Button variant="ghost" size="icon" aria-label={`Actions for ${asset.filename}`}>
                             <MoreHorizontal className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                        {canEdit && (
+                            <>
+                                <DropdownMenuItem onClick={handleEdit}>
+                                    <Edit />
+                                    Edit details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive" onClick={handleDelete}>
+                                    <Trash2 />
+                                    Delete
+                                </DropdownMenuItem>
+                            </>
+                        )}
                         <DropdownMenuItem onClick={handleDownload}>
                             <Download className="mr-2 h-4 w-4" />
                             Download

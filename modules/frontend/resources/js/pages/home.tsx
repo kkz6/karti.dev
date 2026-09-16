@@ -615,59 +615,6 @@ function Work({ roles }: { roles: Role[] }) {
     );
 }
 
-function NewsletterBand() {
-    const { onPointerMove } = useSpotlight();
-
-    return (
-        <section className="mt-28 md:mt-36" aria-labelledby="newsletter-heading">
-            <Container>
-                <div onPointerMove={onPointerMove} className="spotlight overflow-hidden rounded-3xl surface-elevated">
-                    <div className="terminal-window-header">
-                        <span className="terminal-window-dot red" />
-                        <span className="terminal-window-dot yellow" />
-                        <span className="terminal-window-dot green" />
-                        <span className="ml-2 font-mono text-xs text-muted-foreground">subscribe.sh</span>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-8 p-8 md:grid-cols-2 md:items-center md:p-12">
-                        <div>
-                            <p className="mb-4 font-mono text-sm text-muted-foreground">
-                                <span className="text-primary">$</span> ./subscribe <span className="caret" />
-                            </p>
-                            <h2 id="newsletter-heading" className="display-3 text-foreground">
-                                Get new writing in your inbox
-                            </h2>
-                            <p className="prose-measure mt-4 text-base leading-relaxed text-muted-foreground">
-                                Occasional notes on building software, travel, and the things in between. No spam,
-                                unsubscribe anytime.
-                            </p>
-                        </div>
-
-                        <form action="/thank-you" method="POST" className="md:justify-self-end md:pl-8">
-                            <label htmlFor="newsletter-email" className="label-mono mb-3 block">
-                                email address
-                            </label>
-                            <div className="flex flex-col gap-3 sm:flex-row">
-                                <input
-                                    id="newsletter-email"
-                                    type="email"
-                                    name="email"
-                                    placeholder="you@example.com"
-                                    required
-                                    className="min-w-0 flex-auto rounded-lg border border-border bg-background px-4 py-2.5 font-mono text-sm text-foreground transition-colors duration-200 placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none"
-                                />
-                                <Button type="submit" className="shrink-0 font-mono">
-                                    Subscribe
-                                </Button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </Container>
-        </section>
-    );
-}
-
 export default function Home({ articles = [], featuredPhotos = [], roles = [], seo, jsonLd }: HomeProps) {
     return (
         <PublicLayout>
@@ -679,7 +626,6 @@ export default function Home({ articles = [], featuredPhotos = [], roles = [], s
             <PhotoMarquee photos={featuredPhotos} />
             <Writing articles={articles} />
             <Work roles={roles} />
-            <NewsletterBand />
         </PublicLayout>
     );
 }

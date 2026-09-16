@@ -1,13 +1,13 @@
 import axios from 'axios';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { MediaUpload } from '../../types/media';
+import { MediaAsset, MediaUpload } from '../../types/media';
 
 interface UploaderProps {
     domElement?: HTMLDivElement | null;
     container?: string | null;
     path?: string | null;
     onProgress?: (upload: MediaUpload) => void;
-    onUploadComplete?: (item: any, uploads: MediaUpload[]) => void;
+    onUploadComplete?: (item: MediaAsset, uploads: MediaUpload[]) => void;
     onError?: (error: string) => void;
     onUpdated?: (uploads: MediaUpload[]) => void;
 }
@@ -62,7 +62,7 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
         const generateId = (): string => {
             return (1e7 + -1e3 + -4e3 + -8e3 + -1e11)
                 .toString()
-                .replace(/[018]/g, (c: any) => (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16));
+                .replace(/[018]/g, (c: string) => (Number(c) ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (Number(c) / 4)))).toString(16));
         };
 
         const browse = useCallback(() => {

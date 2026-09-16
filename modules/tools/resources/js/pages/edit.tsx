@@ -1,15 +1,17 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Head, Link, router } from '@inertiajs/react';
-import { Button } from '@shared/components/ui/button';
+import { Head, router } from '@inertiajs/react';
+import { CategoryPicker } from '@shared/components/category-picker';
+import { ContentEditorHeader, EditorErrorSummary, EditorPublishedControl, EditorViewLink } from '@shared/components/content-editor';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { Checkbox } from '@shared/components/ui/checkbox';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@shared/components/ui/form';
 import { Input } from '@shared/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components/ui/select';
 import { Textarea } from '@shared/components/ui/textarea';
+import { useEditorSave } from '@shared/hooks/use-editor-save';
 import AppLayout from '@shared/layouts/app-layout';
+import { LocalTrafficCard } from '@shared/components/local-traffic-card';
 import { type BreadcrumbItem } from '@shared/types';
-import { Save, Trash2 } from 'lucide-react';
+import type { BaseSyntheticEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -46,10 +48,9 @@ interface ToolCategory {
 export default function Edit({ tool, categories }: { tool: Tool; categories: ToolCategory[] }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Tools', href: route('admin.tools.index') },
-        { title: tool.title, href: route('admin.tools.show', tool.id) },
+        { title: tool.title, href: route('admin.tools.edit', tool.id) },
         { title: 'Edit', href: route('admin.tools.edit', tool.id) },
     ];
-
 
     const form = useForm<ToolFormData>({
         resolver: zodResolver(toolSchema),
@@ -64,11 +65,10 @@ export default function Edit({ tool, categories }: { tool: Tool; categories: Too
         },
     });
 
-    const onSubmit = (data: ToolFormData) => {
-        router.put(route('admin.tools.update', tool.id), data, {
-            preserveState: true,
-            preserveScroll: true,
-        });
+    const { saving, save } = useEditorSave(form, route('admin.tools.index'));
+
+    const onSubmit = (data: ToolFormData, event?: BaseSyntheticEvent) => {
+        save('put', route('admin.tools.update', tool.id), data, event);
     };
 
     const handleDelete = () => {
@@ -84,34 +84,24 @@ export default function Edit({ tool, categories }: { tool: Tool; categories: Too
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Edit Tool: ${tool.title}`} />
-            <div className="flex h-full flex-col space-y-6 p-8 pt-6">
-                <div className="mx-auto w-full max-w-7xl">
-                    {/* Header with Actions */}
-                    <div className="mb-6 flex items-center justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold tracking-tight">Edit Tool</h1>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                            <Button type="submit" form="tool-form" disabled={form.formState.isSubmitting}>
-                                <Save className="mr-2 h-4 w-4" />
-                                {form.formState.isSubmitting ? 'Updating...' : 'Update Tool'}
-                            </Button>
-                            <Button type="button" variant="outline" asChild>
-                                <Link href={route('admin.tools.show', tool.id)}>Cancel</Link>
-                            </Button>
-                            <Button type="button" variant="destructive" onClick={handleDelete}>
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                            </Button>
-                        </div>
-                    </div>
+            <div className="content-editor">
+                <div className="w-full">
+                    <ContentEditorHeader
+                        title={form.watch('title') || 'New tool'}
+                        status={form.watch('status')}
+                        formId="tool-form"
+                        processing={saving}
+                        backHref={route('admin.tools.index')}
+                        onDelete={handleDelete}
+                    />
+                    <EditorErrorSummary errors={form.formState.errors} />
 
                     <Form {...form}>
                         <form id="tool-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                             {/* Content Grid */}
-                            <div className="grid gap-8 lg:grid-cols-6">
+                            <div className="content-editor-grid">
                                 {/* Left column - 4/6 */}
-                                <div className="space-y-6 lg:col-span-4">
+                                <div className="content-editor-main space-y-6">
                                     {/* Basic Information */}
                                     <Card>
                                         <CardHeader>
@@ -119,31 +109,6 @@ export default function Edit({ tool, categories }: { tool: Tool; categories: Too
                                             <CardDescription>Update the basic details for the tool</CardDescription>
                                         </CardHeader>
                                         <CardContent className="space-y-4">
-                                            <FormField
-                                                control={form.control}
-                                                name="tool_category_id"
-                                                render={({ field }) => (
-                                                    <FormItem>
-                                                        <FormLabel>Category *</FormLabel>
-                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                            <FormControl>
-                                                                <SelectTrigger>
-                                                                    <SelectValue placeholder="Select a category" />
-                                                                </SelectTrigger>
-                                                            </FormControl>
-                                                            <SelectContent>
-                                                                {categories.map((category) => (
-                                                                    <SelectItem key={category.id} value={category.id.toString()}>
-                                                                        {category.name}
-                                                                    </SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />
-
                                             <FormField
                                                 control={form.control}
                                                 name="title"
@@ -191,31 +156,34 @@ export default function Edit({ tool, categories }: { tool: Tool; categories: Too
                                 </div>
 
                                 {/* Right column - 2/6 */}
-                                <div className="space-y-6 lg:col-span-2">
+                                <div className="content-editor-aside space-y-6">
+                                    <LocalTrafficCard />
+                                    <EditorViewLink href={route('uses')} published={tool.status === 'active'} />
+                                    <EditorPublishedControl
+                                        value={form.watch('status')}
+                                        publishedValue="active"
+                                        draftValue="inactive"
+                                        onChange={(value) => form.setValue('status', value, { shouldDirty: true })}
+                                        disabled={saving}
+                                        error={form.formState.errors.status?.message}
+                                    />
+
                                     {/* Publishing Options */}
                                     <Card>
-                                        <CardHeader>
-                                            <CardTitle>Publishing Options</CardTitle>
-                                            <CardDescription>Control tool visibility</CardDescription>
-                                        </CardHeader>
-                                        <CardContent className="space-y-4">
+                                        <CardContent className="space-y-6">
                                             <FormField
                                                 control={form.control}
-                                                name="status"
+                                                name="tool_category_id"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>Status</FormLabel>
-                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                            <FormControl>
-                                                                <SelectTrigger>
-                                                                    <SelectValue />
-                                                                </SelectTrigger>
-                                                            </FormControl>
-                                                            <SelectContent>
-                                                                <SelectItem value="active">Active</SelectItem>
-                                                                <SelectItem value="inactive">Inactive</SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
+                                                        <FormLabel>Category *</FormLabel>
+                                                        <FormControl>
+                                                            <CategoryPicker
+                                                                {...field}
+                                                                categories={categories}
+                                                                createUrl={route('admin.tool-categories.store')}
+                                                            />
+                                                        </FormControl>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}

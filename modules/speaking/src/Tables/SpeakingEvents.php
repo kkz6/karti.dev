@@ -16,8 +16,9 @@ class SpeakingEvents extends Table
     public function columns(): array
     {
         return [
-            Columns\TextColumn::make('id', 'ID', stickable: true)->url(fn(SpeakingEvent $event) => route('admin.speaking.show', $event)),
+            Columns\TextColumn::make('id', 'ID', stickable: true)->url(fn (SpeakingEvent $event) => route('admin.speaking.edit', $event)),
             Columns\TextColumn::make('title', 'Title', toggleable: false)
+                ->url(fn (SpeakingEvent $event) => route('admin.speaking.edit', $event))
                 ->searchable()
                 ->sortable(),
             Columns\TextColumn::make('event_name', 'Event', toggleable: false)
@@ -48,20 +49,15 @@ class SpeakingEvents extends Table
         return [
             Action::make(
                 label: 'Edit',
-                url: fn(SpeakingEvent $event) => route('admin.speaking.edit', $event),
+                url: fn (SpeakingEvent $event) => route('admin.speaking.edit', $event),
                 icon: 'pencil',
-                variant: Variant::Secondary,
-            ),
-            Action::make(
-                label: 'View',
-                url: fn(SpeakingEvent $event) => route('admin.speaking.show', $event),
-                icon: 'eye',
                 variant: Variant::Secondary,
             ),
             Action::make(
                 label: 'Delete',
                 handle: function (SpeakingEvent $event) {
                     $event->delete();
+
                     return back()->with('success', 'Speaking event deleted successfully.');
                 },
                 icon: 'trash',

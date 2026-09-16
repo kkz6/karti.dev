@@ -1,6 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Head, Link, router } from '@inertiajs/react';
-import { Button } from '@shared/components/ui/button';
+import { Head, router } from '@inertiajs/react';
+import { SEOFields } from '@seo/components/SeoFields';
+import { ContentEditorHeader, EditorErrorSummary, EditorPublishedControl, EditorViewLink } from '@shared/components/content-editor';
+import { DateField } from '@shared/components/date-field';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { Checkbox } from '@shared/components/ui/checkbox';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@shared/components/ui/form';
@@ -8,9 +10,11 @@ import { Input } from '@shared/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Textarea } from '@shared/components/ui/textarea';
+import { useEditorSave } from '@shared/hooks/use-editor-save';
 import AppLayout from '@shared/layouts/app-layout';
+import { LocalTrafficCard } from '@shared/components/local-traffic-card';
 import { type BreadcrumbItem } from '@shared/types';
-import { Save, Trash2 } from 'lucide-react';
+import type { BaseSyntheticEvent } from 'react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -58,7 +62,7 @@ interface SpeakingEvent {
 export default function Edit({ event }: { event: SpeakingEvent }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Speaking Events', href: route('admin.speaking.index') },
-        { title: event.title, href: route('admin.speaking.show', event.slug) },
+        { title: event.title, href: route('admin.speaking.edit', event.slug) },
         { title: 'Edit', href: route('admin.speaking.edit', event.slug) },
     ];
 
@@ -83,16 +87,10 @@ export default function Edit({ event }: { event: SpeakingEvent }) {
         },
     });
 
-    const onSubmit = (data: SpeakingEventFormData) => {
-        router.put(route('admin.speaking.update', event.slug), data, {
-            preserveState: true,
-            preserveScroll: true,
-            onError: (errors) => {
-                Object.entries(errors).forEach(([key, message]) => {
-                    form.setError(key as keyof SpeakingEventFormData, { type: 'server', message });
-                });
-            },
-        });
+    const { saving, save } = useEditorSave(form, route('admin.speaking.index'));
+
+    const onSubmit = (data: SpeakingEventFormData, submitEvent?: BaseSyntheticEvent) => {
+        save('put', route('admin.speaking.update', event.slug), data, submitEvent);
     };
 
     const handleDelete = () => {
@@ -108,32 +106,25 @@ export default function Edit({ event }: { event: SpeakingEvent }) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Edit Speaking Event: ${event.title}`} />
-            <div className="flex h-full flex-col space-y-6 p-8 pt-6">
-                <div className="mx-auto w-full max-w-7xl">
-                    {/* Header with Actions */}
-                    <div className="mb-6 flex items-center justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold tracking-tight">Edit Speaking Event</h1>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                            <Button type="submit" form="event-form" disabled={form.formState.isSubmitting}>
-                                <Save className="mr-2 h-4 w-4" />
-                                {form.formState.isSubmitting ? 'Updating...' : 'Update Event'}
-                            </Button>
-                            <Button type="button" variant="outline" asChild>
-                                <Link href={route('admin.speaking.show', event.slug)}>Cancel</Link>
-                            </Button>
-                            <Button type="button" variant="destructive" onClick={handleDelete}>
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                            </Button>
-                        </div>
-                    </div>
+            <div className="content-editor">
+                <div className="w-full">
+                    <ContentEditorHeader
+                        title={form.watch('title') || 'New speaking event'}
+                        status={form.watch('status')}
+                        formId="event-form"
+                        processing={saving}
+                        backHref={route('admin.speaking.index')}
+                        onArchive={() =>
+                            form.setValue('status', form.getValues('status') === 'archived' ? 'draft' : 'archived', { shouldDirty: true })
+                        }
+                        onDelete={handleDelete}
+                    />
+                    <EditorErrorSummary errors={form.formState.errors} />
 
                     <Form {...form}>
                         <form id="event-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                             {/* Tabs Header */}
-                            <Tabs defaultValue="main" value={activeTab} onValueChange={setActiveTab} className="w-full">
+                            <Tabs defaultValue="main" value={activeTab} onValueChange={setActiveTab} className="content-editor-tabs w-full">
                                 <TabsList className="border-border text-foreground h-auto gap-2 rounded-none border-b bg-transparent px-0 py-1">
                                     <TabsTrigger
                                         value="main"
@@ -150,9 +141,9 @@ export default function Edit({ event }: { event: SpeakingEvent }) {
                                 </TabsList>
 
                                 {/* Content Grid */}
-                                <div className="mt-6 grid gap-8 lg:grid-cols-6">
+                                <div className="content-editor-grid">
                                     {/* Left column with tab content - 4/6 */}
-                                    <div className="lg:col-span-4">
+                                    <div className="content-editor-main space-y-6">
                                         <TabsContent value="main" className="mt-0 space-y-6">
                                             {/* Basic Information */}
                                             <Card>
@@ -168,7 +159,11 @@ export default function Edit({ event }: { event: SpeakingEvent }) {
                                                             <FormItem>
                                                                 <FormLabel>Title *</FormLabel>
                                                                 <FormControl>
-                                                                    <Input {...field} placeholder="e.g., Building scalable applications with React" />
+                                                                    <Input
+                                                                        {...field}
+                                                                        value={field.value ?? ''}
+                                                                        placeholder="e.g., Building scalable applications with React"
+                                                                    />
                                                                 </FormControl>
                                                                 <FormMessage />
                                                             </FormItem>
@@ -182,7 +177,12 @@ export default function Edit({ event }: { event: SpeakingEvent }) {
                                                             <FormItem>
                                                                 <FormLabel>Description *</FormLabel>
                                                                 <FormControl>
-                                                                    <Textarea {...field} placeholder="Describe your talk or appearance..." rows={4} />
+                                                                    <Textarea
+                                                                        {...field}
+                                                                        value={field.value ?? ''}
+                                                                        placeholder="Describe your talk or appearance..."
+                                                                        rows={4}
+                                                                    />
                                                                 </FormControl>
                                                                 <FormMessage />
                                                             </FormItem>
@@ -197,7 +197,11 @@ export default function Edit({ event }: { event: SpeakingEvent }) {
                                                                 <FormItem>
                                                                     <FormLabel>Event Name *</FormLabel>
                                                                     <FormControl>
-                                                                        <Input {...field} placeholder="e.g., React Summit 2024" />
+                                                                        <Input
+                                                                            {...field}
+                                                                            value={field.value ?? ''}
+                                                                            placeholder="e.g., React Summit 2024"
+                                                                        />
                                                                     </FormControl>
                                                                     <FormMessage />
                                                                 </FormItem>
@@ -211,7 +215,7 @@ export default function Edit({ event }: { event: SpeakingEvent }) {
                                                                 <FormItem>
                                                                     <FormLabel>Event Date</FormLabel>
                                                                     <FormControl>
-                                                                        <Input {...field} type="date" />
+                                                                        <DateField {...field} label="Event date" />
                                                                     </FormControl>
                                                                     <FormMessage />
                                                                 </FormItem>
@@ -251,7 +255,11 @@ export default function Edit({ event }: { event: SpeakingEvent }) {
                                                                 <FormItem>
                                                                     <FormLabel>Location</FormLabel>
                                                                     <FormControl>
-                                                                        <Input {...field} placeholder="e.g., San Francisco, CA" />
+                                                                        <Input
+                                                                            {...field}
+                                                                            value={field.value ?? ''}
+                                                                            placeholder="e.g., San Francisco, CA"
+                                                                        />
                                                                     </FormControl>
                                                                     <FormMessage />
                                                                 </FormItem>
@@ -267,7 +275,12 @@ export default function Edit({ event }: { event: SpeakingEvent }) {
                                                                 <FormItem>
                                                                     <FormLabel>Event URL</FormLabel>
                                                                     <FormControl>
-                                                                        <Input {...field} placeholder="https://youtube.com/watch?v=..." type="url" />
+                                                                        <Input
+                                                                            {...field}
+                                                                            value={field.value ?? ''}
+                                                                            placeholder="https://youtube.com/watch?v=..."
+                                                                            type="url"
+                                                                        />
                                                                     </FormControl>
                                                                     <FormDescription>Link to video, podcast, or event page</FormDescription>
                                                                     <FormMessage />
@@ -282,7 +295,7 @@ export default function Edit({ event }: { event: SpeakingEvent }) {
                                                                 <FormItem>
                                                                     <FormLabel>CTA Text *</FormLabel>
                                                                     <FormControl>
-                                                                        <Input {...field} placeholder="e.g., Watch video" />
+                                                                        <Input {...field} value={field.value ?? ''} placeholder="e.g., Watch video" />
                                                                     </FormControl>
                                                                     <FormDescription>Button text for the event link</FormDescription>
                                                                     <FormMessage />
@@ -294,61 +307,43 @@ export default function Edit({ event }: { event: SpeakingEvent }) {
                                             </Card>
                                         </TabsContent>
 
-                                        <TabsContent value="seo" className="mt-0 space-y-6">
-                                            <Card>
-                                                <CardHeader>
-                                                    <CardTitle>SEO Settings</CardTitle>
-                                                    <CardDescription>Optimize your content for search engines</CardDescription>
-                                                </CardHeader>
-                                                <CardContent className="space-y-4">
-                                                    <FormField
-                                                        control={form.control}
-                                                        name="meta_title"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>Meta Title</FormLabel>
-                                                                <FormControl>
-                                                                    <Input {...field} placeholder="SEO title for search engines" maxLength={60} />
-                                                                </FormControl>
-                                                                <FormDescription>{(field.value || '').length}/60 characters</FormDescription>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-
-                                                    <FormField
-                                                        control={form.control}
-                                                        name="meta_description"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>Meta Description</FormLabel>
-                                                                <FormControl>
-                                                                    <Textarea
-                                                                        {...field}
-                                                                        placeholder="Brief description for search engine results"
-                                                                        rows={3}
-                                                                        maxLength={160}
-                                                                    />
-                                                                </FormControl>
-                                                                <FormDescription>{(field.value || '').length}/160 characters</FormDescription>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-                                                </CardContent>
-                                            </Card>
+                                        <TabsContent value="seo" className="mt-0">
+                                            <SEOFields
+                                                previewPath="/speaking"
+                                                metadataOnly
+                                                showSlug={false}
+                                                data={{
+                                                    meta_title: form.watch('meta_title') ?? '',
+                                                    meta_description: form.watch('meta_description') ?? '',
+                                                    slug: form.watch('slug'),
+                                                }}
+                                                setData={(key, value) => {
+                                                    if ((key === 'meta_title' || key === 'meta_description') && typeof value === 'string')
+                                                        form.setValue(key, value);
+                                                }}
+                                                errors={form.formState.errors}
+                                                fallbackTitle={form.watch('title')}
+                                                fallbackDescription={form.watch('description')}
+                                            />
                                         </TabsContent>
                                     </div>
 
                                     {/* Right column - fixed - 2/6 */}
-                                    <div className="space-y-6 lg:col-span-2">
+                                    <div className="content-editor-aside space-y-6">
+                                        <LocalTrafficCard />
+                                        <EditorViewLink href={route('speaking')} published={event.status === 'published'} />
+                                        <EditorPublishedControl
+                                            value={form.watch('status')}
+                                            publishedValue="published"
+                                            draftValue="draft"
+                                            onChange={(value) => form.setValue('status', value, { shouldDirty: true })}
+                                            disabled={saving}
+                                            error={form.formState.errors.status?.message}
+                                        />
+
                                         {/* URL Settings */}
                                         <Card>
-                                            <CardHeader>
-                                                <CardTitle>URL Settings</CardTitle>
-                                                <CardDescription>Configure the URL for this event</CardDescription>
-                                            </CardHeader>
-                                            <CardContent>
+                                            <CardContent className="space-y-6">
                                                 <FormField
                                                     control={form.control}
                                                     name="slug"
@@ -356,41 +351,9 @@ export default function Edit({ event }: { event: SpeakingEvent }) {
                                                         <FormItem>
                                                             <FormLabel>Event Slug *</FormLabel>
                                                             <FormControl>
-                                                                <Input {...field} placeholder="url-friendly-slug" />
+                                                                <Input {...field} value={field.value ?? ''} placeholder="url-friendly-slug" />
                                                             </FormControl>
                                                             <FormDescription>Used in URLs.</FormDescription>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
-                                            </CardContent>
-                                        </Card>
-
-                                        {/* Publishing Options */}
-                                        <Card>
-                                            <CardHeader>
-                                                <CardTitle>Publishing Options</CardTitle>
-                                                <CardDescription>Control event visibility</CardDescription>
-                                            </CardHeader>
-                                            <CardContent className="space-y-4">
-                                                <FormField
-                                                    control={form.control}
-                                                    name="status"
-                                                    render={({ field }) => (
-                                                        <FormItem>
-                                                            <FormLabel>Status</FormLabel>
-                                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                                <FormControl>
-                                                                    <SelectTrigger>
-                                                                        <SelectValue />
-                                                                    </SelectTrigger>
-                                                                </FormControl>
-                                                                <SelectContent>
-                                                                    <SelectItem value="draft">Draft</SelectItem>
-                                                                    <SelectItem value="published">Published</SelectItem>
-                                                                    <SelectItem value="archived">Archived</SelectItem>
-                                                                </SelectContent>
-                                                            </Select>
                                                             <FormMessage />
                                                         </FormItem>
                                                     )}

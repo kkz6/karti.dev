@@ -1,4 +1,5 @@
 import { ArticleForm } from '../components';
+import type { Tag } from '../types';
 
 interface Category {
     id: number;
@@ -6,6 +7,6 @@ interface Category {
     slug: string;
 }
 
-export default function Create({ categories }: { categories: Category[]; }) {
-    return <ArticleForm categories={categories} />;
+export default function Create({ categories, tags = [] }: { categories: Category[]; tags?: Tag[] }) {
+    return <ArticleForm categories={categories} tags={tags} />;
 }

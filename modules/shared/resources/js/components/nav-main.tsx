@@ -13,52 +13,7 @@ import {
 } from '@shared/components/ui/sidebar';
 import { type NavGroup, type NavItem, type SharedData } from '@shared/types';
 import { ChevronRight } from 'lucide-react';
-
-// Helper function to check if a route is active
-function isRouteActive(currentRouteName: string | null, itemHref: string): boolean {
-    if (!currentRouteName) return false;
-
-    // Map specific href patterns to route name patterns
-    if (itemHref.includes('/dashboard') && currentRouteName === 'dashboard') return true;
-
-    // Blog routes
-    if (itemHref.includes('/admin/blog') && !itemHref.includes('/categories') && !itemHref.includes('/tags')) {
-        return currentRouteName.startsWith('admin.blog');
-    }
-
-    // Categories routes
-    if (itemHref.includes('/admin/blog/categories') || itemHref.includes('categories')) {
-        return currentRouteName.startsWith('admin.categories');
-    }
-
-    // Tags routes
-    if (itemHref.includes('/admin/blog/tags') || itemHref.includes('tags')) {
-        return currentRouteName.startsWith('admin.tags');
-    }
-
-    // Other admin routes
-    if (itemHref.includes('/admin/photography')) {
-        return currentRouteName.startsWith('admin.photography');
-    }
-
-    if (itemHref.includes('/admin/projects')) {
-        return currentRouteName.startsWith('admin.projects');
-    }
-
-    if (itemHref.includes('/admin/speaking')) {
-        return currentRouteName.startsWith('admin.speaking');
-    }
-
-    if (itemHref.includes('/admin/tools')) {
-        return currentRouteName.startsWith('admin.tools');
-    }
-
-    if (itemHref.includes('media-manager')) {
-        return currentRouteName === 'media-manager';
-    }
-
-    return false;
-}
+import { isRouteActive } from '@shared/lib/navigation-active';
 
 function NavigationItems({ items }: { items: NavItem[] }) {
     const page = usePage<SharedData>();

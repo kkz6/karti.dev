@@ -30,7 +30,7 @@ export const FolderTile: React.FC<FolderTileProps> = ({ folder, canEdit, onSelec
     };
 
     return (
-        <div className="folder-tile group cursor-pointer rounded-lg border border-gray-200 bg-white transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+        <div className="folder-tile border-border bg-card text-card-foreground group cursor-pointer rounded-lg border transition-shadow hover:shadow-md">
             <div className="relative">
                 {/* Actions Dropdown */}
                 {canEdit && (
@@ -39,8 +39,9 @@ export const FolderTile: React.FC<FolderTileProps> = ({ folder, canEdit, onSelec
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     variant="ghost"
-                                    size="sm"
-                                    className="h-8 w-8 bg-white/80 p-0 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
+                                    size="icon"
+                                    aria-label={`Actions for ${folder.title}`}
+                                    className="bg-card/90"
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <MoreHorizontal className="h-4 w-4" />
@@ -51,7 +52,7 @@ export const FolderTile: React.FC<FolderTileProps> = ({ folder, canEdit, onSelec
                                     <Edit className="mr-2 h-4 w-4" />
                                     Rename
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={handleDelete} className="text-red-600">
+                                <DropdownMenuItem onClick={handleDelete} className="text-destructive">
                                     <Trash2 className="mr-2 h-4 w-4" />
                                     Delete
                                 </DropdownMenuItem>
@@ -61,18 +62,27 @@ export const FolderTile: React.FC<FolderTileProps> = ({ folder, canEdit, onSelec
                 )}
 
                 {/* Folder Icon */}
-                <div
-                    className="folder-thumb-container flex aspect-square items-center justify-center rounded-t-lg bg-blue-50 dark:bg-blue-900"
-                    onDoubleClick={handleDoubleClick}
+                <button
+                    type="button"
+                    aria-label={`Open ${folder.title}`}
+                    className="folder-thumb-container focus-visible:outline-ring bg-muted flex aspect-square w-full items-center justify-center rounded-t-lg focus-visible:outline-2"
+                    onClick={handleDoubleClick}
                 >
-                    <Folder className="h-10 w-10 text-blue-500" />
-                </div>
+                    <Folder className="text-muted-foreground h-10 w-10" />
+                </button>
             </div>
 
             {/* Folder Info */}
-            <div className="folder-meta p-2" onDoubleClick={handleDoubleClick}>
-                <div className="folder-name truncate text-xs font-medium text-gray-900 dark:text-gray-100">{folder.title}</div>
-                <div className="folder-details text-xs text-gray-500 dark:text-gray-400">Folder</div>
+            <div className="folder-meta p-2">
+                <button
+                    type="button"
+                    onClick={handleDoubleClick}
+                    title={folder.title}
+                    className="folder-name text-foreground hover:text-primary focus-visible:outline-ring mb-1 block w-full truncate text-left text-sm font-medium focus-visible:outline-2"
+                >
+                    {folder.title}
+                </button>
+                <div className="folder-details text-muted-foreground text-xs">Folder</div>
             </div>
         </div>
     );

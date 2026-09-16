@@ -1,20 +1,24 @@
+import { IndexHeader } from '@shared/components/index-header';
 import { Button } from '@shared/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
 import { Input } from '@shared/components/ui/input';
-import { Toggle } from '@shared/components/ui/toggle';
-import { AlertCircle, Grid, List, Search, UploadCloud, X } from 'lucide-react';
-import React, { useCallback, useEffect, useState } from 'react';
+import { FolderOpen, FolderPlus, Grid, List, ListX, MoreHorizontal, Search, UploadCloud } from 'lucide-react';
+import React, { useCallback, useState } from 'react';
 import { toast } from 'sonner';
+import '../../../css/media-workspace.css';
 import { useMediaBrowser } from '../../hooks/useMediaBrowser';
 import { MediaAsset, MediaFolder } from '../../types/media';
 import { AssetEditor } from '../Editor/AssetEditor';
 import { LoadingGraphic } from '../UI/LoadingGraphic';
 import { Uploader } from '../Upload/Uploader';
+import { Uploads } from '../Upload/Uploads';
 import { AssetDeleter } from './AssetDeleter';
 import { GridListing, TableListing } from './Listing';
 import { Breadcrumbs } from './Navigation/Breadcrumbs';
 import { FolderEditor } from './Navigation/FolderEditor';
 
 interface AssetBrowserProps {
+    indexPage?: boolean;
     selectedContainer?: string | null;
     selectedPath?: string | null;
     selectedPathUuid?: string | null;
@@ -30,12 +34,12 @@ interface AssetBrowserProps {
 }
 
 export const AssetBrowser: React.FC<AssetBrowserProps> = ({
+    indexPage = false,
     selectedContainer = null,
     selectedPath = null,
-    selectedPathUuid = null,
+    selectedAssets: controlledSelections,
+    maxFiles,
     restrictNavigation = false,
-    selectedAssets = [],
-    maxFiles = 10,
     canEdit = false,
     children,
     onNavigated,
@@ -53,7 +57,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
         pagination,
         searchTerm,
         isSearching,
-        selectedAssets: browserSelectedAssets,
+        selectedAssets: internalSelections,
         displayMode,
         uploads,
         loadingAssets,
@@ -70,7 +74,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
         selectContainer,
         selectAsset,
         deselectAsset,
-        clearSelections,
+        clearSelections: clearInternalSelections,
         sortBy,
         goToPage,
         setDisplayMode,
@@ -93,12 +97,11 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
     const [showFolderEditor, setShowFolderEditor] = useState<boolean>(false);
     const [editedFolderPath, setEditedFolderPath] = useState<string | null>(null);
 
-    // Effect to sync external selectedAssets with internal state
-    useEffect(() => {
-        if (onSelectionsUpdated) {
-            onSelectionsUpdated(browserSelectedAssets);
-        }
-    }, [browserSelectedAssets, onSelectionsUpdated]);
+    const browserSelectedAssets = controlledSelections ?? internalSelections;
+    const clearSelections = useCallback(() => {
+        if (controlledSelections !== undefined) onSelectionsUpdated?.([]);
+        else clearInternalSelections();
+    }, [controlledSelections, onSelectionsUpdated, clearInternalSelections]);
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
@@ -120,31 +123,42 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
         dropFile(e);
     };
 
-    const clearUpload = useCallback((uploadId: string) => {
-        uploaderRef.current?.clear(uploadId);
-    }, [uploaderRef]);
+    const clearUpload = useCallback(
+        (uploadId: string) => {
+            uploaderRef.current?.clear(uploadId);
+        },
+        [uploaderRef],
+    );
 
     const clearUploads = useCallback(() => {
         uploaderRef.current?.clearAll();
     }, [uploaderRef]);
 
-    const handleUploadsUpdated = useCallback((updatedUploads: typeof uploads) => {
-        setUploads(updatedUploads);
-    }, [setUploads]);
+    const handleUploadsUpdated = useCallback(
+        (updatedUploads: typeof uploads) => {
+            setUploads(updatedUploads);
+        },
+        [setUploads],
+    );
 
-    const handleAssetSelected = useCallback(
-        (assetId: string) => {
+    const handleAssetSelected = (assetId: string) => {
+        if (browserSelectedAssets.includes(assetId)) return;
+        if (maxFiles && maxFiles > 1 && browserSelectedAssets.length >= maxFiles) {
+            toast.error(`Choose up to ${maxFiles} files.`);
+            return;
+        }
+        if (controlledSelections !== undefined) {
+            onSelectionsUpdated?.(maxFiles === 1 ? [assetId] : [...browserSelectedAssets, assetId]);
+        } else {
+            if (maxFiles === 1) clearInternalSelections();
             selectAsset(assetId);
-        },
-        [selectAsset],
-    );
+        }
+    };
 
-    const handleAssetDeselected = useCallback(
-        (assetId: string) => {
-            deselectAsset(assetId);
-        },
-        [deselectAsset],
-    );
+    const handleAssetDeselected = (assetId: string) => {
+        if (controlledSelections !== undefined) onSelectionsUpdated?.(browserSelectedAssets.filter((id) => id !== assetId));
+        else deselectAsset(assetId);
+    };
 
     const handleAssetEditing = useCallback(
         (assetId: string) => {
@@ -236,7 +250,36 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
         setShowFolderCreator(true);
     };
 
-    const maxFilesReached = maxFiles && selectedAssets.length >= maxFiles;
+    const libraryActions = (
+        <>
+            <div className="media-view-toggle isolate inline-flex shrink-0" role="group" aria-label="Asset view">
+                <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label="Grid view"
+                    aria-pressed={displayMode === 'grid'}
+                    onClick={() => setDisplayMode('grid')}
+                >
+                    <Grid />
+                </Button>
+                <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label="Table view"
+                    aria-pressed={displayMode === 'table'}
+                    onClick={() => setDisplayMode('table')}
+                >
+                    <List />
+                </Button>
+            </div>
+            {canEdit && !restrictNavigation && !isSearching && (
+                <Button type="button" variant="outline" onClick={handleCreateFolder}>
+                    <FolderPlus aria-hidden="true" />
+                    New folder
+                </Button>
+            )}
+        </>
+    );
 
     if (loadError) {
         return (
@@ -267,15 +310,15 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
     return (
         <div
             ref={elementRef}
-            className="asset-browser relative flex h-full overflow-hidden"
+            className={`asset-browser media-workspace relative flex h-full min-h-0 overflow-hidden ${indexPage ? '' : 'media-picker'}`}
         >
             {showSidebar && (
-                <div className="asset-browser-sidebar w-64 bg-gray-50 p-4 dark:bg-gray-800">
+                <div className="asset-browser-sidebar bg-muted/30 w-64 p-4">
                     <h4 className="mb-4 font-semibold">Containers</h4>
                     {Object.values(containers).map((c) => (
                         <div
                             key={c.id}
-                            className={`sidebar-item cursor-pointer rounded p-2 hover:bg-gray-100 dark:hover:bg-gray-700 ${container?.id === c.id ? 'bg-gray-200 dark:bg-gray-600' : ''}`}
+                            className={`sidebar-item hover:bg-accent cursor-pointer rounded p-2 ${container?.id === c.id ? 'bg-accent text-accent-foreground' : ''}`}
                         >
                             <button type="button" onClick={() => selectContainer(c.id)} className="w-full text-left">
                                 {c.title}
@@ -285,212 +328,209 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                 </div>
             )}
 
-            <div className="asset-browser-main flex min-h-0 flex-1 flex-col">
-                <div className="asset-browser-header shrink-0 bg-gray-50 p-4 dark:bg-gray-800">
-                    <div className="mb-4 flex items-center justify-between">
-                        <h1 className="flex items-center gap-2 text-xl font-semibold">
-                            {isSearching ? 'Search Results' : folder?.title || folder?.path || path}
-                            {loadingAssets && <LoadingGraphic text="" />}
-                        </h1>
-                    </div>
-
-                    <div className="asset-browser-actions flex flex-wrap items-center gap-4">
-                        {!browserSelectedAssets.length && (
-                            <div className="relative">
-                                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
-                                <Input
-                                    type="text"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    placeholder="Search"
-                                    className="w-64 pl-9"
-                                />
-                            </div>
-                        )}
-
-                        {browserSelectedAssets.length > 0 && (
-                            <div className="flex gap-2">
-                                <Button variant="destructive" onClick={handleDeleteAssets}>
-                                    Delete
-                                </Button>
-                                <Button variant="outline" onClick={() => clearSelections()}>
-                                    Uncheck All
-                                </Button>
-                                {onMoveAssets && (
-                                    <Button variant="outline" onClick={onMoveAssets}>
-                                        Move
+            <div className="asset-browser-main flex min-h-0 min-w-0 flex-1 flex-col">
+                {indexPage && (
+                    <div className="mb-8 shrink-0">
+                        <IndexHeader
+                            title="Media Manager"
+                            icon={FolderOpen}
+                            actions={
+                                canEdit && (
+                                    <Button type="button" onClick={uploadFile}>
+                                        <UploadCloud aria-hidden="true" />
+                                        Upload files
                                     </Button>
-                                )}
-                            </div>
-                        )}
-
-                        <div className="flex gap-1">
-                            <Toggle pressed={displayMode === 'grid'} onPressedChange={() => setDisplayMode('grid')} aria-label="Grid view">
-                                <Grid className="h-4 w-4" />
-                            </Toggle>
-                            <Toggle pressed={displayMode === 'table'} onPressedChange={() => setDisplayMode('table')} aria-label="Table view">
-                                <List className="h-4 w-4" />
-                            </Toggle>
-                        </div>
-
-                        <div className="flex gap-2">
-                            {!restrictNavigation && !isSearching && (
-                                <Button variant="outline" onClick={handleCreateFolder}>
-                                    New Folder
-                                </Button>
-                            )}
-                            {!isSearching && (
-                                <Button variant="outline" onClick={uploadFile}>
-                                    Upload
-                                </Button>
-                            )}
-                        </div>
-
-                        {children}
-                    </div>
-                </div>
-
-                {/* Scrollable Content Area */}
-                <div
-                    className="asset-browser-content flex-1 overflow-y-auto pb-20"
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                >
-                    {/* Upload Progress */}
-                    {uploads.length > 0 && (
-                        <div className="uploads-section border-b bg-card p-4">
-                            <div className="mb-3 flex items-center justify-between">
-                                <h3 className="font-semibold">
-                                    {uploads.some(u => u.status === 'uploading') ? 'Uploading files...' : 'Upload Status'}
-                                </h3>
-                                {uploads.length > 1 && !uploads.some(u => u.status === 'uploading') && (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={clearUploads}
-                                        className="h-auto px-2 py-1 text-xs"
-                                    >
-                                        Clear All
-                                    </Button>
-                                )}
-                            </div>
-                            {uploads.map((upload) => (
-                                <div
-                                    key={upload.id}
-                                    className={`upload-item mb-2 rounded-lg border p-3 last:mb-0 ${
-                                        upload.status === 'error' ? 'border-destructive/25 bg-destructive/5' : 'border-border bg-background'
-                                    }`}
-                                >
-                                    <div className="flex items-center gap-2 text-sm">
-                                        {upload.status === 'error' && <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />}
-                                        <span className="flex-1 truncate font-medium">{upload.name}</span>
-                                        {upload.status === 'error' ? (
-                                            <span className="shrink-0 font-medium text-destructive">Could not upload</span>
-                                        ) : upload.status === 'completed' ? (
-                                            <span className="text-green-600 font-medium shrink-0">Completed</span>
-                                        ) : (
-                                            <span className="shrink-0">{upload.progress}%</span>
-                                        )}
-                                        {(upload.status === 'error' || upload.status === 'completed') && (
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                type="button"
-                                                onClick={() => clearUpload(upload.id)}
-                                                aria-label={`Dismiss ${upload.name} upload status`}
-                                                className="h-6 w-6 shrink-0"
-                                            >
-                                                <X className="h-4 w-4" />
-                                            </Button>
-                                        )}
-                                    </div>
-                                    {upload.status === 'error' ? (
-                                        <div className="mt-1 text-sm text-destructive">{upload.error}</div>
-                                    ) : upload.status === 'completed' ? (
-                                        <div className="text-sm text-green-600 mt-1">Upload completed successfully</div>
-                                    ) : (
-                                        <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
-                                            <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${upload.progress}%` }} />
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* Asset Listing */}
-                    {displayMode === 'grid' ? (
-                        <GridListing
-                            container={container?.id || ''}
-                            assets={assets}
-                            folder={folder}
-                            subfolders={folders}
-                            loading={loading}
-                            selectedAssets={browserSelectedAssets}
-                            restrictNavigation={restrictNavigation}
-                            isSearching={isSearching}
-                            canEdit={canEdit}
-                            onFolderSelected={handleFolderSelected}
-                            onFolderEditing={handleFolderEditing}
-                            onAssetSelected={handleAssetSelected}
-                            onAssetDeselected={handleAssetDeselected}
-                            onAssetEditing={handleAssetEditing}
-                            onAssetDeleting={handleAssetDeleting}
-                            onAssetDownloading={handleAssetDownloading}
-                            onAssetDoubleClicked={handleAssetDoubleClicked}
-                            onSorted={sortBy}
-                            onFolderDeleted={loadAssets}
+                                )
+                            }
                         />
-                    ) : (
-                        <TableListing
-                            container={container?.id || ''}
-                            assets={assets}
-                            folder={folder}
-                            subfolders={folders}
-                            loading={loading}
-                            selectedAssets={browserSelectedAssets}
-                            restrictNavigation={restrictNavigation}
-                            isSearching={isSearching}
-                            canEdit={canEdit}
-                            onFolderSelected={handleFolderSelected}
-                            onFolderEditing={handleFolderEditing}
-                            onAssetSelected={handleAssetSelected}
-                            onAssetDeselected={handleAssetDeselected}
-                            onAssetEditing={handleAssetEditing}
-                            onAssetDeleting={handleAssetDeleting}
-                            onAssetDownloading={handleAssetDownloading}
-                            onAssetDoubleClicked={handleAssetDoubleClicked}
-                            onSorted={sortBy}
-                            onFolderDeleted={loadAssets}
-                        />
-                    )}
-
-                    {isSearching && isEmpty && (
-                        <div className="no-results py-12 text-center">
-                            <h2 className="text-lg font-semibold text-gray-500">No Search Results</h2>
-                        </div>
-                    )}
-
-                    {/* Pagination */}
-                    {pagination && <div className="pagination-section p-4">{/* You'll need to implement pagination component */}</div>}
-                </div>
-
-                {/* Fixed Breadcrumbs Footer */}
-                {!restrictNavigation && !isSearching && (
-                    <div className="absolute right-0 bottom-0 left-0 z-10 border-t bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                        <Breadcrumbs path={path} folder={folder} folders={folders} onNavigated={handleFolderSelected} />
                     </div>
                 )}
+                <div
+                    className={
+                        indexPage ? 'asset-browser-header mb-4 shrink-0' : 'asset-browser-header border-border bg-card shrink-0 border-b px-5 py-4'
+                    }
+                >
+                    <div className="asset-browser-actions flex flex-wrap items-center gap-3">
+                        <div className="relative w-full min-w-0 sm:w-auto sm:max-w-sm sm:flex-1">
+                            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                            <Input
+                                type="search"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder="Search files…"
+                                aria-label="Search media"
+                                className="w-full pl-9"
+                            />
+                        </div>
+                        <div className="ml-auto flex flex-wrap items-center gap-2">
+                            {libraryActions}
+                            {!indexPage && canEdit && (
+                                <Button onClick={uploadFile}>
+                                    <UploadCloud aria-hidden="true" />
+                                    Upload files
+                                </Button>
+                            )}
+                        </div>
+                        {children}
+                    </div>
+                    {!indexPage && !restrictNavigation && (
+                        <div className="mt-3">
+                            <Breadcrumbs path={path} folder={folder} folders={folders} onNavigated={handleFolderSelected} />
+                        </div>
+                    )}
+                    {indexPage && browserSelectedAssets.length > 0 && (
+                        <div className="mt-3 flex items-center gap-2 text-sm">
+                            <span className="text-muted-foreground tabular-nums" role="status">
+                                {browserSelectedAssets.length} selected
+                            </span>
+                            <Button variant="ghost" onClick={clearSelections}>
+                                <ListX aria-hidden="true" />
+                                Clear
+                            </Button>
+                            {canEdit && (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" aria-label="Selection actions">
+                                            <MoreHorizontal />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="start">
+                                        {onMoveAssets && <DropdownMenuItem onSelect={onMoveAssets}>Move selected files</DropdownMenuItem>}
+                                        <DropdownMenuItem className="text-destructive" onSelect={handleDeleteAssets}>
+                                            Delete selected files
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                <div className={indexPage ? 'media-library-panel flex min-h-0 flex-1 flex-col' : 'contents'}>
+                    {indexPage && !restrictNavigation && (
+                        <div className="media-location mb-3 shrink-0">
+                            <Breadcrumbs path={path} folder={folder} folders={folders} onNavigated={handleFolderSelected} />
+                        </div>
+                    )}
+                    {/* Scrollable Content Area */}
+                    <div
+                        className={`asset-browser-content relative min-h-0 overflow-auto ${indexPage ? 'bg-card rounded-lg border' : 'flex-1'}`}
+                        aria-busy={loadingAssets}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                    >
+                        <Uploads uploads={uploads} onClearUpload={clearUpload} onClearAll={clearUploads} />
+
+                        {/* Asset Listing */}
+                        {displayMode === 'grid' ? (
+                            <GridListing
+                                container={container?.id || ''}
+                                assets={assets}
+                                folder={folder}
+                                subfolders={folders}
+                                loading={loading}
+                                selectedAssets={browserSelectedAssets}
+                                restrictNavigation={restrictNavigation}
+                                isSearching={isSearching}
+                                canEdit={canEdit}
+                                onFolderSelected={handleFolderSelected}
+                                onFolderEditing={handleFolderEditing}
+                                onAssetSelected={handleAssetSelected}
+                                onAssetDeselected={handleAssetDeselected}
+                                onAssetEditing={handleAssetEditing}
+                                onAssetDeleting={handleAssetDeleting}
+                                onAssetDownloading={handleAssetDownloading}
+                                onAssetDoubleClicked={handleAssetDoubleClicked}
+                                onSorted={sortBy}
+                                onFolderDeleted={loadAssets}
+                            />
+                        ) : (
+                            <TableListing
+                                container={container?.id || ''}
+                                assets={assets}
+                                folder={folder}
+                                subfolders={folders}
+                                loading={loading}
+                                selectedAssets={browserSelectedAssets}
+                                restrictNavigation={restrictNavigation}
+                                isSearching={isSearching}
+                                canEdit={canEdit}
+                                onFolderSelected={handleFolderSelected}
+                                onFolderEditing={handleFolderEditing}
+                                onAssetSelected={handleAssetSelected}
+                                onAssetDeselected={handleAssetDeselected}
+                                onAssetEditing={handleAssetEditing}
+                                onAssetDeleting={handleAssetDeleting}
+                                onAssetDownloading={handleAssetDownloading}
+                                onAssetDoubleClicked={handleAssetDoubleClicked}
+                                onSorted={sortBy}
+                                onFolderDeleted={loadAssets}
+                            />
+                        )}
+
+                        {!loading && isEmpty && (
+                            <div className="no-results flex min-h-48 flex-col items-center justify-center gap-2 p-6 text-center">
+                                <FolderOpen className="text-muted-foreground mb-2 size-8" aria-hidden="true" />
+                                <h2 className="font-medium">{isSearching ? 'No matching files' : 'This folder is empty'}</h2>
+                                <p className="text-muted-foreground text-sm">
+                                    {isSearching
+                                        ? 'Try another search or clear it to browse this folder.'
+                                        : 'Upload files or drag them into this area to get started.'}
+                                </p>
+                                {isSearching && (
+                                    <Button variant="outline" onClick={() => setSearchTerm('')}>
+                                        Clear search
+                                    </Button>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {
+                        <div
+                            className={`media-library-footer text-muted-foreground flex shrink-0 flex-wrap items-center justify-between gap-2 text-xs ${indexPage ? 'mt-4' : 'border-t px-5 py-2'}`}
+                        >
+                            <span role="status">
+                                {loadingAssets
+                                    ? 'Loading files…'
+                                    : `${folders.length} ${folders.length === 1 ? 'folder' : 'folders'} · ${assets.length} ${assets.length === 1 ? 'file' : 'files'} shown`}
+                            </span>
+                            {pagination && pagination.meta.last_page > 1 ? (
+                                <div className="flex items-center gap-2">
+                                    <span>
+                                        Page {pagination.meta.current_page} of {pagination.meta.last_page}
+                                    </span>
+                                    <Button
+                                        variant="outline"
+                                        disabled={loadingAssets || pagination.meta.current_page <= 1}
+                                        onClick={() => goToPage(pagination.meta.current_page - 1)}
+                                    >
+                                        Previous
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        disabled={loadingAssets || pagination.meta.current_page >= pagination.meta.last_page}
+                                        onClick={() => goToPage(pagination.meta.current_page + 1)}
+                                    >
+                                        Next
+                                    </Button>
+                                </div>
+                            ) : (
+                                canEdit && <span className="hidden sm:inline">Drag files here to upload</span>
+                            )}
+                        </div>
+                    }
+                </div>
             </div>
 
             {canEdit && draggingFile && (
-                <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center border-2 border-dotted border-primary/80 bg-card/95 p-6 text-center backdrop-blur-[1px]">
-                    <div className="rounded-full bg-background p-3 shadow-sm">
-                        <UploadCloud className="h-7 w-7 text-primary" />
+                <div className="border-primary/80 bg-card/95 pointer-events-none absolute inset-0 z-20 flex items-center justify-center border-2 border-dotted p-6 text-center backdrop-blur-[1px]">
+                    <div className="bg-background rounded-full p-3 shadow-sm">
+                        <UploadCloud className="text-primary h-7 w-7" />
                     </div>
                     <div className="ml-3 text-left">
-                        <p className="font-semibold text-foreground">Drop files to upload</p>
+                        <p className="text-foreground font-semibold">Drop files to upload</p>
                         <p className="text-muted-foreground text-sm">Release to add them to this folder.</p>
                     </div>
                 </div>
@@ -513,7 +553,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                     path={path}
                     parentUuid={folder?.uuid}
                     create={true}
-                    onCreated={(newFolder) => {
+                    onCreated={() => {
                         setShowFolderCreator(false);
                         loadAssets(); // Reload to show the new folder
                     }}
@@ -528,7 +568,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                     path={folders.find((f) => f.path === editedFolderPath) || editedFolderPath}
                     parentUuid={folder?.uuid}
                     create={false}
-                    onUpdated={(updatedFolder) => {
+                    onUpdated={() => {
                         setShowFolderEditor(false);
                         setEditedFolderPath(null);
                         loadAssets(); // Reload to show the updated folder
@@ -545,7 +585,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                 ref={uploaderRef}
                 container={container?.id}
                 path={path}
-                onUploadComplete={(item, uploads) => {
+                onUploadComplete={() => {
                     loadAssets(); // Reload assets after upload
                     // Don't clear uploads here - let them clear naturally after showing success state
                 }}
@@ -564,12 +604,12 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                     setShowAssetEditor(false);
                     setEditedAssetId(null);
                 }}
-                onSaved={(asset) => {
+                onSaved={() => {
                     setShowAssetEditor(false);
                     setEditedAssetId(null);
                     loadAssets(); // Reload assets to show updated data
                 }}
-                onDeleted={(assetId) => {
+                onDeleted={() => {
                     setShowAssetEditor(false);
                     setEditedAssetId(null);
                     loadAssets(); // Reload assets after deletion

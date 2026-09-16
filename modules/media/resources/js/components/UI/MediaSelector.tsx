@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
-import { Selector } from './Selector';
-import { MediaAsset } from '../types/media';
+import { Selector, type SelectorRef } from './Selector';
+import { MediaAsset } from '../../types/media';
 
 interface MediaSelectorProps {
   open: boolean;
@@ -17,7 +17,7 @@ export const MediaSelector: React.FC<MediaSelectorProps> = ({
   onClosed,
   onSelected
 }) => {
-  const selectorRef = useRef<any>(null);
+  const selectorRef = useRef<SelectorRef>(null);
 
   const handleSelectedAsset = () => {
     if (selectorRef.current) {

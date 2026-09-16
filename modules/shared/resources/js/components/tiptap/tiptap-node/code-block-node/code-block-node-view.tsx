@@ -66,7 +66,7 @@ export function CodeBlockNodeView({ node, updateAttributes, selected, editor, ge
         const timer = setTimeout(() => {
             try {
                 // Find the NodeViewContent element (try multiple selectors)
-                let nodeViewContent =
+                const nodeViewContent =
                     codeRef.current?.querySelector('[contenteditable="true"]') ||
                     codeRef.current?.querySelector('.ProseMirror') ||
                     codeRef.current?.querySelector('[data-node-view-content]') ||
@@ -132,7 +132,7 @@ export function CodeBlockNodeView({ node, updateAttributes, selected, editor, ge
                 (nodeViewContent as HTMLElement).style.caretColor = 'hsl(var(--foreground))';
                 (nodeViewContent as HTMLElement).style.position = 'relative';
                 (nodeViewContent as HTMLElement).style.zIndex = '2';
-            } catch (error) {
+            } catch {
                 // Silent fail
             }
         }, 150);
@@ -181,7 +181,9 @@ export function CodeBlockNodeView({ node, updateAttributes, selected, editor, ge
                 // fallback: clear to paragraph
                 editor?.chain().focus().setNode('paragraph').run();
             }
-        } catch {}
+        } catch {
+            // The node may already have been removed by another transaction.
+        }
     };
 
     const selectedLanguage = useMemo(() => {

@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import { IndexHeader } from '@shared/components/index-header';
 import { Button } from '@shared/components/ui/button';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
@@ -34,20 +35,9 @@ export default function Index({ tags }: { tags: TableConfig<Tag> }) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Tags" />
-            <div className="flex h-full flex-col space-y-6 p-8 pt-6">
+            <div className="content-index flex flex-col gap-8">
                 {/* Header */}
-                <div className="flex items-center justify-between space-y-2">
-                    <div>
-                        <h2 className="text-3xl font-bold tracking-tight">Tags</h2>
-                        <p className="text-muted-foreground">Manage your blog tags and organize your content.</p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <Button onClick={handleCreateTag}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Create Tag
-                        </Button>
-                    </div>
-                </div>
+                <IndexHeader title="Tags" icon={TagsIcon} actions={<Button onClick={handleCreateTag}>Create tag</Button>} />
 
                 <InertiaTableWrapper
                     resource={tags}

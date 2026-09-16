@@ -1,16 +1,16 @@
 import { createInertiaApp } from '@inertiajs/react';
 import createServer from '@inertiajs/react/server';
+import { formatDocumentTitle } from '@shared/lib/site-metadata';
+import type { SiteSettings } from '@shared/types/site-settings';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import ReactDOMServer from 'react-dom/server';
 import { type RouteName, route } from 'ziggy-js';
-
-const appName = import.meta.env.VITE_APP_NAME || 'karti.dev';
 
 createServer((page) =>
     createInertiaApp({
         page,
         render: ReactDOMServer.renderToString,
-        title: (title) => `${title} - ${appName}`,
+        title: (title) => formatDocumentTitle(title, (page.props.site as SiteSettings).name, Boolean(page.props.seo)),
         resolve: (name) => {
             if (name.includes('::')) {
                 const [module, page] = name.split('::');

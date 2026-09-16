@@ -112,20 +112,26 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
             try {
                 cropperImage.$resetTransform();
                 cropperImage.$image.src = '';
-            } catch (error) {}
+            } catch {
+                // Cropper elements may already be disconnected during cleanup.
+            }
         }
 
         if (cropperSelection) {
             try {
                 cropperSelection.$reset();
                 cropperSelection.hidden = true;
-            } catch (error) {}
+            } catch {
+                // Cropper elements may already be disconnected during cleanup.
+            }
         }
 
         if (cropperHandle) {
             try {
                 cropperHandle.action = ACTION_MOVE;
-            } catch (error) {}
+            } catch {
+                // Cropper elements may already be disconnected during cleanup.
+            }
         }
     }, []);
 
@@ -536,18 +542,18 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
     }, []);
 
     const applyFilter = useCallback(
-        async (name: string, value: any) => {
+        async (name: string, value: number | boolean | null) => {
             if (!filterProcessorRef.current) return;
 
             setHasChanged(true);
             setProcessing(true);
 
-            const filters = { ...camanFilters };
+            const filters: Record<string, number | boolean | undefined> = { ...camanFilters };
 
             if (value === false || value === null || value === undefined) {
-                delete (filters as any)[name];
+                delete filters[name];
             } else {
-                (filters as any)[name] = value;
+                filters[name] = value;
             }
 
             setCamanFilters(filters);
@@ -594,14 +600,14 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
             checkForChanges();
         };
 
-        canvas.addEventListener('actionstart' as any, handleActionStart);
-        canvas.addEventListener('actionmove' as any, handleActionMove);
-        canvas.addEventListener('actionend' as any, handleActionEnd);
+        canvas.addEventListener('actionstart', handleActionStart);
+        canvas.addEventListener('actionmove', handleActionMove);
+        canvas.addEventListener('actionend', handleActionEnd);
 
         return () => {
-            canvas.removeEventListener('actionstart' as any, handleActionStart);
-            canvas.removeEventListener('actionmove' as any, handleActionMove);
-            canvas.removeEventListener('actionend' as any, handleActionEnd);
+            canvas.removeEventListener('actionstart', handleActionStart);
+            canvas.removeEventListener('actionmove', handleActionMove);
+            canvas.removeEventListener('actionend', handleActionEnd);
         };
     }, [isOpen, checkForChanges]);
 

@@ -1,3 +1,4 @@
+import type { ComponentProps } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { Badge } from '@shared/components/ui/badge';
 import { Button } from '@shared/components/ui/button';
@@ -31,14 +32,14 @@ export default function Show({ event }: { event: SpeakingEvent }) {
         { title: event.title, href: route('admin.speaking.show', event.slug) },
     ];
 
-    const eventTypeColors = {
-        conference: 'primary',
+    const eventTypeColors: Record<SpeakingEvent['event_type'], ComponentProps<typeof Badge>['variant']> = {
+        conference: 'default',
         podcast: 'success',
         workshop: 'warning',
-        webinar: 'info',
+        webinar: 'outline',
     };
 
-    const statusColors = {
+    const statusColors: Record<SpeakingEvent['status'], ComponentProps<typeof Badge>['variant']> = {
         draft: 'warning',
         published: 'success',
         archived: 'secondary',
@@ -71,8 +72,8 @@ export default function Show({ event }: { event: SpeakingEvent }) {
                             )}
                         </div>
                         <div className="mt-2 flex items-center space-x-2">
-                            <Badge variant={eventTypeColors[event.event_type] as any}>{event.event_type}</Badge>
-                            <Badge variant={statusColors[event.status] as any}>{event.status}</Badge>
+                            <Badge variant={eventTypeColors[event.event_type]}>{event.event_type}</Badge>
+                            <Badge variant={statusColors[event.status]}>{event.status}</Badge>
                             {event.featured && <Badge variant="default">Featured</Badge>}
                         </div>
                     </div>

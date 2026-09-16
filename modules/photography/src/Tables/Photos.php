@@ -11,21 +11,28 @@ use Modules\Table\Table;
 
 class Photos extends Table
 {
+    public function resource(): \Illuminate\Contracts\Database\Eloquent\Builder|string
+    {
+        return app(\Modules\Analytics\Services\ContentTraffic::class)->withViewCount(Photo::query(), 'gallery');
+    }
+
     protected ?string $resource = Photo::class;
 
     public function columns(): array
     {
         return [
             Columns\TextColumn::make('id', 'ID', stickable: true)
-                ->url(fn (Photo $photo) => route('admin.photography.show', $photo->id)),
+                ->url(fn (Photo $photo) => route('admin.photography.edit', $photo->id)),
             Columns\TextColumn::make('title', 'Title', toggleable: false)
-                ->url(fn (Photo $photo) => route('admin.photography.show', $photo->id))
+                ->url(fn (Photo $photo) => route('admin.photography.edit', $photo->id))
                 ->searchable(),
             Columns\TextColumn::make('slug', 'Slug')->searchable(),
             Columns\BooleanColumn::make('featured', 'Featured'),
             Columns\NumericColumn::make('sort_order', 'Order')->sortable(),
             Columns\DateColumn::make('published_at', 'Published'),
             Columns\DateColumn::make('created_at', 'Created'),
+            Columns\NumericColumn::make('local_views', 'Views (30d)')->sortable()
+                ->url(fn (Photo $photo) => route('admin.seo.content', ['type' => 'gallery', 'id' => $photo->id])),
             Columns\ActionColumn::new(),
         ];
     }

@@ -47,7 +47,7 @@ export function SimpleTiptapEditor({ content = '', onChange, placeholder = 'Star
         },
         editorProps: {
             attributes: {
-                class: `prose prose-sm sm:prose-base max-w-none focus:outline-none min-h-[200px] p-4 ${className || ''}`,
+                class: `prose dark:prose-invert prose-sm sm:prose-base max-w-none focus:outline-none min-h-[200px] p-4 ${className || ''}`,
                 placeholder,
             },
         },
@@ -66,7 +66,7 @@ export function SimpleTiptapEditor({ content = '', onChange, placeholder = 'Star
     return (
         <div className="border-input rounded-md border">
             {/* Simple Toolbar */}
-            <div className="border-input bg-muted/20 flex flex-wrap gap-1 border-b p-2">
+            <div data-slot="editor-toolbar" className="border-input bg-muted/20 flex flex-wrap gap-1 border-b p-2">
                 <Button
                     type="button"
                     variant="ghost"

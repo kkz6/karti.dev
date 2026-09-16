@@ -100,7 +100,7 @@ class PortfolioController extends BaseController
             ->toArray();
 
         $seoData = new SEOData(
-            title: config('seo.title', config('app.name')) . ' - Developer, Speaker & Founder',
+            title: config('seo.title', config('app.name')),
             description: config('seo.description', 'Karthick is a software designer and developer based in Bangalore, India. Building technologies that empower people to explore the world on their own terms.'),
             author: config('seo.author', 'Karthick'),
             image: config('seo.image'),
@@ -392,13 +392,4 @@ class PortfolioController extends BaseController
         ]);
     }
 
-    public function thankYou(Request $request)
-    {
-        // Handle newsletter subscription
-        $email = $request->input('email');
-
-        // TODO: Save email to newsletter list
-
-        return Inertia::render('frontend::thank-you');
-    }
 }

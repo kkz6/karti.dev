@@ -1,12 +1,14 @@
 import { Head, router } from '@inertiajs/react';
+import { IndexHeader } from '@shared/components/index-header';
+import { LocalTrafficCard } from '@shared/components/local-traffic-card';
 import { Button } from '@shared/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@shared/components/ui/card';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
+import type { TableConfig } from '@table/components';
 import { InertiaTableWrapper } from '@table/components/Table/inertia-table-wrapper';
-import { Mic, Plus, Podcast, Video } from 'lucide-react';
+import { Mic, Podcast, Video } from 'lucide-react';
 
-export default function Index({ table }: { table: any }) {
+export default function Index({ table }: { table: TableConfig }) {
     const breadcrumbs: BreadcrumbItem[] = [{ title: 'Speaking Events', href: route('admin.speaking.index') }];
 
     const handleCreateEvent = () => {
@@ -16,23 +18,13 @@ export default function Index({ table }: { table: any }) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Speaking Events" />
-            <div className="flex h-full flex-col space-y-4 p-8 pt-6">
-                <div className="flex items-center justify-between space-y-2">
-                    <div>
-                        <h2 className="text-3xl font-bold tracking-tight">Speaking Events</h2>
-                        <p className="text-muted-foreground">Manage your conferences, podcasts, and other speaking engagements.</p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <Button onClick={handleCreateEvent}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Create Event
-                        </Button>
-                    </div>
-                </div>
+            <div className="content-index flex flex-col gap-8">
+                <IndexHeader title="Speaking Events" icon={Mic} actions={<Button onClick={handleCreateEvent}>Create event</Button>} />
+                <LocalTrafficCard compact />
 
                 {/* Speaking Events Table */}
                 <div className="flex-1">
-                    <InertiaTableWrapper 
+                    <InertiaTableWrapper
                         resource={table}
                         emptyState={{
                             title: 'No speaking events found',

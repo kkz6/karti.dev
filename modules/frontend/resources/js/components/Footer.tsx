@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react'
 import { Container } from './Container'
+import { NewsletterForm } from './NewsletterForm'
 
 const navigation = [
   { name: 'About', href: '/about' },
@@ -24,14 +25,19 @@ export function Footer() {
       <Container.Outer>
         <div className="border-t border-border/70 py-12">
           <Container.Inner>
-            <div className="flex flex-col gap-10 sm:flex-row sm:justify-between">
-              <div className="max-w-xs">
-                <p className="font-display text-base font-semibold tracking-[-0.015em] text-foreground">
-                  Karthick
-                </p>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Developer and founder in Bangalore. Software, home automation, networks &mdash; and a spare room on Airbnb.
-                </p>
+            <div className="flex flex-col gap-10 md:flex-row md:justify-between">
+              <div className="flex w-full min-w-0 max-w-sm flex-col gap-6">
+                <div className="max-w-xs">
+                  <p className="font-display text-base font-semibold tracking-[-0.015em] text-foreground">
+                    Karthick
+                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    Developer and founder in Bangalore. Software, home automation, networks &mdash; and a spare room on Airbnb.
+                  </p>
+                </div>
+                <div className="mt-auto">
+                  <NewsletterForm />
+                </div>
               </div>
 
               <div className="flex gap-16 sm:gap-20">

@@ -87,31 +87,21 @@ test('user cannot update profile without name', function () {
     $response->assertSessionHasErrors('name');
 });
 
-test('user can delete their account', function () {
+test('self-service account deletion is unavailable', function () {
     $user = User::factory()->create();
 
-    $response = $this->actingAs($user)->delete(route('profile.destroy'), [
+    expect(\Illuminate\Support\Facades\Route::has('profile.destroy'))->toBeFalse();
+
+    $response = $this->actingAs($user)->delete('/profile', [
         'password' => 'password',
     ]);
 
-    $response->assertRedirect('/');
+    $response->assertStatus(405);
 
-    $this->assertGuest();
-    $this->assertDatabaseMissing('users', [
+    $this->assertAuthenticatedAs($user);
+    $this->assertDatabaseHas('users', [
         'id' => $user->id,
     ]);
-});
-
-test('user cannot delete account with incorrect password', function () {
-    $user = User::factory()->create();
-
-    $response = $this->actingAs($user)->delete(route('profile.destroy'), [
-        'password' => 'wrong-password',
-    ]);
-
-    $response->assertSessionHasErrors('password');
-
-    $this->assertNotNull($user->fresh());
 });
 
 test('unauthenticated users cannot access profile page', function () {
@@ -129,10 +119,10 @@ test('unauthenticated users cannot update profile', function () {
     $response->assertRedirect(route('login'));
 });
 
-test('unauthenticated users cannot delete account', function () {
-    $response = $this->delete(route('profile.destroy'), [
+test('account deletion endpoint is unavailable to guests', function () {
+    $response = $this->delete('/profile', [
         'password' => 'password',
     ]);
 
-    $response->assertRedirect(route('login'));
+    $response->assertStatus(405);
 });

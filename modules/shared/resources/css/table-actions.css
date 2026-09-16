@@ -1,0 +1,58 @@
+/* Links and buttons share the same quiet surface in admin table rows. */
+.admin-workspace .it-row-actions {
+    gap: 0.5rem;
+}
+
+/* Keep the external table package on the same dark surfaces without changing it. */
+.dark .admin-workspace .it-table tbody tr {
+    background: var(--card);
+}
+.dark .admin-workspace .it-table tbody tr > td {
+    background: inherit;
+}
+.dark .admin-workspace .it-table tbody tr:hover,
+.dark .admin-workspace .it-table tbody tr[data-state='selected'] {
+    background: var(--accent);
+}
+.dark .admin-workspace .it-table th {
+    color: var(--muted-foreground);
+}
+
+.admin-workspace .it-row-actions > :is(a, button) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-inline: 0;
+    border-color: var(--input);
+    background: var(--card);
+    color: var(--foreground);
+    white-space: nowrap;
+    text-decoration: none;
+    box-shadow: var(--shadow-xs);
+    transition:
+        background-color 150ms,
+        border-color 150ms,
+        box-shadow 150ms;
+}
+
+.admin-workspace .it-row-actions > :is(a, button) > span {
+    margin-inline-start: 0;
+}
+
+.admin-workspace .it-row-actions > :is(a, button):not(:disabled, [aria-disabled='true']):hover {
+    background: var(--accent);
+}
+
+.admin-workspace .it-row-actions > :is(a, button).text-destructive {
+    color: var(--destructive);
+}
+
+.admin-workspace .it-row-actions > :is(a, button).text-destructive:not(:disabled, [aria-disabled='true']):hover {
+    background: color-mix(in oklab, var(--destructive) 8%, var(--card));
+    border-color: color-mix(in oklab, var(--destructive) 35%, var(--border));
+}
+
+.admin-workspace .it-row-actions > :is(a, button):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}

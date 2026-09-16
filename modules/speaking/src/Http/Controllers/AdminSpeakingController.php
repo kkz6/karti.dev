@@ -23,7 +23,8 @@ class AdminSpeakingController extends BaseController
     public function index(Request $request): Response
     {
         return Inertia::render('speaking::index', [
-            'table' => SpeakingEvents::make($request->all()),
+            'table'   => SpeakingEvents::make($request->all()),
+            'localTraffic' => app(\Modules\Analytics\Services\ContentTraffic::class)->forPage('/speaking', 'Speaking page'),
             'filters' => $request->all(),
         ]);
     }
@@ -42,36 +43,34 @@ class AdminSpeakingController extends BaseController
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:speaking_events,slug',
-            'description' => 'required|string',
-            'event_name' => 'required|string|max:255',
-            'event_date' => 'nullable|date',
-            'event_type' => 'required|in:conference,podcast,workshop,webinar',
-            'location' => 'nullable|string|max:255',
-            'url' => 'nullable|url|max:255',
-            'cta_text' => 'required|string|max:50',
-            'featured' => 'boolean',
-            'status' => 'in:draft,published,archived',
-            'meta_title' => 'nullable|string|max:60',
+            'title'            => 'required|string|max:255',
+            'slug'             => 'required|string|max:255|unique:speaking_events,slug',
+            'description'      => 'required|string',
+            'event_name'       => 'required|string|max:255',
+            'event_date'       => 'nullable|date',
+            'event_type'       => 'required|in:conference,podcast,workshop,webinar',
+            'location'         => 'nullable|string|max:255',
+            'url'              => 'nullable|url|max:255',
+            'cta_text'         => 'required|string|max:50',
+            'featured'         => 'boolean',
+            'status'           => 'in:draft,published,archived',
+            'meta_title'       => 'nullable|string|max:60',
             'meta_description' => 'nullable|string|max:160',
         ]);
 
-        SpeakingEvent::create($validated);
+        $speaking = SpeakingEvent::create($validated);
 
         return redirect()
-            ->route('admin.speaking.index')
+            ->route('admin.speaking.edit', $speaking)
             ->with('success', 'Speaking event created successfully.');
     }
 
     /**
      * Display the specified speaking event.
      */
-    public function show(SpeakingEvent $speaking): Response
+    public function show(SpeakingEvent $speaking): RedirectResponse
     {
-        return Inertia::render('speaking::show', [
-            'event' => $speaking,
-        ]);
+        return redirect()->route('admin.speaking.edit', $speaking);
     }
 
     /**
@@ -80,6 +79,7 @@ class AdminSpeakingController extends BaseController
     public function edit(SpeakingEvent $speaking): Response
     {
         return Inertia::render('speaking::edit', [
+            'localTraffic' => app(\Modules\Analytics\Services\ContentTraffic::class)->forPage('/speaking', 'Speaking page'),
             'event' => $speaking,
         ]);
     }
@@ -90,25 +90,25 @@ class AdminSpeakingController extends BaseController
     public function update(Request $request, SpeakingEvent $speaking): RedirectResponse
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:speaking_events,slug,' . $speaking->id,
-            'description' => 'required|string',
-            'event_name' => 'required|string|max:255',
-            'event_date' => 'nullable|date',
-            'event_type' => 'required|in:conference,podcast,workshop,webinar',
-            'location' => 'nullable|string|max:255',
-            'url' => 'nullable|url|max:255',
-            'cta_text' => 'required|string|max:50',
-            'featured' => 'boolean',
-            'status' => 'in:draft,published,archived',
-            'meta_title' => 'nullable|string|max:60',
+            'title'            => 'required|string|max:255',
+            'slug'             => 'required|string|max:255|unique:speaking_events,slug,'.$speaking->id,
+            'description'      => 'required|string',
+            'event_name'       => 'required|string|max:255',
+            'event_date'       => 'nullable|date',
+            'event_type'       => 'required|in:conference,podcast,workshop,webinar',
+            'location'         => 'nullable|string|max:255',
+            'url'              => 'nullable|url|max:255',
+            'cta_text'         => 'required|string|max:50',
+            'featured'         => 'boolean',
+            'status'           => 'in:draft,published,archived',
+            'meta_title'       => 'nullable|string|max:60',
             'meta_description' => 'nullable|string|max:160',
         ]);
 
         $speaking->update($validated);
 
         return redirect()
-            ->route('admin.speaking.index')
+            ->route('admin.speaking.edit', $speaking)
             ->with('success', 'Speaking event updated successfully.');
     }
 

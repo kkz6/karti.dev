@@ -1,3 +1,4 @@
+import type { SeoData } from '@seo/types/seo-schema';
 /**
  * Common types for the Photography module
  */
@@ -22,6 +23,7 @@ export interface Photo {
 }
 
 export interface PhotoGallery {
+    seo?: SeoData;
     id: number;
     title: string;
     slug: string;
@@ -57,21 +59,7 @@ export interface PhotoGalleryFormData {
     sort_order: number;
     meta_title: string;
     meta_description: string;
-    seo: {
-        title: string;
-        description: string;
-        author: string;
-        image: string;
-        canonical_url: string;
-        robots: string;
-        og_title: string;
-        og_description: string;
-        og_image: string;
-        twitter_title: string;
-        twitter_description: string;
-        twitter_image: string;
-        twitter_creator: string;
-    };
+    seo: NonNullable<SeoData>;
     published_at: string;
     photo_id: number | null;
 }

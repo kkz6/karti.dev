@@ -5,7 +5,7 @@ import { Input } from '@shared/components/ui/input';
 import { Label } from '@shared/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@shared/components/ui/dialog';
 import { Alert, AlertDescription } from '@shared/components/ui/alert';
-import { MediaFolder, MediaContainer } from '../../types/media';
+import { MediaFolder, MediaContainer } from '../../../types/media';
 
 interface FolderEditorProps {
   container: MediaContainer;
@@ -31,7 +31,6 @@ export const FolderEditor: React.FC<FolderEditorProps> = ({
   onClosed
 }) => {
   const [form, setForm] = useState<FolderForm>({ basename: '' });
-  const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [errors, setErrors] = useState<string[]>([]);
 
@@ -40,7 +39,6 @@ export const FolderEditor: React.FC<FolderEditorProps> = ({
     if (typeof path === 'object' && path && !create) {
       setForm({ basename: path.title });
     }
-    setLoading(false);
   }, [path, create]);
 
   const hasErrors = errors.length > 0 && !saving;
@@ -69,7 +67,7 @@ export const FolderEditor: React.FC<FolderEditorProps> = ({
           ? form.basename 
           : `${currentPath}/${form.basename}`.replace(/\/+/g, '/');
         
-        const response = await axios.post('/admin/media-manager/create', {
+        await axios.post('/admin/media-manager/create', {
           path: fullPath,
           disk: 'public'
         });
@@ -81,7 +79,7 @@ export const FolderEditor: React.FC<FolderEditorProps> = ({
         window.dispatchEvent(event);
         
         // Create a folder object to return since backend only returns success
-        const newFolder: MediaFolder = {
+        const newFolder: MediaFolder & { container_id: string } = {
           uuid: `folder-${fullPath}`,
           path: fullPath,
           title: form.basename,
@@ -112,10 +110,10 @@ export const FolderEditor: React.FC<FolderEditorProps> = ({
       }
 
       handleClose();
-    } catch (error: any) {
+    } catch (error) {
       let errorMessage = 'Network error occurred';
       
-      if (error.response) {
+      if (axios.isAxiosError<{ message?: string }>(error) && error.response) {
         if (error.response.status === 422) {
           errorMessage = error.response.data?.message || 'Validation error';
         } else {
@@ -153,19 +151,16 @@ export const FolderEditor: React.FC<FolderEditorProps> = ({
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="basename">Name</Label>
+            <Label htmlFor="basename">Folder name</Label>
             <Input
               id="basename"
               value={form.basename}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder="The filesystem directory name"
+              placeholder="e.g. blog-images"
               disabled={saving}
               autoFocus
             />
-            <p className="text-sm text-gray-500">
-              The filesystem directory name
-            </p>
           </div>
         </div>
 

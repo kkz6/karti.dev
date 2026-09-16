@@ -5,7 +5,7 @@ import { ResizableImageComponent } from './resizable-image-component';
 export interface ResizableImageOptions {
   inline: boolean;
   allowBase64: boolean;
-  HTMLAttributes: Record<string, any>;
+  HTMLAttributes: Record<string, unknown>;
 }
 
 declare module '@tiptap/core' {

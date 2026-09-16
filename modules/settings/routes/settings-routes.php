@@ -1,6 +1,12 @@
 <?php
 
-// use Modules\Settings\Http\Controllers\SettingsController;
+use Illuminate\Support\Facades\Route;
+use Modules\Settings\Http\Controllers\SiteSettingsController;
+
+Route::middleware(['web', 'auth', 'verified'])->prefix('admin/settings')->name('admin.settings.')->group(function () {
+    Route::get('/', [SiteSettingsController::class, 'edit'])->name('edit');
+    Route::put('/', [SiteSettingsController::class, 'update'])->name('update');
+});
 
 // Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
 // Route::get('/settings/create', [SettingsController::class, 'create'])->name('settings.create');

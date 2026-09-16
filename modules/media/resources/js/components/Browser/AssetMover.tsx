@@ -15,7 +15,7 @@ interface AssetMoverProps {
     onClosed: () => void;
 }
 
-export const AssetMover: React.FC<AssetMoverProps> = ({ assets, container, folder, onSaved, onClosed }) => {
+export const AssetMover: React.FC<AssetMoverProps> = ({ assets, folder, onSaved, onClosed }) => {
     const [show, setShow] = useState<boolean>(true);
     const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
     const [saving, setSaving] = useState<boolean>(false);
@@ -57,7 +57,7 @@ export const AssetMover: React.FC<AssetMoverProps> = ({ assets, container, folde
                 const { subdirectories } = response.data;
 
                 // Transform subdirectories to folders format
-                const folders: MediaFolder[] = subdirectories.map((dir: any) => ({
+                const folders: MediaFolder[] = subdirectories.map((dir: { name: string; timestamp: string }) => ({
                     uuid: `folder-${dir.name}`,
                     path: dir.name,
                     title: dir.name.split('/').pop() || dir.name,
@@ -82,10 +82,6 @@ export const AssetMover: React.FC<AssetMoverProps> = ({ assets, container, folde
         }
 
         return allFolders;
-    };
-
-    const fieldtypeConfig = {
-        container: container,
     };
 
     useEffect(() => {
@@ -130,9 +126,9 @@ export const AssetMover: React.FC<AssetMoverProps> = ({ assets, container, folde
 
             onSaved(selectedFolder!);
             handleCancel();
-        } catch (error: any) {
+        } catch (error) {
             setSaving(false);
-            const errorMessage = error.response?.data?.message || error.message || 'Failed to move assets';
+            const errorMessage = (axios.isAxiosError<{ message?: string }>(error) && error.response?.data?.message) || (error instanceof Error ? error.message : 'Failed to move assets');
             setErrors([errorMessage]);
         }
     };

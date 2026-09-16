@@ -1,6 +1,6 @@
 import { Button } from '@shared/components/ui/button';
 import { FormControl, FormItem, FormLabel, FormMessage } from '@shared/components/ui/form';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
+import { AssetPickerDialog } from '../UI/AssetPickerDialog';
 import { cn } from '@shared/lib/utils';
 import { FolderOpen, GripVertical, Upload } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -11,6 +11,7 @@ import { Uploader, UploaderRef } from '../Upload/Uploader';
 import { Uploads } from '../Upload/Uploads';
 import { AssetFieldRow } from './AssetFieldRow';
 import { AssetFieldTile } from './AssetFieldTile';
+import { AssetDropOverlay } from './AssetDropOverlay';
 import { MediaAsset } from '../../types/media';
 import { MediaService } from '../../services/MediaService';
 import { toast } from 'sonner';
@@ -59,7 +60,7 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
     const isSolo = maxFiles === 1;
 
     useEffect(() => {
-        const ids = Array.isArray(data) ? data.map((item: any) => {
+        const ids = Array.isArray(data) ? data.map((item: AssetFieldProps['data'][number]) => {
             if (typeof item === 'string') return item;
             if (typeof item === 'number') return item.toString();
             if (typeof item === 'object' && item && item.id) return item.id.toString();
@@ -162,18 +163,21 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
     }, []);
 
     const handleDragOver = (e: React.DragEvent) => {
+        if (!e.dataTransfer.types.includes('Files') || readOnly || showSelector) return;
         e.preventDefault();
         setDraggingFile(true);
     };
 
     const handleDragLeave = (e: React.DragEvent) => {
         e.preventDefault();
+        if (e.relatedTarget instanceof Node && e.currentTarget.contains(e.relatedTarget)) return;
         setDraggingFile(false);
     };
 
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault();
         setDraggingFile(false);
+        if (readOnly || showSelector) return;
         const files = e.dataTransfer.files;
         if (files && files.length > 0 && uploaderRef.current) {
             Array.from(files).forEach((file) => {
@@ -286,7 +290,7 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                 </FormLabel>
                 <FormControl>
                     <div
-                    className={cn('assets-fieldtype border-input bg-background rounded-lg border', {
+                    className={cn('assets-fieldtype relative isolate border-input bg-background rounded-lg border', {
                         'max-files-reached': maxFilesReached,
                         empty: isEmpty,
                         solo: isSolo,
@@ -297,18 +301,13 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                 >
                     {loading && <LoadingGraphic />}
 
-                    {draggingFile && !showSelector && (
-                        <div className="drag-notification flex flex-col items-center justify-center p-8 text-center">
-                            <Upload className="text-muted-foreground mb-2 h-8 w-8" />
-                            <h3 className="text-lg font-medium">Drop to upload</h3>
-                        </div>
-                    )}
+                    {draggingFile && !showSelector && !readOnly && <AssetDropOverlay />}
 
                     {!loading && (
                         <>
                             {!maxFilesReached && (
-                                <div className="manage-assets border-border border-b p-4">
-                                    <div className="flex items-center gap-2">
+                                <div className={cn('manage-assets border-border p-4', !isEmpty && 'border-b')}>
+                                    <div className="flex flex-wrap items-center gap-2">
                                         <Button type="button" variant="outline" onClick={openSelector} disabled={readOnly}>
                                             <FolderOpen className="mr-2 h-4 w-4" />
                                             Browse assets
@@ -388,42 +387,24 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                         </>
                     )}
 
-                    <Dialog open={showSelector} onOpenChange={closeSelector}>
-                        <DialogContent className="max-w-6xl sm:max-w-6xl md:max-w-6xl lg:max-w-6xl h-[85vh] flex flex-col p-0 gap-0">
-                            <DialogHeader className="px-4 py-3 border-b flex-shrink-0">
-                                <DialogTitle>Select {name}</DialogTitle>
-                            </DialogHeader>
-
-                            <div className="flex-1 overflow-hidden p-0">
-                                <AssetBrowser
-                                    selectedPath={folder}
-                                    selectedAssets={selectedAssetIds}
-                                    maxFiles={maxFiles}
-                                    canEdit={canEdit}
-                                    restrictNavigation={restrictNavigation}
-                                    onSelectionsUpdated={handleSelectionsUpdated}
-                                    onAssetDoubleClicked={handleAssetDoubleClicked}
-                                />
-                            </div>
-
-                            <DialogFooter className="px-4 py-3 border-t flex-shrink-0 bg-muted/20">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={closeSelector}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    type="button"
-                                    onClick={handleAssetsSelected}
-                                    disabled={selectedAssetIds.length === 0}
-                                >
-                                    Select
-                                </Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
+                    <AssetPickerDialog
+                        open={showSelector}
+                        title={`Select ${name}`}
+                        selectedCount={selectedAssetIds.length}
+                        onClose={closeSelector}
+                        onConfirm={handleAssetsSelected}
+                        onClear={() => setSelectedAssetIds([])}
+                    >
+                        <AssetBrowser
+                            selectedPath={folder}
+                            selectedAssets={selectedAssetIds}
+                            maxFiles={maxFiles}
+                            canEdit={canEdit}
+                            restrictNavigation={restrictNavigation}
+                            onSelectionsUpdated={handleSelectionsUpdated}
+                            onAssetDoubleClicked={handleAssetDoubleClicked}
+                        />
+                    </AssetPickerDialog>
 
                     <AssetEditor
                         assetId={editedAssetId}
@@ -460,7 +441,7 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                 {required && <span className="ml-1 text-red-500">*</span>}
             </label>
             <div
-                className={cn('assets-fieldtype border-input bg-background rounded-lg border', {
+                className={cn('assets-fieldtype relative isolate border-input bg-background rounded-lg border', {
                     'max-files-reached': maxFilesReached,
                     empty: isEmpty,
                     solo: isSolo,
@@ -471,18 +452,13 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
             >
                 {loading && <LoadingGraphic />}
 
-                {draggingFile && !showSelector && (
-                    <div className="drag-notification flex flex-col items-center justify-center p-8 text-center">
-                        <Upload className="text-muted-foreground mb-2 h-8 w-8" />
-                        <h3 className="text-lg font-medium">Drop to upload</h3>
-                    </div>
-                )}
+                {draggingFile && !showSelector && !readOnly && <AssetDropOverlay />}
 
                 {!loading && (
                     <>
                         {!maxFilesReached && (
-                            <div className="manage-assets border-border border-b p-4">
-                                <div className="flex items-center gap-2">
+                            <div className={cn('manage-assets border-border p-4', !isEmpty && 'border-b')}>
+                                <div className="flex flex-wrap items-center gap-2">
                                     <Button type="button" variant="outline" onClick={openSelector} disabled={readOnly}>
                                         <FolderOpen className="mr-2 h-4 w-4" />
                                         Browse assets
@@ -562,42 +538,24 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                     </>
                 )}
 
-                <Dialog open={showSelector} onOpenChange={closeSelector}>
-                    <DialogContent className="max-w-6xl sm:max-w-6xl md:max-w-6xl lg:max-w-6xl h-[85vh] flex flex-col p-0 gap-0">
-                        <DialogHeader className="px-4 py-3 border-b flex-shrink-0">
-                            <DialogTitle>Select {name}</DialogTitle>
-                        </DialogHeader>
-
-                        <div className="flex-1 overflow-hidden p-0">
-                            <AssetBrowser
-                                selectedPath={folder}
-                                selectedAssets={selectedAssetIds}
-                                maxFiles={maxFiles}
-                                canEdit={canEdit}
-                                restrictNavigation={restrictNavigation}
-                                onSelectionsUpdated={handleSelectionsUpdated}
-                                onAssetDoubleClicked={handleAssetDoubleClicked}
-                            />
-                        </div>
-
-                        <DialogFooter className="px-4 py-3 border-t flex-shrink-0 bg-muted/20">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={closeSelector}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="button"
-                                onClick={handleAssetsSelected}
-                                disabled={selectedAssetIds.length === 0}
-                            >
-                                Select
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+                <AssetPickerDialog
+                        open={showSelector}
+                        title={`Select ${name}`}
+                        selectedCount={selectedAssetIds.length}
+                        onClose={closeSelector}
+                        onConfirm={handleAssetsSelected}
+                        onClear={() => setSelectedAssetIds([])}
+                    >
+                        <AssetBrowser
+                            selectedPath={folder}
+                            selectedAssets={selectedAssetIds}
+                            maxFiles={maxFiles}
+                            canEdit={canEdit}
+                            restrictNavigation={restrictNavigation}
+                            onSelectionsUpdated={handleSelectionsUpdated}
+                            onAssetDoubleClicked={handleAssetDoubleClicked}
+                        />
+                    </AssetPickerDialog>
 
                 <AssetEditor
                     assetId={editedAssetId}

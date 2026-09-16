@@ -38,7 +38,8 @@ export default [
         },
     },
     {
-        ignores: ['vendor', 'node_modules', 'public', 'bootstrap/ssr', 'tailwind.config.js'],
+        // The table module is a separately versioned dependency, like vendor code.
+        ignores: ['vendor', 'node_modules', 'public', 'bootstrap/ssr', 'tailwind.config.js', 'modules/table/**'],
     },
     prettier, // Turn off all rules that might conflict with Prettier
 ];

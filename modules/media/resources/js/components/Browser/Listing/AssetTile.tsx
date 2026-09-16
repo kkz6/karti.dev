@@ -1,7 +1,7 @@
 import { Button } from '@shared/components/ui/button';
 import { Checkbox } from '@shared/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
-import { Download, Edit, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Download, Edit, ImageOff, MoreHorizontal, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { MediaAsset } from '../../../types/media';
 import { FileIcon } from '../../Icons/FileIcon';
@@ -30,6 +30,7 @@ export const AssetTile: React.FC<AssetTileProps> = ({
     onDoubleClicked,
 }) => {
     const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
+    const [failedThumbnail, setFailedThumbnail] = useState<string | null>(null);
 
     const isSelected = selectedAssets.includes(asset.id);
 
@@ -42,8 +43,11 @@ export const AssetTile: React.FC<AssetTileProps> = ({
     };
 
     const handleDoubleClick = () => {
-        // Open edit dialog on double-click
-        onEditing(asset.id);
+        if (canEdit) {
+            onEditing(asset.id);
+        } else {
+            onDoubleClicked(asset);
+        }
     };
 
     const handleEdit = () => {
@@ -71,11 +75,9 @@ export const AssetTile: React.FC<AssetTileProps> = ({
 
     const getThumbnailUrl = () => {
         if (asset.thumbnail_url) {
-            console.log('Using thumbnail_url:', asset.thumbnail_url, 'for asset:', asset.id);
             return asset.thumbnail_url;
         }
         if (asset.is_image) {
-            console.log('No thumbnail, using url:', asset.url, 'for asset:', asset.id);
             return asset.url;
         }
         return null;
@@ -84,22 +86,23 @@ export const AssetTile: React.FC<AssetTileProps> = ({
     const thumbnailUrl = getThumbnailUrl();
 
     return (
-        <div className="asset-tile group rounded-lg border border-gray-200 bg-white transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+        <div data-selected={isSelected} className="asset-tile border-border bg-card text-card-foreground group rounded-lg border transition-shadow hover:shadow-md">
             <div className="relative">
                 {/* Selection Checkbox */}
                 <div className="absolute top-2 left-2 z-10">
-                    <Checkbox checked={isSelected} onCheckedChange={handleCheckboxChange} className="bg-white/80 backdrop-blur-sm" />
+                    <Checkbox
+                        aria-label={`Select ${asset.filename}`}
+                        checked={isSelected}
+                        onCheckedChange={handleCheckboxChange}
+                        className="bg-card/90"
+                    />
                 </div>
 
                 {/* Actions Dropdown */}
                 <div className="absolute top-2 right-2 z-10">
                     <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
                         <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 bg-white/80 p-0 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
-                            >
+                            <Button variant="ghost" size="icon" aria-label={`Actions for ${asset.filename}`} className="bg-card/90">
                                 <MoreHorizontal className="h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
@@ -110,7 +113,7 @@ export const AssetTile: React.FC<AssetTileProps> = ({
                                         <Edit className="mr-2 h-4 w-4" />
                                         Edit
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={handleDelete} className="text-red-600">
+                                    <DropdownMenuItem onClick={handleDelete} className="text-destructive">
                                         <Trash2 className="mr-2 h-4 w-4" />
                                         Delete
                                     </DropdownMenuItem>
@@ -125,29 +128,38 @@ export const AssetTile: React.FC<AssetTileProps> = ({
                 </div>
 
                 {/* Thumbnail */}
-                <div
-                    className="asset-thumb-container flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-t-lg bg-gray-100 dark:bg-gray-700"
-                    onDoubleClick={handleDoubleClick}
+                <button
+                    type="button"
+                    aria-label={`Open ${asset.title || asset.filename}`}
+                    className="asset-thumb-container focus-visible:outline-ring bg-muted relative flex aspect-square w-full cursor-pointer items-center justify-center overflow-hidden rounded-t-lg focus-visible:outline-2"
+                    onClick={handleDoubleClick}
                 >
-                    {thumbnailUrl ? (
-                        <img src={thumbnailUrl} alt={asset.title} className="h-full w-full object-cover" />
+                    {thumbnailUrl && failedThumbnail !== thumbnailUrl ? (
+                        <img src={thumbnailUrl} alt="" className="absolute inset-0 h-full w-full object-cover" onError={() => setFailedThumbnail(thumbnailUrl)} />
+                    ) : thumbnailUrl ? (
+                        <span className="text-muted-foreground flex flex-col items-center gap-2 px-3 text-center text-xs">
+                            <ImageOff aria-hidden="true" className="h-8 w-8" />
+                            Preview unavailable
+                        </span>
                     ) : (
-                        <FileIcon extension={asset.extension} className="h-8 w-8 text-gray-400" />
+                        <FileIcon extension={asset.extension} className="text-muted-foreground h-8 w-8" />
                     )}
-                </div>
+                </button>
             </div>
 
             {/* Asset Info */}
             <div className="asset-meta p-2">
-                <div
-                    className="asset-filename mb-1 cursor-pointer truncate text-xs font-medium text-gray-900 hover:text-blue-600 dark:text-gray-100 dark:hover:text-blue-400"
-                    onDoubleClick={handleDoubleClick}
+                <button
+                    type="button"
+                    title={asset.title || asset.filename}
+                    className="asset-filename text-foreground hover:text-primary focus-visible:outline-ring mb-1 block w-full cursor-pointer truncate text-left text-sm font-medium focus-visible:outline-2"
+                    onClick={handleDoubleClick}
                 >
                     {asset.title || asset.filename}
-                </div>
-                <div className="asset-details space-y-0.5 text-xs text-gray-500 dark:text-gray-400">
-                    <div>{asset.extension.toUpperCase()}</div>
-                    <div>{formatFileSize(asset.size)}</div>
+                </button>
+                <div className="asset-details text-muted-foreground flex min-w-0 items-center gap-2 text-xs">
+                    <span className="truncate">{asset.extension.toUpperCase()}</span>
+                    <span className="shrink-0">{formatFileSize(asset.size)}</span>
                 </div>
             </div>
         </div>

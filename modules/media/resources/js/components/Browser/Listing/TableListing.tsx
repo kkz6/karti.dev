@@ -1,13 +1,12 @@
+import { MediaService } from '@media/services/MediaService';
+import { MediaAsset, MediaFolder } from '@media/types/media';
 import { Button } from '@shared/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
-import { ChevronDown, ChevronUp, CornerLeftUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, CornerLeftUp, Folder } from 'lucide-react';
 import React, { useState } from 'react';
-import { MediaAsset, MediaFolder } from '@media/types/media';
-import { FileIcon } from '@media/components';
+import { toast } from 'sonner';
 import { AssetRow } from './AssetRow';
 import { FolderRow } from './FolderRow';
-import { MediaService } from '@media/services/MediaService';
-import { toast } from 'sonner';
 
 interface TableListingProps {
     container: string;
@@ -38,11 +37,9 @@ interface Column {
 }
 
 export const TableListing: React.FC<TableListingProps> = ({
-    container,
     assets,
     folder,
     subfolders,
-    loading,
     selectedAssets,
     restrictNavigation,
     isSearching,
@@ -68,7 +65,7 @@ export const TableListing: React.FC<TableListingProps> = ({
     const columns: Column[] = [
         {
             field: 'title',
-            label: 'Title',
+            label: 'File',
         },
         {
             field: 'size',
@@ -82,7 +79,7 @@ export const TableListing: React.FC<TableListingProps> = ({
         },
     ];
 
-    const hasParent = folder?.parent_path !== null;
+    const hasParent = !!folder && folder.parent_path !== null;
     const hasResults = assets.length > 0 || subfolders.length > 0;
 
     const handleSort = (field: string) => {
@@ -131,7 +128,8 @@ export const TableListing: React.FC<TableListingProps> = ({
                 setDeleteModal(false);
                 setDeleteFolderSelected(null);
                 onFolderDeleted?.();
-            } catch (error) {
+            } catch {
+                // MediaService already reports the server error through a toast.
             } finally {
                 setDeleting(false);
             }
@@ -153,53 +151,67 @@ export const TableListing: React.FC<TableListingProps> = ({
                 <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                         <thead>
-                            <tr className="border-b border-gray-200 dark:border-gray-700">
-                                <th className="w-12"></th>
-                                <th className="w-12"></th>
+                            <tr className="border-border border-b">
+                                <th className="w-10">
+                                    <span className="sr-only">Selection</span>
+                                </th>
+                                <th className="w-12">
+                                    <span className="sr-only">Preview</span>
+                                </th>
                                 {columns.map((column, index) => (
                                     <th
                                         key={index}
-                                        className={`p-3 text-left font-medium text-gray-900 dark:text-gray-100 ${column.extra ? 'hidden md:table-cell' : ''} ${
-                                            !isSearching ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700' : ''
-                                        }`}
-                                        onClick={() => handleSort(column.field)}
+                                        scope="col"
+                                        aria-sort={isColumnActive(column) ? (sortOrder === 'asc' ? 'ascending' : 'descending') : undefined}
+                                        className={`text-muted-foreground p-3 text-left text-sm font-medium ${column.extra ? 'hidden md:table-cell' : ''}`}
                                     >
-                                        <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            disabled={isSearching}
+                                            onClick={() => handleSort(column.field)}
+                                            className="focus-visible:outline-ring flex items-center gap-2 rounded focus-visible:outline-2"
+                                        >
                                             {column.label}
                                             {isColumnActive(column) &&
                                                 (sortOrder === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)}
-                                        </div>
+                                        </button>
                                     </th>
                                 ))}
-                                <th className="hidden w-20 md:table-cell">Actions</th>
-                                <th className="w-16"></th>
+                                <th scope="col" className="w-14">
+                                    <span className="sr-only">Actions</span>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
                             {hasParent && !restrictNavigation && (
-                                <tr className="cursor-pointer border-b border-gray-100 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700">
-                                    <td className="p-3" onDoubleClick={handleParentSelect}>
-                                        <div className="flex h-8 w-8 items-center justify-center">
-                                            <CornerLeftUp className="h-4 w-4 text-gray-600" />
-                                        </div>
+                                <tr className="border-border hover:bg-accent cursor-pointer border-b">
+                                    <td className="p-3">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={handleParentSelect}
+                                            aria-label="Open parent folder"
+                                            className="media-selection-control"
+                                        >
+                                            <CornerLeftUp className="text-muted-foreground h-4 w-4" />
+                                        </Button>
                                     </td>
                                     <td className="p-3" onDoubleClick={handleParentSelect}>
                                         <div className="flex h-8 w-8 items-center justify-center">
-                                            <FileIcon extension="folder" className="h-6 w-6" />
+                                            <Folder className="text-muted-foreground size-5" />
                                         </div>
                                     </td>
                                     <td className="p-3">
                                         <button
                                             type="button"
-                                            onDoubleClick={handleParentSelect}
-                                            className="cursor-pointer text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                            onClick={handleParentSelect}
+                                            className="text-muted-foreground hover:text-foreground focus-visible:outline-ring text-sm focus-visible:outline-2"
                                         >
-                                            ..
+                                            Parent folder
                                         </button>
                                     </td>
-                                    <td className="hidden p-3 md:table-cell">..</td>
-                                    <td className="hidden p-3 md:table-cell">..</td>
-                                    <td className="hidden p-3 md:table-cell"></td>
+                                    <td className="hidden p-3 md:table-cell">—</td>
+                                    <td className="hidden p-3 md:table-cell">—</td>
                                     <td className="p-3"></td>
                                 </tr>
                             )}

@@ -11,7 +11,7 @@ interface PhotographyShowProps {
         title: string
         description: string
         date: string | null
-        categories: any[]
+        categories: { id: number; name: string; slug: string }[]
         cover_image: string
         images: Array<{
             card_url: string

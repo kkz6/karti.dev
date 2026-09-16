@@ -51,10 +51,13 @@ class PhotoService extends BaseService implements PhotoServiceInterface
                 'status'       => $data->status,
                 'featured'     => $data->featured,
                 'sort_order'   => $data->sort_order,
-                'published_at' => $data->published_at,
+                'published_at' => $data->published_at ?? ($data->status === 'published' ? now() : null),
             ];
 
             $photo = $this->repository->create($photoData);
+            if ($data->seo !== null) {
+                $photo->updateSeo($data->seo);
+            }
 
             if ($data->categories) {
                 $photo->categories()->sync($data->categories);
@@ -82,10 +85,13 @@ class PhotoService extends BaseService implements PhotoServiceInterface
                 'status'       => $data->status,
                 'featured'     => $data->featured,
                 'sort_order'   => $data->sort_order,
-                'published_at' => $data->published_at,
+                'published_at' => $data->published_at ?? ($data->status === 'published' ? now() : null),
             ];
 
             $photo = $this->repository->updateByModel($photo, $photoData);
+            if ($data->seo !== null) {
+                $photo->updateSeo($data->seo);
+            }
 
             if ($data->categories !== null) {
                 $photo->categories()->sync($data->categories);
@@ -107,6 +113,7 @@ class PhotoService extends BaseService implements PhotoServiceInterface
     {
         return DB::transaction(function () use ($photo) {
             $photo->categories()->detach();
+
             return $this->repository->delete($photo->id);
         });
     }

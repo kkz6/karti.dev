@@ -1,16 +1,21 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import { SEOFields } from '@seo/components/SeoFields';
+import { ContentEditorHeader, EditorErrorSummary, EditorPublishedControl, EditorViewLink } from '@shared/components/content-editor';
+import { DateField } from '@shared/components/date-field';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { Checkbox } from '@shared/components/ui/checkbox';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@shared/components/ui/form';
 import { Input } from '@shared/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Textarea } from '@shared/components/ui/textarea';
+import { useEditorSave } from '@shared/hooks/use-editor-save';
 import AppLayout from '@shared/layouts/app-layout';
+import { LocalTrafficCard } from '@shared/components/local-traffic-card';
 import { type BreadcrumbItem } from '@shared/types';
-import { Save, Trash2, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import type { BaseSyntheticEvent } from 'react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -28,9 +33,9 @@ const projectSchema = z.object({
     client: z.string().max(255, 'Client name must be less than 255 characters').nullish(),
     project_url: z.string().url('Must be a valid URL').nullish().or(z.literal('')),
     github_url: z.string().url('Must be a valid URL').nullish().or(z.literal('')),
-    technologies: z.array(z.string()).default([]),
+    technologies: z.array(z.string()),
     featured_image: z.string().nullish(),
-    images: z.array(z.string()).default([]),
+    images: z.array(z.string()),
     start_date: z.string().nullish(),
     end_date: z.string().nullish(),
     status: z.enum(['draft', 'published', 'archived']),
@@ -64,7 +69,7 @@ interface Project {
 export default function Edit({ project }: { project: Project }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Projects', href: route('admin.projects.index') },
-        { title: project.title, href: route('admin.projects.show', project.slug) },
+        { title: project.title, href: route('admin.projects.edit', project.slug) },
         { title: 'Edit', href: route('admin.projects.edit', project.slug) },
     ];
 
@@ -109,16 +114,10 @@ export default function Edit({ project }: { project: Project }) {
         );
     };
 
-    const onSubmit = (data: ProjectFormData) => {
-        router.put(route('admin.projects.update', project.slug), data, {
-            preserveState: true,
-            preserveScroll: true,
-            onError: (errors) => {
-                Object.entries(errors).forEach(([key, message]) => {
-                    form.setError(key as keyof ProjectFormData, { type: 'server', message });
-                });
-            },
-        });
+    const { saving, save } = useEditorSave(form, route('admin.projects.index'));
+
+    const onSubmit = (data: ProjectFormData, event?: BaseSyntheticEvent) => {
+        save('put', route('admin.projects.update', project.slug), data, event);
     };
 
     const handleDelete = () => {
@@ -134,32 +133,25 @@ export default function Edit({ project }: { project: Project }) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Edit Project: ${project.title}`} />
-            <div className="flex h-full flex-col space-y-6 p-8 pt-6">
-                <div className="mx-auto w-full max-w-7xl">
-                    {/* Header with Actions */}
-                    <div className="mb-6 flex items-center justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold tracking-tight">Edit Project</h1>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                            <Button type="submit" form="project-form" disabled={form.formState.isSubmitting}>
-                                <Save className="mr-2 h-4 w-4" />
-                                {form.formState.isSubmitting ? 'Updating...' : 'Update Project'}
-                            </Button>
-                            <Button type="button" variant="outline" asChild>
-                                <Link href={route('admin.projects.show', project.slug)}>Cancel</Link>
-                            </Button>
-                            <Button type="button" variant="destructive" onClick={handleDelete}>
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                            </Button>
-                        </div>
-                    </div>
+            <div className="content-editor">
+                <div className="w-full">
+                    <ContentEditorHeader
+                        title={form.watch('title') || 'New project'}
+                        status={form.watch('status')}
+                        formId="project-form"
+                        processing={saving}
+                        backHref={route('admin.projects.index')}
+                        onArchive={() =>
+                            form.setValue('status', form.getValues('status') === 'archived' ? 'draft' : 'archived', { shouldDirty: true })
+                        }
+                        onDelete={handleDelete}
+                    />
+                    <EditorErrorSummary errors={form.formState.errors} />
 
                     <Form {...form}>
                         <form id="project-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                             {/* Tabs Header */}
-                            <Tabs defaultValue="main" value={activeTab} onValueChange={setActiveTab} className="w-full">
+                            <Tabs defaultValue="main" value={activeTab} onValueChange={setActiveTab} className="content-editor-tabs w-full">
                                 <TabsList className="border-border text-foreground h-auto gap-2 rounded-none border-b bg-transparent px-0 py-1">
                                     <TabsTrigger
                                         value="main"
@@ -182,9 +174,9 @@ export default function Edit({ project }: { project: Project }) {
                                 </TabsList>
 
                                 {/* Content Grid */}
-                                <div className="mt-6 grid gap-8 lg:grid-cols-6">
+                                <div className="content-editor-grid">
                                     {/* Left column with tab content - 4/6 */}
-                                    <div className="lg:col-span-4">
+                                    <div className="content-editor-main space-y-6">
                                         <TabsContent value="main" className="mt-0 space-y-6">
                                             {/* Basic Information */}
                                             <Card>
@@ -200,7 +192,11 @@ export default function Edit({ project }: { project: Project }) {
                                                             <FormItem>
                                                                 <FormLabel>Title *</FormLabel>
                                                                 <FormControl>
-                                                                    <Input {...field} placeholder="e.g., E-commerce Platform Redesign" />
+                                                                    <Input
+                                                                        {...field}
+                                                                        value={field.value ?? ''}
+                                                                        placeholder="e.g., E-commerce Platform Redesign"
+                                                                    />
                                                                 </FormControl>
                                                                 <FormMessage />
                                                             </FormItem>
@@ -214,7 +210,12 @@ export default function Edit({ project }: { project: Project }) {
                                                             <FormItem>
                                                                 <FormLabel>Short Description</FormLabel>
                                                                 <FormControl>
-                                                                    <Textarea {...field} placeholder="Brief overview of the project..." rows={2} />
+                                                                    <Textarea
+                                                                        {...field}
+                                                                        value={field.value ?? ''}
+                                                                        placeholder="Brief overview of the project..."
+                                                                        rows={2}
+                                                                    />
                                                                 </FormControl>
                                                                 <FormDescription>A brief summary for project cards</FormDescription>
                                                                 <FormMessage />
@@ -229,7 +230,12 @@ export default function Edit({ project }: { project: Project }) {
                                                             <FormItem>
                                                                 <FormLabel>Full Description *</FormLabel>
                                                                 <FormControl>
-                                                                    <Textarea {...field} placeholder="Detailed project description..." rows={6} />
+                                                                    <Textarea
+                                                                        {...field}
+                                                                        value={field.value ?? ''}
+                                                                        placeholder="Detailed project description..."
+                                                                        rows={6}
+                                                                    />
                                                                 </FormControl>
                                                                 <FormMessage />
                                                             </FormItem>
@@ -253,7 +259,11 @@ export default function Edit({ project }: { project: Project }) {
                                                             <FormItem>
                                                                 <FormLabel>Client</FormLabel>
                                                                 <FormControl>
-                                                                    <Input {...field} placeholder="Client or company name" />
+                                                                    <Input
+                                                                        {...field}
+                                                                        value={field.value ?? ''}
+                                                                        placeholder="Client or company name"
+                                                                    />
                                                                 </FormControl>
                                                                 <FormMessage />
                                                             </FormItem>
@@ -268,7 +278,7 @@ export default function Edit({ project }: { project: Project }) {
                                                                 <FormItem>
                                                                     <FormLabel>Start Date</FormLabel>
                                                                     <FormControl>
-                                                                        <Input {...field} type="date" />
+                                                                        <DateField {...field} label="Start date" />
                                                                     </FormControl>
                                                                     <FormMessage />
                                                                 </FormItem>
@@ -282,7 +292,7 @@ export default function Edit({ project }: { project: Project }) {
                                                                 <FormItem>
                                                                     <FormLabel>End Date</FormLabel>
                                                                     <FormControl>
-                                                                        <Input {...field} type="date" />
+                                                                        <DateField {...field} label="End date" />
                                                                     </FormControl>
                                                                     <FormMessage />
                                                                 </FormItem>
@@ -297,7 +307,12 @@ export default function Edit({ project }: { project: Project }) {
                                                             <FormItem>
                                                                 <FormLabel>Project URL</FormLabel>
                                                                 <FormControl>
-                                                                    <Input {...field} placeholder="https://example.com" type="url" />
+                                                                    <Input
+                                                                        {...field}
+                                                                        value={field.value ?? ''}
+                                                                        placeholder="https://example.com"
+                                                                        type="url"
+                                                                    />
                                                                 </FormControl>
                                                                 <FormDescription>Live project URL</FormDescription>
                                                                 <FormMessage />
@@ -312,7 +327,12 @@ export default function Edit({ project }: { project: Project }) {
                                                             <FormItem>
                                                                 <FormLabel>GitHub URL</FormLabel>
                                                                 <FormControl>
-                                                                    <Input {...field} placeholder="https://github.com/..." type="url" />
+                                                                    <Input
+                                                                        {...field}
+                                                                        value={field.value ?? ''}
+                                                                        placeholder="https://github.com/..."
+                                                                        type="url"
+                                                                    />
                                                                 </FormControl>
                                                                 <FormDescription>Source code repository</FormDescription>
                                                                 <FormMessage />
@@ -360,61 +380,43 @@ export default function Edit({ project }: { project: Project }) {
                                             </Card>
                                         </TabsContent>
 
-                                        <TabsContent value="seo" className="mt-0 space-y-6">
-                                            <Card>
-                                                <CardHeader>
-                                                    <CardTitle>SEO Settings</CardTitle>
-                                                    <CardDescription>Optimize your content for search engines</CardDescription>
-                                                </CardHeader>
-                                                <CardContent className="space-y-4">
-                                                    <FormField
-                                                        control={form.control}
-                                                        name="meta_title"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>Meta Title</FormLabel>
-                                                                <FormControl>
-                                                                    <Input {...field} placeholder="SEO title for search engines" maxLength={60} />
-                                                                </FormControl>
-                                                                <FormDescription>{(field.value || '').length}/60 characters</FormDescription>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-
-                                                    <FormField
-                                                        control={form.control}
-                                                        name="meta_description"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>Meta Description</FormLabel>
-                                                                <FormControl>
-                                                                    <Textarea
-                                                                        {...field}
-                                                                        placeholder="Brief description for search engine results"
-                                                                        rows={3}
-                                                                        maxLength={160}
-                                                                    />
-                                                                </FormControl>
-                                                                <FormDescription>{(field.value || '').length}/160 characters</FormDescription>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-                                                </CardContent>
-                                            </Card>
+                                        <TabsContent value="seo" className="mt-0">
+                                            <SEOFields
+                                                previewPath="/projects"
+                                                metadataOnly
+                                                showSlug={false}
+                                                data={{
+                                                    meta_title: form.watch('meta_title') ?? '',
+                                                    meta_description: form.watch('meta_description') ?? '',
+                                                    slug: form.watch('slug'),
+                                                }}
+                                                setData={(key, value) => {
+                                                    if ((key === 'meta_title' || key === 'meta_description') && typeof value === 'string')
+                                                        form.setValue(key, value);
+                                                }}
+                                                errors={form.formState.errors}
+                                                fallbackTitle={form.watch('title')}
+                                                fallbackDescription={form.watch('description')}
+                                            />
                                         </TabsContent>
                                     </div>
 
                                     {/* Right column - fixed - 2/6 */}
-                                    <div className="space-y-6 lg:col-span-2">
+                                    <div className="content-editor-aside space-y-6">
+                                        <LocalTrafficCard />
+                                        <EditorViewLink href={route('projects')} published={project.status === 'published'} />
+                                        <EditorPublishedControl
+                                            value={form.watch('status')}
+                                            publishedValue="published"
+                                            draftValue="draft"
+                                            onChange={(value) => form.setValue('status', value, { shouldDirty: true })}
+                                            disabled={saving}
+                                            error={form.formState.errors.status?.message}
+                                        />
+
                                         {/* URL Settings */}
                                         <Card>
-                                            <CardHeader>
-                                                <CardTitle>URL Settings</CardTitle>
-                                                <CardDescription>Configure the URL for this project</CardDescription>
-                                            </CardHeader>
-                                            <CardContent>
+                                            <CardContent className="space-y-6">
                                                 <FormField
                                                     control={form.control}
                                                     name="slug"
@@ -422,41 +424,9 @@ export default function Edit({ project }: { project: Project }) {
                                                         <FormItem>
                                                             <FormLabel>Project Slug *</FormLabel>
                                                             <FormControl>
-                                                                <Input {...field} placeholder="url-friendly-slug" />
+                                                                <Input {...field} value={field.value ?? ''} placeholder="url-friendly-slug" />
                                                             </FormControl>
                                                             <FormDescription>Used in URLs.</FormDescription>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
-                                            </CardContent>
-                                        </Card>
-
-                                        {/* Publishing Options */}
-                                        <Card>
-                                            <CardHeader>
-                                                <CardTitle>Publishing Options</CardTitle>
-                                                <CardDescription>Control project visibility</CardDescription>
-                                            </CardHeader>
-                                            <CardContent className="space-y-4">
-                                                <FormField
-                                                    control={form.control}
-                                                    name="status"
-                                                    render={({ field }) => (
-                                                        <FormItem>
-                                                            <FormLabel>Status</FormLabel>
-                                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                                <FormControl>
-                                                                    <SelectTrigger>
-                                                                        <SelectValue />
-                                                                    </SelectTrigger>
-                                                                </FormControl>
-                                                                <SelectContent>
-                                                                    <SelectItem value="draft">Draft</SelectItem>
-                                                                    <SelectItem value="published">Published</SelectItem>
-                                                                    <SelectItem value="archived">Archived</SelectItem>
-                                                                </SelectContent>
-                                                            </Select>
                                                             <FormMessage />
                                                         </FormItem>
                                                     )}

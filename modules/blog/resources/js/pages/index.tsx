@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
+import { IndexHeader } from '@shared/components/index-header';
+import { LocalTrafficCard } from '@shared/components/local-traffic-card';
 import { Button } from '@shared/components/ui/button';
-import { PageHeader } from '@shared/components/page-header';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
 import { InertiaTableWrapper, type Action, type TableConfig } from '@table/components';
@@ -45,8 +46,6 @@ export default function Index({ articles, categories }: { articles: TableConfig<
     const breadcrumbs: BreadcrumbItem[] = [{ title: 'Blog Management', href: route('admin.blog.index') }];
 
     const handleCustomAction = async (action: Action, keys: (string | number)[], onFinish?: () => void) => {
-        const articleId = typeof keys[0] === 'string' ? parseInt(keys[0]) : keys[0];
-
         if (onFinish) onFinish();
     };
 
@@ -57,11 +56,10 @@ export default function Index({ articles, categories }: { articles: TableConfig<
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Blog Management" />
-            <div className="flex h-full flex-col gap-6 p-4 md:p-6">
-                <PageHeader
-                    eyebrow="content"
+            <div className="content-index flex flex-col gap-8">
+                <IndexHeader
                     title="Articles"
-                    description="Write, edit and publish posts. Drafts stay hidden from the public site until you publish them."
+                    icon={FileText}
                     actions={
                         <Button onClick={handleCreateArticle} disabled={categories.length === 0}>
                             Create article
@@ -69,6 +67,7 @@ export default function Index({ articles, categories }: { articles: TableConfig<
                     }
                 />
 
+                <LocalTrafficCard compact />
                 <InertiaTableWrapper
                     resource={articles}
                     emptyState={{

@@ -19,7 +19,8 @@ class AdminToolController extends BaseController
     public function index(Request $request): Response
     {
         return Inertia::render('tools::index', [
-            'table' => Tools::make($request->all()),
+            'table'   => Tools::make($request->all()),
+            'localTraffic' => app(\Modules\Analytics\Services\ContentTraffic::class)->forPage('/uses', 'Uses page'),
             'filters' => $request->all(),
         ]);
     }
@@ -43,31 +44,27 @@ class AdminToolController extends BaseController
     {
         $validated = $request->validate([
             'tool_category_id' => 'required|exists:tool_categories,id',
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'url' => 'nullable|url|max:255',
-            'image' => 'nullable|string|max:255',
-            'featured' => 'boolean',
-            'status' => 'in:active,inactive',
+            'title'            => 'required|string|max:255',
+            'description'      => 'required|string',
+            'url'              => 'nullable|url|max:255',
+            'image'            => 'nullable|string|max:255',
+            'featured'         => 'boolean',
+            'status'           => 'in:active,inactive',
         ]);
 
-        Tool::create($validated);
+        $tool = Tool::create($validated);
 
         return redirect()
-            ->route('admin.tools.index')
+            ->route('admin.tools.edit', $tool)
             ->with('success', 'Tool created successfully.');
     }
 
     /**
      * Display the specified tool.
      */
-    public function show(Tool $tool): Response
+    public function show(Tool $tool): RedirectResponse
     {
-        $tool->load('category');
-
-        return Inertia::render('tools::show', [
-            'tool' => $tool,
-        ]);
+        return redirect()->route('admin.tools.edit', $tool);
     }
 
     /**
@@ -78,7 +75,8 @@ class AdminToolController extends BaseController
         $categories = ToolCategory::active()->ordered()->get();
 
         return Inertia::render('tools::edit', [
-            'tool' => $tool,
+            'localTraffic' => app(\Modules\Analytics\Services\ContentTraffic::class)->forPage('/uses', 'Uses page'),
+            'tool'       => $tool,
             'categories' => $categories,
         ]);
     }
@@ -90,18 +88,18 @@ class AdminToolController extends BaseController
     {
         $validated = $request->validate([
             'tool_category_id' => 'required|exists:tool_categories,id',
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'url' => 'nullable|url|max:255',
-            'image' => 'nullable|string|max:255',
-            'featured' => 'boolean',
-            'status' => 'in:active,inactive',
+            'title'            => 'required|string|max:255',
+            'description'      => 'required|string',
+            'url'              => 'nullable|url|max:255',
+            'image'            => 'nullable|string|max:255',
+            'featured'         => 'boolean',
+            'status'           => 'in:active,inactive',
         ]);
 
         $tool->update($validated);
 
         return redirect()
-            ->route('admin.tools.index')
+            ->route('admin.tools.edit', $tool)
             ->with('success', 'Tool updated successfully.');
     }
 

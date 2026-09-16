@@ -1,7 +1,7 @@
 import { MediaAsset } from '@media/types/media';
-import { Button } from '@shared/components/ui/button';
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { AssetBrowser } from '../Browser/AssetBrowser';
+import { AssetPickerDialog } from './AssetPickerDialog';
 
 interface SelectorProps {
     container?: string | null;
@@ -20,20 +20,7 @@ export interface SelectorRef {
 }
 
 export const Selector = forwardRef<SelectorRef, SelectorProps>(
-    (
-        {
-            container = null,
-            folder = null,
-            selected = [],
-            maxFiles = null,
-            restrictNavigation = false,
-            canEdit = false,
-            viewMode = 'grid',
-            onClosed,
-            onSelected,
-        },
-        ref,
-    ) => {
+    ({ container = null, folder = null, selected = [], maxFiles = null, restrictNavigation = false, canEdit = false, onClosed, onSelected }, ref) => {
         const [browserSelections, setBrowserSelections] = useState<string[]>(selected);
         const [selectedAsset, setSelectedAsset] = useState<MediaAsset | null>(null);
 
@@ -71,48 +58,25 @@ export const Selector = forwardRef<SelectorRef, SelectorProps>(
         };
 
         return (
-            <div className="asset-selector-modal bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
-                <div className="asset-selector max-h-[90vh] w-full max-w-6xl overflow-hidden rounded-lg bg-white shadow-lg">
-                    <div className="flex-1 overflow-hidden">
-                        <AssetBrowser
-                            selectedContainer={container}
-                            selectedPath={folder}
-                            selectedAssets={browserSelections}
-                            restrictNavigation={restrictNavigation}
-                            maxFiles={maxFiles}
-                            canEdit={canEdit}
-                            onSelectionsUpdated={handleSelectionsUpdated}
-                            onAssetDoubleClicked={handleAssetDoubleClicked}
-                        >
-                            {browserSelections.length > 0 && (
-                                <Button variant="outline" onClick={handleUncheckAll} className="mb-3">
-                                    Uncheck all
-                                </Button>
-                            )}
-                        </AssetBrowser>
-                    </div>
-
-                    <div className="flex items-center justify-between rounded-b-lg border-t border-gray-200 bg-gray-50 p-3">
-                        <div className="text-sm text-gray-600">
-                            {browserSelections.length > 0 && (
-                                <>
-                                    {browserSelections.length}
-                                    {maxFiles && <span>/{maxFiles}</span>} Selected
-                                </>
-                            )}
-                        </div>
-
-                        <div className="flex gap-2">
-                            <Button variant="outline" onClick={handleClose}>
-                                Cancel
-                            </Button>
-                            <Button onClick={handleSelect} disabled={browserSelections.length === 0}>
-                                Select
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <AssetPickerDialog
+                open
+                title="Select assets"
+                selectedCount={browserSelections.length}
+                onClose={handleClose}
+                onConfirm={handleSelect}
+                onClear={handleUncheckAll}
+            >
+                <AssetBrowser
+                    selectedContainer={container}
+                    selectedPath={folder}
+                    selectedAssets={browserSelections}
+                    restrictNavigation={restrictNavigation}
+                    maxFiles={maxFiles ?? undefined}
+                    canEdit={canEdit}
+                    onSelectionsUpdated={handleSelectionsUpdated}
+                    onAssetDoubleClicked={handleAssetDoubleClicked}
+                />
+            </AssetPickerDialog>
         );
     },
 );

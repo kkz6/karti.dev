@@ -1,0 +1,23 @@
+:root {
+    --control-height: 2.25rem;
+}
+
+/* Dark admin fields are inset from cards; portal controls inherit this from body. */
+.ui-control {
+    background-color: var(--control-background, var(--card));
+}
+
+/* Shared field geometry also applies inside dense table filters and dialogs. */
+.ui-control:not(textarea) {
+    height: var(--control-height);
+    min-height: var(--control-height);
+}
+
+textarea.ui-control {
+    min-height: 5rem;
+}
+
+.editor-save-group button:focus-visible {
+    position: relative;
+    z-index: 1;
+}

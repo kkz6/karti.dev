@@ -18,7 +18,7 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
     icon: Icon,
     tooltip,
     variant = 'ghost',
-    size = 'sm',
+    size = 'icon',
     className = '',
     disabled = false,
 }) => {
@@ -26,7 +26,7 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button variant={variant} size={size} onClick={action} disabled={disabled} className={`h-8 w-8 p-0 ${className}`}>
+                    <Button variant={variant} size={size} onClick={action} disabled={disabled} aria-label={tooltip} className={className}>
                         <Icon className="h-4 w-4" />
                     </Button>
                 </TooltipTrigger>

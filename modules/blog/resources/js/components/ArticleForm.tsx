@@ -1,33 +1,30 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Head, router } from '@inertiajs/react';
 import { articleSchema, type ArticleFormData, type ArticleFormProps } from '@blog/types';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Head } from '@inertiajs/react';
 import { SimpleAssetsField } from '@media/components/Field/SimpleAssetsField';
 import { SEOFields } from '@seo/components/SeoFields';
+import { CategoryPicker } from '@shared/components/category-picker';
+import { LocalTrafficCard } from '@shared/components/local-traffic-card';
+import { ContentEditorHeader, EditorErrorSummary, EditorPublishedControl, EditorViewLink } from '@shared/components/content-editor';
+import { EditorDateField } from '@shared/components/editor-date-field';
+import { EditorRelationsField } from '@shared/components/editor-relations-field';
 import { FormSimpleEditor } from '@shared/components/tiptap';
-import { Button } from '@shared/components/ui/button';
-import { Calendar } from '@shared/components/ui/calendar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
+import { Card, CardContent } from '@shared/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@shared/components/ui/form';
 import { Input } from '@shared/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@shared/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Textarea } from '@shared/components/ui/textarea';
+import { useEditorSave } from '@shared/hooks/use-editor-save';
 import { useSlug } from '@shared/hooks/use-slug';
-import { PageHeader } from '@shared/components/page-header';
 import AppLayout from '@shared/layouts/app-layout';
-import { cn } from '@shared/lib/utils';
 import { type BreadcrumbItem } from '@shared/types';
-import { format } from 'date-fns';
-import { CalendarIcon, Save } from 'lucide-react';
+import type { BaseSyntheticEvent } from 'react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
-export default function ArticleForm({ article, categories }: ArticleFormProps) {
+export default function ArticleForm({ article, categories, tags = [] }: ArticleFormProps) {
     const isEditing = !!article;
     const pageTitle = isEditing ? 'Edit Article' : 'Create Article';
-    const submitText = isEditing ? 'Update Article' : 'Create Article';
-    const submittingText = isEditing ? 'Updating...' : 'Creating...';
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Blog Management', href: route('admin.blog.index') },
@@ -58,62 +55,41 @@ export default function ArticleForm({ article, categories }: ArticleFormProps) {
         },
     });
 
-    // Log validation errors for debugging
-    if (Object.keys(form.formState.errors).length > 0) {
-        console.error('Form validation errors:', form.formState.errors);
-    }
+    const { saving, save } = useEditorSave(form, route('admin.blog.index'));
 
-    const onSubmit = (data: ArticleFormData) => {
-        console.log('Form submitted with data:', data);
-        const formattedData = {
-            ...data,
-            published_at: data.published_at ? format(data.published_at, 'yyyy-MM-dd HH:mm:ss') : null,
-        };
-
-        if (isEditing) {
-            router.put(route('admin.blog.update', { blog: article.id }), formattedData, {
-                preserveState: true,
-                preserveScroll: true,
-                onError: (errors) => {
-                    console.error('Server validation errors:', errors);
-                },
-            });
-        } else {
-            router.post(route('admin.blog.store'), formattedData, {
-                preserveState: true,
-                preserveScroll: true,
-                onError: (errors) => {
-                    console.error('Server validation errors:', errors);
-                },
-            });
-        }
-    };
-
-    const onError = (errors: any) => {
-        console.error('Zod validation errors:', errors);
+    const onSubmit = (data: ArticleFormData, event?: BaseSyntheticEvent) => {
+        save(
+            isEditing ? 'put' : 'post',
+            isEditing ? route('admin.blog.update', { blog: article.id }) : route('admin.blog.store'),
+            {
+                ...data,
+                published_at: data.published_at?.toISOString() ?? null,
+            },
+            event,
+        );
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${pageTitle}: ${article?.title || 'New Article'}`} />
             <Form {...form}>
-                <form id="article-form" onSubmit={form.handleSubmit(onSubmit, onError)} className="flex h-full flex-col space-y-6 p-4 md:p-6">
-                    <div className="mx-auto w-full max-w-7xl">
-                        <PageHeader
-                            className="mb-6"
-                            eyebrow="articles"
-                            title={pageTitle}
-                            actions={
-                                <Button type="submit" disabled={form.formState.isSubmitting}>
-                                    <Save className="mr-2 h-4 w-4" />
-                                    {form.formState.isSubmitting ? submittingText : submitText}
-                                </Button>
+                <form id="article-form" onSubmit={form.handleSubmit(onSubmit)} className="content-editor">
+                    <div className="w-full">
+                        <ContentEditorHeader
+                            title={form.watch('title') || 'New article'}
+                            status={form.watch('status')}
+                            formId="article-form"
+                            processing={saving}
+                            backHref={route('admin.blog.index')}
+                            onArchive={() =>
+                                form.setValue('status', form.getValues('status') === 'archived' ? 'draft' : 'archived', { shouldDirty: true })
                             }
                         />
+                        <EditorErrorSummary errors={form.formState.errors} />
 
                         <div className="space-y-6">
                             {/* Tabs Header */}
-                            <Tabs defaultValue="main" value={activeTab} onValueChange={setActiveTab} className="w-full">
+                            <Tabs defaultValue="main" value={activeTab} onValueChange={setActiveTab} className="content-editor-tabs w-full">
                                 <TabsList className="border-border text-foreground h-auto gap-2 rounded-none border-b bg-transparent px-0 py-1">
                                     <TabsTrigger
                                         value="main"
@@ -121,12 +97,7 @@ export default function ArticleForm({ article, categories }: ArticleFormProps) {
                                     >
                                         Main
                                     </TabsTrigger>
-                                    <TabsTrigger
-                                        value="content"
-                                        className="hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-                                    >
-                                        Content
-                                    </TabsTrigger>
+                                    <TabsTrigger value="content">Content</TabsTrigger>
                                     <TabsTrigger
                                         value="seo"
                                         className="hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
@@ -136,118 +107,98 @@ export default function ArticleForm({ article, categories }: ArticleFormProps) {
                                 </TabsList>
 
                                 {/* Content Grid */}
-                                <div className="mt-6 grid gap-8 lg:grid-cols-6">
+                                <div className="content-editor-grid">
                                     {/* Left column with tab content - 4/6 */}
-                                    <div className="min-w-0 lg:col-span-4">
-                                        <TabsContent value="main" className="mt-0 space-y-6">
-                                            {/* Basic Information */}
-                                            <Card>
-                                                <CardHeader>
-                                                    <CardTitle>Basic Information</CardTitle>
-                                                    <CardDescription>Enter the basic details for the article</CardDescription>
-                                                </CardHeader>
-                                                <CardContent className="space-y-4">
-                                                    <FormField
-                                                        control={form.control}
-                                                        name="title"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>Title *</FormLabel>
-                                                                <FormControl>
-                                                                    <Input
-                                                                        {...field}
-                                                                        placeholder="Enter article title"
-                                                                        onInput={(event) => form.setValue('slug', generateSlug(event.target.value)) }
-                                                                    />
-                                                                </FormControl>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-
-                                                    <FormField
-                                                        control={form.control}
-                                                        name="slug"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>Slug *</FormLabel>
-                                                                <FormControl>
-                                                                    <Input
-                                                                        {...field}
-                                                                        placeholder="article-slug"
-                                                                    />
-                                                                </FormControl>
-                                                                <FormDescription>Used in URLs. Auto-generated from title.</FormDescription>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-
-                                                    <FormField
-                                                        control={form.control}
-                                                        name="excerpt"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>Excerpt</FormLabel>
-                                                                <FormControl>
-                                                                    <Textarea {...field} placeholder="Brief description of the article" rows={3} />
-                                                                </FormControl>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-
-                                                    <FormField
-                                                        control={form.control}
-                                                        name="featured_image"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <SimpleAssetsField
-                                                                    name="Featured Image"
-                                                                    data={field.value || []}
-                                                                    config={{
-                                                                        max_files: 1,
-                                                                        mode: 'grid',
-                                                                        accept: 'image/*',
-                                                                        folder: 'blog',
+                                    <div className="content-editor-main">
+                                        <TabsContent value="main" className="mt-0">
+                                            <div className="content-editor-panel space-y-8">
+                                                <FormField
+                                                    control={form.control}
+                                                    name="title"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Title *</FormLabel>
+                                                            <FormControl>
+                                                                <Input
+                                                                    {...field}
+                                                                    value={field.value ?? ''}
+                                                                    placeholder="Enter article title"
+                                                                    onChange={(event) => {
+                                                                        const title = event.target.value;
+                                                                        const previous = form.getValues('title');
+                                                                        const slug = form.getValues('slug');
+                                                                        field.onChange(title);
+                                                                        if (!isEditing && (!slug || slug === generateSlug(previous)))
+                                                                            form.setValue('slug', generateSlug(title));
                                                                     }}
-                                                                    onChange={(assets) => field.onChange(assets)}
-                                                                    onError={(error) => console.error('Asset error:', error)}
                                                                 />
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-                                                </CardContent>
-                                            </Card>
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                <FormField
+                                                    control={form.control}
+                                                    name="featured_image"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <SimpleAssetsField
+                                                                name="Featured Image"
+                                                                data={field.value || []}
+                                                                config={{
+                                                                    max_files: 1,
+                                                                    mode: 'grid',
+                                                                    accept: 'image/*',
+                                                                    folder: 'blog',
+                                                                }}
+                                                                onChange={(assets) => field.onChange(assets)}
+                                                                onError={(error) => console.error('Asset error:', error)}
+                                                            />
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                <FormField
+                                                    control={form.control}
+                                                    name="excerpt"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Excerpt</FormLabel>
+                                                            <FormControl>
+                                                                <Textarea
+                                                                    {...field}
+                                                                    value={field.value ?? ''}
+                                                                    placeholder="Brief description of the article"
+                                                                    rows={3}
+                                                                />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            </div>
                                         </TabsContent>
 
-                                        <TabsContent value="content" className="mt-0 space-y-6">
-                                            <Card className="w-full">
-                                                <CardHeader>
-                                                    <CardTitle>Article Content</CardTitle>
-                                                    <CardDescription>Write the main content of your article</CardDescription>
-                                                </CardHeader>
-                                                <CardContent className="w-full">
-                                                    <FormField
-                                                        control={form.control}
-                                                        name="content"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>Content *</FormLabel>
-                                                                <FormControl>
-                                                                    <FormSimpleEditor
-                                                                        content={field.value}
-                                                                        onChange={field.onChange}
-                                                                        placeholder="Write your article content here..."
-                                                                    />
-                                                                </FormControl>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-                                                </CardContent>
-                                            </Card>
+                                        <TabsContent value="content" className="mt-0">
+                                            <div className="content-editor-panel">
+                                                <FormField
+                                                    control={form.control}
+                                                    name="content"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Content *</FormLabel>
+                                                            <FormControl>
+                                                                <FormSimpleEditor
+                                                                    content={field.value}
+                                                                    onChange={field.onChange}
+                                                                    placeholder="Write your article content here..."
+                                                                />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            </div>
                                         </TabsContent>
 
                                         <TabsContent value="seo" className="mt-0 space-y-6">
@@ -256,7 +207,7 @@ export default function ArticleForm({ article, categories }: ArticleFormProps) {
                                                     seo: form.watch('seo'),
                                                     meta_title: form.watch('meta_title'),
                                                     meta_description: form.watch('meta_description'),
-                                                    slug: form.watch('slug')
+                                                    slug: form.watch('slug'),
                                                 }}
                                                 setData={(key, value) => {
                                                     if (key === 'seo') {
@@ -274,56 +225,50 @@ export default function ArticleForm({ article, categories }: ArticleFormProps) {
                                         </TabsContent>
                                     </div>
 
-                                    <div className="space-y-6 lg:col-span-2">
+                                    <div className="content-editor-aside space-y-6">
+                                        <LocalTrafficCard />
+                                        <EditorViewLink
+                                            href={article?.id ? route('articles.show', article.slug) : undefined}
+                                            published={article?.status === 'published'}
+                                        />
+                                        <EditorPublishedControl
+                                            value={form.watch('status')}
+                                            publishedValue="published"
+                                            draftValue="draft"
+                                            onChange={(value) => form.setValue('status', value, { shouldDirty: true })}
+                                            disabled={saving}
+                                            error={form.formState.errors.status?.message}
+                                        />
+
                                         <Card>
-                                            <CardHeader>
-                                                <CardTitle>Publication Settings</CardTitle>
-                                                <CardDescription>Control article publication</CardDescription>
-                                            </CardHeader>
-                                            <CardContent className="space-y-4">
+                                            <CardContent className="space-y-6">
+                                                <FormField
+                                                    control={form.control}
+                                                    name="slug"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Slug *</FormLabel>
+                                                            <FormControl>
+                                                                <Input {...field} value={field.value ?? ''} placeholder="article-slug" />
+                                                            </FormControl>
+                                                            <FormDescription>Used in URLs. Auto-generated from title.</FormDescription>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
                                                 <FormField
                                                     control={form.control}
                                                     name="category_id"
                                                     render={({ field }) => (
                                                         <FormItem>
                                                             <FormLabel>Category *</FormLabel>
-                                                            <Select onValueChange={field.onChange} value={field.value}>
-                                                                <FormControl>
-                                                                    <SelectTrigger>
-                                                                        <SelectValue placeholder="Select a category" />
-                                                                    </SelectTrigger>
-                                                                </FormControl>
-                                                                <SelectContent>
-                                                                    {categories.map((category) => (
-                                                                        <SelectItem key={category.id} value={category.id.toString()}>
-                                                                            {category.name}
-                                                                        </SelectItem>
-                                                                    ))}
-                                                                </SelectContent>
-                                                            </Select>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
-
-                                                <FormField
-                                                    control={form.control}
-                                                    name="status"
-                                                    render={({ field }) => (
-                                                        <FormItem>
-                                                            <FormLabel>Status</FormLabel>
-                                                            <Select onValueChange={field.onChange} value={field.value}>
-                                                                <FormControl>
-                                                                    <SelectTrigger>
-                                                                        <SelectValue />
-                                                                    </SelectTrigger>
-                                                                </FormControl>
-                                                                <SelectContent>
-                                                                    <SelectItem value="draft">Draft</SelectItem>
-                                                                    <SelectItem value="published">Published</SelectItem>
-                                                                    <SelectItem value="archived">Archived</SelectItem>
-                                                                </SelectContent>
-                                                            </Select>
+                                                            <FormControl>
+                                                                <CategoryPicker
+                                                                    {...field}
+                                                                    categories={categories}
+                                                                    createUrl={route('admin.categories.store')}
+                                                                />
+                                                            </FormControl>
                                                             <FormMessage />
                                                         </FormItem>
                                                     )}
@@ -334,49 +279,33 @@ export default function ArticleForm({ article, categories }: ArticleFormProps) {
                                                     name="published_at"
                                                     render={({ field }) => (
                                                         <FormItem className="flex flex-col">
-                                                            <FormLabel>Publish Date</FormLabel>
-                                                            <Popover>
-                                                                <PopoverTrigger asChild>
-                                                                    <FormControl>
-                                                                        <Button
-                                                                            type="button"
-                                                                            variant="outline"
-                                                                            className={cn(
-                                                                                'w-full justify-start text-left font-normal',
-                                                                                !field.value && 'text-muted-foreground',
-                                                                            )}
-                                                                        >
-                                                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                                                            {field.value ? (
-                                                                                format(field.value, 'PPP p')
-                                                                            ) : (
-                                                                                <span>Pick a publish date</span>
-                                                                            )}
-                                                                        </Button>
-                                                                    </FormControl>
-                                                                </PopoverTrigger>
-                                                                <PopoverContent className="w-auto p-0" align="start">
-                                                                    <Calendar
-                                                                        mode="single"
-                                                                        selected={field.value}
-                                                                        onSelect={field.onChange}
-                                                                    />
-                                                                    {field.value && (
-                                                                        <div className="border-t p-3">
-                                                                            <Button
-                                                                                type="button"
-                                                                                variant="outline"
-                                                                                size="sm"
-                                                                                className="w-full"
-                                                                                onClick={() => field.onChange(undefined)}
-                                                                            >
-                                                                                Clear Date
-                                                                            </Button>
-                                                                        </div>
-                                                                    )}
-                                                                </PopoverContent>
-                                                            </Popover>
+                                                            <FormLabel htmlFor="article-publish-date">Publish Date</FormLabel>
+                                                            <EditorDateField
+                                                                triggerId="article-publish-date"
+                                                                value={field.value}
+                                                                onChange={(date) => field.onChange(date ?? null)}
+                                                                disabled={saving}
+                                                                invalid={!!form.formState.errors.published_at}
+                                                            />
                                                             <FormDescription>Leave empty to publish immediately</FormDescription>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                <FormField
+                                                    control={form.control}
+                                                    name="tags"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel htmlFor="article-tags">Tags</FormLabel>
+                                                            <EditorRelationsField
+                                                                triggerId="article-tags"
+                                                                label="Tags"
+                                                                options={tags}
+                                                                value={field.value ?? []}
+                                                                onChange={field.onChange}
+                                                                invalid={!!form.formState.errors.tags}
+                                                            />
                                                             <FormMessage />
                                                         </FormItem>
                                                     )}

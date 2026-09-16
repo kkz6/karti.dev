@@ -13,7 +13,7 @@ interface Tool {
 }
 
 interface UsesProps {
-    sections?: any[];
+    sections?: { title: string; tools: Tool[] }[];
     seo?: SeoData;
 }
 

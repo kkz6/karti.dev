@@ -19,10 +19,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state', 'locale']);
 
         $middleware->web(append: [
+            \Modules\Settings\Http\Middleware\ApplySiteSettings::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
             HandleLocalization::class,
+            \Modules\Analytics\Http\Middleware\TrackPageViews::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

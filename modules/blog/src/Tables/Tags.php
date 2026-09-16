@@ -25,6 +25,7 @@ class Tags extends Table
             Columns\TextColumn::make('id', 'ID', stickable: true)->url(fn (Tag $tag) => route('admin.tags.edit', $tag->id)),
             Columns\TextColumn::make('name', 'Name', toggleable: false)
                 ->searchable()
+                ->url(fn (Tag $tag) => route('admin.tags.edit', $tag->id))
                 ->sortable(),
             Columns\TextColumn::make('slug', 'Slug', toggleable: false)->sortable(),
             Columns\TextColumn::make('articles_count', 'Articles Count')

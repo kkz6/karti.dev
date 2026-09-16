@@ -1,4 +1,5 @@
 import axios from 'axios';
+import type { UploaderRef } from '../components/Upload/Uploader';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
@@ -42,7 +43,7 @@ export const createDefaultServices = (): MediaServices => ({
         const { subdirectories, media, page_count } = response.data;
 
         // Transform subdirectories to folders format
-        const folders: MediaFolder[] = subdirectories.map((dir: any) => ({
+        const folders: MediaFolder[] = subdirectories.map((dir: { name: string; timestamp: string }) => ({
             uuid: `folder-${dir.name}`,
             path: dir.name,
             title: dir.name.split('/').pop() || dir.name,
@@ -52,7 +53,7 @@ export const createDefaultServices = (): MediaServices => ({
         }));
 
         // Transform media to assets format
-        const assets: MediaAsset[] = media.map((file: any) => ({
+        const assets: MediaAsset[] = media.map((file: Omit<MediaAsset, 'id'> & { id: string | number; basename?: string }) => ({
             ...file,
             id: file.id.toString(),
             title: file.title || file.basename || file.filename,
@@ -61,7 +62,7 @@ export const createDefaultServices = (): MediaServices => ({
             mime_type: file.mime_type,
             size: file.size,
             url: file.url,
-            thumbnail_url: file.aggregate_type === 'image' ? (file.thumbnail_url || file.url) : undefined,
+            thumbnail_url: file.aggregate_type === 'image' ? file.thumbnail_url || file.url : undefined,
             created_at: file.created_at,
             updated_at: file.updated_at,
             is_image: file.aggregate_type === 'image',
@@ -107,7 +108,7 @@ export const createDefaultServices = (): MediaServices => ({
         };
     },
 
-    searchFilesService: async (params: MediaSearchParams) => {
+    searchFilesService: async () => {
         // Search is not yet implemented in the backend, return empty results
         return {
             data: {
@@ -169,7 +170,7 @@ export function useMediaBrowser(
     const [assets, setAssets] = useState<MediaAsset[]>([]);
     const [folders, setFolders] = useState<MediaFolder[]>([]);
     const [folder, setFolder] = useState<MediaFolder | null>(null);
-    const [pagination, setPagination] = useState<any>({});
+    const [pagination, setPagination] = useState<MediaPagination | null>(null);
     const [selectedPage, setSelectedPage] = useState<number>(1);
     const [sort, setSort] = useState<string>('title');
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
@@ -185,7 +186,7 @@ export function useMediaBrowser(
     const [draggingFile, setDraggingFile] = useState<boolean>(false);
 
     // Refs
-    const uploaderRef = useRef<any>(null);
+    const uploaderRef = useRef<UploaderRef>(null);
     const elementRef = useRef<HTMLDivElement>(null);
     const assetRequestId = useRef(0);
 
@@ -262,6 +263,7 @@ export function useMediaBrowser(
     const search = useCallback(async () => {
         if (!container || !folder) return;
 
+        const requestId = ++assetRequestId.current;
         setLoadingAssets(true);
         setIsSearching(true);
         try {
@@ -272,12 +274,14 @@ export function useMediaBrowser(
                 restrictNavigation: false,
             });
 
-            setIsSearching(false);
+            if (requestId !== assetRequestId.current) return;
             setAssets(response.data.assets);
             setFolders([]);
+            setPagination(null);
             setLoadingAssets(false);
             setInitializedAssets(true);
         } catch (error) {
+            if (requestId !== assetRequestId.current) return;
             console.error('Error searching assets:', error);
             setLoadingAssets(false);
             setIsSearching(false);
@@ -335,6 +339,8 @@ export function useMediaBrowser(
     );
 
     const selectFolder = useCallback((folderData: MediaFolder) => {
+        setSearchTerm('');
+        setSelectedAssets([]);
         setPath(folderData.path);
         setPathUuid(folderData.uuid);
         setSelectedPage(1);
@@ -404,9 +410,10 @@ export function useMediaBrowser(
     const dropFile = useCallback((event: React.DragEvent) => {
         event.preventDefault();
         const files = event.dataTransfer.files;
-        if (files.length && uploaderRef.current) {
+        const uploader = uploaderRef.current;
+        if (files.length && uploader) {
             Array.from(files).forEach((file) => {
-                uploaderRef.current.upload(file);
+                uploader.upload(file);
             });
         }
         setDraggingFile(false);
@@ -438,13 +445,19 @@ export function useMediaBrowser(
     }, [loadAssets]);
 
     useEffect(() => {
-        if (searchTerm.length >= 3) {
-            search();
-        } else if (searchTerm.length === 0 && isSearching) {
-            loadAssets();
-        }
+        const timeout = setTimeout(() => {
+            if (searchTerm.length >= 3) {
+                search();
+            } else if (isSearching) {
+                loadAssets();
+            }
+        }, 250);
+        return () => {
+            clearTimeout(timeout);
+            assetRequestId.current += 1;
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchTerm, isSearching]);
+    }, [searchTerm]);
 
     // Computed values
     const initialized = !loadingContainers && initializedAssets;

@@ -1,4 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
+import AppLogoIcon from '@shared/components/app-logo-icon';
 import AppearanceToggleDropdown from '@shared/components/appearance-dropdown';
 import { Breadcrumbs } from '@shared/components/breadcrumbs';
 import { Avatar, AvatarFallback, AvatarImage } from '@shared/components/ui/avatar';
@@ -12,7 +13,7 @@ import { type BreadcrumbItem, type SharedData } from '@shared/types';
 import { ArrowUpRight, Menu } from 'lucide-react';
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItem[] }) {
-    const { auth } = usePage<SharedData>().props;
+    const { auth, site } = usePage<SharedData>().props;
     const getInitials = useInitials();
 
     return (
@@ -33,8 +34,8 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
                     prefetch
                     className="flex shrink-0 items-center gap-2 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
                 >
-                    <img src="/images/avatar.png" alt="" className="size-6 rounded-sm object-cover" />
-                    <span className="text-sm font-medium">karti.dev</span>
+                    <AppLogoIcon className="size-6" />
+                    <span className="max-w-40 truncate text-sm font-medium">{site.name}</span>
                 </Link>
 
                 <Separator orientation="vertical" className="hidden !h-5 bg-white/15 sm:block" />

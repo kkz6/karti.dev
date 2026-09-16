@@ -19,7 +19,7 @@ export interface CodeBlockOptions {
    * HTML attributes to add to the code block element
    * @default {}
    */
-  HTMLAttributes: Record<string, any>
+  HTMLAttributes: Record<string, unknown>
   
   /**
    * Whether to enable syntax highlighting

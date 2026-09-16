@@ -29,6 +29,7 @@ class PhotographyController extends BaseController
 
         return Inertia::render('photography::index', [
             'photos'      => Photos::make(),
+            'localTraffic' => app(\Modules\Analytics\Services\ContentTraffic::class)->forPage('/photography', 'Photography page'),
             'categories'  => $categories,
             'filters'     => $request->only(['search', 'category', 'status']),
         ]);
@@ -49,42 +50,9 @@ class PhotographyController extends BaseController
     /**
      * Display the specified photo gallery.
      */
-    public function show(Photo $photography): Response
+    public function show(Photo $photography): RedirectResponse
     {
-        $photography->load(['categories', 'media']);
-
-        return Inertia::render('photography::show', [
-            'collection' => [
-                'id'               => $photography->id,
-                'title'            => $photography->title,
-                'slug'             => $photography->slug,
-                'description'      => $photography->description,
-                'status'           => $photography->status,
-                'featured'         => $photography->featured,
-                'sort_order'       => $photography->sort_order,
-                'published_at'     => $photography->published_at?->toISOString(),
-                'created_at'       => $photography->created_at?->toISOString(),
-                'updated_at'       => $photography->updated_at?->toISOString(),
-                'meta_title'       => $photography->meta_title,
-                'meta_description' => $photography->meta_description,
-                'categories'       => $photography->categories->map(fn ($category) => [
-                    'id'   => $category->id,
-                    'name' => $category->name,
-                    'slug' => $category->slug,
-                ])->values(),
-                'cover_image'      => $photography->cover_image?->getUrl(),
-                'photos'           => $photography->images->map(fn ($image) => [
-                    'id'         => $image->id,
-                    'title'      => $image->title,
-                    'image_path' => $image->getUrl(),
-                    'alt_text'   => $image->alt,
-                    'sort_order' => $image->pivot?->order ?? 0,
-                    'width'      => null,
-                    'height'     => null,
-                    'file_size'  => $image->size,
-                ])->values(),
-            ],
-        ]);
+        return redirect()->route('admin.photography.edit', $photography);
     }
 
     /**
@@ -103,7 +71,7 @@ class PhotographyController extends BaseController
      */
     public function edit(Photo $photography): Response
     {
-        $photography->load(['categories', 'media']);
+        $photography->load(['categories', 'media', 'seo']);
 
         $categories = $this->categoryService->all(['id', 'name']);
 
@@ -118,6 +86,7 @@ class PhotographyController extends BaseController
                 'cover_image' => $coverImageId,
                 'image_ids'   => $imageIds,
             ]),
+            'localTraffic' => app(\Modules\Analytics\Services\ContentTraffic::class)->forContent('gallery', $photography),
             'categories' => $categories,
         ]);
     }

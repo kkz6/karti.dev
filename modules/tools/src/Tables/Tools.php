@@ -21,14 +21,15 @@ class Tools extends Table
     public function columns(): array
     {
         return [
-            Columns\TextColumn::make('id', 'ID', stickable: true)->url(fn(Tool $tool) => route('admin.tools.show', $tool)),
+            Columns\TextColumn::make('id', 'ID', stickable: true)->url(fn (Tool $tool) => route('admin.tools.edit', $tool)),
             Columns\TextColumn::make('title', 'Title', toggleable: false)
+                ->url(fn (Tool $tool) => route('admin.tools.edit', $tool))
                 ->searchable()
                 ->sortable(),
             Columns\TextColumn::make('category.name', 'Category')
                 ->sortable('tool_category_id'),
             Columns\TextColumn::make('url', 'URL')
-                ->url(fn(Tool $tool) => $tool->url),
+                ->url(fn (Tool $tool) => $tool->url),
             Columns\BooleanColumn::make('featured', 'Featured')
                 ->sortable(),
             Columns\DateColumn::make('created_at', 'Created At', toggleable: false),
@@ -51,20 +52,15 @@ class Tools extends Table
         return [
             Action::make(
                 label: 'Edit',
-                url: fn(Tool $tool) => route('admin.tools.edit', $tool),
+                url: fn (Tool $tool) => route('admin.tools.edit', $tool),
                 icon: 'pencil',
-                variant: Variant::Secondary,
-            ),
-            Action::make(
-                label: 'View',
-                url: fn(Tool $tool) => route('admin.tools.show', $tool),
-                icon: 'eye',
                 variant: Variant::Secondary,
             ),
             Action::make(
                 label: 'Delete',
                 handle: function (Tool $tool) {
                     $tool->delete();
+
                     return back()->with('success', 'Tool deleted successfully.');
                 },
                 icon: 'trash',

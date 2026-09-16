@@ -12,20 +12,7 @@ import { Uploader, UploaderRef } from '../Upload/Uploader';
 import { Uploads } from '../Upload/Uploads';
 import { AssetFieldRow } from './AssetFieldRow';
 import { AssetFieldTile } from './AssetFieldTile';
-
-// Extend Array prototype for swapping (similar to Vue implementation)
-declare global {
-    interface Array<T> {
-        swap(x: number, y: number): Array<T>;
-    }
-}
-
-Array.prototype.swap = function <T>(this: T[], x: number, y: number): T[] {
-    const b = this[x];
-    this[x] = this[y];
-    this[y] = b;
-    return this;
-};
+import { AssetDropOverlay } from './AssetDropOverlay';
 
 export function AssetsField({ name, data = [], config = {}, required = false, readOnly = false, onChange, onError }: AssetFieldProps) {
     const rootRef = useRef<HTMLDivElement>(null);
@@ -37,8 +24,7 @@ export function AssetsField({ name, data = [], config = {}, required = false, re
     const [loading, setLoading] = useState(true);
     const [showSelector, setShowSelector] = useState(false);
     const [draggingFile, setDraggingFile] = useState(false);
-    const [innerDragging, setInnerDragging] = useState(false);
-    const [displayMode, setDisplayMode] = useState<DisplayMode>(config.mode || 'grid');
+    const displayMode: DisplayMode = config.mode || 'grid';
 
     const mediaService = new MediaService();
 
@@ -97,16 +83,16 @@ export function AssetsField({ name, data = [], config = {}, required = false, re
     // Drag & drop handlers
     const handleDragOver = useCallback(
         (e: React.DragEvent) => {
+            if (!e.dataTransfer.types.includes('Files') || readOnly || showSelector || !containerSpecified) return;
             e.preventDefault();
-            if (!innerDragging) {
-                setDraggingFile(true);
-            }
+            setDraggingFile(true);
         },
-        [innerDragging],
+        [readOnly, showSelector, containerSpecified],
     );
 
     const handleDragLeave = useCallback((e: React.DragEvent) => {
         e.preventDefault();
+        if (e.relatedTarget instanceof Node && e.currentTarget.contains(e.relatedTarget)) return;
         setDraggingFile(false);
     }, []);
 
@@ -114,13 +100,15 @@ export function AssetsField({ name, data = [], config = {}, required = false, re
         e.preventDefault();
         setDraggingFile(false);
 
+        if (readOnly || showSelector || !containerSpecified) return;
+
         const files = e.dataTransfer.files;
         if (files.length > 0 && uploaderRef.current) {
             Array.from(files).forEach((file) => {
                 uploaderRef.current?.upload(file);
             });
         }
-    }, []);
+    }, [readOnly, showSelector, containerSpecified]);
 
     // Asset management handlers
     const handleAssetRemove = useCallback((asset: MediaAsset) => {
@@ -175,19 +163,6 @@ export function AssetsField({ name, data = [], config = {}, required = false, re
         [onError],
     );
 
-    // Sortable functionality (simplified - you might want to use a library like react-sortable-hoc)
-    const handleSortStart = useCallback(() => {
-        setInnerDragging(true);
-    }, []);
-
-    const handleSortEnd = useCallback((oldIndex: number, newIndex: number) => {
-        setAssets((prev) => {
-            const newAssets = [...prev];
-            return newAssets.swap(oldIndex, newIndex);
-        });
-        setInnerDragging(false);
-    }, []);
-
     return (
         <FormItem>
             <FormLabel>
@@ -197,7 +172,7 @@ export function AssetsField({ name, data = [], config = {}, required = false, re
             <FormControl>
                 <div
                     ref={rootRef}
-                    className={cn('assets-fieldtype border-input bg-background rounded-lg border', {
+                    className={cn('assets-fieldtype relative isolate border-input bg-background rounded-lg border', {
                         'max-files-reached': maxFilesReached,
                         empty: !assets.length,
                         solo: soloAsset,
@@ -209,18 +184,13 @@ export function AssetsField({ name, data = [], config = {}, required = false, re
                     {loading && <LoadingGraphic />}
 
                     {/* Drag notification */}
-                    {containerSpecified && !innerDragging && draggingFile && !showSelector && (
-                        <div className="drag-notification flex flex-col items-center justify-center p-8 text-center">
-                            <Upload className="text-muted-foreground mb-2 h-8 w-8" />
-                            <h3 className="text-lg font-medium">Drop to upload</h3>
-                        </div>
-                    )}
+                    {containerSpecified && draggingFile && !showSelector && !readOnly && <AssetDropOverlay />}
 
                     {!loading && (
                         <>
                             {/* Upload controls */}
                             {!maxFilesReached && (
-                                <div className="manage-assets border-border border-b p-4">
+                                <div className={cn('manage-assets border-border p-4', assets.length > 0 && 'border-b')}>
                                     {!containerSpecified ? (
                                         <div className="flex items-center text-yellow-600">
                                             <X className="mr-2 h-4 w-4" />
@@ -265,7 +235,7 @@ export function AssetsField({ name, data = [], config = {}, required = false, re
                                             ref={assetContainerRef as React.RefObject<HTMLDivElement>}
                                             className="asset-grid-listing grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6"
                                         >
-                                            {assets.map((asset, index) => (
+                                            {assets.map((asset) => (
                                                 <AssetFieldTile
                                                     key={asset.id}
                                                     asset={asset}
@@ -281,7 +251,7 @@ export function AssetsField({ name, data = [], config = {}, required = false, re
                                         <div className="asset-table-listing">
                                             <table className="w-full">
                                                 <tbody ref={assetContainerRef as React.RefObject<HTMLTableSectionElement>}>
-                                                    {assets.map((asset, index) => (
+                                                    {assets.map((asset) => (
                                                         <AssetFieldRow
                                                             key={asset.id}
                                                             asset={asset}

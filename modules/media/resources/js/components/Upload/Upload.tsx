@@ -1,81 +1,78 @@
 import { Button } from '@shared/components/ui/button';
-import { AlertCircle, X, CheckCircle } from 'lucide-react';
-import React from 'react';
-import { FileIcon } from '../Icons/FileIcon';
-import { LoadingGraphic } from '../UI/LoadingGraphic';
+import { cn } from '@shared/lib/utils';
+import { CircleAlert, CircleCheck, FileUp, X } from 'lucide-react';
+import { useId } from 'react';
+import type { MediaUpload } from '../../types/media';
+import { uploadPresentation } from '../../utils/upload-status';
 
 interface UploadProps {
-    extension: string;
-    basename: string;
-    percent: number;
-    error?: string | null;
-    onClear: () => void;
+    upload: MediaUpload;
+    onClear?: () => void;
 }
 
-export const Upload: React.FC<UploadProps> = ({ extension, basename, percent, error, onClear }) => {
-    const getStatus = () => {
-        if (error) {
-            return 'error';
-        } else if (percent === 100) {
-            return 'completed';
-        } else {
-            return 'uploading';
-        }
-    };
-
-    const status = getStatus();
+export function Upload({ upload, onClear }: UploadProps) {
+    const descriptionId = useId();
+    const { failed, completed, progress, label, message } = uploadPresentation(upload);
+    const Icon = failed ? CircleAlert : completed ? CircleCheck : FileUp;
 
     return (
-        <tr className={`upload-row ${status} ${status === 'error' ? 'bg-destructive/5' : 'bg-card'}`}>
-            <td className="column-status px-4 py-3">
-                {status === 'error' ? (
-                    <AlertCircle className="h-5 w-5 text-destructive" />
-                ) : status === 'completed' ? (
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                ) : (
-                    <LoadingGraphic text="" />
+        <li className="upload-row grid grid-cols-[2rem_minmax(0,1fr)_auto] items-start gap-x-3 px-4 py-4 sm:px-5">
+            <div
+                className={cn(
+                    'bg-muted text-muted-foreground flex size-8 items-center justify-center rounded-md',
+                    failed && 'bg-destructive/10 text-destructive',
+                    completed && 'bg-primary/10 text-primary',
                 )}
-            </td>
-
-            <td className="column-thumbnail py-3 pr-3">
-                <div className="flex h-8 w-8 items-center justify-center">
-                    <FileIcon extension={extension} className="h-6 w-6" />
+            >
+                <Icon className="size-4" aria-hidden="true" />
+            </div>
+            <div className="min-w-0 pt-0.5">
+                <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <span className="text-foreground min-w-0 text-sm font-medium break-all">{upload.name}</span>
+                    <span className={cn('text-muted-foreground text-xs tabular-nums', failed && 'text-destructive', completed && 'text-primary')}>
+                        {label}
+                    </span>
                 </div>
-            </td>
-
-            <td className="column-filename py-3 pr-4">
-                <span className="filename font-medium">{basename}</span>
-            </td>
-
-            {status === 'error' ? (
-                <td className="column-error py-3 pr-4 text-sm text-destructive">{error}</td>
-            ) : status === 'completed' ? (
-                <td className="column-progress py-3 pr-4 text-sm font-medium text-green-600">Upload completed successfully</td>
-            ) : (
-                <td className="column-progress py-3 pr-4">
-                    <div className="h-1 w-full bg-muted">
+                {message && (
+                    <p
+                        id={descriptionId}
+                        role={failed ? 'alert' : undefined}
+                        className="text-muted-foreground mt-1 max-w-prose text-xs leading-relaxed break-words"
+                    >
+                        {message}
+                    </p>
+                )}
+                {!failed && !completed && (
+                    <div
+                        role="progressbar"
+                        aria-label={`Uploading ${upload.name}`}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={progress}
+                        aria-valuetext={label}
+                        className="bg-muted mt-2.5 h-1 overflow-hidden rounded-full"
+                    >
                         <div
-                            className="h-1 bg-primary transition-all"
-                            style={{ width: `${percent}%` }}
+                            className="bg-primary h-full origin-left transition-transform duration-200 motion-reduce:transition-none"
+                            style={{ transform: `scaleX(${progress / 100})` }}
                         />
                     </div>
-                </td>
-            )}
-
-            <td className="w-12 px-3 py-3">
-                {status === 'error' && (
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        type="button"
-                        onClick={onClear}
-                        aria-label={`Dismiss ${basename} upload error`}
-                        className="h-8 w-8 rounded-none hover:bg-destructive/10"
-                    >
-                        <X className="h-4 w-4 text-destructive" />
-                    </Button>
                 )}
-            </td>
-        </tr>
+            </div>
+            {onClear && (failed || completed) ? (
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onClear}
+                    aria-label={`Dismiss ${upload.name} upload status`}
+                    aria-describedby={message ? descriptionId : undefined}
+                    className="text-muted-foreground -mr-1 shrink-0"
+                >
+                    <X className="size-4" aria-hidden="true" />
+                </Button>
+            ) : (
+                <span className="size-8" aria-hidden="true" />
+            )}
+        </li>
     );
-};
+}

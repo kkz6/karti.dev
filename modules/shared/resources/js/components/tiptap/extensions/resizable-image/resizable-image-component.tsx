@@ -111,7 +111,6 @@ export const ResizableImageComponent: React.FC<NodeViewProps> = ({
   const handleFitToContainer = () => {
     if (containerRef.current && imgRef.current) {
       const containerWidth = containerRef.current.offsetWidth;
-      const img = imgRef.current;
       
       if (aspectRatio) {
         updateAttributes({

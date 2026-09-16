@@ -3,7 +3,6 @@ import { Transition } from '@headlessui/react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 
-import DeleteUser from '@shared/components/delete-user';
 import HeadingSmall from '@shared/components/heading-small';
 import InputError from '@shared/components/input-error';
 import { Button } from '@shared/components/ui/button';
@@ -126,7 +125,6 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
                 <PasskeyForm />
 
-                <DeleteUser />
             </SettingsLayout>
         </AppLayout>
     );

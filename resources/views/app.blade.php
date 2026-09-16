@@ -45,7 +45,7 @@
             <title inertia>{{ config('app.name', 'Laravel') }}</title>
         @endif
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
+        <link rel="icon" href="{{ config('site.public.favicon', '/favicon.ico') }}" sizes="any" inertia="site-favicon">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
         @routes
@@ -63,7 +63,8 @@
             @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
         @endif
         @inertiaHead
-        <!-- Google tag (gtag.js) -->
+        @unless (request()->routeIs('newsletter.*'))
+        <!-- Keep signed newsletter links out of third-party analytics. -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZB97KEKN54"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
@@ -72,6 +73,7 @@
 
             gtag('config', 'G-ZB97KEKN54');
         </script>
+        @endunless
     </head>
     <body class="font-sans antialiased">
         @inertia

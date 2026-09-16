@@ -1,11 +1,14 @@
 import { Head, router } from '@inertiajs/react';
+import { IndexHeader } from '@shared/components/index-header';
+import { LocalTrafficCard } from '@shared/components/local-traffic-card';
 import { Button } from '@shared/components/ui/button';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
+import type { TableConfig } from '@table/components';
 import { InertiaTableWrapper } from '@table/components/Table/inertia-table-wrapper';
-import { Plus, Wrench, Settings, Package } from 'lucide-react';
+import { Package, Settings, Wrench } from 'lucide-react';
 
-export default function Index({ table }: { table: any }) {
+export default function Index({ table }: { table: TableConfig }) {
     const breadcrumbs: BreadcrumbItem[] = [{ title: 'Tools', href: route('admin.tools.index') }];
 
     const handleCreateTool = () => {
@@ -15,19 +18,9 @@ export default function Index({ table }: { table: any }) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Tools" />
-            <div className="flex h-full flex-col space-y-4 p-8 pt-6">
-                <div className="flex items-center justify-between space-y-2">
-                    <div>
-                        <h2 className="text-3xl font-bold tracking-tight">Tools</h2>
-                        <p className="text-muted-foreground">Manage your tools and resources collection.</p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <Button onClick={handleCreateTool}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Create Tool
-                        </Button>
-                    </div>
-                </div>
+            <div className="content-index flex flex-col gap-8">
+                <IndexHeader title="Tools" icon={Wrench} actions={<Button onClick={handleCreateTool}>Create tool</Button>} />
+                <LocalTrafficCard compact />
 
                 {/* Tools Table */}
                 <div className="flex-1">

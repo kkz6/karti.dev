@@ -2,6 +2,7 @@
 
 namespace Modules\Blog\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -17,6 +18,7 @@ class CategoryController extends BaseController
     public function __construct(
         private readonly CategoryServiceInterface $categoryService,
     ) {}
+
     /**
      * Display a listing of categories.
      */
@@ -38,12 +40,19 @@ class CategoryController extends BaseController
     /**
      * Store a newly created category in storage.
      */
-    public function store(CategoryData $dto): RedirectResponse
+    public function store(CategoryData $dto, Request $request): RedirectResponse|JsonResponse
     {
-        $this->categoryService->create($dto->except('seo', 'category_id', 'meta_title', 'meta_description')->toArray());
+        $category = $this->categoryService->create($dto->except('seo', 'category_id', 'meta_title', 'meta_description')->toArray());
+        if ($dto->seo !== null) {
+            $category->updateSeo($dto->seo);
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json(['category' => $category->only(['id', 'name', 'slug'])], 201);
+        }
 
         return redirect()
-            ->route('admin.categories.index')
+            ->route('admin.categories.edit', $category)
             ->with('success', 'Category created successfully.');
     }
 
@@ -53,7 +62,7 @@ class CategoryController extends BaseController
     public function edit(Category $category): Response
     {
         return Inertia::render('blog::categories/edit', [
-            'category' => $category,
+            'category' => $category->load('seo'),
         ]);
     }
 
@@ -63,9 +72,12 @@ class CategoryController extends BaseController
     public function update(CategoryData $dto, Category $category): RedirectResponse
     {
         $this->categoryService->update($category->id, $dto->except('seo', 'category_id', 'meta_title', 'meta_description')->toArray());
+        if ($dto->seo !== null) {
+            $category->updateSeo($dto->seo);
+        }
 
         return redirect()
-            ->route('admin.categories.index')
+            ->route('admin.categories.edit', $category->refresh())
             ->with('success', 'Category updated successfully.');
     }
 

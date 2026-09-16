@@ -12,6 +12,15 @@ class FrontendServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        \Illuminate\Support\Facades\RateLimiter::for('newsletter', function (\Illuminate\Http\Request $request) {
+            $email = $request->input('email');
+            $email = is_string($email) ? strtolower(trim($email)) : '';
+            $limited = fn () => redirect()->back(303)->withErrors(['email' => 'Too many subscription attempts. Please try again in an hour.']);
+            return [
+                \Illuminate\Cache\RateLimiting\Limit::perHour(10)->by('newsletter-ip:'.hash('sha256', $request->ip() ?? 'unknown'))->response($limited),
+                \Illuminate\Cache\RateLimiting\Limit::perHour(3)->by('newsletter-email:'.hash_hmac('sha256', $email, config('app.key')))->response($limited),
+            ];
+        });
         $this->commands([ExpireStaleBookingsCommand::class]);
 
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {

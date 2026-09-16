@@ -5,6 +5,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@share
 import { Contrast, Eye, Palette, Sun, Thermometer, X, Zap } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 
+import type { FilterOptions } from '../../utils/imageFilters';
+
 interface Filter {
     step: number | null;
     min: number | null;
@@ -18,7 +20,7 @@ interface ImageFiltersProps {
     processing: boolean;
     reset: boolean;
     applyFilter: (name: string, value: number | null) => void;
-    camanFilters: Record<string, any>;
+    camanFilters: FilterOptions;
 }
 
 export const ImageFilters: React.FC<ImageFiltersProps> = ({ processing, reset, applyFilter, camanFilters }) => {
@@ -102,7 +104,8 @@ export const ImageFilters: React.FC<ImageFiltersProps> = ({ processing, reset, a
                 setFilterValues((prev) => ({ ...prev, [filterName]: value }));
             } else {
                 setFilterValues((prev) => {
-                    const { [filterName]: removed, ...rest } = prev;
+                    const rest = { ...prev };
+                    delete rest[filterName];
                     return rest;
                 });
             }
@@ -119,7 +122,7 @@ export const ImageFilters: React.FC<ImageFiltersProps> = ({ processing, reset, a
     );
 
     const isFilterActive = (filterName: string) => {
-        return camanFilters.hasOwnProperty(filterName);
+        return Object.prototype.hasOwnProperty.call(camanFilters, filterName);
     };
 
     const getCurrentValue = (filterName: string) => {

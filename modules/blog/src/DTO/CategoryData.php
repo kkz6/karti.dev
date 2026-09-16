@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Blog\DTO;
 
 use Illuminate\Validation\Rule;
+use Modules\Blog\Models\Category;
 use Spatie\LaravelData\Data;
 
 class CategoryData extends Data
@@ -21,9 +22,11 @@ class CategoryData extends Data
 
     public static function rules(): array
     {
+        $category = request()->route('category');
+
         return [
             'name'             => ['required', 'string', 'max:255'],
-            'slug'             => ['required', 'string', 'max:255'],
+            'slug'             => ['required', 'string', 'max:255', Rule::unique('categories', 'slug')->ignore($category instanceof Category ? $category->id : null)],
             'description'      => ['nullable', 'string'],
             'meta_title'       => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
@@ -37,8 +40,9 @@ class CategoryData extends Data
      */
     public static function createRules(): array
     {
-        $rules = static::rules();
+        $rules           = static::rules();
         $rules['slug'][] = 'unique:categories,slug';
+
         return $rules;
     }
 
@@ -47,8 +51,9 @@ class CategoryData extends Data
      */
     public static function updateRules(int $categoryId): array
     {
-        $rules = static::rules();
+        $rules           = static::rules();
         $rules['slug'][] = Rule::unique('categories', 'slug')->ignore($categoryId);
+
         return $rules;
     }
 
@@ -56,9 +61,9 @@ class CategoryData extends Data
     {
         return [
             'name.required' => 'The category name is required.',
-            'name.max' => 'The name must not exceed 255 characters.',
+            'name.max'      => 'The name must not exceed 255 characters.',
             'slug.required' => 'The category slug is required.',
-            'slug.max' => 'The slug must not exceed 255 characters.',
+            'slug.max'      => 'The slug must not exceed 255 characters.',
         ];
     }
 
@@ -68,6 +73,7 @@ class CategoryData extends Data
     public static function forUpdate(array $data, int $categoryId): static
     {
         $data['category_id'] = $categoryId;
+
         return static::from($data);
     }
 

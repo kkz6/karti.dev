@@ -74,14 +74,6 @@ export const AssetManager: React.FC<AssetManagerProps> = ({ container = null, pa
         setShowAssetMover(true);
     }, []);
 
-    const deleteSelected = useCallback(() => {
-        // Emit custom event for asset deletion
-        const event = new CustomEvent('delete-assets', {
-            detail: selectedAssets,
-        });
-        window.dispatchEvent(event);
-    }, [selectedAssets]);
-
     const closeAssetMover = useCallback(() => {
         setShowAssetMover(false);
     }, []);
@@ -95,8 +87,9 @@ export const AssetManager: React.FC<AssetManagerProps> = ({ container = null, pa
     );
 
     return (
-        <div className="asset-manager relative flex h-full flex-col">
+        <div className="asset-manager relative flex h-full min-h-0 flex-col">
             <AssetBrowser
+                indexPage
                 selectedContainer={activeContainer}
                 selectedPath={activePath}
                 selectedAssets={selectedAssets}

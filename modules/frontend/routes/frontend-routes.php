@@ -12,6 +12,8 @@ Route::get('/articles/{slug}', [FrontendController::class, 'article'])->name('ar
 Route::get('/projects', [ProjectsController::class, 'index'])->name('projects');
 Route::get('/photography', [PhotographyController::class, 'index'])->name('photography');
 Route::get('/photography/{slug}', [PhotographyController::class, 'show'])->name('photography.show');
-Route::get('/about', [FrontendController::class, 'about'])->name('about');
-Route::get('/uses', [UsesController::class, 'index'])->name('uses');
-Route::get('/speaking', [FrontendController::class, 'speaking'])->name('speaking');
+Route::middleware('web')->group(function () {
+    Route::get('/about', [FrontendController::class, 'about'])->name('about');
+    Route::get('/uses', [UsesController::class, 'index'])->name('uses');
+    Route::get('/speaking', [FrontendController::class, 'speaking'])->name('speaking');
+});

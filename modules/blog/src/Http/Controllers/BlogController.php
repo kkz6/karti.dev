@@ -35,6 +35,7 @@ class BlogController extends BaseController
 
         return Inertia::render('blog::index', [
             'articles'   => Articles::make(),
+            'localTraffic' => app(\Modules\Analytics\Services\ContentTraffic::class)->forPage('/articles', 'Articles page'),
             'categories' => $categories,
             'tags'       => $tags,
             'filters'    => $request->only(['search', 'category', 'status']),
@@ -91,7 +92,7 @@ class BlogController extends BaseController
         }
 
         return redirect()
-            ->route('admin.blog.index')
+            ->route('admin.blog.edit', $article->id)
             ->with('success', 'Article created successfully.');
     }
 
@@ -109,6 +110,7 @@ class BlogController extends BaseController
         $tags       = $this->tagService->all(['id', 'name', 'slug']);
 
         return Inertia::render('blog::edit', [
+            'localTraffic' => app(\Modules\Analytics\Services\ContentTraffic::class)->forContent('article', $article),
             'article'    => $article,
             'categories' => $categories,
             'tags'       => $tags,
@@ -145,11 +147,11 @@ class BlogController extends BaseController
             ...$dto->except('tags', 'meta_title', 'meta_description', 'article_id', 'seo')->toArray(),
             'featured_image' => $featuredImageId,
             'published_at'   => $dto->status === 'published'
-                ? ($dto->published_at ?? $articleData->published_at ?? now())
+                ? ($dto->published_at ?? now())
                 : null,
         ]);
 
-        if (! empty($dto->tags)) {
+        if ($dto->tags !== null) {
             $articleData->tags()->sync($dto->tags);
         }
 
@@ -159,7 +161,7 @@ class BlogController extends BaseController
         }
 
         return redirect()
-            ->route('admin.blog.index')
+            ->route('admin.blog.edit', $articleId)
             ->with('success', 'Article updated successfully.');
     }
 

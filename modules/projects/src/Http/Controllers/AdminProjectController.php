@@ -18,7 +18,8 @@ class AdminProjectController extends BaseController
     public function index(Request $request): Response
     {
         return Inertia::render('projects::index', [
-            'table' => Projects::make($request->all()),
+            'table'   => Projects::make($request->all()),
+            'localTraffic' => app(\Modules\Analytics\Services\ContentTraffic::class)->forPage('/projects', 'Projects page'),
             'filters' => $request->all(),
         ]);
     }
@@ -37,39 +38,37 @@ class AdminProjectController extends BaseController
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'unique:projects,slug'],
-            'description' => ['required', 'string'],
+            'title'             => ['required', 'string', 'max:255'],
+            'slug'              => ['required', 'string', 'max:255', 'unique:projects,slug'],
+            'description'       => ['required', 'string'],
             'short_description' => ['nullable', 'string', 'max:500'],
-            'client' => ['nullable', 'string', 'max:255'],
-            'project_url' => ['nullable', 'url', 'max:255'],
-            'github_url' => ['nullable', 'url', 'max:255'],
-            'technologies' => ['nullable', 'array'],
-            'featured_image' => ['nullable', 'string', 'max:255'],
-            'images' => ['nullable', 'array'],
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date'],
-            'status' => ['required', 'in:draft,published,archived'],
-            'featured' => ['boolean'],
-            'meta_title' => ['nullable', 'string', 'max:60'],
-            'meta_description' => ['nullable', 'string', 'max:160'],
+            'client'            => ['nullable', 'string', 'max:255'],
+            'project_url'       => ['nullable', 'url', 'max:255'],
+            'github_url'        => ['nullable', 'url', 'max:255'],
+            'technologies'      => ['nullable', 'array'],
+            'featured_image'    => ['nullable', 'string', 'max:255'],
+            'images'            => ['nullable', 'array'],
+            'start_date'        => ['nullable', 'date'],
+            'end_date'          => ['nullable', 'date'],
+            'status'            => ['required', 'in:draft,published,archived'],
+            'featured'          => ['boolean'],
+            'meta_title'        => ['nullable', 'string', 'max:60'],
+            'meta_description'  => ['nullable', 'string', 'max:160'],
         ]);
 
-        Project::create($validated);
+        $project = Project::create($validated);
 
         return redirect()
-            ->route('admin.projects.index')
+            ->route('admin.projects.edit', $project)
             ->with('success', 'Project created successfully.');
     }
 
     /**
      * Display the specified project.
      */
-    public function show(Project $project): Response
+    public function show(Project $project): RedirectResponse
     {
-        return Inertia::render('projects::show', [
-            'project' => $project,
-        ]);
+        return redirect()->route('admin.projects.edit', $project);
     }
 
     /**
@@ -78,6 +77,7 @@ class AdminProjectController extends BaseController
     public function edit(Project $project): Response
     {
         return Inertia::render('projects::edit', [
+            'localTraffic' => app(\Modules\Analytics\Services\ContentTraffic::class)->forPage('/projects', 'Projects page'),
             'project' => $project,
         ]);
     }
@@ -88,28 +88,28 @@ class AdminProjectController extends BaseController
     public function update(Request $request, Project $project): RedirectResponse
     {
         $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'unique:projects,slug,' . $project->id],
-            'description' => ['required', 'string'],
+            'title'             => ['required', 'string', 'max:255'],
+            'slug'              => ['required', 'string', 'max:255', 'unique:projects,slug,'.$project->id],
+            'description'       => ['required', 'string'],
             'short_description' => ['nullable', 'string', 'max:500'],
-            'client' => ['nullable', 'string', 'max:255'],
-            'project_url' => ['nullable', 'url', 'max:255'],
-            'github_url' => ['nullable', 'url', 'max:255'],
-            'technologies' => ['nullable', 'array'],
-            'featured_image' => ['nullable', 'string', 'max:255'],
-            'images' => ['nullable', 'array'],
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date'],
-            'status' => ['required', 'in:draft,published,archived'],
-            'featured' => ['boolean'],
-            'meta_title' => ['nullable', 'string', 'max:60'],
-            'meta_description' => ['nullable', 'string', 'max:160'],
+            'client'            => ['nullable', 'string', 'max:255'],
+            'project_url'       => ['nullable', 'url', 'max:255'],
+            'github_url'        => ['nullable', 'url', 'max:255'],
+            'technologies'      => ['nullable', 'array'],
+            'featured_image'    => ['nullable', 'string', 'max:255'],
+            'images'            => ['nullable', 'array'],
+            'start_date'        => ['nullable', 'date'],
+            'end_date'          => ['nullable', 'date'],
+            'status'            => ['required', 'in:draft,published,archived'],
+            'featured'          => ['boolean'],
+            'meta_title'        => ['nullable', 'string', 'max:60'],
+            'meta_description'  => ['nullable', 'string', 'max:160'],
         ]);
 
         $project->update($validated);
 
         return redirect()
-            ->route('admin.projects.index')
+            ->route('admin.projects.edit', $project)
             ->with('success', 'Project updated successfully.');
     }
 

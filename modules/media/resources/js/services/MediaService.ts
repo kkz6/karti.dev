@@ -114,7 +114,7 @@ export class MediaService {
     /**
      * Upload files to the media manager
      */
-    async uploadFiles(files: FileList, uploadPath: string = ''): Promise<any> {
+    async uploadFiles(files: FileList, uploadPath: string = ''): Promise<MediaFile[]> {
         try {
             const formData = new FormData();
             formData.append('upload_path', uploadPath);
@@ -123,7 +123,7 @@ export class MediaService {
                 formData.append('files[]', file);
             });
 
-            const response = await axios.post(`${this.baseUrl}/upload`, formData, {
+            const response = await axios.post<MediaFile[]>(`${this.baseUrl}/upload`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -136,17 +136,17 @@ export class MediaService {
             });
 
             return response.data;
-        } catch (error: any) {
+        } catch (error) {
             console.error('Error uploading files:', error);
 
             let errorMessage = 'Failed to upload files';
 
-            if (error.response) {
+            if (axios.isAxiosError<{ message?: string; errors?: Record<string, string[]> } | string>(error) && error.response) {
                 const responseData = error.response.data;
 
-                if (responseData?.message) {
+                if (typeof responseData === 'object' && responseData?.message) {
                     errorMessage = responseData.message;
-                } else if (responseData?.errors) {
+                } else if (typeof responseData === 'object' && responseData?.errors) {
                     const validationMessage = Object.values(responseData.errors).flat().find((message): message is string => typeof message === 'string');
                     errorMessage = validationMessage || errorMessage;
                 } else if (typeof responseData === 'string' && !responseData.trimStart().startsWith('<')) {
@@ -190,7 +190,7 @@ export class MediaService {
     /**
      * Create a new folder
      */
-    async createFolder(folderName: string, currentPath: string = '/'): Promise<any> {
+    async createFolder(folderName: string, currentPath: string = '/'): Promise<unknown> {
         try {
             const fullPath = `${currentPath.replace(/\/$/, '')}/${folderName}`.replace(/^\/+/, '');
 
@@ -205,7 +205,7 @@ export class MediaService {
         }
     }
 
-    async deleteFolder(path: string): Promise<any> {
+    async deleteFolder(path: string): Promise<unknown> {
         try {
             const response = await axios.delete('/admin/media-manager/folder', {
                 data: {
@@ -223,7 +223,7 @@ export class MediaService {
     /**
      * Move files to a different location
      */
-    async moveFiles(mediaIds: number[], destination: string): Promise<any> {
+    async moveFiles(mediaIds: number[], destination: string): Promise<unknown> {
         try {
             const response = await axios.post(`${this.baseUrl}/move`, {
                 media_ids: mediaIds,
@@ -240,7 +240,7 @@ export class MediaService {
     /**
      * Rename a file
      */
-    async renameFile(mediaId: number, newName: string): Promise<any> {
+    async renameFile(mediaId: number, newName: string): Promise<unknown> {
         try {
             const response = await axios.patch(`${this.baseUrl}/${mediaId}`, {
                 filename: newName,

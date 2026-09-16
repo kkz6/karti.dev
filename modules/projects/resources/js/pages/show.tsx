@@ -1,3 +1,4 @@
+import type { ComponentProps } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { Badge } from '@shared/components/ui/badge';
 import { Button } from '@shared/components/ui/button';
@@ -34,7 +35,7 @@ export default function Show({ project }: { project: Project }) {
         { title: project.title, href: route('admin.projects.show', project.slug) },
     ];
 
-    const statusColors = {
+    const statusColors: Record<Project['status'], ComponentProps<typeof Badge>['variant']> = {
         draft: 'warning',
         published: 'success',
         archived: 'secondary',
@@ -50,7 +51,7 @@ export default function Show({ project }: { project: Project }) {
                         <h1 className="text-3xl font-bold tracking-tight">{project.title}</h1>
                         {project.short_description && <p className="text-muted-foreground mt-2 text-lg">{project.short_description}</p>}
                         <div className="mt-2 flex items-center space-x-2">
-                            <Badge variant={statusColors[project.status] as any}>{project.status}</Badge>
+                            <Badge variant={statusColors[project.status]}>{project.status}</Badge>
                             {project.featured && (
                                 <Badge variant="default">
                                     <Star className="mr-1 h-3 w-3" />

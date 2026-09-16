@@ -1,13 +1,13 @@
 import type { MediaAsset } from '@media/types/media';
 import { Alert, AlertDescription } from '@shared/components/ui/alert';
 import { Button } from '@shared/components/ui/button';
-import { Dialog, DialogContent } from '@shared/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@shared/components/ui/dialog';
 import { Input } from '@shared/components/ui/input';
 import { Label } from '@shared/components/ui/label';
 import { Textarea } from '@shared/components/ui/textarea';
 import axios from 'axios';
 import { Download, ExternalLink, Save, Trash2, X } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AssetDeleter } from '../Browser/AssetDeleter';
 import { FileIcon } from '../Icons';
 import { ActionButton, LoadingGraphic } from '../UI';
@@ -32,6 +32,7 @@ interface AssetEditorData extends MediaAsset {
 }
 
 export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClose, onSaved, onDeleted, allowDeleting = false }) => {
+    const dialogRef = useRef<HTMLDivElement>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [asset, setAsset] = useState<AssetEditorData | null>(null);
@@ -103,9 +104,9 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
             window.dispatchEvent(event);
 
             onClose();
-        } catch (error: any) {
+        } catch (error) {
             console.error('Error saving asset:', error);
-            setErrors([error.response?.data?.message || 'Error saving asset']);
+            setErrors([(axios.isAxiosError<{ message?: string }>(error) && error.response?.data?.message) || 'Error saving asset']);
 
             // Show error toast
             const event = new CustomEvent('toast', {
@@ -164,22 +165,28 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleString();
-    };
-
     if (!isOpen) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl md:max-w-4xl lg:max-w-5xl">
+            <DialogContent
+                ref={dialogRef}
+                tabIndex={-1}
+                aria-describedby={undefined}
+                onOpenAutoFocus={(event) => {
+                    // Keep focus inside the modal without opening a toolbar tooltip during asset loading.
+                    event.preventDefault();
+                    dialogRef.current?.focus({ preventScroll: true });
+                }}
+                className="flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl md:max-w-4xl lg:max-w-5xl"
+            >
                 {/* Sticky Header */}
                 <div className="sticky top-0 z-10 border-b bg-background">
                     <div className="flex items-center justify-between px-6 py-4">
                         <div className="flex items-center gap-3">
                             {asset && <FileIcon extension={asset.extension} className="h-6 w-6" />}
                             <div className="flex flex-col">
-                                <span className="font-semibold">{asset?.filename || 'Asset Editor'}</span>
+                                <DialogTitle className="text-base font-semibold">{asset?.filename || 'Asset Editor'}</DialogTitle>
                                 {asset && (
                                     <span className="text-muted-foreground text-xs">
                                         {asset.path} · {formatFileSize(asset.size)}

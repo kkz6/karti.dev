@@ -2,12 +2,11 @@ import { Button } from '@shared/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
 import { CornerLeftUp } from 'lucide-react';
 import React, { useState } from 'react';
+import { toast } from 'sonner';
+import { MediaService } from '../../../services/MediaService';
 import { MediaAsset, MediaFolder } from '../../../types/media';
-import { FileIcon } from '../../Icons/FileIcon';
 import { AssetTile } from './AssetTile';
 import { FolderTile } from './FolderTile';
-import { MediaService } from '../../../services/MediaService';
-import { toast } from 'sonner';
 
 interface GridListingProps {
     container: string;
@@ -32,11 +31,9 @@ interface GridListingProps {
 }
 
 export const GridListing: React.FC<GridListingProps> = ({
-    container,
     assets,
     folder,
     subfolders,
-    loading,
     selectedAssets,
     restrictNavigation,
     isSearching,
@@ -49,7 +46,6 @@ export const GridListing: React.FC<GridListingProps> = ({
     onAssetDeleting,
     onAssetDownloading,
     onAssetDoubleClicked,
-    onSorted,
     onFolderDeleted,
 }) => {
     const [deleteModal, setDeleteModal] = useState<boolean>(false);
@@ -57,7 +53,7 @@ export const GridListing: React.FC<GridListingProps> = ({
     const [deleting, setDeleting] = useState<boolean>(false);
     const mediaService = new MediaService();
 
-    const hasParent = folder?.parent_path !== null;
+    const hasParent = !!folder && folder.parent_path !== null;
     const hasResults = assets.length > 0 || subfolders.length > 0;
 
     if (!((hasParent && !restrictNavigation) || !isSearching || (isSearching && hasResults))) {
@@ -71,7 +67,6 @@ export const GridListing: React.FC<GridListingProps> = ({
                 path: folder.parent_path || '/',
                 title: folder.parent_path === '/' || !folder.parent_path ? 'Root' : folder.parent_path.split('/').pop() || folder.parent_path,
                 parent_path: folder.parent_path === '/' || !folder.parent_path ? null : folder.parent_path.split('/').slice(0, -1).join('/') || '/',
-                container_id: folder.container_id,
                 created_at: folder.created_at,
                 updated_at: folder.updated_at,
             };
@@ -93,7 +88,8 @@ export const GridListing: React.FC<GridListingProps> = ({
                 setDeleteModal(false);
                 setDeleteFolderSelected(null);
                 onFolderDeleted?.();
-            } catch (error) {
+            } catch {
+                // MediaService already reports the server error through a toast.
             } finally {
                 setDeleting(false);
             }
@@ -108,23 +104,10 @@ export const GridListing: React.FC<GridListingProps> = ({
     return (
         <div className="asset-grid-listing grid grid-cols-3 gap-3 p-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
             {hasParent && !restrictNavigation && (
-                <div
-                    className="asset-tile is-folder group cursor-pointer rounded-lg border border-gray-200 bg-white transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
-                    onDoubleClick={handleParentSelect}
-                >
-                    <div className="relative">
-                        <div className="asset-thumb-container flex aspect-square items-center justify-center rounded-t-lg bg-blue-50 dark:bg-blue-900">
-                            <div className="flex flex-col items-center gap-1">
-                                <CornerLeftUp className="h-8 w-8 text-blue-500" />
-                                <FileIcon extension="folder" className="h-6 w-6 text-blue-500" />
-                            </div>
-                        </div>
-                    </div>
-                    <div className="asset-meta p-2">
-                        <div className="asset-filename truncate text-xs font-medium text-gray-900 dark:text-gray-100">Go Back</div>
-                        <div className="asset-details text-xs text-gray-500 dark:text-gray-400">Parent Folder</div>
-                    </div>
-                </div>
+                <Button type="button" variant="ghost" className="text-muted-foreground col-span-full justify-self-start" onClick={handleParentSelect}>
+                    <CornerLeftUp />
+                    Parent folder
+                </Button>
             )}
 
             {subfolders.map((folderItem, index) => (

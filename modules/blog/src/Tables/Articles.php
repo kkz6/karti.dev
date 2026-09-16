@@ -11,6 +11,11 @@ use Modules\Table\Table;
 
 class Articles extends Table
 {
+    public function resource(): \Illuminate\Contracts\Database\Eloquent\Builder|string
+    {
+        return app(\Modules\Analytics\Services\ContentTraffic::class)->withViewCount(Article::query(), 'article');
+    }
+
     protected ?string $resource = Article::class;
 
     public function columns(): array
@@ -29,6 +34,8 @@ class Articles extends Table
                     'archived'  => Variant::Secondary,
                 ]),
             Columns\DateColumn::make('created_at', 'Created At', toggleable: false),
+            Columns\NumericColumn::make('local_views', 'Views (30d)')->sortable()
+                ->url(fn (Article $article) => route('admin.seo.content', ['type' => 'article', 'id' => $article->id])),
             Columns\DateColumn::make('updated_at', 'Updated At', toggleable: false),
             Columns\ActionColumn::new(),
         ];

@@ -1,11 +1,12 @@
 import { Button } from '@shared/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@shared/components/ui/tooltip';
 import React from 'react';
+import type { FilterOptions } from '../../utils/imageFilters';
 
 interface FilterPresetsProps {
     processing: boolean;
-    camanFilters: Record<string, any>;
-    applyFilter: (name: string, value: any) => void;
+    camanFilters: FilterOptions;
+    applyFilter: (name: string, value: boolean) => void;
 }
 
 interface Preset {
@@ -37,7 +38,7 @@ export const FilterPresets: React.FC<FilterPresetsProps> = ({ processing, camanF
     ];
 
     const isPresetActive = (presetName: string) => {
-        return camanFilters.hasOwnProperty(presetName);
+        return Object.prototype.hasOwnProperty.call(camanFilters, presetName);
     };
 
     const applyPreset = (presetName: string) => {

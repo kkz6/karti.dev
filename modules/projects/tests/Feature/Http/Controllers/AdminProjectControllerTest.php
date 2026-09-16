@@ -17,20 +17,20 @@ function authenticatedUser(): User
 function validProjectData(array $overrides = []): array
 {
     return array_merge([
-        'title' => 'Test Project',
-        'slug' => 'test-project',
-        'description' => 'A test project description.',
+        'title'             => 'Test Project',
+        'slug'              => 'test-project',
+        'description'       => 'A test project description.',
         'short_description' => 'Short desc',
-        'client' => 'Test Client',
-        'project_url' => 'https://example.com',
-        'github_url' => 'https://github.com/test/project',
-        'technologies' => ['Laravel', 'React'],
-        'start_date' => '2026-01-01',
-        'end_date' => '2026-06-01',
-        'status' => 'published',
-        'featured' => true,
-        'meta_title' => 'Test SEO Title',
-        'meta_description' => 'Test SEO Description',
+        'client'            => 'Test Client',
+        'project_url'       => 'https://example.com',
+        'github_url'        => 'https://github.com/test/project',
+        'technologies'      => ['Laravel', 'React'],
+        'start_date'        => '2026-01-01',
+        'end_date'          => '2026-06-01',
+        'status'            => 'published',
+        'featured'          => true,
+        'meta_title'        => 'Test SEO Title',
+        'meta_description'  => 'Test SEO Description',
     ], $overrides);
 }
 
@@ -79,15 +79,15 @@ test('authenticated users can create a project', function () {
     $data = validProjectData();
 
     $this->post(route('admin.projects.store'), $data)
-        ->assertRedirect(route('admin.projects.index'));
+        ->assertRedirect(route('admin.projects.edit', 'test-project'));
 
     $this->assertDatabaseHas('projects', [
-        'title' => 'Test Project',
-        'slug' => 'test-project',
+        'title'       => 'Test Project',
+        'slug'        => 'test-project',
         'description' => 'A test project description.',
-        'client' => 'Test Client',
-        'status' => 'published',
-        'featured' => true,
+        'client'      => 'Test Client',
+        'status'      => 'published',
+        'featured'    => true,
     ]);
 });
 
@@ -150,22 +150,22 @@ test('project creation accepts nullable optional fields', function () {
 
     $data = validProjectData([
         'short_description' => null,
-        'client' => null,
-        'project_url' => null,
-        'github_url' => null,
-        'technologies' => null,
-        'start_date' => null,
-        'end_date' => null,
-        'meta_title' => null,
-        'meta_description' => null,
+        'client'            => null,
+        'project_url'       => null,
+        'github_url'        => null,
+        'technologies'      => null,
+        'start_date'        => null,
+        'end_date'          => null,
+        'meta_title'        => null,
+        'meta_description'  => null,
     ]);
 
     $this->post(route('admin.projects.store'), $data)
-        ->assertRedirect(route('admin.projects.index'));
+        ->assertRedirect(route('admin.projects.edit', 'test-project'));
 
     $this->assertDatabaseHas('projects', [
         'title' => 'Test Project',
-        'slug' => 'test-project',
+        'slug'  => 'test-project',
     ]);
 });
 
@@ -177,11 +177,7 @@ test('authenticated users can view a project', function () {
     $project = Project::create(validProjectData());
 
     $this->get(route('admin.projects.show', $project))
-        ->assertStatus(200)
-        ->assertInertia(fn ($page) => $page
-            ->component('projects::show')
-            ->has('project')
-        );
+        ->assertRedirect(route('admin.projects.edit', $project));
 });
 
 // --- Edit ---
@@ -207,17 +203,17 @@ test('authenticated users can update a project', function () {
     $project = Project::create(validProjectData());
 
     $updatedData = validProjectData([
-        'title' => 'Updated Project Title',
-        'slug' => 'test-project',
+        'title'       => 'Updated Project Title',
+        'slug'        => 'test-project',
         'description' => 'Updated description.',
     ]);
 
     $this->put(route('admin.projects.update', $project), $updatedData)
-        ->assertRedirect(route('admin.projects.index'));
+        ->assertRedirect(route('admin.projects.edit', $project));
 
     $this->assertDatabaseHas('projects', [
-        'id' => $project->id,
-        'title' => 'Updated Project Title',
+        'id'          => $project->id,
+        'title'       => 'Updated Project Title',
         'description' => 'Updated description.',
     ]);
 });
@@ -230,12 +226,12 @@ test('project update allows same slug for same project', function () {
     $updatedData = validProjectData(['title' => 'New Title']);
 
     $this->put(route('admin.projects.update', $project), $updatedData)
-        ->assertRedirect(route('admin.projects.index'));
+        ->assertRedirect(route('admin.projects.edit', $project));
 
     $this->assertDatabaseHas('projects', [
-        'id' => $project->id,
+        'id'    => $project->id,
         'title' => 'New Title',
-        'slug' => 'test-project',
+        'slug'  => 'test-project',
     ]);
 });
 
@@ -265,7 +261,7 @@ test('authenticated users can delete a project', function () {
 // --- Model ---
 
 test('project uses slug as route key', function () {
-    $project = new Project();
+    $project = new Project;
 
     expect($project->getRouteKeyName())->toBe('slug');
 });

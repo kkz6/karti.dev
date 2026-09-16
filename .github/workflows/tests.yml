@@ -10,23 +10,29 @@ on:
       - develop
       - main
 
+permissions:
+  contents: read
+
 jobs:
   ci:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          persist-credentials: false
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.4
+          php-version: '8.4'
           tools: composer:v2
           coverage: xdebug
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: 'npm'
@@ -34,11 +40,14 @@ jobs:
       - name: Install Node Dependencies
         run: npm ci
 
+      - name: Install Dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
       - name: Build Assets
         run: npm run build
 
-      - name: Install Dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+      - name: Frontend Regression Tests
+        run: node --experimental-strip-types --test modules/shared/tests/*.test.* modules/media/tests/*.test.*
 
       - name: Copy Environment File
         run: cp .env.example .env

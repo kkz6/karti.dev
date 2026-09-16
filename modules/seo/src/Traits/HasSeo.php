@@ -3,6 +3,7 @@
 namespace Modules\Seo\Traits;
 
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Support\Str;
 use Modules\Seo\Models\Seo;
 use Modules\Seo\Support\SEOData;
 
@@ -17,12 +18,18 @@ trait HasSeo
     {
         $seoModel = $this->seo;
         $defaults = SEOData::defaults();
+        $description = $seoModel?->description ?: $this->meta_description ?: $this->excerpt ?: $this->description;
+        $description = Str::squish(strip_tags($description ?? '')) ?: $defaults->description;
+        $image = $seoModel?->image ?: $this->featured_image_url ?: $this->featured_image ?: $this->cover_image;
+        if (is_object($image) && method_exists($image, 'getUrl')) {
+            $image = $image->getUrl();
+        }
 
         return new SEOData(
-            title: $seoModel?->title ?? $this->meta_title ?? $this->title ?? $defaults->title,
-            description: $seoModel?->description ?? $this->meta_description ?? $this->description ?? $this->excerpt ?? $defaults->description,
-            author: $seoModel?->author ?? $defaults->author,
-            image: $seoModel?->image ?? $this->featured_image_url ?? $this->featured_image ?? $this->cover_image ?? $defaults->image,
+            title: $seoModel?->title ?: $this->meta_title ?: $this->title ?: $defaults->title,
+            description: $description,
+            author: $seoModel?->author ?: $defaults->author,
+            image: $image ?: $defaults->image,
             canonical_url: $seoModel?->canonical_url,
             robots: $seoModel?->robots ?? $defaults->robots,
             type: $seoModel?->type ?? $defaults->type,

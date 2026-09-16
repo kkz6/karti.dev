@@ -17,17 +17,17 @@ function authenticatedSpeakingUser(): User
 function validSpeakingData(array $overrides = []): array
 {
     return array_merge([
-        'title' => 'Test Talk',
-        'slug' => 'test-talk',
+        'title'       => 'Test Talk',
+        'slug'        => 'test-talk',
         'description' => 'A test speaking event description.',
-        'event_name' => 'LaravelConf 2026',
-        'event_date' => '2026-06-15',
-        'event_type' => 'conference',
-        'location' => 'San Francisco',
-        'url' => 'https://example.com/talk',
-        'cta_text' => 'Watch video',
-        'featured' => false,
-        'status' => 'published',
+        'event_name'  => 'LaravelConf 2026',
+        'event_date'  => '2026-06-15',
+        'event_type'  => 'conference',
+        'location'    => 'San Francisco',
+        'url'         => 'https://example.com/talk',
+        'cta_text'    => 'Watch video',
+        'featured'    => false,
+        'status'      => 'published',
     ], $overrides);
 }
 
@@ -69,14 +69,14 @@ test('authenticated users can create a speaking event', function () {
     authenticatedSpeakingUser();
 
     $this->post(route('admin.speaking.store'), validSpeakingData())
-        ->assertRedirect(route('admin.speaking.index'));
+        ->assertRedirect(route('admin.speaking.edit', 'test-talk'));
 
     $this->assertDatabaseHas('speaking_events', [
-        'title' => 'Test Talk',
-        'slug' => 'test-talk',
+        'title'      => 'Test Talk',
+        'slug'       => 'test-talk',
         'event_name' => 'LaravelConf 2026',
         'event_type' => 'conference',
-        'status' => 'published',
+        'status'     => 'published',
     ]);
 });
 
@@ -132,11 +132,7 @@ test('authenticated users can view a speaking event', function () {
     $event = SpeakingEvent::create(validSpeakingData());
 
     $this->get(route('admin.speaking.show', $event))
-        ->assertStatus(200)
-        ->assertInertia(fn ($page) => $page
-            ->component('speaking::show')
-            ->has('event')
-        );
+        ->assertRedirect(route('admin.speaking.edit', $event));
 });
 
 // --- Edit ---
@@ -162,14 +158,14 @@ test('authenticated users can update a speaking event', function () {
     $event = SpeakingEvent::create(validSpeakingData());
 
     $this->put(route('admin.speaking.update', $event), validSpeakingData([
-        'title' => 'Updated Talk Title',
+        'title'      => 'Updated Talk Title',
         'event_name' => 'ReactConf 2026',
     ]))
-        ->assertRedirect(route('admin.speaking.index'));
+        ->assertRedirect(route('admin.speaking.edit', 'test-talk'));
 
     $this->assertDatabaseHas('speaking_events', [
-        'id' => $event->id,
-        'title' => 'Updated Talk Title',
+        'id'         => $event->id,
+        'title'      => 'Updated Talk Title',
         'event_name' => 'ReactConf 2026',
     ]);
 });
@@ -190,7 +186,7 @@ test('authenticated users can delete a speaking event', function () {
 // --- Model ---
 
 test('speaking event uses slug as route key', function () {
-    $event = new SpeakingEvent();
+    $event = new SpeakingEvent;
 
     expect($event->getRouteKeyName())->toBe('slug');
 });

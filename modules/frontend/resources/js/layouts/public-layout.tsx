@@ -4,6 +4,7 @@ import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
 import { PageTransition } from '../components/PageTransition'
 import { ScrollProgress } from '../components/ScrollProgress'
+import { SiteIdentityHead } from '@shared/components/site-identity-head'
 
 interface PublicLayoutProps {
     children: ReactNode
@@ -32,6 +33,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
 
     return (
         <div className="relative flex min-h-dvh w-full flex-col bg-background">
+            <SiteIdentityHead />
             <a href="#main" className="skip-link">
                 Skip to content
             </a>

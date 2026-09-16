@@ -392,9 +392,6 @@ export class ImageFilterProcessor {
 
     private applySharpen(imageData: ImageData, value: number): ImageData {
         // Simple sharpening using unsharp mask
-        const data = imageData.data;
-        const width = imageData.width;
-        const height = imageData.height;
         const factor = value / 100;
 
         const sharpenKernel = [0, -1, 0, -1, 5, -1, 0, -1, 0];

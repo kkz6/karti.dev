@@ -1,7 +1,7 @@
-import { ActionButton } from '@media/components/UI';
 import { MediaFolder } from '@media/types/media';
-import { Edit, Folder, Trash2 } from 'lucide-react';
-import React, { useState } from 'react';
+import { Button } from '@shared/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
+import { Edit, Folder, MoreHorizontal, Trash2 } from 'lucide-react';
 
 interface FolderRowProps {
     folder: MediaFolder;
@@ -11,68 +11,53 @@ interface FolderRowProps {
     onDeleting: (folder: MediaFolder) => void;
 }
 
-export const FolderRow: React.FC<FolderRowProps> = ({ folder, canEdit, onSelected, onEditing, onDeleting }) => {
-    const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
-
-    const handleDoubleClick = () => {
-        onSelected(folder);
-    };
-
-    const handleEdit = () => {
-        onEditing(folder);
-        setDropdownOpen(false);
-    };
-
-    const handleDelete = () => {
-        onDeleting(folder);
-        setDropdownOpen(false);
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString();
-    };
-
+export function FolderRow({ folder, canEdit, onSelected, onEditing, onDeleting }: FolderRowProps) {
     return (
-        <tr className="border-b border-gray-100 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700">
-            {/* Empty checkbox column */}
-            <td className="p-3"></td>
-
-            {/* Folder Icon */}
+        <tr className="border-border hover:bg-accent border-b">
+            <td className="p-3" />
             <td className="p-3">
-                <div className="flex h-8 w-8 cursor-pointer items-center justify-center" onDoubleClick={handleDoubleClick}>
-                    <Folder className="h-6 w-6 text-blue-500" />
-                </div>
+                <button
+                    type="button"
+                    className="text-muted-foreground focus-visible:outline-ring flex size-8 items-center justify-center rounded focus-visible:outline-2"
+                    aria-label={`Open ${folder.title}`}
+                    onClick={() => onSelected(folder)}
+                >
+                    <Folder className="size-5" />
+                </button>
             </td>
-
-            {/* Folder Name */}
-            <td className="p-3">
-                <div
-                    className="cursor-pointer text-sm font-medium text-gray-900 hover:text-blue-600 dark:text-gray-100 dark:hover:text-blue-400"
-                    onDoubleClick={handleDoubleClick}
+            <td className="min-w-0 p-3">
+                <button
+                    type="button"
+                    onClick={() => onSelected(folder)}
+                    className="text-foreground hover:text-primary focus-visible:outline-ring block max-w-full truncate text-left text-sm font-medium focus-visible:outline-2"
                 >
                     {folder.title}
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Folder</div>
+                </button>
+                <span className="text-muted-foreground text-xs">Folder</span>
             </td>
-
-            {/* Size (empty for folders) */}
-            <td className="hidden p-3 text-sm text-gray-600 md:table-cell dark:text-gray-400">-</td>
-
-            {/* Date Modified */}
-            <td className="hidden p-3 text-sm text-gray-600 md:table-cell dark:text-gray-400">{formatDate(folder.updated_at)}</td>
-
-            {/* Direct Action Buttons */}
-            <td className="hidden p-3 md:table-cell">
+            <td className="text-muted-foreground hidden p-3 text-sm md:table-cell">—</td>
+            <td className="text-muted-foreground hidden p-3 text-sm md:table-cell">{new Date(folder.updated_at).toLocaleDateString()}</td>
+            <td className="p-3">
                 {canEdit && (
-                    <div className="flex items-center gap-1">
-                        <ActionButton action={handleEdit} icon={Edit} tooltip="Rename" variant="ghost" />
-                        <ActionButton action={handleDelete} icon={Trash2} tooltip="Delete" variant="ghost" />
-                    </div>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" aria-label={`Actions for ${folder.title}`}>
+                                <MoreHorizontal />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onSelect={() => onEditing(folder)}>
+                                <Edit />
+                                Rename
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onSelect={() => onDeleting(folder)}>
+                                <Trash2 />
+                                Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 )}
             </td>
-
-            {/* More Actions */}
-            <td className="p-3">{/* No additional actions for folders - dropdown hidden */}</td>
         </tr>
     );
-};
+}

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Validator;
 use Modules\Auth\DTO\ProfileDTO;
 use Modules\Auth\Models\User;
 
@@ -69,28 +70,17 @@ test('profile DTO has correct validation rules structure', function () {
     expect($rules['email'])->toContain('required', 'string', 'lowercase', 'email', 'max:255');
 });
 
-test('profile DTO validation rules include unique constraint', function () {
+test('profile DTO update validation rejects duplicate emails and allows the current user email', function () {
     $user = User::factory()->create();
 
-    // Create a mock DTO that can resolve the user
-    $dto = new class('John Doe', 'john@example.com') extends ProfileDTO
-    {
-        private $mockUser;
-
-        public function __construct(string $name, string $email, ?User $user = null)
-        {
-            parent::__construct($name, $email);
-            $this->mockUser = $user;
-        }
-
-        protected function user(): ?User
-        {
-            return $this->mockUser;
-        }
-    };
-
-    $dtoWithUser = new $dto('John Doe', 'john@example.com', $user);
-    $rules       = $dtoWithUser->rules();
+    $rules     = ProfileDTO::updateRules($user->id);
+    $otherUser = User::factory()->create();
+    expect(Validator::make(
+        ['name' => $user->name, 'email' => $user->email], $rules,
+    )->passes())->toBeTrue();
+    expect(Validator::make(
+        ['name' => $user->name, 'email' => $otherUser->email], $rules,
+    )->errors()->has('email'))->toBeTrue();
 
     expect($rules)->toHaveKey('email');
     // Just verify the unique rule is in the array (comparing objects is complex)
