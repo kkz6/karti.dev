@@ -1,10 +1,11 @@
 import { Button } from '@shared/components/ui/button';
 import { Checkbox } from '@shared/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
-import { Download, Edit, ImageOff, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Download, Edit, MoreHorizontal, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { MediaAsset } from '../../../types/media';
 import { FileIcon } from '../../Icons/FileIcon';
+import { AssetImagePreview } from '../../UI/AssetImagePreview';
 
 interface AssetTileProps {
     asset: MediaAsset;
@@ -30,7 +31,6 @@ export const AssetTile: React.FC<AssetTileProps> = ({
     onDoubleClicked,
 }) => {
     const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
-    const [failedThumbnail, setFailedThumbnail] = useState<string | null>(null);
 
     const isSelected = selectedAssets.includes(asset.id);
 
@@ -134,13 +134,8 @@ export const AssetTile: React.FC<AssetTileProps> = ({
                     className="asset-thumb-container focus-visible:outline-ring bg-muted relative flex aspect-square w-full cursor-pointer items-center justify-center overflow-hidden rounded-t-lg focus-visible:outline-2"
                     onClick={handleDoubleClick}
                 >
-                    {thumbnailUrl && failedThumbnail !== thumbnailUrl ? (
-                        <img src={thumbnailUrl} alt="" className="absolute inset-0 h-full w-full object-cover" onError={() => setFailedThumbnail(thumbnailUrl)} />
-                    ) : thumbnailUrl ? (
-                        <span className="text-muted-foreground flex flex-col items-center gap-2 px-3 text-center text-xs">
-                            <ImageOff aria-hidden="true" className="h-8 w-8" />
-                            Preview unavailable
-                        </span>
+                    {thumbnailUrl || asset.is_image ? (
+                        <AssetImagePreview src={thumbnailUrl} alt={asset.title || asset.filename} className="absolute inset-0" />
                     ) : (
                         <FileIcon extension={asset.extension} className="text-muted-foreground h-8 w-8" />
                     )}

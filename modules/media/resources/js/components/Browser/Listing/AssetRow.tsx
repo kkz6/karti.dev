@@ -1,10 +1,11 @@
 import { Button } from '@shared/components/ui/button';
 import { Checkbox } from '@shared/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
-import { Download, Edit, ImageOff, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Download, Edit, MoreHorizontal, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { MediaAsset } from '../../../types/media';
 import { FileIcon } from '../../Icons/FileIcon';
+import { AssetImagePreview } from '../../UI/AssetImagePreview';
 
 interface AssetRowProps {
     asset: MediaAsset;
@@ -30,7 +31,6 @@ export const AssetRow: React.FC<AssetRowProps> = ({
     onDoubleClicked,
 }) => {
     const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
-    const [failedThumbnail, setFailedThumbnail] = useState<string | null>(null);
 
     const isSelected = selectedAssets.includes(asset.id);
 
@@ -98,10 +98,8 @@ export const AssetRow: React.FC<AssetRowProps> = ({
             {/* Thumbnail */}
             <td className="p-3">
                 <div className="flex h-8 w-8 cursor-pointer items-center justify-center overflow-hidden rounded" onDoubleClick={handleDoubleClick}>
-                    {thumbnailUrl && failedThumbnail !== thumbnailUrl ? (
-                        <img src={thumbnailUrl} alt="" onError={() => setFailedThumbnail(thumbnailUrl)} className="h-full w-full object-cover" />
-                    ) : asset.is_image ? (
-                        <ImageOff className="text-muted-foreground size-4" aria-label="Preview unavailable" />
+                    {thumbnailUrl || asset.is_image ? (
+                        <AssetImagePreview src={thumbnailUrl} alt={asset.title || asset.filename} compact />
                     ) : (
                         <FileIcon extension={asset.extension} className="h-6 w-6" />
                     )}

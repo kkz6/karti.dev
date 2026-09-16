@@ -81,11 +81,31 @@ test('folder and asset previews share one square sizing rule', () => {
 
 test('failed thumbnail URLs have a fallback rather than visible broken-image alt text', () => {
     const tile = read('../resources/js/components/Browser/Listing/AssetTile.tsx');
-    assert.match(tile, /failedThumbnail !== thumbnailUrl/);
-    assert.match(tile, /onError=\{\(\) => setFailedThumbnail\(thumbnailUrl\)\}/);
-    assert.match(tile, /Preview unavailable/);
+    const preview = read('../resources/js/components/UI/AssetImagePreview.tsx');
+    assert.match(tile, /<AssetImagePreview/);
+    assert.match(preview, /onError=\{\(\) => setStatus\('error'\)\}/);
+    assert.match(preview, /Preview unavailable/);
+    assert.match(preview, /src && status !== 'error'/);
     assert.match(tile, /aria-label=\{`Open \$\{asset.title \|\| asset.filename\}`\}/);
-    assert.match(tile, /alt="" className="absolute inset-0 h-full w-full object-cover"/);
+});
+
+test('image previews reserve space and handle loading, cached images and source changes consistently', () => {
+    const preview = read('../resources/js/components/UI/AssetImagePreview.tsx');
+    assert.match(preview, /key=\{props.src\}/);
+    assert.match(preview, /image\?\.complete/);
+    assert.match(preview, /image.naturalWidth > 0/);
+    assert.match(preview, /aria-busy=\{status === 'loading'\}/);
+    assert.match(preview, /motion-safe:animate-pulse/);
+    assert.match(preview, /status === 'ready' \? 'opacity-100' : 'opacity-0'/);
+    assert.match(preview, /absolute inset-0 h-full w-full/);
+    for (const file of ['Field/AssetFieldTile', 'Field/AssetFieldRow', 'Browser/Listing/AssetTile', 'Browser/Listing/AssetRow', 'Editor/AssetEditor']) {
+        const source = read(`../resources/js/components/${file}.tsx`);
+        assert.match(source, /<AssetImagePreview/);
+        assert.doesNotMatch(source, /<img\b/);
+    }
+    for (const file of ['SimpleAssetsField', 'AssetsField']) {
+        assert.match(read(`../resources/js/components/Field/${file}.tsx`), /loading && <AssetFieldLoading/);
+    }
 });
 
 test('asset editor directs opening focus to its labelled dialog instead of a tooltip trigger', () => {

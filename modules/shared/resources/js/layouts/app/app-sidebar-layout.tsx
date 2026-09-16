@@ -16,7 +16,7 @@ export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWi
                     id="main-content"
                     tabIndex={-1}
                     scroll-region=""
-                    className="border-border bg-card my-2 mr-2 ml-2 min-h-0 min-w-0 overflow-auto rounded-xl border [--app-header-height:0px] md:ml-0"
+                    className="border-border bg-card my-2 mr-2 ml-2 min-h-0 min-w-0 overflow-auto rounded-xl border outline-none [--app-header-height:0px] md:ml-0"
                 >
                     {children}
                 </AppContent>

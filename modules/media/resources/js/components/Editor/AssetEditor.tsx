@@ -11,6 +11,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { AssetDeleter } from '../Browser/AssetDeleter';
 import { FileIcon } from '../Icons';
 import { ActionButton, LoadingGraphic } from '../UI';
+import { AssetImagePreview } from '../UI/AssetImagePreview';
 import { FocalPointEditor } from './FocalPointEditor';
 import { ImageEditor } from './ImageEditor';
 
@@ -211,8 +212,15 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
                 {/* Scrollable Content */}
                 <div className="flex-1 overflow-y-auto px-6 py-4">
                     {loading && (
-                        <div className="flex items-center justify-center py-8">
-                            <LoadingGraphic />
+                        <div role="status" aria-label="Loading asset details" className="space-y-6">
+                            <div aria-hidden="true" className="bg-muted/50 h-64 rounded-md motion-safe:animate-pulse sm:h-96" />
+                            <div aria-hidden="true" className="space-y-3 motion-safe:animate-pulse">
+                                <div className="bg-muted h-3 w-20 rounded" />
+                                <div className="bg-muted/60 h-9 rounded-md" />
+                                <div className="bg-muted h-3 w-28 rounded" />
+                                <div className="bg-muted/60 h-20 rounded-md" />
+                            </div>
+                            <span className="sr-only">Loading asset details…</span>
                         </div>
                     )}
 
@@ -236,14 +244,14 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
                         <div className="space-y-6">
                             {/* Preview */}
                         <div className="space-y-4">
-                            {isImage && asset.preview && (
-                                <div className="flex justify-center">
-                                    <img
-                                        src={asset.preview || asset.url}
-                                        alt={asset.title}
-                                        className="max-h-96 max-w-full rounded-lg border object-contain"
-                                    />
-                                </div>
+                            {isImage && (
+                                <AssetImagePreview
+                                    src={asset.preview || asset.url}
+                                    alt={asset.title || asset.filename}
+                                    fit="contain"
+                                    eager
+                                    className="h-64 rounded-md sm:h-96"
+                                />
                             )}
 
                             {asset.is_audio && (

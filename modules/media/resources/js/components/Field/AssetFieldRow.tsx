@@ -2,6 +2,7 @@ import { TooltipButton } from '@shared/components/ui/tooltip-button';
 import { Pencil, Trash2 } from 'lucide-react';
 import { MediaAsset } from '../../types/media';
 import { FileIcon } from '../Icons/FileIcon';
+import { AssetImagePreview } from '../UI/AssetImagePreview';
 
 interface AssetFieldRowProps {
     asset: MediaAsset;
@@ -50,16 +51,11 @@ export function AssetFieldRow({
     const thumbnailUrl = getThumbnailUrl();
 
     return (
-        <tr className={`cursor-grab bg-white hover:bg-gray-50 ${className || ''}`} data-id={dataId}>
+        <tr className={`bg-background hover:bg-muted/50 cursor-grab ${className || ''}`} data-id={dataId}>
             <td className="flex flex-wrap items-center p-2" style={{ width: '100%' }}>
-                <div className="mr-2 flex h-7 w-7 items-center justify-center">
-                    {canShowSvg ? (
-                        <div
-                            className="svg-img h-7 w-7 bg-contain bg-center bg-no-repeat"
-                            style={{ backgroundImage: `url(${thumbnailUrl || asset.url})` }}
-                        />
-                    ) : isImage && thumbnailUrl ? (
-                        <img src={thumbnailUrl} alt={asset.title || asset.filename} className="h-7 w-7 rounded object-cover" loading="lazy" />
+                <div className="mr-2 flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded">
+                    {isImage || canShowSvg ? (
+                        <AssetImagePreview src={thumbnailUrl || asset.url} alt={asset.title || asset.filename} compact fit={canShowSvg ? 'contain' : 'cover'} />
                     ) : (
                         <FileIcon extension={asset.extension} className="h-6 w-6" />
                     )}

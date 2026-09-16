@@ -1,9 +1,9 @@
 import { TooltipButton } from '@shared/components/ui/tooltip-button';
 import { cn } from '@shared/lib/utils';
 import { Pencil, Trash2 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
 import { MediaAsset } from '../../types/media';
 import { FileIcon } from '../Icons/FileIcon';
+import { AssetImagePreview } from '../UI/AssetImagePreview';
 
 interface AssetFieldTileProps {
     asset: MediaAsset;
@@ -26,13 +26,8 @@ export function AssetFieldTile({
     className,
     'data-id': dataId,
 }: AssetFieldTileProps) {
-    const [imageLoaded, setImageLoaded] = useState(false);
-    const [imageError, setImageError] = useState(false);
-    const tileRef = useRef<HTMLDivElement>(null);
-
     const isImage = asset.is_image;
     const canShowSvg = asset.extension === 'svg';
-    const canBeTransparent = ['png', 'svg'].includes(asset.extension.toLowerCase());
 
     const handleEdit = () => {
         if (readOnly || !canEdit) return;
@@ -43,24 +38,6 @@ export function AssetFieldTile({
         if (readOnly) return;
         onRemove?.(asset);
     };
-
-    const handleImageLoad = () => {
-        setImageLoaded(true);
-        setImageError(false);
-    };
-
-    const handleImageError = () => {
-        setImageError(true);
-        setImageLoaded(false);
-    };
-
-    // Initialize lightbox for images if needed
-    useEffect(() => {
-        if (isImage && tileRef.current) {
-            // You can add lightbox initialization here if needed
-            // Similar to the Vue implementation's makeZoomable function
-        }
-    }, [isImage, imageLoaded]);
 
     const getThumbnailUrl = () => {
         if (asset.thumbnail_url) {
@@ -76,7 +53,6 @@ export function AssetFieldTile({
 
     return (
         <div
-            ref={tileRef}
             className={cn(
                 'asset-tile group border-border bg-background hover:border-primary/50 relative flex flex-col rounded-lg border transition-colors',
                 {
@@ -90,50 +66,16 @@ export function AssetFieldTile({
             data-id={dataId}
         >
             <div className="asset-thumb-container relative aspect-square overflow-hidden rounded-t-lg">
-                <div
-                    className={cn('asset-thumb flex h-full w-full items-center justify-center', {
-                        'bg-checkered': canBeTransparent,
-                    })}
-                >
-                    {isImage ? (
-                        <div className="relative h-full w-full">
-                            {canShowSvg ? (
-                                <div
-                                    className="svg-img h-full w-full bg-contain bg-center bg-no-repeat"
-                                    style={{ backgroundImage: `url(${thumbnailUrl})` }}
-                                />
-                            ) : (
-                                <>
-                                    {thumbnailUrl && (
-                                        <img
-                                            src={thumbnailUrl}
-                                            alt={asset.title || asset.filename}
-                                            className={cn('h-full w-full object-cover transition-opacity', imageLoaded ? 'opacity-100' : 'opacity-0')}
-                                            onLoad={handleImageLoad}
-                                            onError={handleImageError}
-                                            loading="lazy"
-                                        />
-                                    )}
-                                    {!imageLoaded && !imageError && thumbnailUrl && (
-                                        <div className="bg-muted absolute inset-0 flex items-center justify-center">
-                                            <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
-                                        </div>
-                                    )}
-                                    {(imageError || !thumbnailUrl) && (
-                                        <div className="bg-muted absolute inset-0 flex items-center justify-center">
-                                            <FileIcon extension={asset.extension} className="h-8 w-8" />
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                        </div>
+                <div className="asset-thumb bg-muted/50 absolute inset-0 flex items-center justify-center">
+                    {isImage || canShowSvg ? (
+                        <AssetImagePreview src={thumbnailUrl || asset.url} alt={asset.title || asset.filename} fit={canShowSvg ? 'contain' : 'cover'} />
                     ) : (
                         <FileIcon extension={asset.extension} className="h-8 w-8" />
                     )}
 
                     {/* Asset Controls Overlay */}
                     {!readOnly && (
-                        <div className="asset-controls absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                        <div className="asset-controls absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
                             {canEdit && (
                                 <TooltipButton
                                     tooltip="Edit Asset"
@@ -163,24 +105,4 @@ export function AssetFieldTile({
             )}
         </div>
     );
-}
-
-// Add checkered background for transparent images
-const checkeredBgStyle = `
-.bg-checkered {
-    background-image:
-        linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
-        linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
-        linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
-    background-size: 20px 20px;
-    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-}
-`;
-
-// Inject styles
-if (typeof document !== 'undefined') {
-    const styleElement = document.createElement('style');
-    styleElement.textContent = checkeredBgStyle;
-    document.head.appendChild(styleElement);
 }

@@ -6,7 +6,8 @@ import { FolderOpen, GripVertical, Upload } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { AssetFieldProps, AssetUpload, DisplayMode } from '../../types/asset-field';
-import { AssetBrowser, AssetEditor, LoadingGraphic } from '@media/components';
+import { AssetBrowser, AssetEditor } from '@media/components';
+import { AssetFieldLoading } from './AssetFieldLoading';
 import { Uploader, UploaderRef } from '../Upload/Uploader';
 import { Uploads } from '../Upload/Uploads';
 import { AssetFieldRow } from './AssetFieldRow';
@@ -299,7 +300,7 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
                 >
-                    {loading && <LoadingGraphic />}
+                    {loading && <AssetFieldLoading />}
 
                     {draggingFile && !showSelector && !readOnly && <AssetDropOverlay />}
 
@@ -450,7 +451,7 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
             >
-                {loading && <LoadingGraphic />}
+                {loading && <AssetFieldLoading />}
 
                 {draggingFile && !showSelector && !readOnly && <AssetDropOverlay />}
 

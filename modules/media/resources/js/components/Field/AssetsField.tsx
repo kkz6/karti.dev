@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { MediaService } from '../../services/MediaService';
 import { AssetFieldProps, AssetUpload, DisplayMode } from '../../types/asset-field';
 import { MediaAsset } from '../../types/media';
-import { LoadingGraphic } from '../UI/LoadingGraphic';
+import { AssetFieldLoading } from './AssetFieldLoading';
 import { Selector } from '../UI/Selector';
 import { Uploader, UploaderRef } from '../Upload/Uploader';
 import { Uploads } from '../Upload/Uploads';
@@ -181,7 +181,7 @@ export function AssetsField({ name, data = [], config = {}, required = false, re
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
                 >
-                    {loading && <LoadingGraphic />}
+                    {loading && <AssetFieldLoading />}
 
                     {/* Drag notification */}
                     {containerSpecified && draggingFile && !showSelector && !readOnly && <AssetDropOverlay />}
