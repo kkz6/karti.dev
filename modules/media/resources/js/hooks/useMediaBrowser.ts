@@ -14,6 +14,7 @@ import {
     MediaUpload,
     SortOrder,
 } from '../types/media';
+import { normalizeUploadPath } from '../utils/upload-queue';
 
 // Service interface for media operations
 interface MediaServices {
@@ -31,16 +32,22 @@ export const createDefaultServices = (): MediaServices => ({
     loadFilesService: async (params: MediaLoadParams) => {
         // Call the Laravel media controller index method
         // The route now accepts path as a route parameter
-        const url = params.path && params.path !== '/' ? `/admin/media/${params.path.replace(/^\//, '')}` : '/admin/media';
+        const url =
+            params.path && params.path !== '/'
+                ? `/admin/media/${normalizeUploadPath(params.path).split('/').map(encodeURIComponent).join('/')}`
+                : '/admin/media';
 
         const response = await axios.get(url, {
             params: {
                 page: params.page,
+                disk: params.container,
+                sort: params.sort,
+                dir: params.dir,
             },
         });
 
         // Transform the backend response to match frontend expectations
-        const { subdirectories, media, page_count } = response.data;
+        const { subdirectories, media, page_count, total } = response.data;
 
         // Transform subdirectories to folders format
         const folders: MediaFolder[] = subdirectories.map((dir: { name: string; timestamp: string }) => ({
@@ -86,7 +93,7 @@ export const createDefaultServices = (): MediaServices => ({
                 current_page: params.page,
                 last_page: page_count,
                 per_page: 20, // Backend uses 20 per page
-                total: page_count * 20, // Approximate total
+                total,
             },
             links: {
                 first: params.page > 1 ? '1' : null,
@@ -172,8 +179,9 @@ export function useMediaBrowser(
     const [folder, setFolder] = useState<MediaFolder | null>(null);
     const [pagination, setPagination] = useState<MediaPagination | null>(null);
     const [selectedPage, setSelectedPage] = useState<number>(1);
-    const [sort, setSort] = useState<string>('title');
-    const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+    const [sort, setSort] = useState<string>('created_at');
+    const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+    const [uploadRefresh, setUploadRefresh] = useState(0);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [isSearching, setIsSearching] = useState<boolean>(false);
     const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
@@ -189,6 +197,30 @@ export function useMediaBrowser(
     const uploaderRef = useRef<UploaderRef>(null);
     const elementRef = useRef<HTMLDivElement>(null);
     const assetRequestId = useRef(0);
+    const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const refreshAfterUpload = useCallback(
+        (asset: MediaAsset) => {
+            // Completing an old upload must not navigate back or populate the current folder with old results.
+            if (normalizeUploadPath(asset.directory) !== normalizeUploadPath(path) || asset.disk !== container?.id) return;
+            if (refreshTimer.current) clearTimeout(refreshTimer.current);
+            refreshTimer.current = setTimeout(() => {
+                setSearchTerm('');
+                setSelectedPage(1);
+                setSort('created_at');
+                setSortOrder('desc');
+                setUploadRefresh((version) => version + 1);
+            }, 200);
+        },
+        [container, path],
+    );
+
+    useEffect(
+        () => () => {
+            if (refreshTimer.current) clearTimeout(refreshTimer.current);
+        },
+        [path],
+    );
 
     // Initialize containers (no API call needed, using default container)
     const initializeContainers = useCallback(() => {
@@ -409,6 +441,7 @@ export function useMediaBrowser(
 
     const dropFile = useCallback((event: React.DragEvent) => {
         event.preventDefault();
+        event.stopPropagation();
         const files = event.dataTransfer.files;
         const uploader = uploaderRef.current;
         if (files.length && uploader) {
@@ -442,7 +475,7 @@ export function useMediaBrowser(
         return () => {
             assetRequestId.current += 1;
         };
-    }, [loadAssets]);
+    }, [loadAssets, uploadRefresh]);
 
     useEffect(() => {
         const timeout = setTimeout(() => {
@@ -500,6 +533,7 @@ export function useMediaBrowser(
         // Actions
         loadContainers: initializeContainers,
         loadAssets,
+        refreshAfterUpload,
         search,
         deleteAssets,
         moveAssets,

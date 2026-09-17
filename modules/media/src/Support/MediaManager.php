@@ -97,11 +97,11 @@ class MediaManager
      *
      * @throws MediaManagerException
      */
-    public function verifyDirectory(string $directory): string
+    public function verifyDirectory(string $directory, ?string $disk = null): string
     {
         $directory = trim($directory, '/');
 
-        if ($directory !== '' && ! Storage::disk(config('mediable.default_disk'))->directoryExists($directory)) {
+        if ($directory !== '' && ! Storage::disk($disk ?? config('mediable.default_disk'))->directoryExists($directory)) {
             throw MediaManagerException::directoryNotFound($directory);
         }
 

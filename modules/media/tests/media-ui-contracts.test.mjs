@@ -4,6 +4,27 @@ import test from 'node:test';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
+test('uploads capture their destination, use a bounded queue and current completion callbacks', () => {
+    const uploader = read('../resources/js/components/Upload/Uploader.tsx');
+    const browser = read('../resources/js/components/Browser/AssetBrowser.tsx');
+    const hook = read('../resources/js/hooks/useMediaBrowser.ts');
+    const row = read('../resources/js/components/Upload/Upload.tsx');
+    assert.match(uploader, /createUploadQueue\(2\)/);
+    assert.ok(uploader.indexOf('const destination = normalizeUploadPath(path)') < uploader.indexOf('queue.current.add'));
+    assert.match(uploader, /formData.append\('path', destination\)/);
+    assert.match(uploader, /\[upload\]/);
+    assert.match(uploader, /callbacks.current.onUploadComplete/);
+    assert.match(uploader, /timeout: 120_000/);
+    assert.match(uploader, /confirmedUpload\(response.data, destination\)/);
+    assert.match(browser, /onUploadComplete=\{refreshAfterUpload\}/);
+    assert.match(browser, /asset-browser media-workspace[^]*?onDragOver=\{handleDragOver\}[^]*?onDrop=\{handleDrop\}/);
+    assert.match(hook, /normalizeUploadPath\(asset.directory\) !== normalizeUploadPath\(path\)/);
+    assert.match(hook, /setSelectedPage\(1\)/);
+    assert.match(hook, /setSort\('created_at'\)/);
+    assert.match(row, /Uploading to:/);
+    assert.match(row, /upload.destination \|\| 'All files'/);
+});
+
 test('mixed deletion checks usage, submits only unused files and keeps protected selections', () => {
     const dialog = read('../resources/js/components/Browser/AssetDeleter.tsx');
     const browser = read('../resources/js/components/Browser/AssetBrowser.tsx');

@@ -33,6 +33,11 @@ export function Upload({ upload, onClear }: UploadProps) {
                         {label}
                     </span>
                 </div>
+                {upload.destination !== undefined && (
+                    <p className="text-muted-foreground mt-1 text-xs break-words">
+                        {completed ? 'Saved to:' : failed ? 'Destination:' : 'Uploading to:'} {upload.destination || 'All files'}
+                    </p>
+                )}
                 {message && (
                     <p
                         id={descriptionId}

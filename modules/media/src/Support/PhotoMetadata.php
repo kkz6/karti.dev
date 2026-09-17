@@ -47,7 +47,7 @@ class PhotoMetadata
             Media::withoutTimestamps(fn () => $current->forceFill(['custom_properties' => $properties])->saveQuietly());
             $media->custom_properties = $properties;
             ExtractPhotoMetadata::dispatch($media->id, $requestId)->afterCommit();
-        });
+        }, attempts: 5);
     }
 
     public function capture(Media $media, string $requestId): void

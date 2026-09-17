@@ -13,6 +13,7 @@ use Modules\Media\Exceptions\MediaUpload\FileNotSupportedException;
 use Modules\Media\Exceptions\MediaUpload\FileSizeException;
 use Modules\Media\Exceptions\MediaUpload\ForbiddenException;
 use Modules\Media\Exceptions\MediaUpload\InvalidHashException;
+use Modules\Media\Exceptions\MediaUploadException;
 use Modules\Media\Helpers\File;
 use Modules\Media\Interfaces\SourceAdapterInterface;
 use Modules\Media\Models\Media;
@@ -164,6 +165,14 @@ class MediaUploader
     public function toDirectory(string $directory): self
     {
         $this->directory = File::sanitizePath($directory);
+
+        return $this;
+    }
+
+    /** Use an existing library directory verbatim, including spaces and Unicode. */
+    public function toExistingDirectory(string $directory): self
+    {
+        $this->directory = app(MediaDirectories::class)->validate($this->disk ?? $this->config['default_disk'], $directory);
 
         return $this;
     }
@@ -1097,12 +1106,20 @@ class MediaUploader
 
     private function writeToDisk(Media $model): void
     {
-        $this->filesystem->disk($model->disk)
-            ->put(
+        $storage = $this->filesystem->disk($model->disk);
+        try {
+            $written = $storage->put(
                 $model->getDiskPath(),
                 $this->source->getStream(),
                 $this->getOptions()
             );
+        } catch (\League\Flysystem\FilesystemException $exception) {
+            report($exception);
+            throw new MediaUploadException('The server could not save the file. Check storage permissions and available disk space.');
+        }
+        if (! $written || ! $storage->exists($model->getDiskPath())) {
+            throw new MediaUploadException('The server could not save the file. Check storage permissions and available disk space.');
+        }
     }
 
     public function getOptions(): array

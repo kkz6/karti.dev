@@ -70,6 +70,8 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
         folders,
         folder,
         pagination,
+        sort,
+        sortOrder,
         searchTerm,
         isSearching,
         selectedAssets: internalSelections,
@@ -84,6 +86,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
         draggingFile,
         // Actions
         loadAssets,
+        refreshAfterUpload,
         navigate,
         selectFolder,
         selectContainer,
@@ -231,6 +234,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
         e.preventDefault();
 
         if (canEdit && e.dataTransfer.types.includes('Files')) {
+            e.dataTransfer.dropEffect = 'copy';
             setDraggingFile(true);
         }
     };
@@ -441,6 +445,9 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
             <div
                 ref={elementRef}
                 className={`asset-browser media-workspace relative flex h-full min-h-0 overflow-hidden ${indexPage ? '' : 'media-picker'}`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
             >
                 {showSidebar && (
                     <div className="asset-browser-sidebar bg-muted/30 w-64 p-4">
@@ -568,9 +575,6 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                         <div
                             className={`asset-browser-content relative min-h-0 overflow-auto ${indexPage ? 'bg-card rounded-lg border' : 'flex-1'}`}
                             aria-busy={loadingAssets}
-                            onDragOver={handleDragOver}
-                            onDragLeave={handleDragLeave}
-                            onDrop={handleDrop}
                         >
                             <Uploads uploads={uploads} onClearUpload={clearUpload} onClearAll={clearUploads} />
 
@@ -599,6 +603,8 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                                 />
                             ) : (
                                 <TableListing
+                                    currentSort={sort}
+                                    sortOrder={sortOrder}
                                     onToggleSelectAll={canSelectMultiple ? toggleSelectAll : undefined}
                                     selectAllState={allSelected}
                                     selectAllDisabled={loadingAssets || moving || visibleIds.length === 0}
@@ -759,10 +765,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                     ref={uploaderRef}
                     container={container?.id}
                     path={path}
-                    onUploadComplete={() => {
-                        loadAssets(); // Reload assets after upload
-                        // Don't clear uploads here - let them clear naturally after showing success state
-                    }}
+                    onUploadComplete={refreshAfterUpload}
                     onUpdated={handleUploadsUpdated}
                     onError={(error) => {
                         // Show error toast

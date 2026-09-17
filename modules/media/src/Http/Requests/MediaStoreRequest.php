@@ -19,7 +19,7 @@ class MediaStoreRequest extends FormRequest
     {
         return [
             'file'    => ['required', new FileArray],
-            'disk'    => ['required', 'string'],
+            'disk'    => ['required', 'string', \Illuminate\Validation\Rule::in(config('mediable.allowed_disks', ['public']))],
             'path'    => ['nullable', 'string'],
             'title'   => ['sometimes', 'string'],
             'alt'     => ['sometimes', 'string'],

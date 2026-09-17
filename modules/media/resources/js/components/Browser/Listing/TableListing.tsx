@@ -29,6 +29,8 @@ interface TableListingProps {
     onAssetDownloading: (assetId: string) => void;
     onAssetDoubleClicked: (asset: MediaAsset) => void;
     onSorted: (field: string) => void;
+    currentSort?: string;
+    sortOrder?: 'asc' | 'desc';
     onFolderDeleted?: () => void;
     onToggleSelectAll?: () => void;
     selectAllState?: boolean | 'mixed';
@@ -58,6 +60,8 @@ export const TableListing: React.FC<TableListingProps> = ({
     onAssetDownloading,
     onAssetDoubleClicked,
     onSorted,
+    currentSort = 'created_at',
+    sortOrder = 'desc',
     onFolderDeleted,
     onToggleSelectAll,
     selectAllState = false,
@@ -66,8 +70,6 @@ export const TableListing: React.FC<TableListingProps> = ({
     const [deleteModal, setDeleteModal] = useState<boolean>(false);
     const [deleteFolderSelected, setDeleteFolderSelected] = useState<MediaFolder | null>(null);
     const [deleting, setDeleting] = useState<boolean>(false);
-    const [currentSort, setCurrentSort] = useState<string>('title');
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const mediaService = new MediaService();
     const move = useMediaMove();
 
@@ -82,7 +84,7 @@ export const TableListing: React.FC<TableListingProps> = ({
             extra: true,
         },
         {
-            field: 'lastModified',
+            field: 'updated_at',
             label: 'Date Modified',
             extra: true,
         },
@@ -94,13 +96,6 @@ export const TableListing: React.FC<TableListingProps> = ({
     const handleSort = (field: string) => {
         if (isSearching) return;
 
-        let newOrder: 'asc' | 'desc' = 'asc';
-        if (currentSort === field) {
-            newOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-        }
-
-        setCurrentSort(field);
-        setSortOrder(newOrder);
         onSorted(field);
     };
 

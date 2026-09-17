@@ -30,12 +30,7 @@ trait Convertible
             return;
         }
 
-        // Make the small preview available in the upload response. Larger website sizes use the queue.
-        try {
-            $images->generate($this, 'thumb', $force);
-        } catch (\Throwable $exception) {
-            report($exception);
-        }
+        // Keep image decoding/encoding off the upload request, including the small preview.
         GenerateResponsiveImages::dispatch($this->id, $force)->afterCommit();
     }
 

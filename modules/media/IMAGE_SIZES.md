@@ -12,7 +12,7 @@ Height is automatic by default. Fit preserves the entire image; crop requires bo
 
 The current built-in defaults use WebP at 80% quality. The settings page shows effective saved values, which can differ on an existing installation. Older `media-manager.conversions` recipes (240px thumb and 600px card) are not shown in the settings UI; the responsive upload pipeline takes priority over these recipes. The collapsed **Advanced compression defaults** section reads `mediable.image_optimization` and the manipulation encoder fallback directly. Exact optimizer flags remain in `config/mediable.php`, rather than the settings UI. Automatic responsive images skip the extra optimizer pass.
 
-Uploads generate `thumb` immediately and queue other sizes. Run the application's queue worker in production. Image-editor replacement regenerates derivatives; it does not reuse stale thumbnails. Originals are never compressed or resized by this pipeline.
+Uploads queue all sizes, including `thumb`, so image decoding does not delay upload confirmation. Run the application's queue worker with an asynchronous `QUEUE_CONNECTION` (such as `database`) in production; `sync` still runs jobs inline. Until a derivative exists, its signed preview URL can generate it on demand without delaying the upload response. Image-editor replacement queues derivative regeneration. Originals are never compressed or resized by this pipeline.
 
 Older images with missing variants use a signed, rate-limited derivative endpoint on first view. The endpoint produces a thumbnail, not a redirect to the full-size source. **Rebuild images** queues regeneration for existing raster images after changing settings. Removed preset definitions do not delete existing files.
 

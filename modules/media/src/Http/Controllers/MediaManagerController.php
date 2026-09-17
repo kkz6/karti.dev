@@ -27,7 +27,10 @@ readonly class MediaManagerController
      */
     public function create(Request $request)
     {
-        $data     = $request->validate(['path' => ['required', 'string', 'max:1024']]);
+        $data     = $request->validate([
+            'path' => ['required', 'string', 'max:1024'],
+            'disk' => ['sometimes', 'string', \Illuminate\Validation\Rule::in(config('mediable.allowed_disks', ['public']))],
+        ]);
         $path     = trim($data['path'], '/');
         $segments = explode('/', $path);
         abort_if($path === '' || preg_match('/[\\\\\x00-\x1F]/', $path)
@@ -35,7 +38,7 @@ readonly class MediaManagerController
             || trim(basename($path)) !== basename($path), 422, 'Enter a valid folder name inside the media library.');
 
         // Use the same disk as the media listing, not an unrelated default filesystem.
-        $disk    = config('mediable.default_disk');
+        $disk    = $data['disk'] ?? config('mediable.default_disk');
         $storage = Storage::disk($disk);
         $parent  = dirname($path) === '.' ? '' : dirname($path);
         app(\Modules\Media\Support\MediaDirectories::class)->validate($disk, $parent);

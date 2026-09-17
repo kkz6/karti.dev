@@ -10,7 +10,17 @@ export function uploadPresentation(upload: MediaUpload) {
         failed,
         completed,
         progress,
-        label: failed ? 'Not uploaded' : completed ? 'Uploaded' : progress === 100 ? 'Processing…' : `Uploading · ${progress}%`,
+        label: failed
+            ? upload.unconfirmed
+                ? 'Check destination'
+                : 'Not uploaded'
+            : completed
+              ? 'Uploaded'
+              : upload.status === 'queued'
+                ? 'Queued'
+                : progress === 100
+                  ? 'Saving…'
+                  : `Uploading · ${progress}%`,
         message: failed
             ? duplicate
                 ? 'A file with this name is already in this folder. Rename your file or choose the existing asset.'

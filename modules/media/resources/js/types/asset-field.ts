@@ -1,4 +1,4 @@
-import { MediaAsset } from './media';
+import { MediaAsset, MediaUpload } from './media';
 
 export interface AssetFieldConfig {
     folder?: string;
@@ -10,13 +10,7 @@ export interface AssetFieldConfig {
     maxFileSize?: number; // In bytes
 }
 
-export interface AssetUpload {
-    id: string;
-    name: string;
-    progress: number;
-    status: 'uploading' | 'complete' | 'completed' | 'error';
-    error?: string;
-}
+export type AssetUpload = MediaUpload;
 
 export type DisplayMode = 'grid' | 'list';
 

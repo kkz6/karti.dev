@@ -43,12 +43,18 @@ class MediaController extends BaseController
     /**
      * @throws MediaManagerException
      */
-    public function index(string $path = '')
+    public function index(Request $request, string $path = '')
     {
-        $path       = $this->manager->verifyDirectory($path);
+        $valid = $request->validate([
+            'disk' => ['sometimes', 'string', \Illuminate\Validation\Rule::in(config('mediable.allowed_disks', ['public']))],
+            'sort' => ['sometimes', \Illuminate\Validation\Rule::in(['title', 'filename', 'size', 'created_at', 'updated_at'])],
+            'dir'  => ['sometimes', \Illuminate\Validation\Rule::in(['asc', 'desc'])],
+        ]);
+        $disk = $valid['disk'] ?? config('mediable.default_disk');
+        $path = $this->manager->verifyDirectory($path, $disk);
 
-        $mediaPaginated = Media::inDirectory($path)->whereNull('original_media_id')->with('variants')->paginate(20);
-        $disk           = config('mediable.default_disk');
+        $mediaPaginated = Media::where('disk', $disk)->where('directory', $path)->whereNull('original_media_id')->with('variants')
+            ->orderBy($valid['sort'] ?? 'created_at', $valid['dir'] ?? 'desc')->orderByDesc('id')->paginate(20);
         $subdirectories = array_diff(Storage::disk($disk)->directories($path), $this->ignore);
 
         // Read current directories on every refresh, including newly created empty folders.
@@ -72,6 +78,7 @@ class MediaController extends BaseController
             'subdirectories' => $subdirectories,
             'media'          => MediaResource::collection($mediaPaginated->items()),
             'page_count'     => $mediaPaginated->lastPage(),
+            'total'          => $mediaPaginated->total(),
         ]);
     }
 
@@ -93,13 +100,15 @@ class MediaController extends BaseController
     {
         $media    = is_array($request->file) ? $request->file : [$request->file];
         $data     = collect($request->only(['title', 'alt', 'caption', 'credit']));
-        $path     = $this->manager->verifyDirectory(trim($request->path ?? '', '/'));
+        $disk     = $request->validated('disk');
+        $path     = app(\Modules\Media\Support\MediaDirectories::class)->validate($disk, $request->path ?? '');
         $response = [];
 
         try {
             foreach ($media as $m) {
                 $model = $this->uploader
-                    ->toDirectory($path)
+                    ->toDisk($disk)
+                    ->toExistingDirectory($path)
                     ->fromSource($m);
 
                 if ($data->isNotEmpty()) {

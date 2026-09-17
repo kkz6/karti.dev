@@ -153,6 +153,55 @@ it('uploads to the library root without a pre-created content folder', function 
     Storage::disk('public')->assertExists('photo.jpg');
 });
 
+it('uploads into the chosen disk and nested folder even when the default disk differs', function () {
+    \Illuminate\Support\Facades\Queue::fake();
+    Storage::fake('local');
+    config(['filesystems.default' => 'local', 'mediable.default_disk' => 'local']);
+    Storage::disk('public')->makeDirectory('photos/Japan Images');
+    $response = $this->postJson('/admin/media', [
+        'disk' => 'public', 'path' => 'photos/Japan Images', 'file' => UploadedFile::fake()->image('chosen.jpg'),
+    ])->assertOk()->assertJsonPath('0.directory', 'photos/Japan Images')->assertJsonPath('0.disk', 'public');
+    Storage::disk('public')->assertExists('photos/Japan Images/chosen.jpg');
+    Storage::disk('local')->assertMissing('photos/Japan Images/chosen.jpg');
+    $this->getJson('/admin/media/photos/Japan%20Images?disk=public')->assertOk()
+        ->assertJsonPath('media.0.id', $response->json('0.id'));
+    expect(Media::whereNotNull('original_media_id')->count())->toBe(0);
+    \Illuminate\Support\Facades\Queue::assertPushed(\Modules\Media\Jobs\GenerateResponsiveImages::class);
+});
+
+it('does not create a media record or report success when storage refuses an upload', function () {
+    $disk = \Mockery::mock(Storage::disk('public'))->makePartial();
+    $disk->shouldReceive('put')->once()->andReturn(false);
+    Storage::shouldReceive('disk')->with('public')->andReturn($disk);
+    $this->postJson('/admin/media', [
+        'disk' => 'public', 'path' => '/', 'file' => UploadedFile::fake()->image('failed.jpg'),
+    ])->assertUnprocessable()->assertJsonPath('message', 'The server could not save the file. Check storage permissions and available disk space.');
+    expect(Media::count())->toBe(0);
+});
+
+it('shows newly uploaded files first with exact pagination counts', function () {
+    \Illuminate\Support\Facades\Queue::fake();
+    for ($i = 0; $i < 21; $i++) {
+        Media::withoutEvents(fn () => Media::forceCreate([
+            'disk'       => 'public', 'directory' => '', 'filename' => 'old-'.$i, 'extension' => 'jpg',
+            'mime_type'  => 'image/jpeg', 'aggregate_type' => 'image', 'size' => 100,
+            'created_at' => now()->subDay(),
+        ]));
+    }
+    $response = $this->postJson('/admin/media', [
+        'disk' => 'public', 'path' => '/', 'file' => UploadedFile::fake()->image('newest.jpg'),
+    ])->assertOk();
+    $this->getJson('/admin/media?disk=public&sort=created_at&dir=desc')->assertOk()
+        ->assertJsonPath('media.0.id', $response->json('0.id'))->assertJsonPath('total', 22)->assertJsonPath('page_count', 2);
+});
+
+it('rejects unavailable upload destinations and disallowed disks', function () {
+    foreach ([['disk' => 'public', 'path' => '../outside'], ['disk' => 'public', 'path' => 'missing'], ['disk' => 'unknown', 'path' => '/']] as $target) {
+        $this->postJson('/admin/media', [...$target, 'file' => UploadedFile::fake()->image('invalid.jpg')])->assertUnprocessable();
+    }
+    expect(Media::count())->toBe(0);
+});
+
 it('accepts a three megabyte file upload', function () {
     $this->post('/admin/media', [
         'disk' => 'public',

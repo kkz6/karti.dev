@@ -31,14 +31,17 @@ function responsiveTestImage(string $name = 'landscape', int $width = 1200, int 
     ]);
 }
 
-it('generates a compressed thumbnail once and queues additional sizes without recursive variants', function () {
+it('queues all sizes without decoding the original in the upload request or recursive variants', function () {
     $image   = responsiveTestImage();
+    expect($image->fresh()->findVariant('thumb'))->toBeNull()->and(Media::count())->toBe(1);
+    Queue::assertPushed(GenerateResponsiveImages::class, 1);
+    (new GenerateResponsiveImages($image->id))->handle(app(ResponsiveImages::class));
     $variant = $image->fresh()->findVariant('thumb');
     expect($variant)->not->toBeNull()
         ->and($variant->extension)->toBe('webp')
         ->and($variant->custom_properties['width'])->toBe(320)
         ->and($variant->custom_properties['height'])->toBe(213)
-        ->and(Media::count())->toBe(2);
+        ->and(Media::count())->toBe(4);
     Queue::assertPushed(GenerateResponsiveImages::class, 1);
     $original = Storage::disk('public')->get($image->getDiskPath());
     (new GenerateResponsiveImages($image->id))->handle(app(ResponsiveImages::class));
@@ -75,15 +78,17 @@ it('respects custom crop settings and does not upscale small images', function (
     expect($square->custom_properties)->toBe(['width' => 200, 'height' => 200])
         ->and($square->mime_type)->toBe('image/png');
     expect(app(\Modules\Media\Support\ImageManipulator::class)->getVariantDefinition('square')->shouldOptimize())->toBeFalse();
-    $small = responsiveTestImage('small', 60, 40)->fresh()->findVariant('thumb');
+    $small = app(ResponsiveImages::class)->generate(responsiveTestImage('small', 60, 40), 'thumb');
     expect($small->custom_properties)->toBe(['width' => 60, 'height' => 40]);
 });
 
 it('rebuilds thumbnails after replacing an original and uses a new cache-safe URL', function () {
     $image  = responsiveTestImage();
+    (new GenerateResponsiveImages($image->id))->handle(app(ResponsiveImages::class));
     $before = $image->fresh()->findVariant('thumb');
     Storage::disk('public')->put($image->getDiskPath(), UploadedFile::fake()->image('new.jpg', 900, 900)->getContent());
     $image->saveConversions(force: true);
+    (new GenerateResponsiveImages($image->id, force: true))->handle(app(ResponsiveImages::class));
     $after = $image->fresh()->findVariant('thumb');
     expect($after->id)->toBe($before->id)
         ->and($after->getUrl())->not->toBe($before->getUrl())

@@ -106,8 +106,10 @@ export interface MediaMoveParams {
 export interface MediaUpload {
     id: string;
     name: string;
+    destination?: string;
+    unconfirmed?: boolean;
     progress: number;
-    status: 'uploading' | 'complete' | 'completed' | 'error';
+    status: 'queued' | 'uploading' | 'complete' | 'completed' | 'error';
     error?: string;
 }
 

@@ -33,7 +33,8 @@ return [
     /*
      * Filesystem disk to use if none is specified
      */
-    'default_disk' => env('FILESYSTEM_DISK', 'local'),
+    'default_disk'  => env('FILESYSTEM_DISK', 'local'),
+    'allowed_disks' => array_values(array_unique(['public', env('FILESYSTEM_DISK', 'local')])),
 
     /*
      * The maximum file size in bytes for a single uploaded file

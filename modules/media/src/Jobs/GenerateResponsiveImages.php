@@ -19,7 +19,8 @@ class GenerateResponsiveImages implements ShouldQueue
 
     public function handle(ResponsiveImages $images): void
     {
-        app(\Modules\Settings\Settings\MediaSettings::class)->refresh();
+        // presets() handles missing settings during rolling deployments.
+        app()->forgetInstance(\Modules\Settings\Settings\MediaSettings::class);
         $media = Media::find($this->mediaId);
         if (! $media || ! $images->supports($media)) {
             return;

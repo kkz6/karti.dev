@@ -72,6 +72,7 @@ export const FolderEditor: React.FC<FolderEditorProps> = ({ container, path, par
 
                 const { data } = await axios.post<{ success: boolean; path: string }>('/admin/media-manager/create', {
                     path: fullPath,
+                    disk: container.id,
                 });
 
                 // Show success toast

@@ -20,6 +20,12 @@ The folder endpoint lists one level at a time without loading assets or exposing
 
 New folders are created and listed on the configured media disk. Creation validates the parent and folder name, rejects duplicate names, and checks that storage actually created the directory before reporting success. The picker uses the normal success toast and keeps readable server errors inside the folder dialog. Enter submits only once and does not reach the surrounding content form. Folder listings are refreshed directly from storage instead of using a day-long cache, so new empty folders appear immediately; existing image selections are retained.
 
+## Uploads
+
+Uploads capture their disk and exact folder when files are selected or dropped. Navigating elsewhere inside the media browser does not retarget queued or active files. Every status row displays the destination. Two requests run at a time; remaining files show **Queued**. Drops are accepted across the browser, including the header and empty area, and do not also trigger a surrounding image field's uploader. Closing the browser cancels pending client requests; do not close/reload the page until uploads finish.
+
+Successful uploads refresh the destination with newest files first on page one. Finishing a batch in another folder does not navigate back or replace the visible folder. Storage writes and the returned media record are checked before reporting success. Existing folder names, including spaces and Unicode, are preserved without slugification. Requests time out after two minutes and advise checking the destination before retrying an unconfirmed upload; failed files do not stop the batch. SQLite uses WAL and a configurable five-second busy timeout, with retries for metadata transaction contention.
+
 ## Safe deletion
 
 The delete dialog checks saved media usage before enabling deletion. It lists gallery attachments, article featured images, embedded image URLs, project image arrays, SEO and site settings, including drafts and trash. Generated-preview URLs and historical URLs count as usage of the original. Links open the relevant content editor in a new tab; trashed records must be restored/edited or permanently removed through their own content workflow. External sites and unsaved drafts cannot be checked.
