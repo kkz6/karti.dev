@@ -72,8 +72,8 @@ class MediaController extends BaseController
 
         return response([
             'subdirectories' => $subdirectories->sortBy('name'),
-            'media' => MediaResource::collection($mediaPaginated->items()),
-            'page_count' => $mediaPaginated->lastPage()
+            'media'          => MediaResource::collection($mediaPaginated->items()),
+            'page_count'     => $mediaPaginated->lastPage(),
         ]);
     }
 
@@ -110,7 +110,7 @@ class MediaController extends BaseController
                     });
                 }
 
-                $response[] = $model->upload();
+                $response[] = new MediaResource($model->upload()->load('variants'));
             }
         } catch (FileExistsException) {
             return response()->json([
@@ -285,7 +285,7 @@ class MediaController extends BaseController
 
             // Use the media's disk and path
             $diskInstance = Storage::disk($media->disk);
-            $fullPath = $media->getDiskPath();
+            $fullPath     = $media->getDiskPath();
 
             // Delete old file if exists
             if ($diskInstance->exists($fullPath)) {
@@ -296,9 +296,10 @@ class MediaController extends BaseController
             $diskInstance->put($fullPath, $decodedImage);
 
             // Update the media record
-            $media->update([
+            $media->forceFill([
                 'size' => strlen($decodedImage),
-            ]);
+            ])->save();
+            $media->saveConversions(force: true);
 
             return response([
                 'success' => true,
@@ -316,9 +317,9 @@ class MediaController extends BaseController
             $path = $this->manager->verifyDirectory($path);
         }
 
-        $filename = $saveData->name;
+        $filename     = $saveData->name;
         $diskInstance = Storage::disk($disk);
-        $fullPath = $path ? $path.'/'.$filename : $filename;
+        $fullPath     = $path ? $path.'/'.$filename : $filename;
 
         if ($diskInstance->exists($fullPath)) {
             $pathInfo  = pathinfo($filename);

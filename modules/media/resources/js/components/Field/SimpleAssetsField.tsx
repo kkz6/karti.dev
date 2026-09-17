@@ -15,6 +15,7 @@ import { AssetFieldTile } from './AssetFieldTile';
 import { AssetDropOverlay } from './AssetDropOverlay';
 import { MediaAsset } from '../../types/media';
 import { MediaService } from '../../services/MediaService';
+import { includeAsset, uniqueAssetIds } from '../../utils/asset-selection';
 import { toast } from 'sonner';
 import {
     closestCenter,
@@ -61,12 +62,7 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
     const isSolo = maxFiles === 1;
 
     useEffect(() => {
-        const ids = Array.isArray(data) ? data.map((item: AssetFieldProps['data'][number]) => {
-            if (typeof item === 'string') return item;
-            if (typeof item === 'number') return item.toString();
-            if (typeof item === 'object' && item && item.id) return item.id.toString();
-            return null;
-        }).filter((id): id is string => Boolean(id)) : [];
+        const ids = Array.isArray(data) ? uniqueAssetIds(data) : [];
 
         setAssetIds(ids);
     }, [data]);
@@ -129,8 +125,9 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
     };
 
     const updateParentWithIds = (newIds: string[]) => {
-        setAssetIds(newIds);
-        onChange?.(newIds);
+        const uniqueIds = uniqueAssetIds(newIds);
+        setAssetIds(uniqueIds);
+        onChange?.(uniqueIds);
     };
 
     const [showAssetEditor, setShowAssetEditor] = useState(false);
@@ -211,6 +208,7 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
     };
 
     const openSelector = () => {
+        setSelectedAssetIds(uniqueAssetIds(assetIds));
         setShowSelector(true);
     };
 
@@ -220,19 +218,16 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
     };
 
     const handleAssetsSelected = () => {
-        if (selectedAssetIds.length > 0) {
-            const newIds = [...assetIds, ...selectedAssetIds];
-            updateParentWithIds(newIds);
-        }
+        updateParentWithIds(selectedAssetIds);
         closeSelector();
     };
 
     const handleSelectionsUpdated = (selections: string[]) => {
-        setSelectedAssetIds(selections);
+        setSelectedAssetIds(uniqueAssetIds(selections));
     };
 
     const handleAssetDoubleClicked = (asset: MediaAsset) => {
-        const newIds = [...assetIds, asset.id];
+        const newIds = includeAsset(selectedAssetIds, asset.id, maxFiles);
         updateParentWithIds(newIds);
         closeSelector();
     };
@@ -392,6 +387,8 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                         open={showSelector}
                         title={`Select ${name}`}
                         selectedCount={selectedAssetIds.length}
+                        confirmLabel="Use selection"
+                        allowEmpty
                         onClose={closeSelector}
                         onConfirm={handleAssetsSelected}
                         onClear={() => setSelectedAssetIds([])}
@@ -543,6 +540,8 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                         open={showSelector}
                         title={`Select ${name}`}
                         selectedCount={selectedAssetIds.length}
+                        confirmLabel="Use selection"
+                        allowEmpty
                         onClose={closeSelector}
                         onConfirm={handleAssetsSelected}
                         onClear={() => setSelectedAssetIds([])}

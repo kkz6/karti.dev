@@ -2,7 +2,6 @@
 
 namespace Modules\Frontend\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Modules\Blog\Models\Article;
 use Modules\Photography\Interfaces\PhotoServiceInterface;
@@ -76,25 +75,25 @@ class PortfolioController extends BaseController
             ->take(5)
             ->map(function ($photo) {
                 // Use the first image from gallery, or cover_image as fallback
-                $imageUrl = null;
+                $imageUrl      = null;
                 $galleryImages = $photo->images;
-                
+
                 if ($galleryImages->isNotEmpty()) {
-                    $imageUrl = $galleryImages->first()->getUrl();
+                    $imageUrl = $galleryImages->first()->imageUrl('card');
                 } elseif ($photo->cover_image) {
-                    $imageUrl = $photo->cover_image->getUrl();
+                    $imageUrl = $photo->cover_image->imageUrl('card');
                 }
-                
+
                 return [
-                    'src' => $imageUrl,
-                    'alt' => $photo->title . ' - Featured photography',
-                    'title' => $photo->title,
-                    'description' => $photo->short_description ?? substr($photo->description, 0, 50) . '...',
-                    'slug' => $photo->slug,
+                    'src'         => $imageUrl,
+                    'alt'         => $photo->title.' - Featured photography',
+                    'title'       => $photo->title,
+                    'description' => $photo->short_description ?? substr($photo->description, 0, 50).'...',
+                    'slug'        => $photo->slug,
                 ];
             })
             ->filter(function ($photo) {
-                return !empty($photo['src']);
+                return ! empty($photo['src']);
             })
             ->values()
             ->toArray();
@@ -146,7 +145,7 @@ class PortfolioController extends BaseController
         ])->get()->keyBy('key');
 
         $seoData = new SEOData(
-            title: 'About - ' . config('seo.site_name', config('app.name')),
+            title: 'About - '.config('seo.site_name', config('app.name')),
             description: 'Learn about Karthick, a software developer and founder based in Bangalore. Building technologies that empower people to explore the world on their own terms.',
             author: config('seo.author', 'Karthick'),
             image: $siteSettings->get('portrait_image')?->value ?? config('seo.image'),
@@ -187,7 +186,6 @@ class PortfolioController extends BaseController
         ]);
     }
 
-
     public function articles()
     {
         $articles = Article::published()
@@ -206,7 +204,7 @@ class PortfolioController extends BaseController
             });
 
         $seoData = new SEOData(
-            title: 'Articles - ' . config('seo.site_name', config('app.name')),
+            title: 'Articles - '.config('seo.site_name', config('app.name')),
             description: 'Read articles about software development, technology, and building products.',
             author: config('seo.author', 'Karthick'),
             image: config('seo.image'),
@@ -279,7 +277,7 @@ class PortfolioController extends BaseController
             'article' => [
                 'slug'         => $article->slug,
                 'title'        => $article->title,
-                'content'      => $article->content,
+                'content'      => app(\Modules\Media\Support\PublicImageSources::class)->html($article->content ?? ''),
                 'description'  => $article->excerpt,
                 'date'         => $article->published_at->format('Y-m-d'),
                 'author'       => $authorName,
@@ -310,7 +308,7 @@ class PortfolioController extends BaseController
             });
 
         $seoData = new SEOData(
-            title: 'Speaking - ' . config('seo.site_name', config('app.name')),
+            title: 'Speaking - '.config('seo.site_name', config('app.name')),
             description: 'Karthick has spoken at events around the world and been interviewed for many podcasts. See upcoming and past speaking engagements.',
             author: config('seo.author', 'Karthick'),
             image: config('seo.image'),
@@ -330,12 +328,10 @@ class PortfolioController extends BaseController
         ]);
     }
 
-
-
     public function consulting()
     {
         $seoData = new SEOData(
-            title: 'Consulting - ' . config('seo.site_name', config('app.name')),
+            title: 'Consulting - '.config('seo.site_name', config('app.name')),
             description: 'Visa consultations, home automation, and network design. One-on-one help getting a visa application right or building a home that runs itself.',
             author: config('seo.author', 'Karthick'),
             image: config('seo.image'),
@@ -391,5 +387,4 @@ class PortfolioController extends BaseController
             'siteSettings' => $siteSettings,
         ]);
     }
-
 }

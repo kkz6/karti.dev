@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { Link } from '@inertiajs/react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import PublicLayout from '../../layouts/public-layout'
 import { Container } from '../../components/Container'
 import { SeoHead, SeoData } from '../../components/SeoHead'
+import { GalleryLightbox } from '../../components/GalleryLightbox'
 
 interface PhotographyShowProps {
     photo: {
@@ -58,6 +59,7 @@ function CameraIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 
 export default function PhotographyShow({ photo, seo, jsonLd }: PhotographyShowProps) {
     const [selectedImage, setSelectedImage] = useState<number | null>(null)
+    const galleryTrigger = useRef<HTMLButtonElement>(null)
 
     return (
         <>
@@ -140,7 +142,8 @@ export default function PhotographyShow({ photo, seo, jsonLd }: PhotographyShowP
                                     {photo?.images?.length > 0 ? (
                                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                                             {photo.images.map((image, index) => (
-                                                <motion.div
+                                                <motion.button
+                                                    type="button"
                                                     key={index}
                                                     initial={{ opacity: 0, y: 50 }}
                                                     animate={{ opacity: 1, y: 0 }}
@@ -149,8 +152,12 @@ export default function PhotographyShow({ photo, seo, jsonLd }: PhotographyShowP
                                                         delay: 0.3 + (index * 0.05),
                                                         ease: "easeOut"
                                                     }}
-                                                    className="group cursor-pointer"
-                                                    onClick={() => setSelectedImage(index)}
+                                                    className="group cursor-zoom-in rounded-2xl text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+                                                    aria-label={`Open photo ${index + 1}: ${image.alt || photo.title}`}
+                                                    onClick={(event) => {
+                                                        galleryTrigger.current = event.currentTarget
+                                                        setSelectedImage(index)
+                                                    }}
                                                 >
                                                     <div className="travel-card overflow-hidden">
                                                         <div className="aspect-[4/5] overflow-hidden">
@@ -172,7 +179,7 @@ export default function PhotographyShow({ photo, seo, jsonLd }: PhotographyShowP
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </motion.div>
+                                                </motion.button>
                                             ))}
                                         </div>
                                     ) : (
@@ -202,72 +209,14 @@ export default function PhotographyShow({ photo, seo, jsonLd }: PhotographyShowP
                         </div>
                     </div>
 
-                    {/* Lightbox Modal */}
-                    <AnimatePresence>
-                        {selectedImage !== null && (
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
-                                onClick={() => setSelectedImage(null)}
-                            >
-                                <motion.div
-                                    initial={{ scale: 0.9, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    exit={{ scale: 0.9, opacity: 0 }}
-                                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                                    className="relative max-w-7xl max-h-[90vh] mx-4"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <img
-                                        src={photo.images[selectedImage].full_url}
-                                        alt={photo.images[selectedImage].alt}
-                                        className="max-w-full max-h-[85vh] object-contain rounded-lg"
-                                    />
-
-                                    {/* Close button */}
-                                    <button
-                                        onClick={() => setSelectedImage(null)}
-                                        className="absolute top-4 right-4 w-10 h-10 rounded-xl glass-strong text-white hover:text-primary transition-colors flex items-center justify-center font-mono"
-                                    >
-                                        ×
-                                    </button>
-
-                                    {/* Navigation */}
-                                    {photo.images.length > 1 && (
-                                        <>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setSelectedImage(selectedImage > 0 ? selectedImage - 1 : photo.images.length - 1);
-                                                }}
-                                                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-xl glass-strong text-white hover:text-primary transition-colors flex items-center justify-center font-mono text-2xl"
-                                            >
-                                                ‹
-                                            </button>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setSelectedImage(selectedImage < photo.images.length - 1 ? selectedImage + 1 : 0);
-                                                }}
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-xl glass-strong text-white hover:text-primary transition-colors flex items-center justify-center font-mono text-2xl"
-                                            >
-                                                ›
-                                            </button>
-                                        </>
-                                    )}
-
-                                    {/* Image counter */}
-                                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl glass-strong text-white font-mono text-sm">
-                                        <span className="text-primary">[</span>
-                                        {selectedImage + 1} / {photo.images.length}
-                                        <span className="text-primary">]</span>
-                                    </div>
-                                </motion.div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                    <GalleryLightbox
+                        title={photo.title}
+                        images={photo.images}
+                        index={selectedImage}
+                        onIndexChange={setSelectedImage}
+                        onClose={() => setSelectedImage(null)}
+                        returnFocusRef={galleryTrigger}
+                    />
                 </Container>
             </PublicLayout>
         </>

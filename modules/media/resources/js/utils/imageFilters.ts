@@ -1,6 +1,6 @@
 /**
- * Modern Canvas-based image filters to replace CamanJS
- * These filters work with HTML5 Canvas and are compatible with modern browsers
+ * Pixel filters for the background image-editor worker.
+ * The original pixels stay immutable; every render starts from that source.
  */
 
 export interface FilterOptions {
@@ -39,45 +39,43 @@ export interface FilterOptions {
 }
 
 export class ImageFilterProcessor {
-    private canvas: HTMLCanvasElement;
-    private ctx: CanvasRenderingContext2D;
+    private canvas: OffscreenCanvas;
+    private ctx: OffscreenCanvasRenderingContext2D;
     private originalImageData: ImageData | null = null;
+    private hasAlpha = false;
 
-    constructor() {
-        this.canvas = document.createElement('canvas');
-        this.ctx = this.canvas.getContext('2d')!;
+    constructor(canvas: OffscreenCanvas) {
+        this.canvas = canvas;
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        if (!context) throw new Error('Image processing is unavailable');
+        this.ctx = context;
     }
 
-    /**
-     * Load image from URL or HTMLImageElement
-     */
-    public async loadImage(source: string | HTMLImageElement): Promise<void> {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-
-            img.onload = () => {
-                this.canvas.width = img.naturalWidth;
-                this.canvas.height = img.naturalHeight;
-                this.ctx.drawImage(img, 0, 0);
-                this.originalImageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-                resolve();
-            };
-
-            img.onerror = reject;
-
-            if (typeof source === 'string') {
-                img.src = source;
-            } else {
-                img.src = source.src;
+    public loadBitmap(image: ImageBitmap): void {
+        this.canvas.width = image.width;
+        this.canvas.height = image.height;
+        this.ctx.drawImage(image, 0, 0);
+        this.originalImageData = this.ctx.getImageData(0, 0, image.width, image.height);
+        this.hasAlpha = false;
+        for (let i = 3; i < this.originalImageData.data.length; i += 4) {
+            if (this.originalImageData.data[i] !== 255) {
+                this.hasAlpha = true;
+                break;
             }
+        }
+    }
+
+    // Called inside a worker: PNG remains lossless for exports and transparent images.
+    // Opaque previews use fast asynchronous JPEG encoding instead of blocking base64 PNG.
+    public async renderBlob(filters: FilterOptions, preview = true): Promise<Blob> {
+        this.processFilters(filters);
+        return this.canvas.convertToBlob({
+            type: preview && !this.hasAlpha ? 'image/jpeg' : 'image/png',
+            quality: 0.9,
         });
     }
 
-    /**
-     * Apply filters to the image
-     */
-    public applyFilters(filters: FilterOptions): string {
+    private processFilters(filters: FilterOptions): void {
         if (!this.originalImageData) {
             throw new Error('No image loaded');
         }
@@ -100,6 +98,10 @@ export class ImageFilterProcessor {
 
         if (filters.saturation !== undefined) {
             imageData = this.applySaturation(imageData, filters.saturation);
+        }
+
+        if (filters.vibrance !== undefined) {
+            imageData = this.applyVibrance(imageData, filters.vibrance);
         }
 
         if (filters.hue !== undefined) {
@@ -196,27 +198,6 @@ export class ImageFilterProcessor {
 
         // Put processed image data back to canvas
         this.ctx.putImageData(imageData, 0, 0);
-
-        return this.canvas.toDataURL();
-    }
-
-    /**
-     * Reset to original image
-     */
-    public reset(): string {
-        if (!this.originalImageData) {
-            throw new Error('No image loaded');
-        }
-
-        this.ctx.putImageData(this.originalImageData, 0, 0);
-        return this.canvas.toDataURL();
-    }
-
-    /**
-     * Get current canvas as data URL
-     */
-    public getDataURL(type?: string, quality?: number): string {
-        return this.canvas.toDataURL(type, quality);
     }
 
     // Filter implementations
@@ -271,37 +252,42 @@ export class ImageFilterProcessor {
 
         const cos = Math.cos(hueRotation);
         const sin = Math.sin(hueRotation);
+        const rr = 0.299 + 0.701 * cos + 0.168 * sin;
+        const rg = 0.587 - 0.587 * cos + 0.33 * sin;
+        const rb = 0.114 - 0.114 * cos - 0.497 * sin;
+        const gr = 0.299 - 0.299 * cos - 0.328 * sin;
+        const gg = 0.587 + 0.413 * cos + 0.035 * sin;
+        const gb = 0.114 - 0.114 * cos + 0.292 * sin;
+        const br = 0.299 - 0.3 * cos + 1.25 * sin;
+        const bg = 0.587 - 0.588 * cos - 1.05 * sin;
+        const bb = 0.114 + 0.886 * cos - 0.203 * sin;
 
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i];
             const g = data[i + 1];
             const b = data[i + 2];
 
-            data[i] = Math.max(
-                0,
-                Math.min(
-                    255,
-                    (0.299 + 0.701 * cos + 0.168 * sin) * r + (0.587 - 0.587 * cos + 0.33 * sin) * g + (0.114 - 0.114 * cos - 0.497 * sin) * b,
-                ),
-            );
-
-            data[i + 1] = Math.max(
-                0,
-                Math.min(
-                    255,
-                    (0.299 - 0.299 * cos - 0.328 * sin) * r + (0.587 + 0.413 * cos + 0.035 * sin) * g + (0.114 - 0.114 * cos + 0.292 * sin) * b,
-                ),
-            );
-
-            data[i + 2] = Math.max(
-                0,
-                Math.min(
-                    255,
-                    (0.299 - 0.3 * cos + 1.25 * sin) * r + (0.587 - 0.588 * cos - 1.05 * sin) * g + (0.114 + 0.886 * cos - 0.203 * sin) * b,
-                ),
-            );
+            data[i] = Math.max(0, Math.min(255, rr * r + rg * g + rb * b));
+            data[i + 1] = Math.max(0, Math.min(255, gr * r + gg * g + gb * b));
+            data[i + 2] = Math.max(0, Math.min(255, br * r + bg * g + bb * b));
         }
 
+        return imageData;
+    }
+
+    private applyVibrance(imageData: ImageData, value: number): ImageData {
+        const data = imageData.data;
+        for (let i = 0; i < data.length; i += 4) {
+            const r = data[i],
+                g = data[i + 1],
+                b = data[i + 2];
+            const max = Math.max(r, g, b);
+            const average = (r + g + b) / 3;
+            const amount = (((max - average) * 2) / 255) * (-value / 100);
+            data[i] = r + (max - r) * amount;
+            data[i + 1] = g + (max - g) * amount;
+            data[i + 2] = b + (max - b) * amount;
+        }
         return imageData;
     }
 
@@ -379,9 +365,14 @@ export class ImageFilterProcessor {
     private applyNoise(imageData: ImageData, value: number): ImageData {
         const data = imageData.data;
         const intensity = value * 2.55;
+        // Repeatable grain keeps a regenerated lossless export identical to its preview.
+        let seed = 0x9e3779b9;
 
         for (let i = 0; i < data.length; i += 4) {
-            const noise = (Math.random() - 0.5) * intensity;
+            seed ^= seed << 13;
+            seed ^= seed >>> 17;
+            seed ^= seed << 5;
+            const noise = ((seed >>> 0) / 4294967296 - 0.5) * intensity;
             data[i] = Math.max(0, Math.min(255, data[i] + noise)); // R
             data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise)); // G
             data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise)); // B
@@ -439,7 +430,8 @@ export class ImageFilterProcessor {
         const data = imageData.data;
         const width = imageData.width;
         const height = imageData.height;
-        const output = new Uint8ClampedArray(data.length);
+        // Keep edge pixels/alpha intact; the kernel only visits interior pixels.
+        const output = new Uint8ClampedArray(data);
 
         for (let y = 1; y < height - 1; y++) {
             for (let x = 1; x < width - 1; x++) {

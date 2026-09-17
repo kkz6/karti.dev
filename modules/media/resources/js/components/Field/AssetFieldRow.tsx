@@ -42,7 +42,7 @@ export function AssetFieldRow({
         if (asset.thumbnail_url) {
             return asset.thumbnail_url;
         }
-        if (asset.is_image) {
+        if (asset.mime_type === 'image/svg+xml') {
             return asset.url;
         }
         return null;
@@ -55,7 +55,7 @@ export function AssetFieldRow({
             <td className="flex flex-wrap items-center p-2" style={{ width: '100%' }}>
                 <div className="mr-2 flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded">
                     {isImage || canShowSvg ? (
-                        <AssetImagePreview src={thumbnailUrl || asset.url} alt={asset.title || asset.filename} compact fit={canShowSvg ? 'contain' : 'cover'} />
+                        <AssetImagePreview src={thumbnailUrl} alt={asset.title || asset.filename} compact fit={canShowSvg ? 'contain' : 'cover'} />
                     ) : (
                         <FileIcon extension={asset.extension} className="h-6 w-6" />
                     )}

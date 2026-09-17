@@ -77,7 +77,7 @@ export const AssetTile: React.FC<AssetTileProps> = ({
         if (asset.thumbnail_url) {
             return asset.thumbnail_url;
         }
-        if (asset.is_image) {
+        if (asset.mime_type === 'image/svg+xml') {
             return asset.url;
         }
         return null;

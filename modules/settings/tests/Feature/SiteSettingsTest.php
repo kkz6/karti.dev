@@ -27,7 +27,7 @@ test('site settings require authentication', function () {
 test('site settings render with the saved values and shared public identity', function () {
     $this->actingAs(User::factory()->create());
     $this->get(route('admin.settings.edit'))->assertOk()->assertInertia(fn (Assert $page) => $page
-        ->component('settings/site')->has('settings.name')->has('settings.favicon')->has('site.name'));
+        ->component('settings/site')->has('settings.name')->has('settings.favicon')->has('site.name')->missing('mediaSettings')->missing('mediaMessage'));
 });
 
 test('settings persist and flow into admin identity and public HTML without rebuilding', function () {

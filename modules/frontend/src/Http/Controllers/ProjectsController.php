@@ -42,13 +42,21 @@ class ProjectsController extends BaseController
                         'href'  => $project->project_url ?? $project->github_url ?? '#',
                         'label' => $project->project_url ? 'View project' : ($project->github_url ? 'View on GitHub' : 'View project'),
                     ],
-                    'logo'        => $project->logo ?? $project->featured_image,
+                    'logo'         => $project->logo ?? $project->featured_image,
                     'technologies' => $project->technologies ?? [],
                 ];
             })->toArray();
 
+        $logos = app(\Modules\Media\Support\PublicImageSources::class)->mediaForUrls(array_filter(array_column($projects, 'logo')));
+        foreach ($projects as &$project) {
+            if (isset($logos[$project['logo'] ?? ''])) {
+                $project['logo'] = $logos[$project['logo']]->imageUrl('thumb');
+            }
+        }
+        unset($project);
+
         $seoData = new SEOData(
-            title: 'Projects - ' . config('seo.site_name', config('app.name')),
+            title: 'Projects - '.config('seo.site_name', config('app.name')),
             description: 'Things I\'ve made trying to put my dent in the universe. Explore open-source projects and software I\'ve built.',
             author: config('seo.author', 'Karthick'),
             image: config('seo.image'),

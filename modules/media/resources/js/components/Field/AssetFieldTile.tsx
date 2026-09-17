@@ -43,7 +43,7 @@ export function AssetFieldTile({
         if (asset.thumbnail_url) {
             return asset.thumbnail_url;
         }
-        if (asset.is_image) {
+        if (asset.mime_type === 'image/svg+xml') {
             return asset.url;
         }
         return null;
@@ -68,7 +68,7 @@ export function AssetFieldTile({
             <div className="asset-thumb-container relative aspect-square overflow-hidden rounded-t-lg">
                 <div className="asset-thumb bg-muted/50 absolute inset-0 flex items-center justify-center">
                     {isImage || canShowSvg ? (
-                        <AssetImagePreview src={thumbnailUrl || asset.url} alt={asset.title || asset.filename} fit={canShowSvg ? 'contain' : 'cover'} />
+                        <AssetImagePreview src={thumbnailUrl} alt={asset.title || asset.filename} fit={canShowSvg ? 'contain' : 'cover'} />
                     ) : (
                         <FileIcon extension={asset.extension} className="h-8 w-8" />
                     )}

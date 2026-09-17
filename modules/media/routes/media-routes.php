@@ -4,6 +4,10 @@ use Illuminate\Support\Facades\Route;
 use Modules\Media\Http\Controllers\MediaController;
 use Modules\Media\Http\Controllers\MediaManagerController;
 
+Route::get('/media/images/{media}/{preset}', \Modules\Media\Http\Controllers\ResponsiveImageController::class)
+    ->middleware(['signed', 'throttle:120,1', \Illuminate\Routing\Middleware\SubstituteBindings::class])
+    ->whereNumber('media')->where('preset', '[a-z][a-z0-9_-]*')->name('media.image');
+
 Route::middleware(['web', 'auth'])->prefix('admin')->group(function () {
     // Media Manager
     Route::get('media-manager', [MediaManagerController::class, 'index'])->name('media-manager');

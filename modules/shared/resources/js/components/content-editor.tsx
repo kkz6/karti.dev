@@ -36,7 +36,7 @@ export function ContentEditorHeader({
                 {status && (
                     <span className={`size-2 shrink-0 rounded-full ${published ? 'bg-emerald-500' : 'bg-zinc-400'}`} role="img" aria-label={status} />
                 )}
-                <h1 className="min-w-0 text-2xl font-semibold tracking-tight break-words">{title}</h1>
+                <h1 data-editor-title className="min-w-0 text-2xl font-semibold tracking-tight break-words">{title}</h1>
             </div>
             <div className="flex shrink-0 items-center gap-3">
                 <DropdownMenu>

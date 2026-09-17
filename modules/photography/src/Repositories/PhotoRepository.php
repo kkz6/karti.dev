@@ -57,6 +57,7 @@ class PhotoRepository extends QueryableRepository implements PhotoRepositoryInte
     public function getPublished(): Collection
     {
         return $this->model->newQuery()
+            ->with(['media.variants', 'categories'])
             ->published()
             ->ordered()
             ->get();

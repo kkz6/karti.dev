@@ -1,5 +1,5 @@
 import { type NavGroup, type NavItem } from '@shared/types';
-import { Camera, Files, FileText, Folder, FolderOpen, LayoutGrid, Mail, Mic, Search, Settings, Tags, Wrench } from 'lucide-react';
+import { Camera, Files, FileText, Folder, FolderOpen, Image, LayoutGrid, Mail, Mic, Search, Settings, Tags, Wrench } from 'lucide-react';
 
 /**
  * Main navigation items for the admin panel
@@ -69,6 +69,7 @@ export const mainNavItems: NavItem[] = [
     },
     { title: 'Newsletter', href: route('admin.newsletter.index'), icon: Mail },
     { title: 'Site settings', href: route('admin.settings.edit'), icon: Settings },
+    { title: 'Media settings', href: route('admin.settings.media.edit'), icon: Image },
 ];
 
 export const mainNavGroups: NavGroup[] = [
@@ -84,5 +85,5 @@ export const mainNavGroups: NavGroup[] = [
         title: 'Tools',
         items: mainNavItems.filter((item) => ['Tools', 'SEO', 'Newsletter'].includes(item.title)),
     },
-    { title: 'Settings', items: mainNavItems.filter((item) => item.title === 'Site settings') },
+    { title: 'Settings', items: mainNavItems.filter((item) => ['Site settings', 'Media settings'].includes(item.title)) },
 ];

@@ -12,7 +12,9 @@ class SiteSettingsController
 {
     public function edit(SiteSettings $settings): Response
     {
-        return Inertia::render('settings/site', ['settings' => $settings->toArray()]);
+        return Inertia::render('settings/site', [
+            'settings'      => $settings->toArray(),
+        ]);
     }
 
     public function update(UpdateSiteSettingsRequest $request, SiteSettings $settings): RedirectResponse

@@ -24,6 +24,7 @@ export interface MediaAsset {
     is_video: boolean;
     url: string;
     thumbnail_url?: string;
+    image_urls?: Record<string, string>;
     preview?: string;
     path: string;
     formatted_size: string;

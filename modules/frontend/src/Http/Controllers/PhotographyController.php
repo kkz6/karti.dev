@@ -41,7 +41,7 @@ class PhotographyController extends BaseController
                     'title'       => $photo->title,
                     'description' => $photo->excerpt,
                     'date'        => $photo->published_at ? $photo->published_at->format('Y-m-d') : null,
-                    'coverImage'  => $photo->cover_image?->getUrl(),
+                    'coverImage'  => $photo->cover_image?->imageUrl('card'),
                     'imageCount'  => $photo->images->count(),
                     'categories'  => $photo->categories->pluck('name')->toArray(),
                     'location'    => null,
@@ -49,7 +49,7 @@ class PhotographyController extends BaseController
             })->toArray();
 
         $seoData = new SEOData(
-            title: 'Photography - ' . config('seo.site_name', config('app.name')),
+            title: 'Photography - '.config('seo.site_name', config('app.name')),
             description: 'A visual journal capturing moments through my lens. From landscapes to street scenes, each collection tells its own story.',
             author: config('seo.author', 'Karthick'),
             image: config('seo.image'),
@@ -82,7 +82,7 @@ class PhotographyController extends BaseController
         // Get image data with both card conversions and full URLs
         $images = $photo->images->map(function ($media) {
             return [
-                'card_url' => $media->getConversion('card') ?: $media->getUrl(),
+                'card_url' => $media->imageUrl('card'),
                 'full_url' => $media->getUrl(),
                 'alt'      => $media->alt ?: 'Gallery image',
             ];

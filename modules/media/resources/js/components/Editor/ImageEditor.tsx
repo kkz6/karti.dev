@@ -1,17 +1,31 @@
 import { MediaAsset } from '@media/types/media';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@shared/components/ui/alert-dialog';
 import { Button } from '@shared/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
-import { TooltipButton } from '@shared/components/ui/tooltip-button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import axios from 'axios';
-import { Code, Loader2, RotateCcw, X } from 'lucide-react';
+import { Columns2, ImageOff, Loader2, RotateCcw, SlidersHorizontal, Sparkles } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { AssetImagePreview } from '../UI/AssetImagePreview';
 import { FilterPresets } from './FilterPresets';
 import { ImageControls } from './ImageControls';
 import { ImageFilters } from './ImageFilters';
 import { SaveDropdown } from './SaveDropdown';
 
 import '@media/../css/image-editor.css';
-import { FilterOptions, ImageFilterProcessor } from '@media/utils/imageFilters';
+import { hasImageTransform, imageExportBounds } from '@media/utils/image-export';
+import { ImageFilterClient } from '@media/utils/image-filter-client';
+import { FilterOptions } from '@media/utils/imageFilters';
+import { LatestPreview } from '@media/utils/latest-preview';
 import 'cropperjs';
 import type { CropperCanvas, CropperHandle, CropperImage, CropperSelection } from 'cropperjs';
 import {
@@ -31,16 +45,12 @@ type CropperImageElement = CropperImage;
 type CropperSelectionElement = CropperSelection;
 type CropperCanvasElement = CropperCanvas;
 type CropperHandleElement = CropperHandle;
-const isIdentityMatrix = (matrix: number[]): boolean => {
-    return matrix[0] === 1 && matrix[1] === 0 && matrix[2] === 0 && matrix[3] === 1 && matrix[4] === 0 && matrix[5] === 0;
-};
 
 const flipImage = (cropperImage: CropperImage, direction: 'horizontal' | 'vertical'): void => {
-    const matrix = cropperImage.$getTransform();
     if (direction === 'horizontal') {
-        cropperImage.$scale(-matrix[0], matrix[3]);
+        cropperImage.$scale(-1, 1);
     } else {
-        cropperImage.$scale(matrix[0], -matrix[3]);
+        cropperImage.$scale(1, -1);
     }
 };
 
@@ -52,13 +62,20 @@ interface ImageEditorProps {
 }
 
 export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose, onSaved }) => {
+    const dialogRef = useRef<HTMLDivElement>(null);
+    const [editorError, setEditorError] = useState('');
+    const [imageFailed, setImageFailed] = useState(false);
+    const [loadAttempt, setLoadAttempt] = useState(0);
+    const [saving, setSaving] = useState(false);
+    const [discardOpen, setDiscardOpen] = useState(false);
     const [processing, setProcessing] = useState(false);
+    const [previewPending, setPreviewPending] = useState(false);
+    const [previewFailed, setPreviewFailed] = useState(false);
     const [imageLoading, setImageLoading] = useState(false);
     const [hasChanged, setHasChanged] = useState(false);
     const [dragMode, setDragMode] = useState<'move' | 'crop'>('move');
     const [croppedByUser, setCroppedByUser] = useState(false);
     const [showDiff, setShowDiff] = useState(false);
-    const [diffDisable, setDiffDisable] = useState(true);
     const [originalImageUrl, setOriginalImageUrl] = useState<string>('');
     const [editedImageUrl, setEditedImageUrl] = useState<string>('');
     const [camanFilters, setCamanFilters] = useState<FilterOptions>({});
@@ -68,7 +85,10 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
     const cropperSelectionRef = useRef<CropperSelectionElement>(null);
     const cropperHandleRef = useRef<CropperHandleElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const filterProcessorRef = useRef<ImageFilterProcessor | null>(null);
+    const filterProcessorRef = useRef<ImageFilterClient | null>(null);
+    const previewQueueRef = useRef<LatestPreview<FilterOptions, Blob | string> | null>(null);
+    const filtersRef = useRef<FilterOptions>({});
+    const previewUrlRef = useRef<string | null>(null);
 
     const centerImage = useCallback(() => {
         const cropperImage = cropperImageRef.current;
@@ -95,12 +115,15 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
         setDragMode('move');
         setCroppedByUser(false);
         setShowDiff(false);
-        setDiffDisable(true);
         setOriginalImageUrl('');
         setEditedImageUrl('');
         setCamanFilters({});
+        filtersRef.current = {};
+        setPreviewPending(false);
+        setPreviewFailed(false);
 
         if (filterProcessorRef.current) {
+            filterProcessorRef.current.dispose();
             filterProcessorRef.current = null;
         }
 
@@ -135,135 +158,96 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
         }
     }, []);
 
-    const initializeCropper = useCallback(async () => {
-        if (!asset) return;
+    useEffect(() => {
+        if (!isOpen || !asset) {
+            cleanup();
+            return;
+        }
 
+        let active = true;
+        let processor: ImageFilterClient;
+        try {
+            processor = new ImageFilterClient();
+        } catch {
+            setImageFailed(true);
+            setEditorError('Background image processing is unavailable in this browser. Please try an up-to-date browser.');
+            return;
+        }
+        filterProcessorRef.current = processor;
+        filtersRef.current = {};
+        setCamanFilters({});
+        setPreviewFailed(false);
+        setPreviewPending(false);
+        const queue = new LatestPreview<FilterOptions, Blob | string>({
+            render: (filters) => (Object.keys(filters).length ? processor.render(filters) : Promise.resolve(processor.originalUrl)),
+            commit: async (result, isCurrent) => {
+                const url = typeof result === 'string' ? result : URL.createObjectURL(result);
+                let retained = false;
+                try {
+                    const decoded = new Image();
+                    decoded.src = url;
+                    await decoded.decode();
+                    const cropperImage = cropperImageRef.current;
+                    if (!isCurrent() || !cropperImage) return;
+                    const transform = cropperImage.$getTransform();
+                    cropperImage.$image.src = url;
+                    await cropperImage.$ready();
+                    // A newer slider value may arrive during decoding. Restore this
+                    // frame's geometry unless reset/close has replaced its source.
+                    if (!active || cropperImage.$image.src !== decoded.src) return;
+                    cropperImage.$setTransform(transform);
+                    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+                    previewUrlRef.current = typeof result === 'string' ? null : url;
+                    retained = true;
+                } finally {
+                    if (!retained && typeof result !== 'string') URL.revokeObjectURL(url);
+                }
+            },
+            busy: setPreviewPending,
+            error: () => {
+                setPreviewFailed(true);
+                setEditorError('Could not update the preview. Adjust a setting to retry, or reset the filters.');
+            },
+        });
+        previewQueueRef.current = queue;
         setImageLoading(true);
+        setImageFailed(false);
+        setEditorError('');
         setOriginalImageUrl(asset.url);
 
-        filterProcessorRef.current = new ImageFilterProcessor();
-        await filterProcessorRef.current.loadImage(asset.url);
-
-        setTimeout(() => {
-            setProcessing(false);
-            setTimeout(() => {
+        Promise.all([processor.loadImage(asset.url), cropperImageRef.current?.$ready()])
+            .then(() => {
+                if (!active) return;
                 centerImage();
-                setImageLoading(false);
-            }, 100);
-        }, 200);
-    }, [asset, centerImage]);
-
-    useEffect(() => {
-        if (isOpen && asset) {
-            setProcessing(true);
-            initializeCropper();
-        } else if (!isOpen) {
-            cleanup();
-        }
-    }, [isOpen, asset, initializeCropper, cleanup]);
-
-    useEffect(() => {
-        if (!isOpen || !asset || !cropperImageRef.current) return;
-
-        const cropperImage = cropperImageRef.current;
-
-        // Simple ready check - wait for the image element to be ready
-        const initImage = () => {
-            setTimeout(() => {
-                if (cropperImage.$ready) {
-                    cropperImage.$ready().then(() => {
-                        centerImage();
-                        setImageLoading(false);
-                    });
-                } else {
-                    centerImage();
-                    setImageLoading(false);
-                }
-            }, 100);
-        };
-
-        initImage();
-
-        // Add resize observer to re-center image when container size changes
-        const container = containerRef.current;
-        if (container) {
-            const resizeObserver = new ResizeObserver(() => {
-                if (!processing && !imageLoading) {
-                    centerImage();
-                }
-            });
-            resizeObserver.observe(container);
-
-            return () => {
-                resizeObserver.disconnect();
-            };
-        }
-    }, [isOpen, asset, centerImage, processing, imageLoading]);
-
-    const handleOperation = useCallback((action: string) => {
-        const cropperImage = cropperImageRef.current;
-        const cropperSelection = cropperSelectionRef.current;
-        const cropperHandle = cropperHandleRef.current;
-
-        if (!cropperImage) return;
-
-        switch (action) {
-            case 'move':
-                setDragMode('move');
-                if (cropperHandle) cropperHandle.action = ACTION_MOVE;
-                break;
-
-            case 'crop':
-                setDragMode('crop');
-                if (cropperHandle) cropperHandle.action = ACTION_SELECT;
-                break;
-
-            case 'zoom-in':
-                cropperImage.$zoom(0.1);
-                setHasChanged(true);
-                break;
-
-            case 'zoom-out':
-                cropperImage.$zoom(-0.1);
-                setHasChanged(true);
-                break;
-
-            case 'rotate-left':
-                cropperImage.$rotate('-90deg');
-                setHasChanged(true);
-                break;
-
-            case 'rotate-right':
-                cropperImage.$rotate('90deg');
-                setHasChanged(true);
-                break;
-
-            case 'flip-horizontal':
-                flipImage(cropperImage, 'horizontal');
-                setHasChanged(true);
-                break;
-
-            case 'flip-vertical':
-                flipImage(cropperImage, 'vertical');
-                setHasChanged(true);
-                break;
-
-            case 'reset':
-                resetAll();
-                break;
-
-            case 'clear':
-                setCroppedByUser(false);
-                if (cropperSelection) {
-                    cropperSelection.hidden = true;
-                    cropperSelection.$reset();
-                }
                 setHasChanged(false);
-                break;
-        }
+                setImageLoading(false);
+            })
+            .catch(() => {
+                if (!active) return;
+                setImageFailed(true);
+                setImageLoading(false);
+                setEditorError('We could not open this image. Check the file or try loading it again.');
+            });
 
-        checkForChanges();
-    }, []);
+        return () => {
+            active = false;
+            queue.dispose();
+            processor.dispose();
+            if (previewQueueRef.current === queue) previewQueueRef.current = null;
+            if (filterProcessorRef.current === processor) filterProcessorRef.current = null;
+            if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+            previewUrlRef.current = null;
+        };
+    }, [isOpen, asset, loadAttempt, centerImage, cleanup]);
+
+    useEffect(() => {
+        if (!isOpen || !containerRef.current) return;
+        const observer = new ResizeObserver(() => {
+            if (!imageLoading) centerImage();
+        });
+        observer.observe(containerRef.current);
+        return () => observer.disconnect();
+    }, [isOpen, imageLoading, centerImage]);
 
     const checkForChanges = useCallback(() => {
         const cropperImage = cropperImageRef.current;
@@ -273,10 +257,14 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
         const matrix = cropperImage.$getTransform();
         const hasFilters = Object.keys(camanFilters).length > 0;
         const hasCrop = cropperSelection ? cropperSelection.width > 0 && cropperSelection.height > 0 && !cropperSelection.hidden : false;
-        const hasTransform = !isIdentityMatrix(matrix);
+        const hasTransform = hasImageTransform(matrix);
 
         setHasChanged(hasTransform || hasCrop || hasFilters);
     }, [camanFilters]);
+
+    useEffect(() => {
+        checkForChanges();
+    }, [checkForChanges]);
 
     const resetAll = useCallback(() => {
         const cropperImage = cropperImageRef.current;
@@ -288,6 +276,11 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
         setHasChanged(false);
         setCroppedByUser(false);
         setCamanFilters({});
+        filtersRef.current = {};
+        previewQueueRef.current?.cancel();
+        setPreviewFailed(false);
+        setShowDiff(false);
+        setEditorError('');
 
         cropperImage.$resetTransform();
         setTimeout(() => centerImage(), 100);
@@ -302,106 +295,134 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
         }
 
         if (filterProcessorRef.current) {
-            const originalImageUrl = filterProcessorRef.current.reset();
+            const originalImageUrl = filterProcessorRef.current.originalUrl;
             cropperImage.$image.src = originalImageUrl;
         }
     }, [centerImage]);
 
-    const getCropperData = useCallback(async () => {
-        const cropperSelection = cropperSelectionRef.current;
-        const cropperImage = cropperImageRef.current;
-        if (!cropperSelection || !asset || !cropperImage) return null;
+    const handleOperation = useCallback(
+        (action: string) => {
+            const cropperImage = cropperImageRef.current;
+            const cropperSelection = cropperSelectionRef.current;
+            const cropperHandle = cropperHandleRef.current;
 
-        // Check if filters are applied
-        const hasFilters = Object.keys(camanFilters).length > 0;
+            if (!cropperImage) return;
 
-        // Get the transformation matrix from cropper
-        const matrix = cropperImage.$getTransform();
-        const hasTransforms = !isIdentityMatrix(matrix);
-        const hasCrop = croppedByUser && !cropperSelection.hidden && cropperSelection.width > 0;
+            switch (action) {
+                case 'move':
+                    setDragMode('move');
+                    if (cropperHandle) cropperHandle.action = ACTION_MOVE;
+                    return;
 
-        // If we have filters and no transforms/crop, just return the filtered image directly
-        if (hasFilters && filterProcessorRef.current && !hasTransforms && !hasCrop) {
-            return filterProcessorRef.current.getDataURL(asset.mime_type);
-        }
+                case 'crop':
+                    setDragMode('crop');
+                    if (cropperHandle) cropperHandle.action = ACTION_SELECT;
+                    return;
 
-        // If we have filters with transforms or crop, we need to apply them to the filtered image
-        if (hasFilters && filterProcessorRef.current) {
-            const filteredDataUrl = filterProcessorRef.current.getDataURL(asset.mime_type);
+                case 'zoom-in':
+                    cropperImage.$zoom(0.1);
+                    setHasChanged(true);
+                    break;
 
-            // Load the filtered image
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-            await new Promise<void>((resolve, reject) => {
-                img.onload = () => resolve();
-                img.onerror = reject;
-                img.src = filteredDataUrl;
-            });
+                case 'zoom-out':
+                    cropperImage.$zoom(-0.1);
+                    setHasChanged(true);
+                    break;
 
-            // Create canvas for the final output
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            if (!ctx) return null;
+                case 'rotate-left':
+                    cropperImage.$rotate('-90deg');
+                    setHasChanged(true);
+                    break;
 
-            // Determine output dimensions based on transforms
-            let outputWidth = img.naturalWidth;
-            let outputHeight = img.naturalHeight;
+                case 'rotate-right':
+                    cropperImage.$rotate('90deg');
+                    setHasChanged(true);
+                    break;
 
-            // Check for 90/270 degree rotation (swap dimensions)
-            const rotation = Math.atan2(matrix[1], matrix[0]) * (180 / Math.PI);
-            const normalizedRotation = ((rotation % 360) + 360) % 360;
-            if (Math.abs(normalizedRotation - 90) < 1 || Math.abs(normalizedRotation - 270) < 1) {
-                outputWidth = img.naturalHeight;
-                outputHeight = img.naturalWidth;
+                case 'flip-horizontal':
+                    flipImage(cropperImage, 'horizontal');
+                    setHasChanged(true);
+                    break;
+
+                case 'flip-vertical':
+                    flipImage(cropperImage, 'vertical');
+                    setHasChanged(true);
+                    break;
+
+                case 'reset':
+                    resetAll();
+                    return;
+
+                case 'clear':
+                    setCroppedByUser(false);
+                    setShowDiff(false);
+                    if (cropperSelection) {
+                        cropperSelection.hidden = true;
+                        cropperSelection.$reset();
+                    }
+                    setHasChanged(false);
+                    break;
             }
 
-            canvas.width = outputWidth;
-            canvas.height = outputHeight;
+            checkForChanges();
+        },
+        [checkForChanges, resetAll],
+    );
 
-            if (asset.mime_type?.includes('png')) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-            } else {
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
+    const getCropperData = useCallback(
+        async (fullQuality = false) => {
+            const selection = cropperSelectionRef.current;
+            const cropperImage = cropperImageRef.current;
+            if (!asset || !cropperImage) return null;
 
-            // Apply transformation matrix
-            ctx.save();
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.transform(matrix[0], matrix[1], matrix[2], matrix[3], 0, 0);
-            ctx.translate(-img.naturalWidth / 2, -img.naturalHeight / 2);
-            ctx.drawImage(img, 0, 0);
-            ctx.restore();
+            let image = await cropperImage.$ready();
+            let exportUrl: string | undefined;
+            try {
+                // Preview JPEGs are never used as the source for a saved file.
+                if (fullQuality && Object.keys(filtersRef.current).length && filterProcessorRef.current) {
+                    const blob = await filterProcessorRef.current.render(filtersRef.current, false);
+                    exportUrl = URL.createObjectURL(blob);
+                    image = new Image();
+                    image.src = exportUrl;
+                    await image.decode();
+                }
+                const matrix = cropperImage.$getTransform();
+                const crop =
+                    croppedByUser && selection && !selection.hidden && selection.width > 0 && selection.height > 0
+                        ? { x: selection.x, y: selection.y, width: selection.width, height: selection.height }
+                        : undefined;
+                const bounds = imageExportBounds(image.naturalWidth, image.naturalHeight, matrix, crop);
+                const canvas = document.createElement('canvas');
+                canvas.width = bounds.outputWidth;
+                canvas.height = bounds.outputHeight;
+                const context = canvas.getContext('2d');
+                if (!context) throw new Error('Image export is unavailable');
 
-            return canvas.toDataURL(asset.mime_type);
-        }
-
-        // No filters - use the original cropper logic
-        if (!croppedByUser || cropperSelection.hidden) {
-            cropperSelection.hidden = false;
-            cropperSelection.x = 0;
-            cropperSelection.y = 0;
-            cropperSelection.width = cropperImage.$image.naturalWidth || 800;
-            cropperSelection.height = cropperImage.$image.naturalHeight || 600;
-        }
-
-        const canvas = await cropperSelection.$toCanvas({
-            beforeDraw: (context, canvas) => {
-                if (asset.mime_type?.includes('png')) {
-                    context.clearRect(0, 0, canvas.width, canvas.height);
-                } else {
+                if (!asset.mime_type?.includes('png') && !asset.mime_type?.includes('webp')) {
                     context.fillStyle = '#fff';
                     context.fillRect(0, 0, canvas.width, canvas.height);
                 }
-            },
-        });
-
-        if (!croppedByUser) {
-            cropperSelection.hidden = true;
-        }
-
-        return canvas.toDataURL(asset.mime_type);
-    }, [asset, croppedByUser, camanFilters]);
+                context.scale(canvas.width / bounds.width, canvas.height / bounds.height);
+                context.translate(-bounds.x, -bounds.y);
+                context.translate(image.naturalWidth / 2, image.naturalHeight / 2);
+                context.transform(...(matrix as [number, number, number, number, number, number]));
+                context.translate(-image.naturalWidth / 2, -image.naturalHeight / 2);
+                context.drawImage(image, 0, 0);
+                const blob = await new Promise<Blob>((resolve, reject) =>
+                    canvas.toBlob((result) => (result ? resolve(result) : reject(new Error('Could not encode image'))), asset.mime_type),
+                );
+                return await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result as string);
+                    reader.onerror = () => reject(new Error('Could not read image export'));
+                    reader.readAsDataURL(blob);
+                });
+            } finally {
+                if (exportUrl) URL.revokeObjectURL(exportUrl);
+            }
+        },
+        [asset, croppedByUser],
+    );
 
     const reloadWithAsset = useCallback(
         async (newAsset: MediaAsset) => {
@@ -409,6 +430,9 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
             setHasChanged(false);
             setCroppedByUser(false);
             setCamanFilters({});
+            filtersRef.current = {};
+            previewQueueRef.current?.cancel();
+            setShowDiff(false);
 
             // Reset cropper transforms
             const cropperImage = cropperImageRef.current;
@@ -451,12 +475,13 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
     const handleSave = useCallback(async () => {
         if (!asset || !cropperSelectionRef.current) return;
 
-        const imageData = await getCropperData();
-        if (!imageData) return;
-
         setProcessing(true);
+        setSaving(true);
+        setEditorError('');
 
         try {
+            const imageData = await getCropperData(true);
+            if (!imageData) throw new Error('No image to save');
             const response = await axios.post(route('media.image-editor.save'), {
                 data: imageData,
                 path: asset.directory || '',
@@ -466,14 +491,17 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                 asset_id: asset.id,
             });
 
+            if (!response.data.success) throw new Error('The server could not save the image');
             if (response.data.success) {
-                onSaved?.(response.data.asset);
                 // Reload the editor with the saved image instead of closing
                 await reloadWithAsset(response.data.asset);
+                onSaved?.(response.data.asset);
             }
         } catch (error) {
             console.error('Error saving image:', error);
+            setEditorError('Your image could not be saved. Your edits are still here; please try again.');
         } finally {
+            setSaving(false);
             setProcessing(false);
         }
     }, [asset, getCropperData, onSaved, reloadWithAsset]);
@@ -481,12 +509,13 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
     const handleSaveAsCopy = useCallback(async () => {
         if (!asset || !cropperSelectionRef.current) return;
 
-        const imageData = await getCropperData();
-        if (!imageData) return;
-
         setProcessing(true);
+        setSaving(true);
+        setEditorError('');
 
         try {
+            const imageData = await getCropperData(true);
+            if (!imageData) throw new Error('No image to save');
             // Generate a new filename for the copy
             const timestamp = Date.now();
             const nameWithoutExt = asset.filename.replace(/\.[^/.]+$/, '');
@@ -501,6 +530,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                 overwrite: false,
             });
 
+            if (!response.data.success) throw new Error('The server could not save the image');
             if (response.data.success) {
                 onSaved?.(response.data.asset);
                 // Reset the editor state but keep the original image
@@ -509,69 +539,64 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
             }
         } catch (error) {
             console.error('Error saving image copy:', error);
+            setEditorError('The copy could not be saved. Your edits are still here; please try again.');
         } finally {
+            setSaving(false);
             setProcessing(false);
         }
     }, [asset, getCropperData, onSaved]);
 
     const toggleDiff = useCallback(async () => {
-        if (!showDiff && filterProcessorRef.current) {
-            const currentEditedUrl = filterProcessorRef.current.getDataURL();
-            setEditedImageUrl(currentEditedUrl);
+        if (showDiff) {
+            setShowDiff(false);
+            return;
         }
-        setShowDiff(!showDiff);
-    }, [showDiff]);
-
-    useEffect(() => {
-        const hasFilters = Object.keys(camanFilters).length > 0;
-        const cropperImage = cropperImageRef.current;
-        const hasTransforms = cropperImage ? !isIdentityMatrix(cropperImage.$getTransform()) : false;
-
-        setDiffDisable(!hasFilters && !hasTransforms);
-    }, [camanFilters, hasChanged]);
+        try {
+            setProcessing(true);
+            const image = await getCropperData();
+            if (image) {
+                setEditedImageUrl(image);
+                setShowDiff(true);
+            }
+        } catch {
+            setEditorError('Could not prepare the comparison. Please try again.');
+        } finally {
+            setProcessing(false);
+        }
+    }, [showDiff, getCropperData]);
 
     const resetFilters = useCallback(() => {
-        if (!filterProcessorRef.current) return;
-
+        filtersRef.current = {};
         setCamanFilters({});
-
-        const originalImageUrl = filterProcessorRef.current.reset();
-        if (cropperImageRef.current) {
-            cropperImageRef.current.$image.src = originalImageUrl;
-        }
+        setEditorError('');
+        setPreviewFailed(false);
+        previewQueueRef.current?.schedule({});
     }, []);
 
-    const applyFilter = useCallback(
-        async (name: string, value: number | boolean | null) => {
-            if (!filterProcessorRef.current) return;
+    const applyFilter = useCallback((name: string, value: number | boolean | null) => {
+        if (!previewQueueRef.current) return;
 
-            setHasChanged(true);
-            setProcessing(true);
+        setHasChanged(true);
 
-            const filters: Record<string, number | boolean | undefined> = { ...camanFilters };
+        const filters: Record<string, number | boolean | undefined> = { ...filtersRef.current };
 
-            if (value === false || value === null || value === undefined) {
-                delete filters[name];
-            } else {
-                filters[name] = value;
-            }
+        if (value === false || value === null || value === undefined) {
+            delete filters[name];
+        } else {
+            filters[name] = value;
+        }
 
-            setCamanFilters(filters);
-
-            const filteredImageUrl = filterProcessorRef.current.applyFilters(filters);
-            if (cropperImageRef.current) {
-                cropperImageRef.current.$image.src = filteredImageUrl;
-            }
-
-            setProcessing(false);
-        },
-        [camanFilters],
-    );
+        setCamanFilters(filters);
+        filtersRef.current = filters;
+        setEditorError('');
+        setPreviewFailed(false);
+        previewQueueRef.current.schedule(filters);
+    }, []);
 
     const haveFilters = () => Object.keys(camanFilters).length > 0;
 
     useEffect(() => {
-        if (!isOpen || !cropperCanvasRef.current) return;
+        if (!isOpen || imageLoading || !cropperCanvasRef.current) return;
 
         const canvas = cropperCanvasRef.current;
 
@@ -590,7 +615,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
         const handleActionMove = (e: Event) => {
             const customEvent = e as CustomEvent;
             const action = customEvent.detail?.action;
-            if (action === 'select' || action === 'move' || action?.includes('resize')) {
+            if (action === 'select' || action?.includes('resize')) {
                 setCroppedByUser(true);
                 setHasChanged(true);
             }
@@ -609,207 +634,304 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
             canvas.removeEventListener('actionmove', handleActionMove);
             canvas.removeEventListener('actionend', handleActionEnd);
         };
-    }, [isOpen, checkForChanges]);
+    }, [isOpen, imageLoading, checkForChanges]);
 
     if (!asset) return null;
 
-    return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="h-[95vh] !w-[95vw] !max-w-[95vw] grid-rows-[auto_1fr] gap-0 overflow-hidden p-0">
-                <DialogHeader className="border-b px-6 py-4">
-                    <DialogTitle>Image Editor - {asset.filename}</DialogTitle>
-                </DialogHeader>
+    const busy = processing || imageLoading;
+    const requestClose = () => {
+        if (processing) return;
+        if (hasChanged) setDiscardOpen(true);
+        else onClose();
+    };
 
-                <div className="image-editor flex min-h-0 flex-col">
-                    <div className="flex items-center justify-between border-b bg-gray-50 px-6 py-2 dark:border-gray-700 dark:bg-gray-800">
-                        <div className="flex items-center space-x-2">
-                            <ImageFilters
-                                processing={processing || imageLoading}
-                                reset={false}
-                                applyFilter={applyFilter}
-                                camanFilters={camanFilters}
+    return (
+        <>
+            <Dialog
+                open={isOpen}
+                onOpenChange={(open) => {
+                    if (!open) requestClose();
+                }}
+            >
+                <DialogContent
+                    ref={dialogRef}
+                    tabIndex={-1}
+                    aria-describedby="image-editor-description"
+                    onOpenAutoFocus={(event) => {
+                        event.preventDefault();
+                        dialogRef.current?.focus();
+                    }}
+                    onInteractOutside={(event) => event.preventDefault()}
+                    className="image-editor-dialog flex flex-col gap-0 overflow-hidden p-0 outline-none"
+                >
+                    <DialogHeader className="image-editor-header border-border/60 shrink-0 border-b px-5 py-4 pr-12 text-left">
+                        <DialogTitle className="text-base">Edit image</DialogTitle>
+                        <p id="image-editor-description" className="text-muted-foreground truncate text-xs" title={asset.filename}>
+                            {asset.filename}
+                        </p>
+                    </DialogHeader>
+
+                    <div className="image-editor-toolbar border-border/60 flex shrink-0 items-center justify-between gap-4 overflow-x-auto border-b px-3 py-2">
+                        <ImageControls
+                            dragMode={dragMode}
+                            onOperation={handleOperation}
+                            processing={busy || previewPending || showDiff || imageFailed}
+                        />
+                        <Button
+                            type="button"
+                            variant={showDiff ? 'secondary' : 'outline'}
+                            size="sm"
+                            disabled={busy || previewPending || previewFailed || (!hasChanged && !showDiff) || imageFailed}
+                            aria-pressed={showDiff}
+                            onClick={toggleDiff}
+                        >
+                            <Columns2 className="size-4" />
+                            {showDiff ? 'Back to editing' : 'Compare'}
+                        </Button>
+                    </div>
+                    {editorError && (
+                        <div
+                            role="alert"
+                            className="text-destructive border-border/60 flex shrink-0 items-center justify-between gap-3 border-b px-5 py-3 text-sm"
+                        >
+                            <span>{editorError}</span>
+                            {imageFailed && (
+                                <Button type="button" variant="outline" onClick={() => setLoadAttempt((attempt) => attempt + 1)}>
+                                    Retry
+                                </Button>
+                            )}
+                        </div>
+                    )}
+
+                    <div className="image-editor-workspace">
+                        <div className="image-editor-stage flex min-h-0 min-w-0 flex-col">
+                            <div
+                                ref={containerRef}
+                                className="__cropper relative min-h-0 flex-1 overflow-hidden"
+                                aria-label="Image editing canvas"
+                                aria-busy={busy || previewPending}
+                            >
+                                {previewPending && !busy && (
+                                    <div
+                                        role="status"
+                                        aria-live="polite"
+                                        className="bg-background/95 text-foreground pointer-events-none absolute right-3 bottom-3 z-20 flex items-center gap-2 rounded-md border px-3 py-2 text-xs shadow-sm"
+                                    >
+                                        <Loader2 aria-hidden="true" className="size-3.5 motion-safe:animate-spin" />
+                                        Updating preview…
+                                    </div>
+                                )}
+                                {(busy || imageFailed) && (
+                                    <div className="bg-background/85 absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 px-6 text-center">
+                                        {imageFailed ? (
+                                            <ImageOff className="text-muted-foreground size-6" />
+                                        ) : (
+                                            <Loader2 aria-hidden="true" className="text-muted-foreground size-5 motion-safe:animate-spin" />
+                                        )}
+                                        <p role="status" className="text-muted-foreground text-sm">
+                                            {imageFailed
+                                                ? 'Image could not be loaded'
+                                                : imageLoading
+                                                  ? 'Preparing your image…'
+                                                  : saving
+                                                    ? 'Saving your image…'
+                                                    : 'Applying changes…'}
+                                        </p>
+                                    </div>
+                                )}
+                                {showDiff && originalImageUrl && (
+                                    <div className="bg-muted absolute inset-0 z-10 grid grid-cols-2 gap-px">
+                                        <figure className="bg-background relative min-h-0 min-w-0">
+                                            <AssetImagePreview src={originalImageUrl} alt="Original image" fit="contain" eager />
+                                            <figcaption className="bg-background/90 absolute bottom-3 left-3 rounded px-2 py-1 text-xs">
+                                                Original
+                                            </figcaption>
+                                        </figure>
+                                        <figure className="bg-background relative min-h-0 min-w-0">
+                                            <AssetImagePreview src={editedImageUrl} alt="Image with your edits" fit="contain" eager />
+                                            <figcaption className="bg-background/90 absolute right-3 bottom-3 rounded px-2 py-1 text-xs">
+                                                Edited
+                                            </figcaption>
+                                        </figure>
+                                    </div>
+                                )}
+                                {React.createElement(
+                                    'cropper-canvas',
+                                    {
+                                        ref: cropperCanvasRef,
+                                        disabled: processing || imageLoading || previewPending ? 'true' : undefined,
+                                        style: {
+                                            height: '100%',
+                                            width: '100%',
+                                        },
+                                    },
+                                    [
+                                        React.createElement('cropper-image', {
+                                            key: `image-${asset.id}-${loadAttempt}`,
+                                            ref: cropperImageRef,
+                                            src: asset.url,
+                                            alt: asset.filename,
+                                            rotatable: 'true',
+                                            scalable: 'true',
+                                            translatable: 'true',
+                                        }),
+                                        React.createElement('cropper-shade', { key: 'shade', 'theme-color': 'rgba(0, 0, 0, 0.45)' }),
+                                        React.createElement('cropper-handle', {
+                                            key: 'handle',
+                                            ref: cropperHandleRef,
+                                            action: dragMode === 'move' ? ACTION_MOVE : ACTION_SELECT,
+                                            plain: true,
+                                        }),
+                                        React.createElement(
+                                            'cropper-selection',
+                                            {
+                                                key: 'selection',
+                                                ref: cropperSelectionRef,
+                                                'initial-coverage': 0,
+                                                movable: true,
+                                                resizable: true,
+                                                hidden: true,
+                                            },
+                                            [
+                                                React.createElement('cropper-grid', {
+                                                    key: 'grid',
+                                                    role: 'grid',
+                                                    covered: true,
+                                                }),
+                                                React.createElement('cropper-crosshair', {
+                                                    key: 'crosshair',
+                                                    centered: true,
+                                                }),
+                                                React.createElement('cropper-handle', {
+                                                    key: 'move-handle',
+                                                    action: ACTION_MOVE,
+                                                    'theme-color': 'rgba(255, 255, 255, 0.35)',
+                                                }),
+                                                React.createElement('cropper-handle', { key: 'n-resize', action: ACTION_RESIZE_NORTH }),
+                                                React.createElement('cropper-handle', { key: 'e-resize', action: ACTION_RESIZE_EAST }),
+                                                React.createElement('cropper-handle', { key: 's-resize', action: ACTION_RESIZE_SOUTH }),
+                                                React.createElement('cropper-handle', { key: 'w-resize', action: ACTION_RESIZE_WEST }),
+                                                React.createElement('cropper-handle', { key: 'ne-resize', action: ACTION_RESIZE_NORTHEAST }),
+                                                React.createElement('cropper-handle', { key: 'nw-resize', action: ACTION_RESIZE_NORTHWEST }),
+                                                React.createElement('cropper-handle', { key: 'se-resize', action: ACTION_RESIZE_SOUTHEAST }),
+                                                React.createElement('cropper-handle', { key: 'sw-resize', action: ACTION_RESIZE_SOUTHWEST }),
+                                            ],
+                                        ),
+                                    ],
+                                )}
+                            </div>
+                            <div className="text-muted-foreground border-border/60 flex shrink-0 items-center justify-between gap-3 border-t px-4 py-2 text-xs">
+                                <span>
+                                    {showDiff
+                                        ? 'Original and edited image'
+                                        : dragMode === 'crop'
+                                          ? 'Drag on the image to select a crop.'
+                                          : 'Drag to reposition. Use the tools above to crop or rotate.'}
+                                </span>
+                                <span className="hidden shrink-0 uppercase sm:inline">{asset.extension}</span>
+                            </div>
+                        </div>
+                        <aside aria-label="Image adjustments" className="image-editor-inspector bg-background min-h-0 min-w-0 overflow-y-auto">
+                            <Tabs defaultValue="adjust" className="gap-0">
+                                <div className="bg-background sticky top-0 z-10 px-4 pt-4 pb-3">
+                                    <TabsList className="grid w-full grid-cols-2" aria-label="Editing panel">
+                                        <TabsTrigger value="adjust">
+                                            <SlidersHorizontal className="size-4" />
+                                            Adjust
+                                        </TabsTrigger>
+                                        <TabsTrigger value="presets">
+                                            <Sparkles className="size-4" />
+                                            Presets
+                                        </TabsTrigger>
+                                    </TabsList>
+                                </div>
+                                <TabsContent value="adjust" className="m-0 px-5 pb-5">
+                                    <div className="mb-4 flex items-center justify-between gap-2">
+                                        <h2 className="text-sm font-medium">Light & color</h2>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            disabled={busy || showDiff || !haveFilters()}
+                                            onClick={resetFilters}
+                                        >
+                                            Reset filters
+                                        </Button>
+                                    </div>
+                                    <ImageFilters
+                                        processing={busy || showDiff || imageFailed}
+                                        applyFilter={applyFilter}
+                                        camanFilters={camanFilters}
+                                    />
+                                </TabsContent>
+                                <TabsContent value="presets" className="m-0 px-4 pb-5">
+                                    <FilterPresets
+                                        processing={busy || showDiff || imageFailed}
+                                        camanFilters={camanFilters}
+                                        applyFilter={applyFilter}
+                                    />
+                                </TabsContent>
+                            </Tabs>
+                        </aside>
+                    </div>
+
+                    <footer className="image-editor-footer border-border/60 bg-background flex shrink-0 flex-wrap items-center justify-between gap-3 border-t px-5 py-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Button type="button" variant="ghost" disabled={busy || !hasChanged} onClick={() => handleOperation('reset')}>
+                                <RotateCcw className="size-4" />
+                                Reset all
+                            </Button>
+                            {croppedByUser && (
+                                <Button type="button" variant="ghost" disabled={busy} onClick={() => handleOperation('clear')}>
+                                    Clear crop
+                                </Button>
+                            )}
+                            <span role="status" className="text-muted-foreground hidden text-xs lg:inline">
+                                {saving
+                                    ? 'Saving…'
+                                    : previewPending
+                                      ? 'Applying your latest settings…'
+                                      : hasChanged
+                                        ? 'Unsaved changes'
+                                        : 'No unsaved changes'}
+                            </span>
+                        </div>
+                        <div className="ml-auto flex items-center gap-2">
+                            <Button type="button" variant="outline" disabled={processing} onClick={requestClose}>
+                                Cancel
+                            </Button>
+                            <SaveDropdown
+                                onSave={handleSave}
+                                onSaveAsCopy={handleSaveAsCopy}
+                                isSaving={saving}
+                                disabled={busy || previewPending || previewFailed || imageFailed}
+                                hasChanges={hasChanged}
                             />
                         </div>
-
-                        <div className="flex items-center space-x-2">
-                            <TooltipButton
-                                variant="outline"
-                                size="sm"
-                                disabled={processing || imageLoading || diffDisable}
-                                className={showDiff ? 'bg-blue-100 dark:bg-blue-900' : ''}
-                                onClick={toggleDiff}
-                                tooltip={showDiff ? 'Hide comparison' : 'Show before/after comparison'}
-                            >
-                                <Code className="h-4 w-4" />
-                            </TooltipButton>
-
-                            <TooltipButton
-                                variant="outline"
-                                size="sm"
-                                disabled={processing || imageLoading || !haveFilters()}
-                                onClick={resetFilters}
-                                tooltip="Clear all filters"
-                            >
-                                <X className="h-4 w-4" />
-                            </TooltipButton>
-                        </div>
-                    </div>
-
-                    <div className="flex min-h-0 flex-1 overflow-hidden">
-                        <div className="flex w-16 flex-col items-center space-y-2 border-r bg-gray-50 py-2 dark:border-gray-700 dark:bg-gray-800">
-                            <ImageControls dragMode={dragMode} onOperation={handleOperation} processing={processing || imageLoading} />
-                        </div>
-
-                        <div
-                            ref={containerRef}
-                            className="__cropper relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-gray-100 dark:bg-gray-900"
+                    </footer>
+                </DialogContent>
+            </Dialog>
+            <AlertDialog open={discardOpen} onOpenChange={setDiscardOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Discard your edits?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Your unsaved image changes will be lost. The original file has not been changed.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Keep editing</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => {
+                                setDiscardOpen(false);
+                                onClose();
+                            }}
                         >
-                            {(processing || imageLoading) && (
-                                <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
-                                    <div className="flex flex-col items-center space-y-4 rounded-lg bg-white p-8 shadow-lg dark:bg-gray-800">
-                                        <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
-                                        <div className="text-center">
-                                            <div className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                                {imageLoading ? 'Loading Image' : 'Processing'}
-                                            </div>
-                                            <div className="text-sm text-gray-600 dark:text-gray-400">
-                                                {imageLoading ? 'Please wait while the image loads...' : 'Applying changes...'}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {showDiff && originalImageUrl && (
-                                <div className="__diff-overlay bg-opacity-95 absolute inset-0 z-10 flex items-center justify-center bg-gray-900">
-                                    <div className="__diff-container relative flex h-full max-h-[90%] w-full max-w-[90%] overflow-hidden rounded-lg bg-white shadow-2xl">
-                                        <div className="relative flex w-1/2 items-center justify-center border-r border-gray-300 bg-gray-100">
-                                            <img
-                                                src={originalImageUrl}
-                                                alt="Original"
-                                                className="__diff-image max-h-full max-w-full object-contain"
-                                                style={{ maxWidth: '100%', maxHeight: '100%' }}
-                                            />
-                                            <div className="bg-opacity-80 absolute bottom-4 left-4 rounded bg-black px-3 py-1 text-sm font-medium text-white">
-                                                Original
-                                            </div>
-                                        </div>
-
-                                        <div className="relative flex w-1/2 items-center justify-center bg-gray-100">
-                                            {editedImageUrl ? (
-                                                <img
-                                                    src={editedImageUrl}
-                                                    alt="Edited"
-                                                    className="__diff-image max-h-full max-w-full object-contain"
-                                                    style={{ maxWidth: '100%', maxHeight: '100%' }}
-                                                />
-                                            ) : (
-                                                <div className="text-sm text-gray-500">Loading edited image...</div>
-                                            )}
-                                            <div className="bg-opacity-80 absolute right-4 bottom-4 rounded bg-black px-3 py-1 text-sm font-medium text-white">
-                                                Edited
-                                            </div>
-                                        </div>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowDiff(false)}
-                                            className="bg-opacity-80 hover:bg-opacity-100 absolute top-4 right-4 rounded-full bg-black p-2 text-white transition-all duration-200"
-                                        >
-                                            <X className="h-5 w-5" />
-                                        </button>
-
-                                        <div className="absolute top-0 left-1/2 h-full w-px -translate-x-px transform bg-gray-300"></div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {React.createElement(
-                                'cropper-canvas',
-                                {
-                                    ref: cropperCanvasRef,
-                                    background: 'true',
-                                    disabled: processing || imageLoading ? 'true' : undefined,
-                                    style: {
-                                        height: '100%',
-                                        width: '100%',
-                                    },
-                                },
-                                [
-                                    React.createElement('cropper-image', {
-                                        key: `image-${asset.id}`,
-                                        ref: cropperImageRef,
-                                        src: asset.url,
-                                        alt: asset.filename,
-                                        rotatable: 'true',
-                                        scalable: 'true',
-                                        translatable: 'true',
-                                    }),
-                                    React.createElement('cropper-shade', { key: 'shade' }),
-                                    React.createElement('cropper-handle', {
-                                        key: 'handle',
-                                        ref: cropperHandleRef,
-                                        action: dragMode === 'move' ? ACTION_MOVE : ACTION_SELECT,
-                                        plain: true,
-                                    }),
-                                    React.createElement(
-                                        'cropper-selection',
-                                        {
-                                            key: 'selection',
-                                            ref: cropperSelectionRef,
-                                            'initial-coverage': 0,
-                                            movable: true,
-                                            resizable: true,
-                                            hidden: true,
-                                        },
-                                        [
-                                            React.createElement('cropper-grid', {
-                                                key: 'grid',
-                                                role: 'grid',
-                                                covered: true,
-                                            }),
-                                            React.createElement('cropper-crosshair', {
-                                                key: 'crosshair',
-                                                centered: true,
-                                            }),
-                                            React.createElement('cropper-handle', {
-                                                key: 'move-handle',
-                                                action: ACTION_MOVE,
-                                                'theme-color': 'rgba(255, 255, 255, 0.35)',
-                                            }),
-                                            React.createElement('cropper-handle', { key: 'n-resize', action: ACTION_RESIZE_NORTH }),
-                                            React.createElement('cropper-handle', { key: 'e-resize', action: ACTION_RESIZE_EAST }),
-                                            React.createElement('cropper-handle', { key: 's-resize', action: ACTION_RESIZE_SOUTH }),
-                                            React.createElement('cropper-handle', { key: 'w-resize', action: ACTION_RESIZE_WEST }),
-                                            React.createElement('cropper-handle', { key: 'ne-resize', action: ACTION_RESIZE_NORTHEAST }),
-                                            React.createElement('cropper-handle', { key: 'nw-resize', action: ACTION_RESIZE_NORTHWEST }),
-                                            React.createElement('cropper-handle', { key: 'se-resize', action: ACTION_RESIZE_SOUTHEAST }),
-                                            React.createElement('cropper-handle', { key: 'sw-resize', action: ACTION_RESIZE_SOUTHWEST }),
-                                        ],
-                                    ),
-                                ],
-                            )}
-                        </div>
-
-                        <div className="w-64 border-l bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
-                            <FilterPresets processing={processing || imageLoading} camanFilters={camanFilters} applyFilter={applyFilter} />
-                        </div>
-                    </div>
-
-                    <div className="flex items-center justify-center space-x-2 border-t bg-gray-50 px-6 py-2 dark:border-gray-700 dark:bg-gray-800">
-                        <Button variant="outline" disabled={processing || imageLoading || !hasChanged} onClick={() => handleOperation('reset')}>
-                            <RotateCcw className="mr-2 h-4 w-4" />
-                            Reset
-                        </Button>
-
-                        <Button variant="outline" disabled={processing || imageLoading || !croppedByUser} onClick={() => handleOperation('clear')}>
-                            Clear
-                        </Button>
-
-                        <SaveDropdown onSave={handleSave} onSaveAsCopy={handleSaveAsCopy} isSaving={processing} hasChanges={hasChanged} />
-                    </div>
-                </div>
-            </DialogContent>
-        </Dialog>
+                            Discard edits
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     );
 };

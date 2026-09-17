@@ -8,6 +8,8 @@ export function isRouteActive(currentRouteName: string | null | undefined, itemH
     if (path === '/admin/seo/google') return currentRouteName === 'admin.seo.google';
     if (path === '/dashboard') return currentRouteName === 'dashboard';
     if (path === '/admin/media-manager') return currentRouteName === 'media-manager';
+    if (path === '/admin/settings') return ['admin.settings.edit', 'admin.settings.update'].includes(currentRouteName);
+    if (path === '/admin/settings/media') return currentRouteName.startsWith('admin.settings.media.');
 
     const sections: Record<string, string> = {
         '/admin/blog': 'admin.blog',
@@ -18,7 +20,6 @@ export function isRouteActive(currentRouteName: string | null | undefined, itemH
         '/admin/speaking': 'admin.speaking',
         '/admin/tools': 'admin.tools',
         '/admin/newsletter': 'admin.newsletter',
-        '/admin/settings': 'admin.settings',
     };
     const section = sections[path];
     return !!section && (currentRouteName === section || currentRouteName.startsWith(`${section}.`));

@@ -3,6 +3,7 @@
 namespace Modules\Media\Support;
 
 use Modules\Media\Exceptions\MediaUpload\ConfigurationException;
+use Modules\Media\Helpers\File;
 use Spatie\ImageOptimizer\Optimizer;
 use Spatie\ImageOptimizer\OptimizerChain;
 

@@ -2,24 +2,18 @@
 
 namespace Modules\Media\Models\Traits;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Modules\Media\Jobs\CreateImageVariants;
+use Illuminate\Support\Facades\Storage;
+use Modules\Media\Jobs\GenerateResponsiveImages;
+use Modules\Media\Models\Media;
+use Modules\Media\Support\ResponsiveImages;
 
 trait Convertible
 {
     protected static function bootConvertible(): void
     {
-        static::saved(function (Model $model) {
-            if (config('media-manager.use-conversions')) {
-                $model->saveConversions();
-            }
-        });
-
-        static::deleted(function (Model $model) {
-            if (config('media-manager.use-conversions')) {
-                $model->deleteConversions();
-            }
+        static::created(function (Media $model) {
+            $model->saveConversions();
         });
     }
 
@@ -28,14 +22,20 @@ trait Convertible
         return $this->hasMany(config('media-manager.model'), 'original_media_id');
     }
 
-    public function saveConversions(): void
+    public function saveConversions(bool $force = false): void
     {
-        $conversions = config('media-manager.conversions', []);
-        $variantNames = array_keys($conversions);
-
-        if (! empty($variantNames)) {
-            CreateImageVariants::dispatch($this, $variantNames, false);
+        $images = app(ResponsiveImages::class);
+        if (! $images->supports($this) || ! Storage::disk($this->disk)->exists($this->getDiskPath())) {
+            return;
         }
+
+        // Make the small preview available in the upload response. Larger website sizes use the queue.
+        try {
+            $images->generate($this, 'thumb', $force);
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+        GenerateResponsiveImages::dispatch($this->id, $force)->afterCommit();
     }
 
     public function deleteConversions(): void
@@ -52,8 +52,13 @@ trait Convertible
 
     public function getConversion(string $variantName)
     {
-        $variant = $this->variants()->where('variant_name', $variantName)->first();
+        $variant = $this->findVariant($variantName);
 
         return $variant ? $variant->getUrl() : null;
+    }
+
+    public function imageUrl(string $preset = 'thumb'): string
+    {
+        return app(ResponsiveImages::class)->url($this, $preset);
     }
 }

@@ -674,6 +674,7 @@ class MediaUploader
         $this->writeToDisk($model);
 
         $model->save();
+        $model->saveConversions(force: true);
 
         return $model;
     }

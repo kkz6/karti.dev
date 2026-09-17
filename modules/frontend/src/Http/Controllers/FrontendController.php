@@ -46,7 +46,7 @@ class FrontendController extends BaseController
         });
 
         $seoData = new SEOData(
-            title: config('seo.title', config('app.name')) . ' - Developer, Speaker & Founder',
+            title: config('seo.title', config('app.name')).' - Developer, Speaker & Founder',
             description: config('seo.description', 'Karthick is a software designer and developer based in Bangalore, India. Building technologies that empower people to explore the world on their own terms.'),
             author: config('seo.author', 'Karthick'),
             image: config('seo.image'),
@@ -97,7 +97,7 @@ class FrontendController extends BaseController
         });
 
         $seoData = new SEOData(
-            title: 'Articles - ' . config('seo.site_name', config('app.name')),
+            title: 'Articles - '.config('seo.site_name', config('app.name')),
             description: 'Read articles about software development, technology, and building products.',
             author: config('seo.author', 'Karthick'),
             image: config('seo.image'),
@@ -122,10 +122,10 @@ class FrontendController extends BaseController
         $article = $this->articleService->findBySlugOrFail($slug);
         $article->load(['seo', 'featuredImageMedia']);
 
-        $articleUrl   = url("/articles/{$article->slug}");
-        $authorName   = $article->author_name ?? $article->user?->name ?? config('seo.author', 'Karthick');
-        $publishedAt  = $article->published_at?->toISOString() ?? $article->created_at->toISOString();
-        $modifiedAt   = $article->updated_at->toISOString();
+        $articleUrl    = url("/articles/{$article->slug}");
+        $authorName    = $article->author_name ?? $article->user?->name ?? config('seo.author', 'Karthick');
+        $publishedAt   = $article->published_at?->toISOString() ?? $article->created_at->toISOString();
+        $modifiedAt    = $article->updated_at->toISOString();
         $featuredImage = $article->featured_image_url ?? config('seo.image');
 
         // Get SEO data from model (uses HasSeo trait)
@@ -136,7 +136,7 @@ class FrontendController extends BaseController
             'title'       => $article->title,
             'description' => $article->excerpt,
             'date'        => $publishedAt,
-            'content'     => $article->content,
+            'content'     => app(\Modules\Media\Support\PublicImageSources::class)->html($article->content ?? ''),
             'author'      => $authorName,
         ];
 

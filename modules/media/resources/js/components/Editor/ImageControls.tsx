@@ -1,91 +1,51 @@
 import { Button } from '@shared/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@shared/components/ui/tooltip';
 import { Crop, FlipHorizontal, FlipVertical, Move, RotateCcw, RotateCw, ZoomIn, ZoomOut } from 'lucide-react';
-import React from 'react';
 
-interface Control {
-    trans: string;
-    op: string;
-    mode?: string;
-    icon: React.ReactNode;
-}
+const tools = [
+    { label: 'Move', action: 'move', icon: Move, mode: true },
+    { label: 'Crop', action: 'crop', icon: Crop, mode: true },
+    { label: 'Zoom in', action: 'zoom-in', icon: ZoomIn },
+    { label: 'Zoom out', action: 'zoom-out', icon: ZoomOut },
+    { label: 'Rotate left', action: 'rotate-left', icon: RotateCcw },
+    { label: 'Rotate right', action: 'rotate-right', icon: RotateCw },
+    { label: 'Flip horizontal', action: 'flip-horizontal', icon: FlipHorizontal },
+    { label: 'Flip vertical', action: 'flip-vertical', icon: FlipVertical },
+];
 
-interface ImageControlsProps {
+export function ImageControls({
+    dragMode,
+    onOperation,
+    processing,
+}: {
     dragMode: 'move' | 'crop';
     onOperation: (action: string) => void;
     processing: boolean;
-}
-
-export const ImageControls: React.FC<ImageControlsProps> = ({ dragMode, onOperation, processing }) => {
-    const controls: Control[] = [
-        {
-            trans: 'Move',
-            op: 'move',
-            mode: 'move',
-            icon: <Move className="h-4 w-4" />,
-        },
-        {
-            trans: 'Crop',
-            op: 'crop',
-            mode: 'crop',
-            icon: <Crop className="h-4 w-4" />,
-        },
-        {
-            trans: 'Zoom In',
-            op: 'zoom-in',
-            icon: <ZoomIn className="h-4 w-4" />,
-        },
-        {
-            trans: 'Zoom Out',
-            op: 'zoom-out',
-            icon: <ZoomOut className="h-4 w-4" />,
-        },
-        {
-            trans: 'Rotate Left',
-            op: 'rotate-left',
-            icon: <RotateCcw className="h-4 w-4" />,
-        },
-        {
-            trans: 'Rotate Right',
-            op: 'rotate-right',
-            icon: <RotateCw className="h-4 w-4" />,
-        },
-        {
-            trans: 'Flip Horizontal',
-            op: 'flip-horizontal',
-            icon: <FlipHorizontal className="h-4 w-4" />,
-        },
-        {
-            trans: 'Flip Vertical',
-            op: 'flip-vertical',
-            icon: <FlipVertical className="h-4 w-4" />,
-        },
-    ];
-
+}) {
     return (
-        <TooltipProvider>
-            <div className="flex flex-col space-y-2">
-                {controls.map((control) => (
-                    <Tooltip key={control.op}>
+        <TooltipProvider delayDuration={400}>
+            <div role="group" aria-label="Image tools" className="flex shrink-0 items-center gap-1">
+                {tools.map(({ label, action, icon: Icon, mode }) => (
+                    <Tooltip key={action}>
                         <TooltipTrigger asChild>
                             <Button
-                                variant="ghost"
-                                size="sm"
+                                type="button"
+                                variant={mode && dragMode === action ? 'secondary' : 'ghost'}
+                                size={mode ? 'sm' : 'icon'}
+                                className={mode ? 'gap-1.5' : 'size-9'}
                                 disabled={processing}
-                                className={`h-12 w-12 p-0 ${
-                                    control.mode && dragMode === control.mode ? 'border-blue-300 bg-blue-100 text-blue-700' : ''
-                                }`}
-                                onClick={() => onOperation(control.op)}
+                                aria-label={label}
+                                aria-pressed={mode ? dragMode === action : undefined}
+                                onClick={() => onOperation(action)}
                             >
-                                {control.icon}
+                                <Icon className="size-4" />
+                                {mode && label}
                             </Button>
                         </TooltipTrigger>
-                        <TooltipContent>
-                            <p>{control.trans}</p>
-                        </TooltipContent>
+                        <TooltipContent>{label}</TooltipContent>
                     </Tooltip>
                 ))}
             </div>
         </TooltipProvider>
     );
-};
+}

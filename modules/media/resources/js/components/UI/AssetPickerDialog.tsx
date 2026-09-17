@@ -7,13 +7,15 @@ interface AssetPickerDialogProps {
     open: boolean;
     title: string;
     selectedCount: number;
+    confirmLabel?: string;
+    allowEmpty?: boolean;
     onClose: () => void;
     onConfirm: () => void;
     onClear: () => void;
     children: ReactNode;
 }
 
-export function AssetPickerDialog({ open, title, selectedCount, onClose, onConfirm, onClear, children }: AssetPickerDialogProps) {
+export function AssetPickerDialog({ open, title, selectedCount, confirmLabel, allowEmpty = false, onClose, onConfirm, onClear, children }: AssetPickerDialogProps) {
     return (
         <Dialog
             open={open}
@@ -44,9 +46,9 @@ export function AssetPickerDialog({ open, title, selectedCount, onClose, onConfi
                             <X aria-hidden="true" />
                             Cancel
                         </Button>
-                        <Button onClick={onConfirm} disabled={selectedCount === 0}>
+                        <Button onClick={onConfirm} disabled={!allowEmpty && selectedCount === 0}>
                             <Check aria-hidden="true" />
-                            {selectedCount ? `Add ${selectedCount} ${selectedCount === 1 ? 'file' : 'files'}` : 'Add files'}
+                            {confirmLabel ?? (selectedCount ? `Add ${selectedCount} ${selectedCount === 1 ? 'file' : 'files'}` : 'Add files')}
                         </Button>
                     </div>
                 </DialogFooter>
