@@ -1,5 +1,5 @@
 import { Head, useForm } from '@inertiajs/react';
-import { SimpleAssetsField } from '@media/components/Field';
+import { SimpleAssetsField } from '@media/components/Field/SimpleAssetsField';
 import { SEOFields } from '@seo/components/SeoFields';
 import { seoSchema } from '@seo/types/seo-schema';
 import { CategoryPicker } from '@shared/components/category-picker';

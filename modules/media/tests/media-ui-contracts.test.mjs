@@ -4,6 +4,15 @@ import test from 'node:test';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
+test('gallery fields use direct imports without cycling through their own re-export indexes', () => {
+    const field = read('../resources/js/components/Field/SimpleAssetsField.tsx');
+    const gallery = read('../../photography/resources/js/pages/createOrEdit.tsx');
+    assert.match(field, /from '\.\.\/Browser\/AssetBrowser'/);
+    assert.match(field, /from '\.\.\/Editor\/AssetEditor'/);
+    assert.doesNotMatch(field, /from '@media\/components(?:\/Field)?'/);
+    assert.match(gallery, /from '@media\/components\/Field\/SimpleAssetsField'/);
+});
+
 test('uploads capture their destination, use a bounded queue and current completion callbacks', () => {
     const uploader = read('../resources/js/components/Upload/Uploader.tsx');
     const browser = read('../resources/js/components/Browser/AssetBrowser.tsx');
