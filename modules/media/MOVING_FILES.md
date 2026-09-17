@@ -3,6 +3,7 @@
 Media Manager supports moving existing files within the current storage disk:
 
 - Table view has a **Select all** checkbox in its first column header, aligned with row checkboxes. Grid view keeps the labelled header button, changing to **Deselect all** when every visible file is selected. Both show unchecked, mixed, and checked states and select only files on the visible page. They exclude folders and hidden pages, retain other-page selections, and are disabled while loading/moving or when no files are shown. Both use shared keyboard-accessible controls; the table checkbox shows a dash for partial selection.
+- Multi-image pickers (including Gallery Images) use the same table-header checkbox and grid select-all button. Single-image pickers do not show bulk selection. Limited pickers add only as many visible files as remaining capacity permits, retain existing selections, and explain the limit. Selection remains a draft until **Use selection**; Cancel leaves the saved field unchanged.
 - Use **Move to folder** in a file's actions menu, or select multiple files and use the bulk toolbar button.
 - Drag a file onto a folder in grid or table view. Dragging a selected file moves the whole selection; dragging an unselected file moves only that file.
 - Parent-folder controls and ancestor breadcrumbs are also drop targets.
@@ -16,6 +17,8 @@ Saved image URLs in article/gallery/project/tool/speaking content, project image
 Deployment: run `php artisan migrate`. The web server must pass missing `/storage/*` requests to Laravel (standard `try_files $uri $uri/ /index.php?$query_string`); a static-assets location using `try_files $uri =404` needs the same fallback for old links. Private signed file downloads use `/private-storage/*` to avoid overriding the public redirect route. External CDN/S3 paths require equivalent origin routing; redirects here cover this application's public storage URLs. Reusing an old path for another file makes that physical file take precedence, so avoid reusing published URLs. Already-sent emails and external pages are not rewritten.
 
 The folder endpoint lists one level at a time without loading assets or exposing the internal conversions directory. Up to 100 files can be moved in one request.
+
+New folders are created and listed on the configured media disk. Creation validates the parent and folder name, rejects duplicate names, and checks that storage actually created the directory before reporting success. The picker uses the normal success toast and keeps readable server errors inside the folder dialog. Enter submits only once and does not reach the surrounding content form. Folder listings are refreshed directly from storage instead of using a day-long cache, so new empty folders appear immediately; existing image selections are retained.
 
 ## Safe deletion
 

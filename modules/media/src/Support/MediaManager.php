@@ -94,16 +94,14 @@ class MediaManager
      * Checks for the existence of the passed directory on the specified disk.
      *
      *
-     * @param string $directory
      *
-     * @return string
      * @throws MediaManagerException
      */
     public function verifyDirectory(string $directory): string
     {
         $directory = trim($directory, '/');
 
-        if ($directory !== '' && ! Storage::directoryExists($directory)) {
+        if ($directory !== '' && ! Storage::disk(config('mediable.default_disk'))->directoryExists($directory)) {
             throw MediaManagerException::directoryNotFound($directory);
         }
 

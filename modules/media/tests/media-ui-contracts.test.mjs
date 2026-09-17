@@ -62,6 +62,13 @@ test('folder editor uses a clear label and example without duplicated helper cop
     assert.match(editor, /<Label htmlFor="basename">Folder name<\/Label>/);
     assert.match(editor, /placeholder="e.g. blog-images"/);
     assert.doesNotMatch(editor, /The filesystem directory name/);
+    assert.match(editor, /savingRef.current \|\| !basename/);
+    assert.match(editor, /e.preventDefault\(\)/);
+    assert.match(editor, /e.stopPropagation\(\)/);
+    assert.match(editor, /toast.success\(/);
+    assert.match(editor, /error.response.data\?\.message/);
+    assert.match(editor, /path: data.path/);
+    assert.doesNotMatch(editor, /CustomEvent\('toast'/);
 });
 
 test('picker and manager load the same styles and keep selection out of the search toolbar', () => {

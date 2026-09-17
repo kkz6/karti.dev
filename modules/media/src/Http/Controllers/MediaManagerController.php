@@ -27,17 +27,32 @@ readonly class MediaManagerController
      */
     public function create(Request $request)
     {
-        $path = $request->path;
+        $data     = $request->validate(['path' => ['required', 'string', 'max:1024']]);
+        $path     = trim($data['path'], '/');
+        $segments = explode('/', $path);
+        abort_if($path === '' || preg_match('/[\\\\\x00-\x1F]/', $path)
+            || array_intersect($segments, ['', '.', '..']) || $segments[0] === 'conversions'
+            || trim(basename($path)) !== basename($path), 422, 'Enter a valid folder name inside the media library.');
 
-        if (Storage::exists($path)) {
-            throw MediaManagerException::directoryAlreadyExists($path);
+        // Use the same disk as the media listing, not an unrelated default filesystem.
+        $disk    = config('mediable.default_disk');
+        $storage = Storage::disk($disk);
+        $parent  = dirname($path) === '.' ? '' : dirname($path);
+        app(\Modules\Media\Support\MediaDirectories::class)->validate($disk, $parent);
+        abort_if($storage->exists($path), 409, 'A file or folder with this name already exists here.');
+        try {
+            $created = $storage->makeDirectory($path) && $storage->directoryExists($path);
+        } catch (\League\Flysystem\FilesystemException $exception) {
+            report($exception);
+            $created = false;
         }
-        Storage::makeDirectory($path);
+        abort_unless($created, 503, 'Could not create the folder. Check storage permissions and try again.');
         $this->invalidateFolderCache($path);
 
         return response([
             'success' => true,
             'path'    => $path,
+            'disk'    => $disk,
         ]);
     }
 

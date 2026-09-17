@@ -147,7 +147,9 @@ export class MediaService {
                 if (typeof responseData === 'object' && responseData?.message) {
                     errorMessage = responseData.message;
                 } else if (typeof responseData === 'object' && responseData?.errors) {
-                    const validationMessage = Object.values(responseData.errors).flat().find((message): message is string => typeof message === 'string');
+                    const validationMessage = Object.values(responseData.errors)
+                        .flat()
+                        .find((message): message is string => typeof message === 'string');
                     errorMessage = validationMessage || errorMessage;
                 } else if (typeof responseData === 'string' && !responseData.trimStart().startsWith('<')) {
                     errorMessage = responseData;
@@ -194,7 +196,7 @@ export class MediaService {
         try {
             const fullPath = `${currentPath.replace(/\/$/, '')}/${folderName}`.replace(/^\/+/, '');
 
-            const response = await axios.post(`${this.baseUrl}/create`, {
+            const response = await axios.post('/admin/media-manager/create', {
                 path: fullPath,
             });
 
@@ -271,12 +273,12 @@ export class MediaService {
      */
     async getAssetsByIds(mediaIds: (string | number)[]): Promise<MediaAsset[]> {
         try {
-            const ids = mediaIds.map(id => typeof id === 'string' ? parseInt(id) : id).join(',');
+            const ids = mediaIds.map((id) => (typeof id === 'string' ? parseInt(id) : id)).join(',');
 
             const response = await axios.get(`${this.baseUrl}/show`, {
                 params: {
-                    ids: ids
-                }
+                    ids: ids,
+                },
             });
 
             return response.data?.data || response.data || [];

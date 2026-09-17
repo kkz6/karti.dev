@@ -23,12 +23,22 @@ test('media header select-all uses accessible mixed state and is disabled while 
     assert.match(browser, /aria-checked=\{allSelected\}/);
     assert.match(browser, /disabled=\{loadingAssets \|\| moving \|\| visibleIds.length === 0\}/);
     assert.match(browser, /Select all files on this page/);
-    assert.match(browser, /indexPage && displayMode === 'grid'/);
-    assert.match(browser, /onToggleSelectAll=\{indexPage \? toggleSelectAll : undefined\}/);
+    assert.match(browser, /const canSelectMultiple = indexPage \|\| maxFiles !== 1/);
+    assert.match(browser, /canSelectMultiple && displayMode === 'grid'/);
+    assert.match(browser, /onToggleSelectAll=\{canSelectMultiple \? toggleSelectAll : undefined\}/);
+    assert.match(browser, /toggleVisibleAssets\(browserSelectedAssets, visibleIds, indexPage \? 0 : maxFiles\)/);
     const table = readFileSync(new URL('../resources/js/components/Browser/Listing/TableListing.tsx', import.meta.url), 'utf8');
     assert.match(table, /<thead>[\s\S]*?<Checkbox[\s\S]*?<\/thead>/);
     assert.match(table, /checked=\{selectAllState === 'mixed' \? 'indeterminate' : selectAllState\}/);
     assert.match(table, /disabled=\{selectAllDisabled\}/);
+});
+
+test('picker bulk selection respects limits without dropping existing selections', () => {
+    assert.deepEqual(toggleVisibleAssets(['elsewhere', '2'], ['1', '2', '3'], 3), ['elsewhere', '2', '1']);
+    assert.deepEqual(toggleVisibleAssets(['elsewhere', '2'], ['1', '2', '3'], 2), ['elsewhere', '2']);
+    assert.deepEqual(toggleVisibleAssets(['elsewhere', '1', '2'], ['1', '2'], 3), ['elsewhere']);
+    assert.deepEqual(toggleVisibleAssets(['elsewhere', '2'], ['1', '2', '3'], 0), ['elsewhere', '2', '1', '3']);
+    assert.deepEqual(toggleVisibleAssets(['elsewhere', '1', '2'], ['2', '3'], 2), ['elsewhere', '1', '2']);
 });
 
 test('normalizes mixed saved IDs and removes duplicates without changing gallery order', () => {

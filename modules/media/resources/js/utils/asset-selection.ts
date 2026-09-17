@@ -18,10 +18,13 @@ export function visibleSelectionState(selection: readonly string[], visibleIds: 
     return count === visibleIds.length ? true : 'mixed';
 }
 
-export function toggleVisibleAssets(selection: readonly string[], visibleIds: readonly string[]): string[] {
+export function toggleVisibleAssets(selection: readonly string[], visibleIds: readonly string[], maxFiles = 0): string[] {
     if (visibleSelectionState(selection, visibleIds) === true) {
         const visible = new Set(visibleIds);
         return selection.filter((id) => !visible.has(id));
     }
-    return uniqueAssetIds([...selection, ...visibleIds]);
+    const existing = uniqueAssetIds(selection);
+    const additions = uniqueAssetIds(visibleIds).filter((id) => !existing.includes(id));
+    const available = maxFiles > 0 ? Math.max(0, maxFiles - existing.length) : additions.length;
+    return [...existing, ...additions.slice(0, available)];
 }

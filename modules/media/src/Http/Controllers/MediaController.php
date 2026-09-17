@@ -8,7 +8,6 @@ use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Modules\Media\DTO\ImageEditorSaveData;
 use Modules\Media\Exceptions\MediaManagerException;
@@ -49,29 +48,28 @@ class MediaController extends BaseController
         $path       = $this->manager->verifyDirectory($path);
 
         $mediaPaginated = Media::inDirectory($path)->whereNull('original_media_id')->with('variants')->paginate(20);
-        $subdirectories = array_diff(Storage::directories($path), $this->ignore);
+        $disk           = config('mediable.default_disk');
+        $subdirectories = array_diff(Storage::disk($disk)->directories($path), $this->ignore);
 
-        $key            = trim('root.'.implode('.', explode('/', $path)), "\.");
-        $subdirectories = Cache::remember("media.manager.folders.{$key}", 60 * 60 * 24, function () use ($subdirectories) {
-            $modified = Media::whereIn('directory', $subdirectories)
-                ->selectRaw('directory, max(updated_at) as timestamp')
-                ->groupBy('directory')
-                ->get()
-                ->map(function ($directory) {
-                    return [
-                        'name'      => $directory->directory,
-                        'timestamp' => $directory->timestamp,
-                    ];
-                });
-            foreach (array_diff($subdirectories, $modified->pluck('name')->toArray()) as $leftover) {
-                $modified[] = ['name' => $leftover, 'timestamp' => 'N/A'];
-            }
+        // Read current directories on every refresh, including newly created empty folders.
+        $modified = Media::where('disk', $disk)->whereIn('directory', $subdirectories)
+            ->selectRaw('directory, max(updated_at) as timestamp')
+            ->groupBy('directory')
+            ->get()
+            ->map(function ($directory) {
+                return [
+                    'name'      => $directory->directory,
+                    'timestamp' => $directory->timestamp,
+                ];
+            });
+        foreach (array_diff($subdirectories, $modified->pluck('name')->toArray()) as $leftover) {
+            $modified[] = ['name' => $leftover, 'timestamp' => 'N/A'];
+        }
 
-            return $modified->sortBy('name')->values();
-        });
+        $subdirectories = $modified->sortBy('name')->values();
 
         return response([
-            'subdirectories' => $subdirectories->sortBy('name'),
+            'subdirectories' => $subdirectories,
             'media'          => MediaResource::collection($mediaPaginated->items()),
             'page_count'     => $mediaPaginated->lastPage(),
         ]);

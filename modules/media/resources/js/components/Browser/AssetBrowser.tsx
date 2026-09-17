@@ -118,12 +118,16 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
     const [dropTarget, setDropTarget] = useState<string | null>(null);
 
     const browserSelectedAssets = controlledSelections ?? internalSelections;
+    const canSelectMultiple = indexPage || maxFiles !== 1;
     const visibleIds = assets.map((asset) => asset.id);
     const allSelected = visibleSelectionState(browserSelectedAssets, visibleIds);
     const SelectionIcon = allSelected === true ? SquareCheck : allSelected === 'mixed' ? SquareMinus : Square;
     const toggleSelectAll = () => {
-        if (!indexPage || loadingAssets || moving || !visibleIds.length) return;
-        const next = toggleVisibleAssets(browserSelectedAssets, visibleIds);
+        if (!canSelectMultiple || loadingAssets || moving || !visibleIds.length) return;
+        const next = toggleVisibleAssets(browserSelectedAssets, visibleIds, indexPage ? 0 : maxFiles);
+        if (allSelected !== true && visibleSelectionState(next, visibleIds) !== true) {
+            toast.info(`Choose up to ${maxFiles} files. Your existing selections have been kept.`);
+        }
         if (controlledSelections !== undefined) onSelectionsUpdated?.(next);
         else {
             clearInternalSelections();
@@ -490,7 +494,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                                     className="w-full pl-9"
                                 />
                             </div>
-                            {indexPage && displayMode === 'grid' && (
+                            {canSelectMultiple && displayMode === 'grid' && (
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -595,7 +599,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                                 />
                             ) : (
                                 <TableListing
-                                    onToggleSelectAll={indexPage ? toggleSelectAll : undefined}
+                                    onToggleSelectAll={canSelectMultiple ? toggleSelectAll : undefined}
                                     selectAllState={allSelected}
                                     selectAllDisabled={loadingAssets || moving || visibleIds.length === 0}
                                     container={container?.id || ''}

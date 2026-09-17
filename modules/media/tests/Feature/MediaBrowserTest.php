@@ -30,6 +30,58 @@ it('opens an empty media library without requiring a blog folder', function () {
     Storage::disk('public')->assertDirectoryEmpty('/');
 });
 
+it('creates folders on the media disk and immediately lists them even with a stale cache', function () {
+    Storage::fake('local');
+    config(['filesystems.default' => 'local', 'mediable.default_disk' => 'public']);
+    Storage::disk('public')->makeDirectory('photography/galleries');
+    \Illuminate\Support\Facades\Cache::put('media.manager.folders.root.photography.galleries', collect([]), 86400);
+    $this->postJson(route('media-manager.create'), ['path' => 'photography/galleries/Japan Images'])
+        ->assertOk()->assertJsonPath('success', true)
+        ->assertJsonPath('path', 'photography/galleries/Japan Images')->assertJsonPath('disk', 'public');
+    expect(Storage::disk('public')->directoryExists('photography/galleries/Japan Images'))->toBeTrue()
+        ->and(Storage::disk('local')->directoryExists('photography/galleries/Japan Images'))->toBeFalse();
+    $this->getJson('/admin/media/photography/galleries')->assertOk()
+        ->assertJsonPath('subdirectories.0.name', 'photography/galleries/Japan Images');
+    $this->getJson('/admin/media/photography/galleries/Japan%20Images')->assertOk()
+        ->assertJsonPath('media', [])->assertJsonPath('subdirectories', []);
+    // A folder created outside the app must not remain hidden behind a cached list either.
+    Storage::disk('public')->makeDirectory('photography/galleries/Another');
+    $this->getJson('/admin/media/photography/galleries')->assertOk()->assertJsonCount(2, 'subdirectories');
+});
+
+it('reports duplicate folders and files without overwriting them', function () {
+    Storage::disk('public')->makeDirectory('Existing');
+    Storage::disk('public')->put('photo.jpg', 'original');
+    foreach (['Existing', 'photo.jpg'] as $path) {
+        $this->postJson(route('media-manager.create'), ['path' => $path])->assertConflict()
+            ->assertJsonPath('message', 'A file or folder with this name already exists here.');
+    }
+    expect(Storage::disk('public')->get('photo.jpg'))->toBe('original');
+});
+
+it('never reports folder creation success when storage refuses the write', function () {
+    $disk = \Mockery::mock(Storage::disk('public'))->makePartial();
+    $disk->shouldReceive('makeDirectory')->with('New folder')->once()->andReturn(false);
+    Storage::shouldReceive('disk')->with('public')->andReturn($disk);
+    $this->postJson(route('media-manager.create'), ['path' => 'New folder'])->assertStatus(503)
+        ->assertJsonPath('message', 'Could not create the folder. Check storage permissions and try again.');
+});
+
+it('rejects invalid folder paths and missing parents', function (string $path) {
+    $this->postJson(route('media-manager.create'), ['path' => $path])->assertUnprocessable();
+    Storage::disk('public')->assertDirectoryEmpty('/');
+})->with(['/', '../outside', 'a/../b', 'conversions/new', 'missing/child', 'bad\\name', ' ', 'two//parts']);
+
+it('returns the normalized path for a folder with surrounding whitespace', function () {
+    $this->postJson(route('media-manager.create'), ['path' => ' New folder '])->assertOk()->assertJsonPath('path', 'New folder');
+    expect(Storage::disk('public')->directoryExists('New folder'))->toBeTrue();
+});
+
+it('requires authentication to create a folder', function () {
+    auth()->logout();
+    $this->postJson(route('media-manager.create'), ['path' => 'New folder'])->assertUnauthorized();
+});
+
 it('returns a recoverable error for a missing folder and still serves the library root', function () {
     Storage::disk('public')->makeDirectory('photos');
 
