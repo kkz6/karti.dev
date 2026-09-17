@@ -1,7 +1,35 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { includeAsset, uniqueAssetIds } from '../resources/js/utils/asset-selection.ts';
+import { includeAsset, toggleVisibleAssets, uniqueAssetIds, visibleSelectionState } from '../resources/js/utils/asset-selection.ts';
+
+test('select all exposes none, partial and complete states for the visible page', () => {
+    assert.equal(visibleSelectionState([], []), false);
+    assert.equal(visibleSelectionState(['elsewhere'], ['1', '2']), false);
+    assert.equal(visibleSelectionState(['1'], ['1', '2']), 'mixed');
+    assert.equal(visibleSelectionState(['2', '1'], ['1', '2']), true);
+});
+
+test('select all fills partial selections without duplicates and deselects only the visible page', () => {
+    const existing = ['elsewhere', '1'];
+    assert.deepEqual(toggleVisibleAssets(existing, ['1', '2']), ['elsewhere', '1', '2']);
+    assert.deepEqual(toggleVisibleAssets(['elsewhere', '1', '2'], ['1', '2']), ['elsewhere']);
+    assert.deepEqual(toggleVisibleAssets(existing, []), existing);
+    assert.deepEqual(existing, ['elsewhere', '1']);
+});
+
+test('media header select-all uses accessible mixed state and is disabled while loading or moving', () => {
+    const browser = readFileSync(new URL('../resources/js/components/Browser/AssetBrowser.tsx', import.meta.url), 'utf8');
+    assert.match(browser, /aria-checked=\{allSelected\}/);
+    assert.match(browser, /disabled=\{loadingAssets \|\| moving \|\| visibleIds.length === 0\}/);
+    assert.match(browser, /Select all files on this page/);
+    assert.match(browser, /indexPage && displayMode === 'grid'/);
+    assert.match(browser, /onToggleSelectAll=\{indexPage \? toggleSelectAll : undefined\}/);
+    const table = readFileSync(new URL('../resources/js/components/Browser/Listing/TableListing.tsx', import.meta.url), 'utf8');
+    assert.match(table, /<thead>[\s\S]*?<Checkbox[\s\S]*?<\/thead>/);
+    assert.match(table, /checked=\{selectAllState === 'mixed' \? 'indeterminate' : selectAllState\}/);
+    assert.match(table, /disabled=\{selectAllDisabled\}/);
+});
 
 test('normalizes mixed saved IDs and removes duplicates without changing gallery order', () => {
     assert.deepEqual(uniqueAssetIds([3, '2', { id: 3 }, { id: '1' }, '2', '']), ['3', '2', '1']);

@@ -120,15 +120,26 @@ readonly class MediaManagerController
      */
     public function destroy(Request $request)
     {
-        $path   = $this->manager->verifyDirectory($request->path);
-        $parent = collect(explode('/', $path))->slice(-1)->implode('/');
-
-        Storage::deleteDirectory($path);
-        Media::where('disk', config('mediable.default_disk'))->where(function (Builder $q) use ($path) {
-            $path = str_replace(['%', '_'], ['\%', '\_'], $path);
+        $request->validate(['path' => ['required', 'string']]);
+        $disk = config('mediable.default_disk');
+        $path = app(\Modules\Media\Support\MediaDirectories::class)->validate($disk, $request->path);
+        abort_if($path === '', 422, 'The media library root cannot be deleted.');
+        $parent = dirname($path) === '.' ? '/' : dirname($path);
+        $files  = Media::where('disk', $disk)->where(function (Builder $q) use ($path) {
             $q->where('directory', $path);
-            $q->orWhere('directory', 'like', $path.'/%');
-        })->delete();
+            $q->orWhereRaw("directory LIKE ? ESCAPE '!'", [str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $path).'/%']);
+        })->with('variants')->get();
+        $usage = app(\Modules\Media\Support\MediaUsage::class);
+        foreach ($files as $file) {
+            if ($usage->forMedia($file)['usages']) {
+                return response()->json(['message' => 'This folder contains files that are still in use. Open the folder and delete unused files, or remove their references first.'], 409);
+            }
+        }
+        // Model events remove generated previews and URL history too.
+        foreach ($files as $file) {
+            $file->delete();
+        }
+        Storage::disk($disk)->deleteDirectory($path);
         $this->invalidateFolderCache($path);
 
         return response(['success' => true, 'parentFolder' => $parent]);

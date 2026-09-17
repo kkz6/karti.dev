@@ -2,6 +2,7 @@
 
 Media Manager supports moving existing files within the current storage disk:
 
+- Table view has a **Select all** checkbox in its first column header, aligned with row checkboxes. Grid view keeps the labelled header button, changing to **Deselect all** when every visible file is selected. Both show unchecked, mixed, and checked states and select only files on the visible page. They exclude folders and hidden pages, retain other-page selections, and are disabled while loading/moving or when no files are shown. Both use shared keyboard-accessible controls; the table checkbox shows a dash for partial selection.
 - Use **Move to folder** in a file's actions menu, or select multiple files and use the bulk toolbar button.
 - Drag a file onto a folder in grid or table view. Dragging a selected file moves the whole selection; dragging an unselected file moves only that file.
 - Parent-folder controls and ancestor breadcrumbs are also drop targets.
@@ -15,3 +16,11 @@ Saved image URLs in article/gallery/project/tool/speaking content, project image
 Deployment: run `php artisan migrate`. The web server must pass missing `/storage/*` requests to Laravel (standard `try_files $uri $uri/ /index.php?$query_string`); a static-assets location using `try_files $uri =404` needs the same fallback for old links. Private signed file downloads use `/private-storage/*` to avoid overriding the public redirect route. External CDN/S3 paths require equivalent origin routing; redirects here cover this application's public storage URLs. Reusing an old path for another file makes that physical file take precedence, so avoid reusing published URLs. Already-sent emails and external pages are not rewritten.
 
 The folder endpoint lists one level at a time without loading assets or exposing the internal conversions directory. Up to 100 files can be moved in one request.
+
+## Safe deletion
+
+The delete dialog checks saved media usage before enabling deletion. It lists gallery attachments, article featured images, embedded image URLs, project image arrays, SEO and site settings, including drafts and trash. Generated-preview URLs and historical URLs count as usage of the original. Links open the relevant content editor in a new tab; trashed records must be restored/edited or permanently removed through their own content workflow. External sites and unsaved drafts cannot be checked.
+
+For mixed selections, **Delete unused files (N)** removes only unused files. In-use and failed files remain selected. The dialog stays open to show remaining references and supports **Recheck usage** after editing content. There is no force-delete option. Every delete request rechecks usage on the server; single-file deletion returns a conflict for used files, while bulk deletion returns separate deleted IDs, kept references and per-file errors. Folder deletion is blocked if any file inside is used; open the folder and use the mixed-selection flow to remove only unused files. Unused originals are deleted through model events so generated previews and URL history are cleaned up too.
+
+This pattern reuses the shared dialog, buttons and thumbnail preview, plus existing `border`, `muted`, `primary` and `destructive` tokens. Usage checks and deletions show loading states and disable submission. Inline status/error announcements, keyboard-accessible reference links, cancellable checks and trapped dialog focus support keyboard and screen-reader use. Closing is disabled while deletion is running; failed checks never enable deletion.

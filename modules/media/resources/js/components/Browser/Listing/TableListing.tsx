@@ -1,6 +1,7 @@
 import { MediaService } from '@media/services/MediaService';
 import { MediaAsset, MediaFolder } from '@media/types/media';
 import { Button } from '@shared/components/ui/button';
+import { Checkbox } from '@shared/components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
 import { ChevronDown, ChevronUp, CornerLeftUp, Folder } from 'lucide-react';
 import React, { useState } from 'react';
@@ -29,6 +30,9 @@ interface TableListingProps {
     onAssetDoubleClicked: (asset: MediaAsset) => void;
     onSorted: (field: string) => void;
     onFolderDeleted?: () => void;
+    onToggleSelectAll?: () => void;
+    selectAllState?: boolean | 'mixed';
+    selectAllDisabled?: boolean;
 }
 
 interface Column {
@@ -55,6 +59,9 @@ export const TableListing: React.FC<TableListingProps> = ({
     onAssetDoubleClicked,
     onSorted,
     onFolderDeleted,
+    onToggleSelectAll,
+    selectAllState = false,
+    selectAllDisabled = false,
 }) => {
     const [deleteModal, setDeleteModal] = useState<boolean>(false);
     const [deleteFolderSelected, setDeleteFolderSelected] = useState<MediaFolder | null>(null);
@@ -154,8 +161,22 @@ export const TableListing: React.FC<TableListingProps> = ({
                     <table className="w-full border-collapse">
                         <thead>
                             <tr className="border-border border-b">
-                                <th className="w-10">
-                                    <span className="sr-only">Selection</span>
+                                <th scope="col" className="w-10 px-3 py-2">
+                                    {onToggleSelectAll ? (
+                                        <div className="media-selection-control flex size-8 items-center justify-center">
+                                            <Checkbox
+                                                checked={selectAllState === 'mixed' ? 'indeterminate' : selectAllState}
+                                                onCheckedChange={onToggleSelectAll}
+                                                disabled={selectAllDisabled}
+                                                aria-label={
+                                                    selectAllState === true ? 'Deselect all files on this page' : 'Select all files on this page'
+                                                }
+                                                title={selectAllState === true ? 'Deselect all files on this page' : 'Select all files on this page'}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <span className="sr-only">Selection</span>
+                                    )}
                                 </th>
                                 <th className="w-12">
                                     <span className="sr-only">Preview</span>

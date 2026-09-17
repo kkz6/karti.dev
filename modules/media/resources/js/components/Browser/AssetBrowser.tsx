@@ -3,12 +3,26 @@ import { Button } from '@shared/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
 import { Input } from '@shared/components/ui/input';
 import axios from 'axios';
-import { FolderInput, FolderOpen, FolderPlus, Grid, List, ListX, MoreHorizontal, Search, UploadCloud } from 'lucide-react';
+import {
+    FolderInput,
+    FolderOpen,
+    FolderPlus,
+    Grid,
+    List,
+    ListX,
+    MoreHorizontal,
+    Search,
+    Square,
+    SquareCheck,
+    SquareMinus,
+    UploadCloud,
+} from 'lucide-react';
 import React, { useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import '../../../css/media-workspace.css';
 import { useMediaBrowser } from '../../hooks/useMediaBrowser';
 import { MediaAsset, MediaFolder } from '../../types/media';
+import { toggleVisibleAssets, visibleSelectionState } from '../../utils/asset-selection';
 import { AssetEditor } from '../Editor/AssetEditor';
 import { LoadingGraphic } from '../UI/LoadingGraphic';
 import { Uploader } from '../Upload/Uploader';
@@ -104,6 +118,18 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
     const [dropTarget, setDropTarget] = useState<string | null>(null);
 
     const browserSelectedAssets = controlledSelections ?? internalSelections;
+    const visibleIds = assets.map((asset) => asset.id);
+    const allSelected = visibleSelectionState(browserSelectedAssets, visibleIds);
+    const SelectionIcon = allSelected === true ? SquareCheck : allSelected === 'mixed' ? SquareMinus : Square;
+    const toggleSelectAll = () => {
+        if (!indexPage || loadingAssets || moving || !visibleIds.length) return;
+        const next = toggleVisibleAssets(browserSelectedAssets, visibleIds);
+        if (controlledSelections !== undefined) onSelectionsUpdated?.(next);
+        else {
+            clearInternalSelections();
+            next.forEach(selectAsset);
+        }
+    };
     const clearSelections = useCallback(() => {
         if (controlledSelections !== undefined) onSelectionsUpdated?.([]);
         else clearInternalSelections();
@@ -324,8 +350,12 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
 
     const handleAssetsDeleted = useCallback(
         (deletedAssetIds: string[]) => {
-            // Clear all selections since deleted assets were likely selected
-            clearSelections();
+            // Keep protected/failed files selected after a mixed bulk deletion.
+            if (controlledSelections !== undefined) {
+                onSelectionsUpdated?.(browserSelectedAssets.filter((id) => !deletedAssetIds.includes(id)));
+            } else {
+                deletedAssetIds.forEach(deselectAsset);
+            }
 
             // Refresh the assets list
             loadAssets();
@@ -333,7 +363,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
             // Show success message
             toast.success(`Successfully deleted ${deletedAssetIds.length} ${deletedAssetIds.length === 1 ? 'item' : 'items'}`);
         },
-        [clearSelections, loadAssets],
+        [controlledSelections, onSelectionsUpdated, browserSelectedAssets, deselectAsset, loadAssets],
     );
 
     const handleAssetDeleterClosed = useCallback(() => {
@@ -460,6 +490,21 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                                     className="w-full pl-9"
                                 />
                             </div>
+                            {indexPage && displayMode === 'grid' && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    role="checkbox"
+                                    aria-checked={allSelected}
+                                    aria-label={allSelected === true ? 'Deselect all files on this page' : 'Select all files on this page'}
+                                    title="Applies to files shown on this page"
+                                    disabled={loadingAssets || moving || visibleIds.length === 0}
+                                    onClick={toggleSelectAll}
+                                >
+                                    <SelectionIcon aria-hidden="true" />
+                                    {allSelected === true ? 'Deselect all' : 'Select all'}
+                                </Button>
+                            )}
                             <div className="ml-auto flex flex-wrap items-center gap-2">
                                 {libraryActions}
                                 {!indexPage && canEdit && (
@@ -550,6 +595,9 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                                 />
                             ) : (
                                 <TableListing
+                                    onToggleSelectAll={indexPage ? toggleSelectAll : undefined}
+                                    selectAllState={allSelected}
+                                    selectAllDisabled={loadingAssets || moving || visibleIds.length === 0}
                                     container={container?.id || ''}
                                     assets={assets}
                                     folder={folder}

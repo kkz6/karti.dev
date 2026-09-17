@@ -195,9 +195,51 @@ class MediaController extends BaseController
      *
      * @param mixed $id
      */
-    public function destroy($id)
+    public function destroy($id, \Modules\Media\Support\MediaUsage $usage)
     {
-        return response(Media::destroy($id));
+        $media = Media::findOrFail($id);
+        abort_unless($media->isOriginal(), 422, 'Generated previews are managed with their original file.');
+        $result = $usage->forMedia($media);
+        if ($result['usages']) {
+            return response()->json(['message' => 'This file is still used. Replace or remove the listed references before deleting it.', 'assets' => [$result]], 409);
+        }
+
+        return response($media->delete());
+    }
+
+    public function usage(Request $request, \Modules\Media\Support\MediaUsage $usage)
+    {
+        $data = $request->validate(['media_ids' => ['required', 'array', 'min:1', 'max:100'], 'media_ids.*' => ['required', 'integer', 'distinct', 'exists:media,id']]);
+
+        return response()->json(['assets' => Media::whereIn('id', $data['media_ids'])->with('variants')->get()->map(fn ($media) => $usage->forMedia($media))]);
+    }
+
+    public function deleteUnused(Request $request, \Modules\Media\Support\MediaUsage $usage)
+    {
+        $data  = $request->validate(['media_ids' => ['required', 'array', 'min:1', 'max:100'], 'media_ids.*' => ['required', 'integer', 'distinct', 'exists:media,id']]);
+        $files = Media::whereIn('id', $data['media_ids'])->with('variants')->get();
+        abort_if($files->contains(fn ($file) => ! $file->isOriginal()), 422, 'Generated previews are managed with their original file.');
+        $deleted = [];
+        $kept    = [];
+        $errors  = [];
+        foreach ($files as $file) {
+            // Recheck on submission: usage may have changed since the dialog opened.
+            try {
+                $result = $usage->forMedia($file);
+                if ($result['usages']) {
+                    $kept[] = $result;
+
+                    continue;
+                }
+                $file->delete();
+                $deleted[] = (string) $file->id;
+            } catch (\Throwable $exception) {
+                report($exception);
+                $errors[] = ['id' => (string) $file->id, 'message' => 'Could not delete '.($file->title ?: $file->filename).'. Please retry.'];
+            }
+        }
+
+        return response()->json(['deleted_ids' => $deleted, 'kept' => $kept, 'errors' => $errors]);
     }
 
     /**

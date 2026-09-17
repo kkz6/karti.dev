@@ -4,6 +4,23 @@ import test from 'node:test';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
+test('mixed deletion checks usage, submits only unused files and keeps protected selections', () => {
+    const dialog = read('../resources/js/components/Browser/AssetDeleter.tsx');
+    const browser = read('../resources/js/components/Browser/AssetBrowser.tsx');
+    assert.match(dialog, /route\('media.usage'\)/);
+    assert.match(dialog, /route\('media.delete-unused'\)/);
+    assert.match(dialog, /media_ids: unused.map\(\(asset\) => asset.id\)/);
+    assert.match(dialog, /onDeleted\(data.deleted_ids\)/);
+    assert.match(dialog, /disabled=\{!ready \|\| isDeleting \|\| !unused.length\}/);
+    assert.match(dialog, /In use · kept/);
+    assert.match(dialog, /Delete unused files/);
+    assert.match(dialog, /Recheck usage/);
+    assert.match(dialog, /setDeleteError\(data.errors.map/);
+    assert.match(dialog, /href=\{reference.url\}/);
+    assert.match(browser, /browserSelectedAssets.filter\(\(id\) => !deletedAssetIds.includes\(id\)\)/);
+    assert.match(browser, /deletedAssetIds.forEach\(deselectAsset\)/);
+});
+
 test('media moves support both accessible dialogs and internal drag targets without changing upload drops', () => {
     const browser = read('../resources/js/components/Browser/AssetBrowser.tsx');
     const mover = read('../resources/js/components/Browser/AssetMover.tsx');

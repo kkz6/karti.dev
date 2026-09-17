@@ -24,6 +24,8 @@ Route::middleware(['web', 'auth'])->prefix('admin')->group(function () {
     // Media API routes
     Route::prefix('media')->name('media.')->group(function () {
         Route::get('/folders', [MediaController::class, 'folders'])->name('folders');
+        Route::get('/usage', [MediaController::class, 'usage'])->name('usage');
+        Route::post('/delete-unused', [MediaController::class, 'deleteUnused'])->name('delete-unused');
         Route::post('/', [MediaController::class, 'create'])->name('create');
         Route::post('/move', [MediaController::class, 'move'])->name('move');
         Route::get('/show/{id?}', [MediaController::class, 'show'])->name('show');

@@ -9,3 +9,19 @@ export function includeAsset(selection: readonly AssetSelectionItem[], id: strin
     const ids = uniqueAssetIds(maxFiles === 1 ? [id] : [...selection, id]);
     return maxFiles > 0 ? ids.slice(0, maxFiles) : ids;
 }
+
+/** Selection scope is the current page/search results, never hidden files or folders. */
+export function visibleSelectionState(selection: readonly string[], visibleIds: readonly string[]): boolean | 'mixed' {
+    const selected = new Set(selection);
+    const count = visibleIds.filter((id) => selected.has(id)).length;
+    if (count === 0) return false;
+    return count === visibleIds.length ? true : 'mixed';
+}
+
+export function toggleVisibleAssets(selection: readonly string[], visibleIds: readonly string[]): string[] {
+    if (visibleSelectionState(selection, visibleIds) === true) {
+        const visible = new Set(visibleIds);
+        return selection.filter((id) => !visible.has(id));
+    }
+    return uniqueAssetIds([...selection, ...visibleIds]);
+}
