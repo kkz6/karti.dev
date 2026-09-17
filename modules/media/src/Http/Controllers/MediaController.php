@@ -152,6 +152,9 @@ class MediaController extends BaseController
         }
 
         $media = Media::with('variants')->findOrFail($id);
+        if (! $request->boolean('metadata_only')) {
+            app(\Modules\Media\Support\PhotoMetadata::class)->queue($media);
+        }
 
         return new MediaResource($media);
     }
@@ -228,29 +231,63 @@ class MediaController extends BaseController
     public function move(Request $request)
     {
         $request->validate([
-            'media_ids'   => 'required|array',
-            'media_ids.*' => 'required|integer|exists:media,id',
+            'media_ids'   => 'required|array|min:1|max:100',
+            'media_ids.*' => 'required|integer|distinct|exists:media,id',
             'destination' => 'required|string',
+            'disk'        => ['sometimes', 'string', \Illuminate\Validation\Rule::in(config('mediable.allowed_disks', ['public']))],
         ]);
 
-        $mediaIds    = $request->input('media_ids');
-        $destination = $this->manager->verifyDirectory(trim($request->input('destination'), '/'));
-
-        $moved = collect();
-
-        foreach ($mediaIds as $id) {
-            $media = Media::find($id);
-            if ($media && $media->directory !== $destination) {
-                $media->move($destination);
-                $moved->push(new MediaResource($media->fresh()));
+        $disk        = $request->input('disk', config('mediable.default_disk'));
+        $destination = app(\Modules\Media\Support\MediaDirectories::class)->validate($disk, $request->string('destination')->toString());
+        $files       = Media::whereIn('id', $request->input('media_ids'))->get();
+        $storage     = Storage::disk($disk);
+        $targets     = [];
+        // Check the whole batch before moving anything. Never overwrite a destination file.
+        foreach ($files as $media) {
+            abort_if($media->disk !== $disk || ! $media->isOriginal(), 422, 'Only original files from this media library can be moved.');
+            abort_unless($storage->exists($media->getDiskPath()), 422, "The original file {$media->basename} is missing.");
+            if ($media->directory === $destination) {
+                continue;
             }
+            $target = trim($destination.'/'.$media->basename, '/');
+            abort_if(isset($targets[$target]) || $storage->exists($target), 409, "A file named {$media->basename} already exists in the destination. Nothing was moved.");
+            $targets[$target] = true;
+        }
+
+        $moved = [];
+        try {
+            foreach ($files as $media) {
+                if ($media->directory !== $destination) {
+                    $media->move($destination);
+                }
+                $moved[] = (string) $media->id;
+            }
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return response()->json(['message' => 'Could not move all files. Completed moves have been refreshed; retry the remaining files.', 'moved_ids' => $moved], 409);
         }
 
         return response([
-            'success' => true,
-            'message' => "Moved {$moved->count()} file(s) successfully",
-            'media'   => $moved,
+            'success'   => true,
+            'message'   => 'Files moved successfully.',
+            'moved_ids' => $moved,
         ]);
+    }
+
+    public function folders(Request $request)
+    {
+        $request->validate([
+            'disk' => ['sometimes', 'string', \Illuminate\Validation\Rule::in(config('mediable.allowed_disks', ['public']))],
+            'path' => 'nullable|string',
+        ]);
+        $disk    = $request->input('disk', config('mediable.default_disk'));
+        $path    = app(\Modules\Media\Support\MediaDirectories::class)->validate($disk, $request->input('path') ?? '');
+        $folders = collect(Storage::disk($disk)->directories($path))
+            ->reject(fn ($directory) => explode('/', $directory)[0] === 'conversions')
+            ->sort()->values()->map(fn ($directory) => ['path' => $directory, 'title' => basename($directory)]);
+
+        return response()->json(['folders' => $folders]);
     }
 
     /**

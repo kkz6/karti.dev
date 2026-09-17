@@ -4,6 +4,29 @@ import test from 'node:test';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
+test('media moves support both accessible dialogs and internal drag targets without changing upload drops', () => {
+    const browser = read('../resources/js/components/Browser/AssetBrowser.tsx');
+    const mover = read('../resources/js/components/Browser/AssetMover.tsx');
+    assert.match(browser, /indexPage && canEdit/);
+    assert.match(browser, /browserSelectedAssets.includes\(id\) \? \[\.\.\.browserSelectedAssets\] : \[id\]/);
+    assert.match(browser, /dataTransfer.types.includes\(MEDIA_DRAG_TYPE\)/);
+    assert.match(browser, /dataTransfer.types.includes\('Files'\)/);
+    assert.match(browser, /Move to folder/);
+    assert.match(browser, /onNavigated\?\.\(container\?\.id \|\| 'public', destination, completed\)/);
+    assert.match(browser, /onSelectionsUpdated\?\.\(completed\)/);
+    assert.match(mover, /route\('media.folders'\)/);
+    assert.match(mover, /<DialogTitle>/);
+    assert.match(mover, /Move here/);
+    for (const file of ['Listing/AssetRow', 'Listing/AssetTile']) {
+        const source = read(`../resources/js/components/Browser/${file}.tsx`);
+        assert.match(source, /onDragStart=/);
+        assert.match(source, /Move to folder/);
+    }
+    for (const file of ['Listing/FolderRow', 'Listing/FolderTile', 'Listing/TableListing', 'Listing/GridListing', 'Navigation/Breadcrumbs']) {
+        assert.match(read(`../resources/js/components/Browser/${file}.tsx`), /folderProps\(/);
+    }
+});
+
 test('upload feedback is integrated with the browser instead of nested in a card', () => {
     const listing = read('../resources/js/components/Upload/Uploads.tsx');
     const row = read('../resources/js/components/Upload/Upload.tsx');
@@ -98,7 +121,13 @@ test('image previews reserve space and handle loading, cached images and source 
     assert.match(preview, /motion-safe:animate-pulse/);
     assert.match(preview, /status === 'ready' \? 'opacity-100' : 'opacity-0'/);
     assert.match(preview, /absolute inset-0 h-full w-full/);
-    for (const file of ['Field/AssetFieldTile', 'Field/AssetFieldRow', 'Browser/Listing/AssetTile', 'Browser/Listing/AssetRow', 'Editor/AssetEditor']) {
+    for (const file of [
+        'Field/AssetFieldTile',
+        'Field/AssetFieldRow',
+        'Browser/Listing/AssetTile',
+        'Browser/Listing/AssetRow',
+        'Editor/AssetEditor',
+    ]) {
         const source = read(`../resources/js/components/${file}.tsx`);
         assert.match(source, /<AssetImagePreview/);
         assert.doesNotMatch(source, /<img\b/);
@@ -112,7 +141,10 @@ test('asset editor directs opening focus to its labelled dialog instead of a too
     const editor = read('../resources/js/components/Editor/AssetEditor.tsx');
     assert.match(editor, /ref=\{dialogRef\}/);
     assert.match(editor, /tabIndex=\{-1\}/);
-    assert.match(editor, /onOpenAutoFocus=\{\(event\) => \{[\s\S]*?event.preventDefault\(\);[\s\S]*?dialogRef.current\?\.focus\(\{ preventScroll: true \}\);/);
+    assert.match(
+        editor,
+        /onOpenAutoFocus=\{\(event\) => \{[\s\S]*?event.preventDefault\(\);[\s\S]*?dialogRef.current\?\.focus\(\{ preventScroll: true \}\);/,
+    );
     assert.match(editor, /<DialogTitle/);
     assert.match(editor, /tooltip="Close"/);
 });

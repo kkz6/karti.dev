@@ -1,6 +1,7 @@
 import { MediaFolder } from '@media/types/media';
 import { ChevronRight, FolderOpen } from 'lucide-react';
 import React from 'react';
+import { useMediaMove } from '../MediaMoveContext';
 
 interface BreadcrumbsProps {
     path: string;
@@ -10,6 +11,7 @@ interface BreadcrumbsProps {
 }
 
 export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ path, folder, onNavigated }) => {
+    const move = useMediaMove();
     const getPathParts = (): string[] => {
         const parts = ['/'];
         if (path === '/' || path === null || !folder) {
@@ -81,9 +83,10 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ path, folder, onNaviga
                             </span>
                         ) : (
                             <button
+                                {...move?.folderProps(index === 0 ? '/' : pathParts.slice(1, index + 1).join('/'))}
                                 type="button"
                                 onClick={() => selectFolder(index)}
-                                className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring inline-flex min-w-0 items-center gap-2 rounded px-1.5 py-1 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                                className="media-folder-target text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring inline-flex min-w-0 items-center gap-2 rounded px-1.5 py-1 transition-colors focus-visible:ring-2 focus-visible:outline-none"
                             >
                                 {index === 0 && <FolderOpen className="size-3.5 shrink-0" aria-hidden="true" />}
                                 <span className="break-all">{part === '/' ? 'All files' : part}</span>

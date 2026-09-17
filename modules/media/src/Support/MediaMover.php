@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Modules\Media\Support;
 
 use Illuminate\Filesystem\FilesystemManager;
-use Illuminate\Support\Facades\File;
 use Modules\Media\Exceptions\MediaMoveException;
 use Modules\Media\Exceptions\MediaUpload\FileNotFoundException;
+use Modules\Media\Helpers\File;
 use Modules\Media\Models\Media;
 
 /**
@@ -37,18 +37,30 @@ class MediaMover
         $storage = $this->filesystem->disk($media->disk);
 
         $filename   = $this->cleanFilename($media, $filename);
-        $directory  = File::sanitizePath($directory);
-        $targetPath = $directory.'/'.$filename.'.'.$media->extension;
+        $directory  = $storage->directoryExists($directory) ? trim($directory, '/') : File::sanitizePath($directory);
+        $targetPath = trim($directory.'/'.$filename.'.'.$media->extension, '/');
 
         if ($storage->exists($targetPath)) {
             throw MediaMoveException::destinationExists($targetPath);
         }
 
-        $storage->move($media->getDiskPath(), $targetPath);
+        $sourcePath = $media->getDiskPath();
+        $oldUrl     = $media->getUrl();
+        if (! $storage->move($sourcePath, $targetPath)) {
+            throw MediaMoveException::failedToCopy($sourcePath, $targetPath);
+        }
 
         $media->filename  = $filename;
         $media->directory = $directory;
-        $media->save();
+        try {
+            $media->getConnection()->transaction(function () use ($media, $oldUrl) {
+                $media->save();
+                app(MediaReferences::class)->moved($media, $oldUrl);
+            });
+        } catch (\Throwable $exception) {
+            $storage->move($targetPath, $sourcePath);
+            throw $exception;
+        }
     }
 
     /**

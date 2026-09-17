@@ -28,10 +28,25 @@ export interface MediaAsset {
     preview?: string;
     path: string;
     formatted_size: string;
+    photo_metadata?: {
+        version: number;
+        status: 'pending' | 'available' | 'empty' | 'unsupported' | 'unavailable' | 'error';
+        fields: {
+            camera_make?: string;
+            camera_model?: string;
+            lens?: string;
+            aperture?: number;
+            focal_length?: number;
+            exposure_seconds?: number;
+            iso?: number;
+            orientation?: number;
+            taken_at?: string;
+        };
+    } | null;
     dimensions?: {
         width: number;
         height: number;
-    };
+    } | null;
 }
 
 export interface MediaFolder {

@@ -3,6 +3,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Edit, Folder, MoreHorizontal, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { MediaFolder } from '../../../types/media';
+import { useMediaMove } from '../MediaMoveContext';
 
 interface FolderTileProps {
     folder: MediaFolder;
@@ -14,6 +15,7 @@ interface FolderTileProps {
 
 export const FolderTile: React.FC<FolderTileProps> = ({ folder, canEdit, onSelected, onEditing, onDeleting }) => {
     const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
+    const move = useMediaMove();
 
     const handleDoubleClick = () => {
         onSelected(folder);
@@ -30,7 +32,10 @@ export const FolderTile: React.FC<FolderTileProps> = ({ folder, canEdit, onSelec
     };
 
     return (
-        <div className="folder-tile border-border bg-card text-card-foreground group cursor-pointer rounded-lg border transition-shadow hover:shadow-md">
+        <div
+            {...move?.folderProps(folder.path)}
+            className="media-folder-target folder-tile border-border bg-card text-card-foreground group cursor-pointer rounded-lg border transition-shadow hover:shadow-md"
+        >
             <div className="relative">
                 {/* Actions Dropdown */}
                 {canEdit && (

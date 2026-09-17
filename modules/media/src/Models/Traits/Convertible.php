@@ -24,6 +24,7 @@ trait Convertible
 
     public function saveConversions(bool $force = false): void
     {
+        app(\Modules\Media\Support\PhotoMetadata::class)->queue($this, $force);
         $images = app(ResponsiveImages::class);
         if (! $images->supports($this) || ! Storage::disk($this->disk)->exists($this->getDiskPath())) {
             return;

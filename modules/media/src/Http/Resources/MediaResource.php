@@ -44,7 +44,10 @@ class MediaResource extends JsonResource
             'preview'        => $this->aggregate_type === 'image' ? Storage::disk($this->disk)->url($fullPath) : null,
             'path'           => $fullPath,
             'formatted_size' => $this->getFormattedSize(),
-            'dimensions'     => null,
+            'dimensions'     => isset($this->custom_properties['width'], $this->custom_properties['height'])
+                ? ['width' => $this->custom_properties['width'], 'height' => $this->custom_properties['height']]
+                : null,
+            'photo_metadata' => $this->when($request->user() !== null, $this->custom_properties['photo_metadata'] ?? null),
         ];
     }
 

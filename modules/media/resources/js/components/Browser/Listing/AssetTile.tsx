@@ -1,11 +1,12 @@
 import { Button } from '@shared/components/ui/button';
 import { Checkbox } from '@shared/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
-import { Download, Edit, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Download, Edit, FolderInput, MoreHorizontal, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { MediaAsset } from '../../../types/media';
 import { FileIcon } from '../../Icons/FileIcon';
 import { AssetImagePreview } from '../../UI/AssetImagePreview';
+import { useMediaMove } from '../MediaMoveContext';
 
 interface AssetTileProps {
     asset: MediaAsset;
@@ -31,6 +32,7 @@ export const AssetTile: React.FC<AssetTileProps> = ({
     onDoubleClicked,
 }) => {
     const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
+    const move = useMediaMove();
 
     const isSelected = selectedAssets.includes(asset.id);
 
@@ -86,7 +88,13 @@ export const AssetTile: React.FC<AssetTileProps> = ({
     const thumbnailUrl = getThumbnailUrl();
 
     return (
-        <div data-selected={isSelected} className="asset-tile border-border bg-card text-card-foreground group rounded-lg border transition-shadow hover:shadow-md">
+        <div
+            data-selected={isSelected}
+            draggable={!!move && !move.moving}
+            onDragStart={(event) => move?.start(event, asset.id)}
+            onDragEnd={() => move?.end()}
+            className="asset-tile border-border bg-card text-card-foreground group rounded-lg border transition-shadow hover:shadow-md"
+        >
             <div className="relative">
                 {/* Selection Checkbox */}
                 <div className="absolute top-2 left-2 z-10">
@@ -117,6 +125,12 @@ export const AssetTile: React.FC<AssetTileProps> = ({
                                         <Trash2 className="mr-2 h-4 w-4" />
                                         Delete
                                     </DropdownMenuItem>
+                                    {move && (
+                                        <DropdownMenuItem disabled={move.moving} onSelect={() => move.open([asset.id])}>
+                                            <FolderInput />
+                                            Move to folder
+                                        </DropdownMenuItem>
+                                    )}
                                 </>
                             )}
                             <DropdownMenuItem onClick={handleDownload}>

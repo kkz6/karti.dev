@@ -2,6 +2,7 @@ import { MediaFolder } from '@media/types/media';
 import { Button } from '@shared/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
 import { Edit, Folder, MoreHorizontal, Trash2 } from 'lucide-react';
+import { useMediaMove } from '../MediaMoveContext';
 
 interface FolderRowProps {
     folder: MediaFolder;
@@ -12,8 +13,9 @@ interface FolderRowProps {
 }
 
 export function FolderRow({ folder, canEdit, onSelected, onEditing, onDeleting }: FolderRowProps) {
+    const move = useMediaMove();
     return (
-        <tr className="border-border hover:bg-accent border-b">
+        <tr {...move?.folderProps(folder.path)} className="media-folder-target border-border hover:bg-accent border-b">
             <td className="p-3" />
             <td className="p-3">
                 <button

@@ -30,3 +30,13 @@ Media API responses also expose `image_urls` keyed by preset name, alongside `th
 Article rendering resolves images registered on the public media disk in one query, uses the `content` derivative, and exposes the original only to the click-to-open viewer. External images and static assets outside the media library are not fetched or rewritten.
 
 Deploy the media-settings migration before starting workers. Existing preset URLs change on regeneration to avoid stale browser caches. Signed fallback URLs may remain browser-cached for up to an hour.
+
+## Photo details
+
+Original uploads queue `ExtractPhotoMetadata` after the database transaction commits. The job stores dimensions and an allowlisted EXIF summary in `custom_properties.photo_metadata`. Opening an older asset queues extraction if needed; neither uploads nor detail requests parse EXIF inline. Media Manager shows a pending message and polls every three seconds while the job runs, updating only read-only details without changing unsaved form fields. Closing the dialog cancels polling.
+
+Repeated requests do not enqueue duplicate pending work. Jobs retry up to three times, then expose a readable failure state. Reopening details retries failed work or pending work older than 15 minutes. Per-request tokens discard stale results and failures after an image is replaced. Replacing an image queues fresh dimensions and clears stale camera fields; metadata updates preserve the asset's modification time and other custom properties.
+
+Camera extraction uses PHP's EXIF extension for JPEG/TIFF files; dimensions are also available for supported raster images without EXIF. Missing metadata and an unavailable EXIF extension have explicit empty states. Enable the PHP EXIF extension on the worker runtime. Use an asynchronous `QUEUE_CONNECTION` (the default is `database`) and run `php artisan queue:work`; the `sync` connection would still execute jobs inline. Restart long-running workers after deploying this job.
+
+Only camera make/model, lens, exposure, aperture, ISO, focal length, orientation and camera-local capture time are stored. GPS, serial numbers, maker notes and comments are excluded. The summary is currently exposed only in authenticated media responses, not public gallery data. Originals remain byte-for-byte unchanged, so any sensitive metadata embedded in the original is still present in the downloadable file; excluding fields from the summary does not sanitize that file.

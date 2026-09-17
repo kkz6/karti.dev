@@ -33,6 +33,8 @@ return [
         'local' => [
             'driver' => 'local',
             'root'   => storage_path('app/private'),
+            // Keep signed private downloads separate from public media URL history.
+            'url'    => env('APP_URL').'/private-storage',
             'serve'  => true,
             'throw'  => false,
             'report' => false,

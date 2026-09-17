@@ -1,11 +1,12 @@
 import { Button } from '@shared/components/ui/button';
 import { Checkbox } from '@shared/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
-import { Download, Edit, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Download, Edit, FolderInput, MoreHorizontal, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { MediaAsset } from '../../../types/media';
 import { FileIcon } from '../../Icons/FileIcon';
 import { AssetImagePreview } from '../../UI/AssetImagePreview';
+import { useMediaMove } from '../MediaMoveContext';
 
 interface AssetRowProps {
     asset: MediaAsset;
@@ -31,6 +32,7 @@ export const AssetRow: React.FC<AssetRowProps> = ({
     onDoubleClicked,
 }) => {
     const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
+    const move = useMediaMove();
 
     const isSelected = selectedAssets.includes(asset.id);
 
@@ -87,7 +89,13 @@ export const AssetRow: React.FC<AssetRowProps> = ({
     const thumbnailUrl = getThumbnailUrl();
 
     return (
-        <tr data-selected={isSelected} className="border-border hover:bg-accent border-b">
+        <tr
+            data-selected={isSelected}
+            draggable={!!move && !move.moving}
+            onDragStart={(event) => move?.start(event, asset.id)}
+            onDragEnd={() => move?.end()}
+            className="border-border hover:bg-accent border-b"
+        >
             {/* Checkbox */}
             <td className="p-3">
                 <div className="media-selection-control flex size-8 items-center justify-center">
@@ -143,6 +151,12 @@ export const AssetRow: React.FC<AssetRowProps> = ({
                                     <Trash2 />
                                     Delete
                                 </DropdownMenuItem>
+                                {move && (
+                                    <DropdownMenuItem disabled={move.moving} onSelect={() => move.open([asset.id])}>
+                                        <FolderInput />
+                                        Move to folder
+                                    </DropdownMenuItem>
+                                )}
                             </>
                         )}
                         <DropdownMenuItem onClick={handleDownload}>

@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { MediaService } from '../../../services/MediaService';
 import { MediaAsset, MediaFolder } from '../../../types/media';
+import { useMediaMove } from '../MediaMoveContext';
 import { AssetTile } from './AssetTile';
 import { FolderTile } from './FolderTile';
 
@@ -52,6 +53,7 @@ export const GridListing: React.FC<GridListingProps> = ({
     const [deleteFolderSelected, setDeleteFolderSelected] = useState<MediaFolder | null>(null);
     const [deleting, setDeleting] = useState<boolean>(false);
     const mediaService = new MediaService();
+    const move = useMediaMove();
 
     const hasParent = !!folder && folder.parent_path !== null;
     const hasResults = assets.length > 0 || subfolders.length > 0;
@@ -104,7 +106,13 @@ export const GridListing: React.FC<GridListingProps> = ({
     return (
         <div className="asset-grid-listing grid grid-cols-3 gap-3 p-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
             {hasParent && !restrictNavigation && (
-                <Button type="button" variant="ghost" className="text-muted-foreground col-span-full justify-self-start" onClick={handleParentSelect}>
+                <Button
+                    {...move?.folderProps(folder?.parent_path || '/')}
+                    type="button"
+                    variant="ghost"
+                    className="media-folder-target text-muted-foreground col-span-full justify-self-start"
+                    onClick={handleParentSelect}
+                >
                     <CornerLeftUp />
                     Parent folder
                 </Button>

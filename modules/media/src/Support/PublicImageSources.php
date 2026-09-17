@@ -5,6 +5,7 @@ namespace Modules\Media\Support;
 use DOMDocument;
 use Illuminate\Support\Facades\Storage;
 use Modules\Media\Models\Media;
+use Modules\Media\Models\MediaUrlHistory;
 
 class PublicImageSources
 {
@@ -29,10 +30,17 @@ class PublicImageSources
         $media = Media::where('disk', 'public')->whereNull('original_media_id')
             ->whereIn('filename', array_map(fn ($path) => pathinfo($path, PATHINFO_FILENAME), $paths))
             ->with('variants')->get()->keyBy(fn ($image) => $image->getDiskPath());
-        $result = [];
+        $result  = [];
+        $missing = array_filter($paths, fn ($path) => ! isset($media[$path]));
+        $aliases = $missing ? MediaUrlHistory::whereIn('path_hash', array_map(fn ($path) => hash('sha256', $prefix.$path), $missing))->get()->keyBy('path_hash') : collect();
+        $moved   = $aliases->isNotEmpty() ? Media::where('disk', 'public')->whereIn('id', $aliases->pluck('media_id'))->with('variants')->get()->keyBy('id') : collect();
         foreach ($paths as $url => $path) {
             if (isset($media[$path])) {
                 $result[$url] = $media[$path];
+            } elseif ($alias = $aliases->get(hash('sha256', $prefix.$path))) {
+                if (($asset = $moved->get($alias->media_id)) && $asset->fileExists() && $asset->isVisible()) {
+                    $result[$url] = $asset;
+                }
             }
         }
 

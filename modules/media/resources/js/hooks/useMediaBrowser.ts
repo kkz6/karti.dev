@@ -1,7 +1,7 @@
 import axios from 'axios';
-import type { UploaderRef } from '../components/Upload/Uploader';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import type { UploaderRef } from '../components/Upload/Uploader';
 import {
     DisplayMode,
     MediaAsset,
@@ -67,7 +67,7 @@ export const createDefaultServices = (): MediaServices => ({
             updated_at: file.updated_at,
             is_image: file.aggregate_type === 'image',
             path: file.directory,
-            dimensions: undefined, // Backend doesn't provide dimensions yet
+            dimensions: file.dimensions,
         }));
 
         // Create current folder object

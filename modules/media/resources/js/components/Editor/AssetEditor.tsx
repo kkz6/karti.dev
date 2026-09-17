@@ -14,6 +14,7 @@ import { ActionButton, LoadingGraphic } from '../UI';
 import { AssetImagePreview } from '../UI/AssetImagePreview';
 import { FocalPointEditor } from './FocalPointEditor';
 import { ImageEditor } from './ImageEditor';
+import { PhotoDetails } from './PhotoDetails';
 
 interface AssetEditorProps {
     assetId: string | null;
@@ -48,6 +49,42 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
     const [errors, setErrors] = useState<string[]>([]);
 
     const isImage = asset?.is_image || false;
+
+    useEffect(() => {
+        if (!isOpen || !asset?.id || asset.photo_metadata?.status !== 'pending') return;
+
+        const id = asset.id;
+        const controller = new AbortController();
+        let timer: ReturnType<typeof setTimeout>;
+        const refreshMetadata = async () => {
+            try {
+                const response = await axios.get(route('media.show', id), {
+                    params: { metadata_only: true },
+                    signal: controller.signal,
+                });
+                const updated = response.data.data as MediaAsset;
+                if (controller.signal.aborted) return;
+                // Only refresh read-only details, never overwrite unsaved title/caption edits.
+                setAsset((current) =>
+                    current?.id === id
+                        ? {
+                              ...current,
+                              dimensions: updated.dimensions,
+                              photo_metadata: updated.photo_metadata,
+                          }
+                        : current,
+                );
+                if (updated.photo_metadata?.status === 'pending') timer = setTimeout(refreshMetadata, 3000);
+            } catch {
+                if (!controller.signal.aborted) timer = setTimeout(refreshMetadata, 10000);
+            }
+        };
+        timer = setTimeout(refreshMetadata, 3000);
+        return () => {
+            controller.abort();
+            clearTimeout(timer);
+        };
+    }, [isOpen, asset?.id, asset?.photo_metadata?.status]);
 
     useEffect(() => {
         if (isOpen && assetId) {
@@ -182,7 +219,7 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
                 className="flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl md:max-w-4xl lg:max-w-5xl"
             >
                 {/* Sticky Header */}
-                <div className="sticky top-0 z-10 border-b bg-background">
+                <div className="bg-background sticky top-0 z-10 border-b">
                     <div className="flex items-center justify-between px-6 py-4">
                         <div className="flex items-center gap-3">
                             {asset && <FileIcon extension={asset.extension} className="h-6 w-6" />}
@@ -191,7 +228,7 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
                                 {asset && (
                                     <span className="text-muted-foreground text-xs">
                                         {asset.path} · {formatFileSize(asset.size)}
-                                        {isImage && asset.width && asset.height && ` · ${asset.width}×${asset.height}`}
+                                        {isImage && asset.dimensions && ` · ${asset.dimensions.width}×${asset.dimensions.height}`}
                                     </span>
                                 )}
                             </div>
@@ -201,7 +238,9 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
                                 <>
                                     <ActionButton action={handleOpen} icon={ExternalLink} tooltip="Open in new tab" />
                                     <ActionButton action={handleDownload} icon={Download} tooltip="Download" />
-                                    {allowDeleting && <ActionButton action={handleDeleteClick} icon={Trash2} tooltip="Delete" variant="destructive" />}
+                                    {allowDeleting && (
+                                        <ActionButton action={handleDeleteClick} icon={Trash2} tooltip="Delete" variant="destructive" />
+                                    )}
                                 </>
                             )}
                             <ActionButton action={onClose} icon={X} tooltip="Close" />
@@ -243,120 +282,122 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
                     {!loading && !saving && asset && (
                         <div className="space-y-6">
                             {/* Preview */}
-                        <div className="space-y-4">
-                            {isImage && (
-                                <AssetImagePreview
-                                    src={asset.preview || asset.url}
-                                    alt={asset.title || asset.filename}
-                                    fit="contain"
-                                    eager
-                                    className="h-64 rounded-md sm:h-96"
-                                />
-                            )}
+                            <div className="space-y-4">
+                                {isImage && (
+                                    <AssetImagePreview
+                                        src={asset.preview || asset.url}
+                                        alt={asset.title || asset.filename}
+                                        fit="contain"
+                                        eager
+                                        className="h-64 rounded-md sm:h-96"
+                                    />
+                                )}
 
-                            {asset.is_audio && (
-                                <div className="flex justify-center">
-                                    <audio src={asset.url} controls preload="auto" className="w-full max-w-md" />
-                                </div>
-                            )}
-
-                            {asset.is_video && (
-                                <div className="flex justify-center">
-                                    <video src={asset.url} controls className="w-full max-w-2xl rounded-lg" />
-                                </div>
-                            )}
-
-                            {asset.extension === 'pdf' && (
-                                <div className="h-96">
-                                    <object data={asset.url} type="application/pdf" width="100%" height="100%" className="rounded-lg border">
-                                        <p>
-                                            PDF cannot be displayed.{' '}
-                                            <a href={asset.url} target="_blank" rel="noopener noreferrer">
-                                                Download PDF
-                                            </a>
-                                        </p>
-                                    </object>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Edit Form */}
-                        <div className="space-y-4">
-                            <div>
-                                <Label htmlFor="title">Title</Label>
-                                <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Asset title" />
-                            </div>
-
-                            <div>
-                                <Label htmlFor="credit">Credit</Label>
-                                <Input
-                                    id="credit"
-                                    value={credit}
-                                    onChange={(e) => setCredit(e.target.value)}
-                                    placeholder="Photo credit or attribution"
-                                />
-                            </div>
-
-                            <div>
-                                <Label htmlFor="caption">Caption</Label>
-                                <Textarea
-                                    id="caption"
-                                    value={caption}
-                                    onChange={(e) => setCaption(e.target.value)}
-                                    placeholder="Caption or description"
-                                    rows={3}
-                                />
-                            </div>
-
-                            {isImage && (
-                                <>
-                                    <div>
-                                        <Label htmlFor="altText">Alt Text</Label>
-                                        <Textarea
-                                            id="altText"
-                                            value={altText}
-                                            onChange={(e) => setAltText(e.target.value)}
-                                            placeholder="Alternative text for accessibility"
-                                            rows={3}
-                                        />
+                                {asset.is_audio && (
+                                    <div className="flex justify-center">
+                                        <audio src={asset.url} controls preload="auto" className="w-full max-w-md" />
                                     </div>
+                                )}
 
-                                    <div>
-                                        <Label>Focal Point</Label>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                {focus ? `${focus.replace('-', '%, ')}%` : 'Not set (default: 50%, 50%)'}
-                                            </span>
-                                            <Button type="button" variant="outline" size="sm" onClick={() => setShowFocalPointEditor(true)}>
-                                                Edit Focal Point
-                                            </Button>
+                                {asset.is_video && (
+                                    <div className="flex justify-center">
+                                        <video src={asset.url} controls className="w-full max-w-2xl rounded-lg" />
+                                    </div>
+                                )}
+
+                                {asset.extension === 'pdf' && (
+                                    <div className="h-96">
+                                        <object data={asset.url} type="application/pdf" width="100%" height="100%" className="rounded-lg border">
+                                            <p>
+                                                PDF cannot be displayed.{' '}
+                                                <a href={asset.url} target="_blank" rel="noopener noreferrer">
+                                                    Download PDF
+                                                </a>
+                                            </p>
+                                        </object>
+                                    </div>
+                                )}
+                            </div>
+
+                            {isImage && <PhotoDetails asset={asset} />}
+
+                            {/* Edit Form */}
+                            <div className="space-y-4">
+                                <div>
+                                    <Label htmlFor="title">Title</Label>
+                                    <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Asset title" />
+                                </div>
+
+                                <div>
+                                    <Label htmlFor="credit">Credit</Label>
+                                    <Input
+                                        id="credit"
+                                        value={credit}
+                                        onChange={(e) => setCredit(e.target.value)}
+                                        placeholder="Photo credit or attribution"
+                                    />
+                                </div>
+
+                                <div>
+                                    <Label htmlFor="caption">Caption</Label>
+                                    <Textarea
+                                        id="caption"
+                                        value={caption}
+                                        onChange={(e) => setCaption(e.target.value)}
+                                        placeholder="Caption or description"
+                                        rows={3}
+                                    />
+                                </div>
+
+                                {isImage && (
+                                    <>
+                                        <div>
+                                            <Label htmlFor="altText">Alt Text</Label>
+                                            <Textarea
+                                                id="altText"
+                                                value={altText}
+                                                onChange={(e) => setAltText(e.target.value)}
+                                                placeholder="Alternative text for accessibility"
+                                                rows={3}
+                                            />
                                         </div>
-                                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Set the focal point for image cropping</p>
-                                    </div>
 
-                                    <div>
-                                        <Label>Image Editor</Label>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                Edit, crop, rotate and apply filters to your image
-                                            </span>
-                                            <Button type="button" variant="outline" size="sm" onClick={() => setShowImageEditor(true)}>
-                                                Edit Image
-                                            </Button>
+                                        <div>
+                                            <Label>Focal Point</Label>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                                    {focus ? `${focus.replace('-', '%, ')}%` : 'Not set (default: 50%, 50%)'}
+                                                </span>
+                                                <Button type="button" variant="outline" size="sm" onClick={() => setShowFocalPointEditor(true)}>
+                                                    Edit Focal Point
+                                                </Button>
+                                            </div>
+                                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Set the focal point for image cropping</p>
                                         </div>
-                                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                            Advanced image editing with cropping, filters and effects
-                                        </p>
-                                    </div>
-                                </>
-                            )}
+
+                                        <div>
+                                            <Label>Image Editor</Label>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                                    Edit, crop, rotate and apply filters to your image
+                                                </span>
+                                                <Button type="button" variant="outline" size="sm" onClick={() => setShowImageEditor(true)}>
+                                                    Edit Image
+                                                </Button>
+                                            </div>
+                                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                                Advanced image editing with cropping, filters and effects
+                                            </p>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         </div>
-                    </div>
                     )}
                 </div>
 
                 {/* Sticky Footer */}
-                <div className="sticky bottom-0 z-10 border-t bg-background px-6 py-4">
+                <div className="bg-background sticky bottom-0 z-10 border-t px-6 py-4">
                     <div className="flex justify-end gap-2">
                         <Button variant="outline" onClick={onClose}>
                             Cancel

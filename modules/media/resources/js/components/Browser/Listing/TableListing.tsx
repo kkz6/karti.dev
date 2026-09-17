@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { ChevronDown, ChevronUp, CornerLeftUp, Folder } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
+import { useMediaMove } from '../MediaMoveContext';
 import { AssetRow } from './AssetRow';
 import { FolderRow } from './FolderRow';
 
@@ -61,6 +62,7 @@ export const TableListing: React.FC<TableListingProps> = ({
     const [currentSort, setCurrentSort] = useState<string>('title');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const mediaService = new MediaService();
+    const move = useMediaMove();
 
     const columns: Column[] = [
         {
@@ -184,7 +186,10 @@ export const TableListing: React.FC<TableListingProps> = ({
                         </thead>
                         <tbody>
                             {hasParent && !restrictNavigation && (
-                                <tr className="border-border hover:bg-accent cursor-pointer border-b">
+                                <tr
+                                    {...move?.folderProps(folder?.parent_path || '/')}
+                                    className="media-folder-target border-border hover:bg-accent cursor-pointer border-b"
+                                >
                                     <td className="p-3">
                                         <Button
                                             variant="ghost"
