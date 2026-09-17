@@ -143,22 +143,22 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
     }, [controlledSelections, onSelectionsUpdated, clearInternalSelections]);
 
     const moveFiles = async (ids: string[], destination: string) => {
-        if (movingRef.current || !canEdit || !indexPage || !ids.length) return;
+        if (movingRef.current || !canEdit || !indexPage || !ids.length || !container) return;
         movingRef.current = true;
         setMoving(true);
         let completed: string[] = [];
         let succeeded = false;
         try {
-            const { data } = await axios.post(route('media.move'), { media_ids: ids, destination, disk: container?.id || 'public' });
+            const { data } = await axios.post(route('media.move'), { media_ids: ids, destination, disk: container.id });
             completed = data.moved_ids;
             succeeded = true;
             // Follow the files so their checked state remains visible, rather than
             // keeping an invisible selection in the folder they just left.
             setSearchTerm('');
-            navigate(container?.id || 'public', destination);
+            navigate(container.id, destination);
             if (controlledSelections !== undefined) onSelectionsUpdated?.(completed);
             else completed.forEach(selectAsset);
-            onNavigated?.(container?.id || 'public', destination, completed);
+            onNavigated?.(container.id, destination, completed);
             toast.success(
                 `${completed.length} ${completed.length === 1 ? 'file moved' : 'files moved'} to ${destination === '/' ? 'All files' : destination}`,
             );
@@ -750,10 +750,10 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                         Moving files…
                     </p>
                 )}
-                {moveIds && (
+                {moveIds && container && (
                     <AssetMover
                         assets={moveIds}
-                        container={container?.id || 'public'}
+                        container={container.id}
                         folder={path}
                         onMove={(destination) => moveFiles(moveIds, destination)}
                         onClosed={() => setMoveIds(null)}

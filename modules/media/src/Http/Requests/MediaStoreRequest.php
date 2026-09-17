@@ -10,6 +10,14 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class MediaStoreRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        // Non-browser callers can omit the disk and use the same configured default.
+        if (! $this->has('disk')) {
+            $this->merge(['disk' => config('mediable.default_disk')]);
+        }
+    }
+
     public function authorize()
     {
         return true;

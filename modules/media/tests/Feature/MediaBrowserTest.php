@@ -30,6 +30,49 @@ it('opens an empty media library without requiring a blog folder', function () {
     Storage::disk('public')->assertDirectoryEmpty('/');
 });
 
+it('uses the configured media disk across page props folders uploads listing and moves', function (string $disk) {
+    \Illuminate\Support\Facades\Queue::fake();
+    Storage::fake($disk);
+    config([
+        'filesystems.default'    => $disk,
+        'mediable.default_disk'  => $disk,
+        'mediable.allowed_disks' => array_unique(['public', $disk]),
+    ]);
+
+    $this->get('/admin/media-manager')->assertOk()->assertInertia(fn ($page) => $page
+        ->where('mediaLibrary.defaultDisk', $disk)
+        ->has('mediaLibrary', 1));
+
+    foreach (['source', 'destination'] as $folder) {
+        $this->postJson(route('media-manager.create'), ['path' => $folder])
+            ->assertOk()->assertJsonPath('disk', $disk);
+    }
+
+    // Direct uploads without a disk must use the same default as the picker.
+    $upload = $this->postJson('/admin/media', [
+        'path' => 'source', 'file' => UploadedFile::fake()->image('configured.jpg'),
+    ])->assertOk()->assertJsonPath('0.disk', $disk);
+    $id = $upload->json('0.id');
+    Storage::disk($disk)->assertExists('source/configured.jpg');
+
+    // The browser sends the shared disk explicitly; older API clients can omit it.
+    foreach (['', '?disk='.$disk] as $query) {
+        $this->getJson('/admin/media/source'.$query)->assertOk()->assertJsonPath('media.0.id', $id);
+    }
+    $this->postJson(route('media.move'), [
+        'media_ids' => [$id], 'destination' => 'destination', 'disk' => $disk,
+    ])->assertOk()->assertJsonPath('moved_ids', [$id]);
+    Storage::disk($disk)->assertExists('destination/configured.jpg');
+    Storage::disk($disk)->assertMissing('source/configured.jpg');
+    $this->getJson('/admin/media/destination?disk='.$disk)->assertOk()->assertJsonPath('media.0.id', $id);
+
+    if ($disk !== 'public') {
+        $this->getJson('/admin/media?disk=public')->assertOk()
+            ->assertJsonPath('media', [])->assertJsonPath('subdirectories', []);
+        Storage::disk('public')->assertDirectoryEmpty('/');
+    }
+})->with(['public', 's3', 'local']);
+
 it('creates folders on the media disk and immediately lists them even with a stale cache', function () {
     Storage::fake('local');
     config(['filesystems.default' => 'local', 'mediable.default_disk' => 'public']);

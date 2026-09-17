@@ -31,6 +31,7 @@ export interface NavSubItem {
 }
 
 export interface SharedData {
+    mediaLibrary: { defaultDisk: string };
     site: import('./site-settings').SiteSettings;
     name: string;
     quote: { message: string; author: string };

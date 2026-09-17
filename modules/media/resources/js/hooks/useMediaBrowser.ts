@@ -15,6 +15,7 @@ import {
     SortOrder,
 } from '../types/media';
 import { normalizeUploadPath } from '../utils/upload-queue';
+import { useMediaDisk } from './useMediaDisk';
 
 // Service interface for media operations
 interface MediaServices {
@@ -130,7 +131,7 @@ export const createDefaultServices = (): MediaServices => ({
         const response = await axios.post('/admin/media/move', {
             media_ids: params.assets.map((id) => parseInt(id)),
             destination: params.folder,
-            disk: 'public',
+            disk: params.container,
         });
         return response.data;
     },
@@ -169,6 +170,7 @@ export function useMediaBrowser(
     services: MediaServices = defaultServices,
     restrictNavigation = false,
 ) {
+    const disk = useMediaDisk(initialContainer);
     // State
     const [containers, setContainers] = useState<Record<string, MediaContainer>>({});
     const [container, setContainer] = useState<MediaContainer | null>(null);
@@ -222,21 +224,20 @@ export function useMediaBrowser(
         [path],
     );
 
-    // Initialize containers (no API call needed, using default container)
+    // The server supplies the environment-backed default for both the manager and pickers.
     const initializeContainers = useCallback(() => {
-        // Create a default public container
         const defaultContainer: MediaContainer = {
-            id: 'public',
-            title: 'Public',
-            uuid: 'public-uuid',
-            item_id: 'public',
+            id: disk,
+            title: disk,
+            uuid: `${disk}-uuid`,
+            item_id: disk,
         };
 
-        const containersData = { public: defaultContainer };
+        const containersData = { [disk]: defaultContainer };
         setContainers(containersData);
         setContainer(defaultContainer);
         setLoadingContainers(false);
-    }, []);
+    }, [disk]);
 
     // Load assets
     const loadAssets = useCallback(async () => {

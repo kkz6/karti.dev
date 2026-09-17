@@ -40,14 +40,17 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
-            'name' => config('app.name'),
-            'site' => config('site.public'),
-            'settingsSaved' => fn () => $request->session()->get('settings_saved', false),
+            'name'         => config('app.name'),
+            'site'         => config('site.public'),
+            'mediaLibrary' => [
+                'defaultDisk' => config('mediable.default_disk'),
+            ],
+            'settingsSaved'  => fn () => $request->session()->get('settings_saved', false),
             'newsletterForm' => fn () => [
                 'started_at' => \Illuminate\Support\Facades\Crypt::encryptString((string) now()->timestamp),
             ],
             'newsletterStatus' => fn () => $request->session()->get('newsletter_status'),
-            'auth' => [
+            'auth'             => [
                 'user' => $request->user(),
             ],
             'route' => [

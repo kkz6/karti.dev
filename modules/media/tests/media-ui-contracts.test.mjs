@@ -4,6 +4,27 @@ import test from 'node:test';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
+test('media browser upload and move actions share the server-configured disk without public fallbacks', () => {
+    const disk = read('../resources/js/hooks/useMediaDisk.ts');
+    const hook = read('../resources/js/hooks/useMediaBrowser.ts');
+    const uploader = read('../resources/js/components/Upload/Uploader.tsx');
+    const browser = read('../resources/js/components/Browser/AssetBrowser.tsx');
+    const editorUpload = read('../../shared/resources/js/lib/media-image-upload.ts');
+    assert.match(disk, /container \|\| mediaLibrary.defaultDisk/);
+    assert.match(hook, /useMediaDisk\(initialContainer\)/);
+    assert.match(hook, /id: disk/);
+    assert.match(hook, /\{ \[disk\]: defaultContainer \}/);
+    assert.match(hook, /disk: params.container/);
+    assert.match(uploader, /useMediaDisk\(container\)/);
+    assert.match(uploader, /formData.append\('disk', disk\)/);
+    assert.match(uploader, /\[disk, path, updateUploads\]/);
+    assert.match(browser, /disk: container.id/);
+    assert.match(editorUpload, /route\('media.create'\)/);
+    for (const source of [hook, uploader, browser, editorUpload]) {
+        assert.doesNotMatch(source, /['"]public['"]/);
+    }
+});
+
 test('gallery fields use direct imports without cycling through their own re-export indexes', () => {
     const field = read('../resources/js/components/Field/SimpleAssetsField.tsx');
     const gallery = read('../../photography/resources/js/pages/createOrEdit.tsx');
@@ -59,7 +80,7 @@ test('media moves support both accessible dialogs and internal drag targets with
     assert.match(browser, /dataTransfer.types.includes\(MEDIA_DRAG_TYPE\)/);
     assert.match(browser, /dataTransfer.types.includes\('Files'\)/);
     assert.match(browser, /Move to folder/);
-    assert.match(browser, /onNavigated\?\.\(container\?\.id \|\| 'public', destination, completed\)/);
+    assert.match(browser, /onNavigated\?\.\(container.id, destination, completed\)/);
     assert.match(browser, /onSelectionsUpdated\?\.\(completed\)/);
     assert.match(mover, /route\('media.folders'\)/);
     assert.match(mover, /<DialogTitle>/);

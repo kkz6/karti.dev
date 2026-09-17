@@ -1,5 +1,6 @@
 import axios from 'axios';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useMediaDisk } from '../../hooks/useMediaDisk';
 import { MediaAsset, MediaUpload } from '../../types/media';
 import { confirmedUpload, createUploadQueue, normalizeUploadPath } from '../../utils/upload-queue';
 
@@ -63,6 +64,7 @@ function uploadErrorMessage(error: unknown, file: File): string {
 
 export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
     ({ container = null, path = null, onUploadComplete, onError, onUpdated }, ref) => {
+        const disk = useMediaDisk(container);
         const fileInputRef = useRef<HTMLInputElement>(null);
         const [uploads, setUploads] = useState<MediaUpload[]>([]);
         const uploadsRef = useRef<MediaUpload[]>([]);
@@ -130,7 +132,7 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
 
                     const formData = new FormData();
                     formData.append('file', file);
-                    formData.append('disk', container || 'public');
+                    formData.append('disk', disk);
                     formData.append('path', destination);
 
                     try {
@@ -186,7 +188,7 @@ export const Uploader = React.forwardRef<UploaderRef, UploaderProps>(
                     }
                 });
             },
-            [container, path, updateUploads],
+            [disk, path, updateUploads],
         );
 
         const selectFile = useCallback(
