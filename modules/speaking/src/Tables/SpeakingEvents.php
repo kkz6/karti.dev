@@ -2,6 +2,7 @@
 
 namespace Modules\Speaking\Tables;
 
+use Modules\Shared\Tables\RestoreAction;
 use Modules\Speaking\Models\SpeakingEvent;
 use Modules\Table\Action;
 use Modules\Table\Columns;
@@ -16,9 +17,9 @@ class SpeakingEvents extends Table
     public function columns(): array
     {
         return [
-            Columns\TextColumn::make('id', 'ID', stickable: true)->url(fn (SpeakingEvent $event) => route('admin.speaking.edit', $event)),
+            Columns\TextColumn::make('id', 'ID', stickable: true)->url(fn (SpeakingEvent $event) => $event->trashed() ? null : route('admin.speaking.edit', $event)),
             Columns\TextColumn::make('title', 'Title', toggleable: false)
-                ->url(fn (SpeakingEvent $event) => route('admin.speaking.edit', $event))
+                ->url(fn (SpeakingEvent $event) => $event->trashed() ? null : route('admin.speaking.edit', $event))
                 ->searchable()
                 ->sortable(),
             Columns\TextColumn::make('event_name', 'Event', toggleable: false)
@@ -30,6 +31,7 @@ class SpeakingEvents extends Table
             Columns\BooleanColumn::make('featured', 'Featured')
                 ->sortable(),
             Columns\DateColumn::make('created_at', 'Created At', toggleable: false),
+            Columns\DateColumn::make('deleted_at', 'Deleted at')->sortable(),
             Columns\ActionColumn::new(),
         ];
     }
@@ -37,6 +39,7 @@ class SpeakingEvents extends Table
     public function filters(): array
     {
         return [
+            Filters\TrashedFilter::make('deleted_at', 'Trash'),
             Filters\TextFilter::make('title', 'Title'),
             Filters\TextFilter::make('event_name', 'Event Name'),
             Filters\BooleanFilter::make('featured', 'Featured'),
@@ -49,12 +52,14 @@ class SpeakingEvents extends Table
         return [
             Action::make(
                 label: 'Edit',
+                disabledAndHidden: fn (?SpeakingEvent $event) => $event?->trashed() ?? false,
                 url: fn (SpeakingEvent $event) => route('admin.speaking.edit', $event),
                 icon: 'pencil',
                 variant: Variant::Secondary,
             ),
             Action::make(
                 label: 'Delete',
+                disabledAndHidden: fn (?SpeakingEvent $event) => $event?->trashed() ?? false,
                 handle: function (SpeakingEvent $event) {
                     $event->delete();
 
@@ -65,6 +70,7 @@ class SpeakingEvents extends Table
             )
                 ->confirm('Are you sure you want to delete this speaking event?')
                 ->asBulkAction(),
+            RestoreAction::make(),
         ];
     }
 

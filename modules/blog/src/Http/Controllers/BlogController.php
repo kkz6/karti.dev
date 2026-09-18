@@ -34,11 +34,11 @@ class BlogController extends BaseController
         $tags       = Tag::all(['id', 'name', 'slug']);
 
         return Inertia::render('blog::index', [
-            'articles'   => Articles::make(),
+            'articles'     => Articles::make(),
             'localTraffic' => app(\Modules\Analytics\Services\ContentTraffic::class)->forPage('/articles', 'Articles page'),
-            'categories' => $categories,
-            'tags'       => $tags,
-            'filters'    => $request->only(['search', 'category', 'status']),
+            'categories'   => $categories,
+            'tags'         => $tags,
+            'filters'      => $request->only(['search', 'category', 'status']),
         ]);
     }
 
@@ -111,9 +111,9 @@ class BlogController extends BaseController
 
         return Inertia::render('blog::edit', [
             'localTraffic' => app(\Modules\Analytics\Services\ContentTraffic::class)->forContent('article', $article),
-            'article'    => $article,
-            'categories' => $categories,
-            'tags'       => $tags,
+            'article'      => $article,
+            'categories'   => $categories,
+            'tags'         => $tags,
         ]);
     }
 
@@ -168,10 +168,9 @@ class BlogController extends BaseController
     /**
      * Remove the specified article from storage.
      */
-    public function destroy(Article $article): RedirectResponse
+    public function destroy(string $article): RedirectResponse
     {
-        $article->tags()->detach();
-        $article->comments()->delete();
+        $article = $this->articleService->findOrFail($article);
         $this->articleService->delete($article->id);
 
         return redirect()

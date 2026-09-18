@@ -3,6 +3,7 @@
 namespace Modules\Blog\Tables;
 
 use Modules\Blog\Models\Article;
+use Modules\Shared\Tables\RestoreAction;
 use Modules\Table\Action;
 use Modules\Table\Columns;
 use Modules\Table\Enums\Variant;
@@ -22,11 +23,11 @@ class Articles extends Table
     {
         return [
             Columns\TextColumn::make('id', 'ID', stickable: true)
-                ->url(fn (Article $article) => route('admin.blog.edit', ['blog' => $article->id])),
+                ->url(fn (Article $article) => $article->trashed() ? null : route('admin.blog.edit', ['blog' => $article->id])),
             Columns\TextColumn::make('title', 'Title', toggleable: false)
-                ->url(fn (Article $article) => route('admin.blog.edit', ['blog' => $article->id]))->searchable(),
+                ->url(fn (Article $article) => $article->trashed() ? null : route('admin.blog.edit', ['blog' => $article->id]))->searchable(),
             Columns\TextColumn::make('slug', 'Slug', toggleable: false)
-                ->url(fn (Article $article) => route('admin.blog.edit', ['blog' => $article->id]))->sortable(),
+                ->url(fn (Article $article) => $article->trashed() ? null : route('admin.blog.edit', ['blog' => $article->id]))->sortable(),
             Columns\BadgeColumn::make('status', 'Status', toggleable: false)
                 ->variant([
                     'published' => Variant::Success,
@@ -35,8 +36,9 @@ class Articles extends Table
                 ]),
             Columns\DateColumn::make('created_at', 'Created At', toggleable: false),
             Columns\NumericColumn::make('local_views', 'Views (30d)')->sortable()
-                ->url(fn (Article $article) => route('admin.seo.content', ['type' => 'article', 'id' => $article->id])),
+                ->url(fn (Article $article) => $article->trashed() ? null : route('admin.seo.content', ['type' => 'article', 'id' => $article->id])),
             Columns\DateColumn::make('updated_at', 'Updated At', toggleable: false),
+            Columns\DateColumn::make('deleted_at', 'Deleted at')->sortable(),
             Columns\ActionColumn::new(),
         ];
     }
@@ -55,12 +57,14 @@ class Articles extends Table
         return [
             Action::make(
                 label: 'Delete',
+                disabledAndHidden: fn (?Article $article) => $article?->trashed() ?? false,
                 handle: fn (Article $article) => $article->delete(),
                 icon: 'trash-2',
                 variant: Variant::Destructive,
             )
                 ->confirm()
                 ->asBulkAction(),
+            RestoreAction::make(),
         ];
     }
 

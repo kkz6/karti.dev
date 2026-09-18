@@ -3,6 +3,7 @@
 namespace Modules\Photography\Tables;
 
 use Modules\Photography\Models\Photo;
+use Modules\Shared\Tables\RestoreAction;
 use Modules\Table\Action;
 use Modules\Table\Columns;
 use Modules\Table\Enums\Variant;
@@ -22,9 +23,9 @@ class Photos extends Table
     {
         return [
             Columns\TextColumn::make('id', 'ID', stickable: true)
-                ->url(fn (Photo $photo) => route('admin.photography.edit', $photo->id)),
+                ->url(fn (Photo $photo) => $photo->trashed() ? null : route('admin.photography.edit', $photo->id)),
             Columns\TextColumn::make('title', 'Title', toggleable: false)
-                ->url(fn (Photo $photo) => route('admin.photography.edit', $photo->id))
+                ->url(fn (Photo $photo) => $photo->trashed() ? null : route('admin.photography.edit', $photo->id))
                 ->searchable(),
             Columns\TextColumn::make('slug', 'Slug')->searchable(),
             Columns\BooleanColumn::make('featured', 'Featured'),
@@ -32,7 +33,8 @@ class Photos extends Table
             Columns\DateColumn::make('published_at', 'Published'),
             Columns\DateColumn::make('created_at', 'Created'),
             Columns\NumericColumn::make('local_views', 'Views (30d)')->sortable()
-                ->url(fn (Photo $photo) => route('admin.seo.content', ['type' => 'gallery', 'id' => $photo->id])),
+                ->url(fn (Photo $photo) => $photo->trashed() ? null : route('admin.seo.content', ['type' => 'gallery', 'id' => $photo->id])),
+            Columns\DateColumn::make('deleted_at', 'Deleted at')->sortable(),
             Columns\ActionColumn::new(),
         ];
     }
@@ -54,17 +56,20 @@ class Photos extends Table
         return [
             Action::make(
                 label: 'Edit',
+                disabledAndHidden: fn (?Photo $photo) => $photo?->trashed() ?? false,
                 url: fn (Photo $photo) => route('admin.photography.edit', $photo->id),
                 icon: 'pencil',
             ),
             Action::make(
                 label: 'Delete',
+                disabledAndHidden: fn (?Photo $photo) => $photo?->trashed() ?? false,
                 handle: fn (Photo $photo) => $photo->delete(),
                 icon: 'trash-2',
                 variant: Variant::Destructive,
             )
                 ->confirm()
                 ->asBulkAction(),
+            RestoreAction::make(),
         ];
     }
 

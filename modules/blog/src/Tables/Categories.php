@@ -4,6 +4,7 @@ namespace Modules\Blog\Tables;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Modules\Blog\Models\Category;
+use Modules\Shared\Tables\RestoreAction;
 use Modules\Table\Action;
 use Modules\Table\Columns;
 use Modules\Table\Enums\Variant;
@@ -23,11 +24,11 @@ class Categories extends Table
     {
         return [
             Columns\TextColumn::make('id', 'ID', stickable: true)
-                ->url(fn (Category $category) => route('admin.categories.edit', $category)),
+                ->url(fn (Category $category) => $category->trashed() ? null : route('admin.categories.edit', $category)),
             Columns\TextColumn::make('name', 'Name', toggleable: false)
                 ->searchable()
                 ->sortable()
-                ->url(fn (Category $category) => route('admin.categories.edit', $category)),
+                ->url(fn (Category $category) => $category->trashed() ? null : route('admin.categories.edit', $category)),
             Columns\TextColumn::make('slug', 'Slug', toggleable: false)->sortable(),
             Columns\TextColumn::make('articles_count', 'Articles Count')
                 ->sortable(),
@@ -35,6 +36,7 @@ class Categories extends Table
                 ->sortable(),
             Columns\DateColumn::make('created_at', 'Created At', toggleable: false),
             Columns\DateColumn::make('updated_at', 'Updated At', toggleable: false),
+            Columns\DateColumn::make('deleted_at', 'Deleted at')->sortable(),
             Columns\ActionColumn::new(),
         ];
     }
@@ -42,6 +44,7 @@ class Categories extends Table
     public function filters(): array
     {
         return [
+            Filters\TrashedFilter::make('deleted_at', 'Trash'),
             Filters\TextFilter::make('name', 'Name'),
             Filters\BooleanFilter::make('is_active', 'Active'),
             Filters\DateFilter::make('created_at'),
@@ -53,12 +56,14 @@ class Categories extends Table
         return [
             Action::make(
                 label: 'Edit',
+                disabledAndHidden: fn (?Category $category) => $category?->trashed() ?? false,
                 url: fn (Category $category) => route('admin.categories.edit', $category),
                 icon: 'pencil',
                 variant: Variant::Secondary,
             ),
             Action::make(
                 label: 'Delete',
+                disabledAndHidden: fn (?Category $category) => $category?->trashed() ?? false,
                 handle: function (Category $category) {
                     if ($category->articles()->exists()) {
                         return back()->with('error', 'Cannot delete category with existing articles.');
@@ -72,6 +77,7 @@ class Categories extends Table
             )
                 ->confirm('Are you sure you want to delete this category?')
                 ->asBulkAction(),
+            RestoreAction::make(),
         ];
     }
 

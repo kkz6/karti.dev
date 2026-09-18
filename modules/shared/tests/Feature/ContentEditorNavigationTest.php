@@ -25,7 +25,8 @@ test('content table IDs and titles open the editor directly', function (string $
             ->toBe(route("admin.{$module}.edit", $record));
     }
 
-    expect($listing->actions())->toHaveCount(2);
+    expect(collect($listing->actions())->reject(fn ($action) => $action->isHidden($record)))->toHaveCount(2);
+    expect(collect($listing->actions())->firstWhere('label', 'Restore'))->not->toBeNull();
 })->with([
     [Project::class, Projects::class, 'projects'],
     [SpeakingEvent::class, SpeakingEvents::class, 'speaking'],

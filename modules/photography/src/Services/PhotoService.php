@@ -111,11 +111,7 @@ class PhotoService extends BaseService implements PhotoServiceInterface
 
     public function deletePhoto(Photo $photo): bool
     {
-        return DB::transaction(function () use ($photo) {
-            $photo->categories()->detach();
-
-            return $this->repository->delete($photo->id);
-        });
+        return $this->repository->delete($photo->id);
     }
 
     public function updateSortOrder(array $photoIds): bool
