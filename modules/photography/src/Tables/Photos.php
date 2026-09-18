@@ -71,6 +71,21 @@ class Photos extends Table
                 ->confirm()
                 ->asBulkAction(),
             RestoreAction::make(),
+            Action::make(
+                label: 'Delete permanently',
+                handle: fn (Photo $photo) => $photo->forceDelete(),
+                icon: 'trash-2',
+                variant: Variant::Destructive,
+                authorize: fn () => auth()->check(),
+                disabledAndHidden: fn (?Photo $photo) => $photo !== null && ! $photo->trashed(),
+            )
+                ->withTrashed()
+                ->confirm(
+                    'Permanently delete selected galleries?',
+                    'This cannot be undone. The selected trashed galleries and their details will be removed. Images in the media library will be kept.',
+                    'Delete permanently',
+                )
+                ->asBulkAction(),
         ];
     }
 

@@ -15,6 +15,14 @@ class Photo extends Model
 {
     use HasSeo, Mediable, SoftDeletes;
 
+    protected static function booted(): void
+    {
+        static::forceDeleting(function (Photo $photo): void {
+            $photo->categories()->detach();
+            $photo->seo()->delete();
+        });
+    }
+
     protected $fillable = [
         'title',
         'slug',
