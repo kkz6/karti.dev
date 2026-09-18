@@ -14,14 +14,14 @@ test('trash clauses survive URL serialization without a value', () => {
     assert.deepEqual(filterQuery({ clause: 'is_false', value: null }), { clause: 'is_false', value: null });
 });
 
-test('both table renderers expose trash and preserve controls for empty results', () => {
+test('both table renderers use the normal filters menu without view tabs, including empty results', () => {
     for (const file of ['Table.tsx', 'TableComponent.tsx']) {
         const source = readFileSync(new URL('../../table/resources/js/' + file, import.meta.url), 'utf8');
-        assert.match(source, /aria-label="Show active or trashed items"/);
-        assert.match(source, /!trashFilter && resource.emptyState/);
-        assert.match(source, /setFilter\(trashFilter, clause, null\)/);
-        assert.match(source, /Trash is empty/);
+        assert.match(source, /!resource.hasFilters && resource.emptyState/);
+        assert.match(source, /filters=\{resource.filters\} onAdd=\{addFilter\}/);
+        assert.doesNotMatch(source, /FilterLinks|filterLinks|trashFilter|Show active or trashed items/);
+        assert.match(source, /resource.filters.filter\(\(filter\) => state.filters\[filter.attribute\]\?\.enabled\)/);
     }
     const wrapper = readFileSync(new URL('../../table/resources/js/components/Table/inertia-table-wrapper.tsx', import.meta.url), 'utf8');
-    assert.match(wrapper, /!resource.filters.some\(\(filter\) => filter.type === 'trashed'\)/);
+    assert.match(wrapper, /!resource.hasFilters/);
 });

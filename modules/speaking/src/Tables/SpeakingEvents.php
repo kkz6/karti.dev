@@ -39,6 +39,7 @@ class SpeakingEvents extends Table
     public function filters(): array
     {
         return [
+            Filters\SetFilter::make('status', 'Status')->options(['published' => 'Published', 'draft' => 'Draft', 'archived' => 'Archived']),
             Filters\TrashedFilter::make('deleted_at', 'Trash'),
             Filters\TextFilter::make('title', 'Title'),
             Filters\TextFilter::make('event_name', 'Event Name'),

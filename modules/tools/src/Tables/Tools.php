@@ -43,6 +43,7 @@ class Tools extends Table
     public function filters(): array
     {
         return [
+            Filters\SetFilter::make('status', 'Status')->options(['active' => 'Active', 'inactive' => 'Inactive']),
             Filters\TrashedFilter::make('deleted_at', 'Trash'),
             Filters\TextFilter::make('title', 'Title'),
             Filters\BooleanFilter::make('featured', 'Featured'),

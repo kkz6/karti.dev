@@ -46,9 +46,10 @@ class Articles extends Table
     public function filters(): array
     {
         return [
+            Filters\SetFilter::make('status', 'Status')->options(['published' => 'Published', 'draft' => 'Draft', 'archived' => 'Archived']),
             Filters\TextFilter::make('id', 'ID'),
             Filters\DateFilter::make('created_at'),
-            Filters\TrashedFilter::make('deleted_at', 'Trashed'),
+            Filters\TrashedFilter::make('deleted_at', 'Trash'),
         ];
     }
 
