@@ -118,11 +118,11 @@ export const AssetTile: React.FC<AssetTileProps> = ({
                             {canEdit && (
                                 <>
                                     <DropdownMenuItem onClick={handleEdit}>
-                                        <Edit className="mr-2 h-4 w-4" />
+                                        <Edit className="size-4" aria-hidden="true" />
                                         Edit
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        <Trash2 className="size-4" aria-hidden="true" />
                                         Delete
                                     </DropdownMenuItem>
                                     {move && (
@@ -134,7 +134,7 @@ export const AssetTile: React.FC<AssetTileProps> = ({
                                 </>
                             )}
                             <DropdownMenuItem onClick={handleDownload}>
-                                <Download className="mr-2 h-4 w-4" />
+                                <Download className="size-4" aria-hidden="true" />
                                 Download
                             </DropdownMenuItem>
                         </DropdownMenuContent>

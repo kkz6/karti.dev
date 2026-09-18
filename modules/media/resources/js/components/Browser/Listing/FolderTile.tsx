@@ -54,11 +54,11 @@ export const FolderTile: React.FC<FolderTileProps> = ({ folder, canEdit, onSelec
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={handleEdit}>
-                                    <Edit className="mr-2 h-4 w-4" />
+                                    <Edit className="size-4" aria-hidden="true" />
                                     Rename
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    <Trash2 className="size-4" aria-hidden="true" />
                                     Delete
                                 </DropdownMenuItem>
                             </DropdownMenuContent>

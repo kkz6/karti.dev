@@ -160,7 +160,7 @@ export const AssetRow: React.FC<AssetRowProps> = ({
                             </>
                         )}
                         <DropdownMenuItem onClick={handleDownload}>
-                            <Download className="mr-2 h-4 w-4" />
+                            <Download className="size-4" aria-hidden="true" />
                             Download
                         </DropdownMenuItem>
                     </DropdownMenuContent>

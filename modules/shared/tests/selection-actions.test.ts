@@ -77,7 +77,7 @@ test('both table renderers expose one shared selection bar and retain exports wi
 });
 
 test('selection bar slides in from below only when motion is allowed', () => {
-    const source = readFileSync(new URL('../../table/resources/js/SelectionActionBar.tsx', import.meta.url), 'utf8');
+    const source = readFileSync(new URL('../resources/js/components/ui/floating-selection-bar.tsx', import.meta.url), 'utf8');
     for (const token of [
         'motion-safe:animate-in',
         'motion-safe:fade-in-0',
@@ -87,5 +87,5 @@ test('selection bar slides in from below only when motion is allowed', () => {
     ]) {
         assert.ok(source.includes(token));
     }
-    assert.match(source, /if \(!selectedItems.length\) return null/);
+    assert.match(source, /if \(!count\) return null/);
 });

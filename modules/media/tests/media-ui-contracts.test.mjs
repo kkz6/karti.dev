@@ -4,6 +4,13 @@ import test from 'node:test';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
+test('media action menus rely on the shared gap without extra icon margins', () => {
+    for (const name of ['AssetRow', 'AssetTile', 'FolderRow', 'FolderTile']) {
+        const source = read(`../resources/js/components/Browser/Listing/${name}.tsx`);
+        assert.doesNotMatch(source, /<(?:Download|Edit|Trash2|FolderInput)[^>]*className="[^"]*\b(?:mr|ml|me|ms)-/);
+    }
+});
+
 test('media browser upload and move actions share the server-configured disk without public fallbacks', () => {
     const disk = read('../resources/js/hooks/useMediaDisk.ts');
     const hook = read('../resources/js/hooks/useMediaBrowser.ts');

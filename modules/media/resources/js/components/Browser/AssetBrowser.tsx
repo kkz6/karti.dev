@@ -1,20 +1,21 @@
 import { IndexHeader } from '@shared/components/index-header';
 import { Button } from '@shared/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
+import { FloatingSelectionBar } from '@shared/components/ui/floating-selection-bar';
 import { Input } from '@shared/components/ui/input';
 import axios from 'axios';
 import {
+    Download,
+    Edit,
     FolderInput,
     FolderOpen,
     FolderPlus,
     Grid,
     List,
-    ListX,
-    MoreHorizontal,
     Search,
     Square,
     SquareCheck,
     SquareMinus,
+    Trash2,
     UploadCloud,
 } from 'lucide-react';
 import React, { useCallback, useRef, useState } from 'react';
@@ -116,11 +117,14 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
     const [editedFolderPath, setEditedFolderPath] = useState<string | null>(null);
     const [moveIds, setMoveIds] = useState<string[] | null>(null);
     const [moving, setMoving] = useState(false);
+    const [preparingDeletion, setPreparingDeletion] = useState(false);
+    const [downloading, setDownloading] = useState(false);
     const movingRef = useRef(false);
     const draggedIds = useRef<string[]>([]);
     const [dropTarget, setDropTarget] = useState<string | null>(null);
 
     const browserSelectedAssets = controlledSelections ?? internalSelections;
+    const selectionBusy = moving || preparingDeletion || downloading || loadingAssets;
     const canSelectMultiple = indexPage || maxFiles !== 1;
     const visibleIds = assets.map((asset) => asset.id);
     const allSelected = visibleSelectionState(browserSelectedAssets, visibleIds);
@@ -312,12 +316,15 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
 
     const handleAssetDownloading = useCallback(
         async (assetId: string) => {
+            setDownloading(true);
             try {
                 await downloadAsset(assetId);
                 toast.success('Download started');
             } catch (error) {
                 console.error('Download error:', error);
                 toast.error('Failed to download file');
+            } finally {
+                setDownloading(false);
             }
         },
         [downloadAsset],
@@ -348,13 +355,29 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
         [onAssetDoubleClicked],
     );
 
-    const handleDeleteAssets = useCallback(() => {
-        const assetsToDelete = assets.filter((asset) => browserSelectedAssets.includes(asset.id));
-        if (assetsToDelete.length > 0) {
+    const handleDeleteAssets = useCallback(async () => {
+        if (!canEdit || selectionBusy || !browserSelectedAssets.length) return;
+        const selectedIds = [...browserSelectedAssets];
+        setPreparingDeletion(true);
+        try {
+            let assetsToDelete = assets.filter((asset) => selectedIds.includes(asset.id));
+            // Selection can span pages. Resolve every selected file before checking usage.
+            if (assetsToDelete.length !== selectedIds.length) {
+                const { data } = await axios.get<{ data: MediaAsset[] }>(route('media.show'), { params: { ids: selectedIds.join(',') } });
+                assetsToDelete = data.data.filter((asset) => selectedIds.includes(asset.id));
+            }
+            if (assetsToDelete.length !== selectedIds.length) {
+                toast.error('Some selected files are no longer available. Clear the selection and choose the files again.');
+                return;
+            }
             setAssetsToBeDeleted(assetsToDelete);
             setShowAssetDeleter(true);
+        } catch {
+            toast.error('Could not load the selected files. Please try again.');
+        } finally {
+            setPreparingDeletion(false);
         }
-    }, [assets, browserSelectedAssets]);
+    }, [assets, browserSelectedAssets, canEdit, selectionBusy]);
 
     const handleAssetsDeleted = useCallback(
         (deletedAssetIds: string[]) => {
@@ -532,40 +555,15 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                                 <Breadcrumbs path={path} folder={folder} folders={folders} onNavigated={handleFolderSelected} />
                             </div>
                         )}
-                        {indexPage && browserSelectedAssets.length > 0 && (
-                            <div className="mt-3 flex items-center gap-2 text-sm">
-                                <span className="text-muted-foreground tabular-nums" role="status">
-                                    {browserSelectedAssets.length} selected
-                                </span>
-                                <Button variant="ghost" onClick={clearSelections}>
-                                    <ListX aria-hidden="true" />
-                                    Clear
-                                </Button>
-                                {canEdit && (
-                                    <Button variant="outline" disabled={moving} onClick={() => setMoveIds([...browserSelectedAssets])}>
-                                        <FolderInput />
-                                        Move to folder
-                                    </Button>
-                                )}
-                                {canEdit && (
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon" aria-label="Selection actions">
-                                                <MoreHorizontal />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="start">
-                                            <DropdownMenuItem className="text-destructive" onSelect={handleDeleteAssets}>
-                                                Delete selected files
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                )}
-                            </div>
-                        )}
                     </div>
 
-                    <div className={indexPage ? 'media-library-panel flex min-h-0 flex-1 flex-col' : 'contents'}>
+                    <div
+                        className={
+                            indexPage
+                                ? `media-library-panel flex min-h-0 flex-1 flex-col ${browserSelectedAssets.length > 0 ? 'pb-24' : ''}`
+                                : 'contents'
+                        }
+                    >
                         {indexPage && !restrictNavigation && (
                             <div className="media-location mb-3 shrink-0">
                                 <Breadcrumbs path={path} folder={folder} folders={folders} onNavigated={handleFolderSelected} />
@@ -699,6 +697,45 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                             <p className="text-muted-foreground text-sm">Release to add them to this folder.</p>
                         </div>
                     </div>
+                )}
+
+                {indexPage && browserSelectedAssets.length > 0 && (
+                    <FloatingSelectionBar
+                        count={browserSelectedAssets.length}
+                        label="Selected media actions"
+                        busy={selectionBusy}
+                        busyLabel={
+                            moving ? 'Moving files…' : preparingDeletion ? 'Preparing selection…' : downloading ? 'Downloading…' : 'Loading files…'
+                        }
+                        onClear={clearSelections}
+                    >
+                        {browserSelectedAssets.length === 1 && (
+                            <>
+                                {canEdit && (
+                                    <Button variant="outline" disabled={selectionBusy} onClick={() => handleAssetEditing(browserSelectedAssets[0])}>
+                                        <Edit aria-hidden="true" />
+                                        Edit details
+                                    </Button>
+                                )}
+                                <Button variant="outline" disabled={selectionBusy} onClick={() => handleAssetDownloading(browserSelectedAssets[0])}>
+                                    <Download aria-hidden="true" />
+                                    Download
+                                </Button>
+                            </>
+                        )}
+                        {canEdit && (
+                            <>
+                                <Button variant="outline" disabled={selectionBusy} onClick={() => setMoveIds([...browserSelectedAssets])}>
+                                    <FolderInput aria-hidden="true" />
+                                    Move to folder
+                                </Button>
+                                <Button variant="destructiveGhost" disabled={selectionBusy} onClick={handleDeleteAssets}>
+                                    <Trash2 aria-hidden="true" />
+                                    Delete
+                                </Button>
+                            </>
+                        )}
+                    </FloatingSelectionBar>
                 )}
 
                 {/* Asset Deleter */}
