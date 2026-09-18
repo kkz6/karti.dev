@@ -79,3 +79,46 @@ test('the signed permanent delete endpoint requires authentication', function ()
     $this->actingAs(User::factory()->create())->post($url, ['keys' => [$gallery->id]])->assertRedirect();
     expect(Photo::withTrashed()->find($gallery->id))->toBeNull();
 });
+
+test('shared table routes retain session csrf and signature middleware', function () {
+    app(Illuminate\Contracts\Http\Kernel::class);
+    $router = app('router');
+
+    foreach (['action', 'export', 'async-export', 'view.store', 'view.destroy'] as $name) {
+        $route      = $router->getRoutes()->getByName('inertia-tables.'.$name);
+        $middleware = $router->gatherRouteMiddleware($route);
+
+        expect($middleware)->toContain(
+            Illuminate\Cookie\Middleware\EncryptCookies::class,
+            Illuminate\Session\Middleware\StartSession::class,
+            Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+        );
+        expect(collect($middleware)->contains(fn ($class) => str_starts_with(
+            $class, Illuminate\Routing\Middleware\ValidateSignature::class
+        )))->toBeTrue();
+    }
+});
+
+test('permanent deletion authenticates the browser session on the shared table endpoint', function () {
+    $user    = User::factory()->create();
+    $gallery = Photo::create(['title' => 'Session gallery', 'slug' => 'session-gallery']);
+    $gallery->delete();
+    $table = permanentPhotoTable();
+    $index = collect($table->actions())->search(fn ($action) => $action->label === 'Delete permanently');
+    $url   = $table->getActionById($index)->getActionUrl();
+
+    // Do not use actingAs: it bypasses the browser's session authentication path.
+    $this->withSession([auth('web')->getName() => $user->getAuthIdentifier()]);
+    $session = app('session')->driver();
+    $session->save();
+    $this->withCookie($session->getName(), $session->getId());
+    $session->flush();
+    app('auth')->forgetGuards();
+
+    $this->withCredentials()->from('/admin/photography')->postJson($url, [
+        'keys' => [$gallery->id],
+        'json' => true,
+    ])->assertOk()->assertJsonPath('targetUrl', url('/admin/photography'));
+
+    expect(Photo::withTrashed()->find($gallery->id))->toBeNull();
+});
