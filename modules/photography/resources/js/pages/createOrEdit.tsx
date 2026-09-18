@@ -13,10 +13,11 @@ import { Label } from '@shared/components/ui/label';
 import { Switch } from '@shared/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { editorSaveOptions } from '@shared/hooks/use-editor-save';
+import { useAdminTab } from '@shared/hooks/use-admin-tab';
 import { useSlug } from '@shared/hooks/use-slug';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
-import { FormEventHandler, useState } from 'react';
+import { FormEventHandler } from 'react';
 import { type PhotoGalleryCreateEditPageProps, type PhotoGalleryFormData } from '../types';
 
 export default function Create({ categories, photo }: PhotoGalleryCreateEditPageProps) {
@@ -33,7 +34,7 @@ export default function Create({ categories, photo }: PhotoGalleryCreateEditPage
               { title: 'Create Gallery', href: route('admin.photography.create') },
           ];
 
-    const [activeTab, setActiveTab] = useState('main');
+    const [activeTab, setActiveTab] = useAdminTab(['main', 'content', 'seo'], 'main');
     const { handleTitleChange: handleSlugTitleChange } = useSlug({ autoGenerate: !isEdit });
 
     const { data, setData, post, put, processing, errors } = useForm<PhotoGalleryFormData>({

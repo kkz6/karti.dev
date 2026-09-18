@@ -15,11 +15,11 @@ import { Input } from '@shared/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Textarea } from '@shared/components/ui/textarea';
 import { useEditorSave } from '@shared/hooks/use-editor-save';
+import { useAdminTab } from '@shared/hooks/use-admin-tab';
 import { useSlug } from '@shared/hooks/use-slug';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
 import type { BaseSyntheticEvent } from 'react';
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 export default function ArticleForm({ article, categories, tags = [] }: ArticleFormProps) {
@@ -34,7 +34,7 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
         },
     ];
 
-    const [activeTab, setActiveTab] = useState('main');
+    const [activeTab, setActiveTab] = useAdminTab(['main', 'content', 'seo'], 'main');
     const { generateSlug } = useSlug();
 
     const form = useForm<ArticleFormData>({

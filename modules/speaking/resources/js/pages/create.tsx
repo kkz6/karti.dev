@@ -15,7 +15,7 @@ import { useEditorSave } from '@shared/hooks/use-editor-save';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
 import type { BaseSyntheticEvent } from 'react';
-import { useState } from 'react';
+import { useAdminTab } from '@shared/hooks/use-admin-tab';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -49,7 +49,7 @@ export default function Create() {
         { title: 'Create Event', href: route('admin.speaking.create') },
     ];
 
-    const [activeTab, setActiveTab] = useState('main');
+    const [activeTab, setActiveTab] = useAdminTab(['main', 'seo'], 'main');
 
     const form = useForm<SpeakingEventFormData>({
         resolver: zodResolver(speakingEventSchema),

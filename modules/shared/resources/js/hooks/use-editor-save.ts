@@ -1,14 +1,18 @@
 import { router } from '@inertiajs/react';
+import type { Page } from '@inertiajs/core';
+import { adminTabUrl } from '@shared/lib/admin-tab';
 import { useState, type BaseSyntheticEvent } from 'react';
 import type { FieldValues, Path, UseFormReturn } from 'react-hook-form';
 
 export function editorSaveOptions(event: Pick<BaseSyntheticEvent, 'nativeEvent'> | undefined, backHref: string) {
     const submitter = (event?.nativeEvent as SubmitEvent | undefined)?.submitter;
     const close = submitter instanceof HTMLButtonElement && submitter.value === 'save-and-close';
+    const tab = new URL(window.location.href).searchParams.get('tab');
     return {
         preserveScroll: true,
-        onSuccess: () => {
+        onSuccess: (page: Page) => {
             if (close) router.visit(backHref);
+            else if (tab) router.replace({ url: adminTabUrl(page.url, tab), preserveState: true, preserveScroll: true });
         },
     };
 }

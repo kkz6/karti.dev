@@ -17,6 +17,7 @@ import { type BreadcrumbItem } from '@shared/types';
 import { X } from 'lucide-react';
 import type { BaseSyntheticEvent } from 'react';
 import { useState } from 'react';
+import { useAdminTab } from '@shared/hooks/use-admin-tab';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -53,7 +54,7 @@ export default function Create() {
         { title: 'Create Project', href: route('admin.projects.create') },
     ];
 
-    const [activeTab, setActiveTab] = useState('main');
+    const [activeTab, setActiveTab] = useAdminTab(['main', 'details', 'seo'], 'main');
     const [techInput, setTechInput] = useState('');
 
     const form = useForm<ProjectFormData>({

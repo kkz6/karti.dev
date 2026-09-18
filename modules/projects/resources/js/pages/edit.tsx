@@ -17,6 +17,7 @@ import { type BreadcrumbItem } from '@shared/types';
 import { X } from 'lucide-react';
 import type { BaseSyntheticEvent } from 'react';
 import { useState } from 'react';
+import { useAdminTab } from '@shared/hooks/use-admin-tab';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -73,7 +74,7 @@ export default function Edit({ project }: { project: Project }) {
         { title: 'Edit', href: route('admin.projects.edit', project.slug) },
     ];
 
-    const [activeTab, setActiveTab] = useState('main');
+    const [activeTab, setActiveTab] = useAdminTab(['main', 'details', 'seo'], 'main');
     const [techInput, setTechInput] = useState('');
 
     const form = useForm<ProjectFormData>({

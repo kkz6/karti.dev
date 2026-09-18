@@ -8,6 +8,7 @@ import { Label } from '@shared/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Textarea } from '@shared/components/ui/textarea';
 import { editorSaveOptions } from '@shared/hooks/use-editor-save';
+import { useAdminTab } from '@shared/hooks/use-admin-tab';
 import { useSlug } from '@shared/hooks/use-slug';
 import AppLayout from '@shared/layouts/app-layout';
 import type { FormEvent } from 'react';
@@ -21,6 +22,7 @@ export interface TaxonomyEntry {
 }
 
 export default function TaxonomyForm({ kind, entry }: { kind: 'category' | 'tag'; entry?: TaxonomyEntry }) {
+    const [activeTab, setActiveTab] = useAdminTab(['main', 'seo'], 'main');
     const label = kind === 'category' ? 'Category' : 'Tag';
     const resource = kind === 'category' ? 'categories' : 'tags';
     const backHref = route(`admin.${resource}.index`);
@@ -67,7 +69,7 @@ export default function TaxonomyForm({ kind, entry }: { kind: 'category' | 'tag'
                     onDelete={entry ? remove : undefined}
                 />
                 <EditorErrorSummary errors={errors} />
-                <Tabs defaultValue="main" className="content-editor-tabs">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="content-editor-tabs">
                     <TabsList>
                         <TabsTrigger value="main">Main</TabsTrigger>
                         <TabsTrigger value="seo">SEO</TabsTrigger>

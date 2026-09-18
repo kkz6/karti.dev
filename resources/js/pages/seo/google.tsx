@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@shared/components/ui/tooltip';
 import AppLayout from '@shared/layouts/app-layout';
+import { useAdminTab } from '@shared/hooks/use-admin-tab';
 import { cn } from '@shared/lib/utils';
 import { type BreadcrumbItem } from '@shared/types';
 import { GoogleReportSkeleton } from './components/google-report-skeleton';
@@ -334,6 +335,7 @@ function CountriesList({ countries }: { countries: TopCountry[] }) {
 }
 
 function GoogleReport({ analytics, onRetry, isUpdating }: { analytics: AnalyticsData; onRetry: () => void; isUpdating: boolean }) {
+    const [activeTab, setActiveTab] = useAdminTab(['pages', 'referrers'], 'pages');
     const [chartMetric, setChartMetric] = React.useState<'visitors' | 'pageViews'>('visitors');
     const reportTabClassName =
         'text-muted-foreground hover:text-foreground h-11 gap-2 rounded-none border-b-2 border-transparent px-2 py-0 text-sm transition-colors data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none focus-visible:ring-inset';
@@ -416,7 +418,7 @@ function GoogleReport({ analytics, onRetry, isUpdating }: { analytics: Analytics
             <div className="grid gap-4 lg:grid-cols-2">
                 {/* Pages & Referrers */}
                 <Card>
-                    <Tabs defaultValue="pages" className="w-full">
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                         <CardHeader className="border-b pt-1 pb-0">
                             <TabsList aria-label="Traffic breakdown" className="h-auto w-full justify-start gap-4 rounded-none bg-transparent p-0">
                                 <TabsTrigger value="pages" className={reportTabClassName}>
@@ -476,12 +478,13 @@ function GoogleReport({ analytics, onRetry, isUpdating }: { analytics: Analytics
 }
 
 export default function GoogleAnalyticsPage(props: { analytics?: AnalyticsData; period: TimeRange }) {
+    const [activeTab] = useAdminTab(['pages', 'referrers'], 'pages');
     const [isUpdating, setIsUpdating] = React.useState(false);
     const loadReport = (period: TimeRange = props.period) => {
         setIsUpdating(true);
         router.get(
             '/admin/seo/google',
-            { period },
+            { period, tab: activeTab },
             {
                 only: ['analytics', 'period'],
                 preserveState: true,
