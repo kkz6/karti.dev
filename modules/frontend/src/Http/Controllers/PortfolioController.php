@@ -374,9 +374,8 @@ class PortfolioController extends BaseController
         ];
 
         return Inertia::render('frontend::consulting', [
-            'seo'          => $this->getSeoArray($seoData),
-            'jsonLd'       => $jsonLd,
-            'contactEmail' => SiteSetting::where('key', 'contact_email')->value('value') ?: 'karthick@gigcodes.com',
+            'seo'    => $this->getSeoArray($seoData),
+            'jsonLd' => $jsonLd,
         ]);
     }
 

@@ -13,7 +13,7 @@ export default function MediaIndex() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Media Manager" />
-            <PageContainer width="full" padding="compact" className="content-index media-index flex min-h-0 flex-1 flex-col overflow-hidden">
+            <PageContainer padding="compact" className="content-index media-index flex min-h-0 flex-1 flex-col overflow-hidden">
                 <div className="min-h-0 flex-1">
                     <AssetManager />
                 </div>

@@ -11,6 +11,7 @@ import {
     FolderPlus,
     Grid,
     List,
+    LoaderCircle,
     Search,
     Square,
     SquareCheck,
@@ -570,6 +571,25 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                         >
                             <Uploads uploads={uploads} onClearUpload={clearUpload} onClearAll={clearUploads} />
 
+                            {loadingAssets && (
+                                <div
+                                    role="status"
+                                    aria-live="polite"
+                                    aria-label="Loading media library"
+                                    className="bg-card/90 motion-safe:animate-in motion-safe:fade-in-0 absolute inset-0 z-20 flex min-h-48 items-center justify-center backdrop-blur-[1px] motion-safe:duration-200"
+                                >
+                                    <div className="flex flex-col items-center gap-3 px-6 py-8 text-center">
+                                        <span className="border-primary/20 flex size-10 items-center justify-center rounded-full border">
+                                            <LoaderCircle className="text-primary size-5 motion-safe:animate-spin" aria-hidden="true" />
+                                        </span>
+                                        <div>
+                                            <p className="text-sm font-medium">Loading files</p>
+                                            <p className="text-muted-foreground mt-1 text-xs">Updating this folder…</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Asset Listing */}
                             {displayMode === 'grid' ? (
                                 <GridListing
@@ -644,10 +664,8 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                             <div
                                 className={`media-library-footer text-muted-foreground flex shrink-0 flex-wrap items-center justify-between gap-2 text-xs ${indexPage ? 'mt-4' : 'border-t px-5 py-2'}`}
                             >
-                                <span role="status">
-                                    {loadingAssets
-                                        ? 'Loading files…'
-                                        : `${folders.length} ${folders.length === 1 ? 'folder' : 'folders'} · ${assets.length} ${assets.length === 1 ? 'file' : 'files'} shown`}
+                                <span className={loadingAssets ? 'invisible' : undefined}>
+                                    {`${folders.length} ${folders.length === 1 ? 'folder' : 'folders'} · ${assets.length} ${assets.length === 1 ? 'file' : 'files'} shown`}
                                 </span>
                                 {pagination && pagination.meta.last_page > 1 ? (
                                     <div className="flex items-center gap-2">

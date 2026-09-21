@@ -58,6 +58,7 @@ type DashboardOverview = {
         media: number;
     };
     bookings: { pending: number; confirmed: number };
+    contacts: { new: number; open: number };
     recentContent: Array<{
         id: string;
         type: string;
@@ -325,13 +326,25 @@ export default function Dashboard({ overview }: { overview: DashboardOverview })
                                 <dt className="text-muted-foreground">Pending consultations</dt>
                                 <dd className="font-semibold tabular-nums">{overview.bookings.pending}</dd>
                             </div>
+                            <div className="flex items-center justify-between pt-3">
+                                <dt className="text-muted-foreground">Open contact messages</dt>
+                                <dd className="font-semibold tabular-nums">{overview.contacts.open}</dd>
+                            </div>
                         </dl>
-                        <Link
-                            href={route('admin.newsletter.index')}
-                            className="text-primary hover:text-primary/80 focus-visible:ring-ring mt-6 inline-flex items-center gap-1 rounded-sm text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
-                        >
-                            Manage subscribers <ArrowRight className="size-4" aria-hidden="true" />
-                        </Link>
+                        <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2">
+                            <Link
+                                href={route('admin.contact.index')}
+                                className="text-primary hover:text-primary/80 focus-visible:ring-ring inline-flex items-center gap-1 rounded-sm text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+                            >
+                                Contact inbox <ArrowRight className="size-4" aria-hidden="true" />
+                            </Link>
+                            <Link
+                                href={route('admin.newsletter.index')}
+                                className="text-primary hover:text-primary/80 focus-visible:ring-ring inline-flex items-center gap-1 rounded-sm text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+                            >
+                                Subscribers <ArrowRight className="size-4" aria-hidden="true" />
+                            </Link>
+                        </div>
                     </aside>
                 </div>
 

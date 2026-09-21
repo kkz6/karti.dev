@@ -115,6 +115,18 @@ test('upload feedback is integrated with the browser instead of nested in a card
     assert.doesNotMatch(row, /bg-destructive\/10|bg-primary\/10/);
 });
 
+test('library loading feedback stays inside the media panel and does not move the footer', () => {
+    const browser = read('../resources/js/components/Browser/AssetBrowser.tsx');
+    assert.match(browser, /aria-label="Loading media library"/);
+    assert.match(browser, /bg-card\/90/);
+    assert.match(browser, /absolute inset-0 z-20/);
+    assert.match(browser, /motion-safe:animate-in/);
+    assert.match(browser, /motion-safe:fade-in-0/);
+    assert.match(browser, /motion-safe:animate-spin/);
+    assert.match(browser, /<span className=\{loadingAssets \? 'invisible' : undefined\}>/);
+    assert.doesNotMatch(browser, /loadingAssets\s*\?\s*'Loading files…'/);
+});
+
 test('folder editor uses a clear label and example without duplicated helper copy', () => {
     const editor = read('../resources/js/components/Browser/Navigation/FolderEditor.tsx');
     assert.match(editor, /<Label htmlFor="basename">Folder name<\/Label>/);

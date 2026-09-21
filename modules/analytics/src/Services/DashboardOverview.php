@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use Modules\Analytics\Models\PageView;
 use Modules\Blog\Models\Article;
 use Modules\Frontend\Models\ConsultationBooking;
+use Modules\Frontend\Models\ContactSubmission;
 use Modules\Frontend\Models\NewsletterSubscriber;
 use Modules\Media\Models\Media;
 use Modules\Photography\Models\Photo;
@@ -74,6 +75,10 @@ class DashboardOverview
             'bookings' => [
                 'pending'   => ConsultationBooking::query()->pending()->count(),
                 'confirmed' => ConsultationBooking::query()->confirmed()->count(),
+            ],
+            'contacts' => [
+                'new'  => ContactSubmission::query()->where('status', ContactSubmission::STATUS_NEW)->count(),
+                'open' => ContactSubmission::query()->open()->count(),
             ],
             'recentContent' => $this->recentContent(),
         ];
