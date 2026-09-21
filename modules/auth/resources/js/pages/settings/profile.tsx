@@ -1,17 +1,18 @@
-import { type BreadcrumbItem, type SharedData } from '@shared/types';
 import { Transition } from '@headlessui/react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { type BreadcrumbItem, type SharedData } from '@shared/types';
 import { FormEventHandler } from 'react';
 
+import { PasskeyForm } from '@auth/components/passkey-form';
+import { TwoFactorForm } from '@auth/components/two-factor-form';
 import HeadingSmall from '@shared/components/heading-small';
 import InputError from '@shared/components/input-error';
 import { Button } from '@shared/components/ui/button';
 import { Input } from '@shared/components/ui/input';
 import { Label } from '@shared/components/ui/label';
+import { UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
 import AppLayout from '@shared/layouts/app-layout';
 import SettingsLayout from '@shared/layouts/settings/layout';
-import { PasskeyForm } from '@auth/components/passkey-form';
-import { TwoFactorForm } from '@auth/components/two-factor-form';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -28,7 +29,7 @@ type ProfileForm = {
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
     const { auth } = usePage<SharedData>().props;
 
-    const { data, setData, patch, errors, processing, recentlySuccessful } = useForm<Required<ProfileForm>>({
+    const { data, setData, setDefaults, patch, errors, processing, recentlySuccessful, isDirty } = useForm<Required<ProfileForm>>({
         name: auth.user.name,
         email: auth.user.email,
     });
@@ -38,12 +39,14 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
         patch(route('profile.update'), {
             preserveScroll: true,
+            onSuccess: () => setDefaults(),
         });
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Profile settings" />
+            <UnsavedChangesGuard dirty={isDirty} />
 
             <SettingsLayout>
                 <div className="space-y-6">
@@ -85,7 +88,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
                         {mustVerifyEmail && auth.user.email_verified_at === null && (
                             <div>
-                                <p className="-mt-4 text-sm text-muted-foreground">
+                                <p className="text-muted-foreground -mt-4 text-sm">
                                     Your email address is unverified.{' '}
                                     <Link
                                         href={route('verification.send')}
@@ -106,7 +109,9 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                         )}
 
                         <div className="flex items-center gap-4">
-                            <Button type="submit" disabled={processing}>Save</Button>
+                            <Button type="submit" disabled={processing}>
+                                Save
+                            </Button>
 
                             <Transition
                                 show={recentlySuccessful}
@@ -124,7 +129,6 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                 <TwoFactorForm />
 
                 <PasskeyForm />
-
             </SettingsLayout>
         </AppLayout>
     );

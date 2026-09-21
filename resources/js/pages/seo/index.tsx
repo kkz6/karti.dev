@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { IndexHeader } from '@shared/components/index-header';
+import { PageContainer } from '@shared/components/page-container';
 import { Button } from '@shared/components/ui/button';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@shared/components/ui/chart';
 import { Label } from '@shared/components/ui/label';
@@ -124,7 +125,7 @@ export default function SeoOverview({ traffic, days, scope }: { traffic: Traffic
             ]}
         >
             <Head title={scope ? `Analytics · ${scopeTitle}` : 'SEO · Local traffic'} />
-            <div className="content-index mx-auto max-w-7xl space-y-8">
+            <PageContainer className="content-index space-y-8">
                 <div className="space-y-2">
                     <IndexHeader
                         title="Local traffic"
@@ -288,7 +289,7 @@ export default function SeoOverview({ traffic, days, scope }: { traffic: Traffic
                         Records are retained for 90 days.
                     </p>
                 </details>
-            </div>
+            </PageContainer>
         </AppLayout>
     );
 }

@@ -4,6 +4,7 @@ import { SEOFields } from '@seo/components/SeoFields';
 import { seoSchema } from '@seo/types/seo-schema';
 import { ContentEditorHeader, EditorErrorSummary, EditorPublishedControl } from '@shared/components/content-editor';
 import { DateField } from '@shared/components/date-field';
+import { PageContainer } from '@shared/components/page-container';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { Checkbox } from '@shared/components/ui/checkbox';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@shared/components/ui/form';
@@ -11,11 +12,12 @@ import { Input } from '@shared/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Textarea } from '@shared/components/ui/textarea';
+import { UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
+import { useAdminTab } from '@shared/hooks/use-admin-tab';
 import { useEditorSave } from '@shared/hooks/use-editor-save';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
 import type { BaseSyntheticEvent } from 'react';
-import { useAdminTab } from '@shared/hooks/use-admin-tab';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -72,11 +74,11 @@ export default function Create() {
     });
 
     const handleTitleChange = (title: string) => {
-        form.setValue('title', title);
+        form.setValue('title', title, { shouldDirty: true });
         // Auto-generate slug from title
         const currentSlug = form.getValues('slug');
         if (!currentSlug || currentSlug === generateSlug(form.watch('title'))) {
-            form.setValue('slug', generateSlug(title));
+            form.setValue('slug', generateSlug(title), { shouldDirty: true });
         }
     };
 
@@ -97,7 +99,7 @@ export default function Create() {
 
     // Update CTA text based on event type
     const handleEventTypeChange = (value: string) => {
-        form.setValue('event_type', value as SpeakingEventFormData['event_type']);
+        form.setValue('event_type', value as SpeakingEventFormData['event_type'], { shouldDirty: true });
 
         // Set default CTA text based on event type
         const defaultCTAs: Record<string, string> = {
@@ -107,13 +109,14 @@ export default function Create() {
             webinar: 'Watch recording',
         };
 
-        form.setValue('cta_text', defaultCTAs[value] || 'Learn more');
+        form.setValue('cta_text', defaultCTAs[value] || 'Learn more', { shouldDirty: true });
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create Speaking Event" />
-            <div className="content-editor">
+            <UnsavedChangesGuard dirty={form.formState.isDirty} />
+            <PageContainer className="content-editor">
                 <div className="w-full">
                     <ContentEditorHeader
                         title={form.watch('title') || 'New speaking event'}
@@ -326,7 +329,7 @@ export default function Create() {
                                                 }}
                                                 setData={(key, value) => {
                                                     if ((key === 'meta_title' || key === 'meta_description') && typeof value === 'string')
-                                                        form.setValue(key, value);
+                                                        form.setValue(key, value, { shouldDirty: true });
                                                 }}
                                                 errors={form.formState.errors}
                                                 fallbackTitle={form.watch('title')}
@@ -387,7 +390,7 @@ export default function Create() {
                         </form>
                     </Form>
                 </div>
-            </div>
+            </PageContainer>
         </AppLayout>
     );
 }

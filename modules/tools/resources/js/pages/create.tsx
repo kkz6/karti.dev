@@ -2,11 +2,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Head } from '@inertiajs/react';
 import { CategoryPicker } from '@shared/components/category-picker';
 import { ContentEditorHeader, EditorErrorSummary, EditorPublishedControl } from '@shared/components/content-editor';
+import { PageContainer } from '@shared/components/page-container';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { Checkbox } from '@shared/components/ui/checkbox';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@shared/components/ui/form';
 import { Input } from '@shared/components/ui/input';
 import { Textarea } from '@shared/components/ui/textarea';
+import { UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
 import { useEditorSave } from '@shared/hooks/use-editor-save';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
@@ -53,7 +55,7 @@ export default function Create({ categories }: { categories: ToolCategory[] }) {
     });
 
     const handleTitleChange = (title: string) => {
-        form.setValue('title', title);
+        form.setValue('title', title, { shouldDirty: true });
     };
 
     const { saving, save } = useEditorSave(form, route('admin.tools.index'));
@@ -65,7 +67,8 @@ export default function Create({ categories }: { categories: ToolCategory[] }) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create Tool" />
-            <div className="content-editor">
+            <UnsavedChangesGuard dirty={form.formState.isDirty} />
+            <PageContainer className="content-editor">
                 <div className="w-full">
                     <ContentEditorHeader
                         title={form.watch('title') || 'New tool'}
@@ -193,7 +196,7 @@ export default function Create({ categories }: { categories: ToolCategory[] }) {
                         </form>
                     </Form>
                 </div>
-            </div>
+            </PageContainer>
         </AppLayout>
     );
 }

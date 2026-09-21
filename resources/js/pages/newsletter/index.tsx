@@ -1,21 +1,16 @@
 import { Head } from '@inertiajs/react';
 import { IndexHeader } from '@shared/components/index-header';
+import { PageContainer } from '@shared/components/page-container';
 import AppLayout from '@shared/layouts/app-layout';
 import type { TableConfig } from '@table/components';
 import { InertiaTableWrapper } from '@table/components/Table/inertia-table-wrapper';
 import { Mail } from 'lucide-react';
 
-export default function Subscribers({
-    table,
-    counts,
-}: {
-    table: TableConfig;
-    counts: { active: number; pending: number; unsubscribed: number };
-}) {
+export default function Subscribers({ table, counts }: { table: TableConfig; counts: { active: number; pending: number; unsubscribed: number } }) {
     return (
         <AppLayout breadcrumbs={[{ title: 'Newsletter', href: route('admin.newsletter.index') }]}>
             <Head title="Newsletter subscribers" />
-            <div className="content-index space-y-6">
+            <PageContainer className="content-index space-y-6">
                 <IndexHeader title="Newsletter" icon={Mail} />
                 <p className="text-muted-foreground text-sm">
                     Only confirmed, active addresses are eligible for newsletters. Pending addresses have not opted in. Campaign sending is not
@@ -37,7 +32,7 @@ export default function Subscribers({
                         icons: [Mail],
                     }}
                 />
-            </div>
+            </PageContainer>
         </AppLayout>
     );
 }

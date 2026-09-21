@@ -6,14 +6,10 @@
 
 .content-index {
     width: 100%;
-    padding: 1.5rem 1.5rem 3rem;
 }
 .content-editor {
     --editor-panel-padding: 1.5rem;
     width: 100%;
-    max-width: 1440px;
-    margin-inline: auto;
-    padding: 2rem 1.5rem 3rem;
 }
 
 .content-editor-grid {
@@ -101,12 +97,6 @@
 }
 
 @media (min-width: 1024px) {
-    .content-index {
-        padding: 1.5rem 3rem 4rem;
-    }
-    .content-editor {
-        padding: 2.5rem 3rem 4rem;
-    }
     .content-editor-grid {
         grid-template-columns: minmax(0, 1fr) 18rem;
     }
@@ -117,12 +107,8 @@
     }
 }
 @media (max-width: 639px) {
-    .content-index {
-        padding: 1rem 1rem 2rem;
-    }
     .content-editor {
         --editor-panel-padding: 1rem;
-        padding: 1.25rem 1rem 2rem;
     }
     .content-editor-panel {
         padding: 1rem;

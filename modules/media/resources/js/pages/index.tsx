@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import { PageContainer } from '@shared/components/page-container';
 import AppLayout from '@shared/layouts/app-layout';
 import { Toaster } from 'sonner';
 import { AssetManager } from '../components/Browser/AssetManager';
@@ -12,11 +13,11 @@ export default function MediaIndex() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Media Manager" />
-            <div className="content-index media-index flex min-h-0 flex-1 flex-col overflow-hidden">
+            <PageContainer width="full" padding="compact" className="content-index media-index flex min-h-0 flex-1 flex-col overflow-hidden">
                 <div className="min-h-0 flex-1">
                     <AssetManager />
                 </div>
-            </div>
+            </PageContainer>
             <Toaster />
         </AppLayout>
     );

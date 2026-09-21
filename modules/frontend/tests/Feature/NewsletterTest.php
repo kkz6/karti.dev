@@ -145,7 +145,7 @@ test('duplicate subscriptions do not duplicate records or resend immediately', f
 
 test('confirmation emails contain signed links using the configured mailer', function () {
     $subscriber = NewsletterSubscriber::create(['email' => 'reader@example.org', 'confirmation_key' => Str::random(64)]);
-    (new SendNewsletterConfirmation($subscriber->id, $subscriber->confirmation_key))->handle();
+    (new SendNewsletterConfirmation($subscriber->id, $subscriber->confirmation_key))->handle(app(\Modules\Settings\Support\EmailConfiguration::class));
     Mail::assertSent(ConfirmNewsletterSubscription::class, fn ($mail) => $mail->hasTo('reader@example.org'));
     expect($subscriber->fresh()->confirmation_sent_at)->not->toBeNull();
     expect((new ConfirmNewsletterSubscription($subscriber))->render())->toContain('Confirm subscription', 'signature=');
@@ -197,9 +197,10 @@ test('re-subscribing needs fresh confirmation and invalidates old links', functi
 });
 
 test('stale queued confirmation jobs do not send mail', function () {
-    $subscriber = NewsletterSubscriber::create(['email' => 'reader@example.org', 'confirmation_key' => Str::random(64), 'unsubscribed_at' => now()]);
-    (new SendNewsletterConfirmation($subscriber->id, $subscriber->confirmation_key))->handle();
-    (new SendNewsletterConfirmation($subscriber->id, 'old-key'))->handle();
+    $subscriber    = NewsletterSubscriber::create(['email' => 'reader@example.org', 'confirmation_key' => Str::random(64), 'unsubscribed_at' => now()]);
+    $configuration = app(\Modules\Settings\Support\EmailConfiguration::class);
+    (new SendNewsletterConfirmation($subscriber->id, $subscriber->confirmation_key))->handle($configuration);
+    (new SendNewsletterConfirmation($subscriber->id, 'old-key'))->handle($configuration);
     Mail::assertNothingSent();
 });
 

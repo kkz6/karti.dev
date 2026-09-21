@@ -10,6 +10,11 @@ interface ArticleProps {
         date: string;
         content: string;
         author?: string;
+        image?: {
+            src: string;
+            fullSrc: string;
+            alt: string;
+        } | null;
     };
     seo?: SeoData;
     jsonLd?: Record<string, unknown>;

@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             \Modules\Settings\Http\Middleware\ApplySiteSettings::class,
+            \Modules\Settings\Http\Middleware\ApplyEmailSettings::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,

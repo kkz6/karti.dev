@@ -2,14 +2,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, router } from '@inertiajs/react';
 import { CategoryPicker } from '@shared/components/category-picker';
 import { ContentEditorHeader, EditorErrorSummary, EditorPublishedControl, EditorViewLink } from '@shared/components/content-editor';
+import { LocalTrafficCard } from '@shared/components/local-traffic-card';
+import { PageContainer } from '@shared/components/page-container';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { Checkbox } from '@shared/components/ui/checkbox';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@shared/components/ui/form';
 import { Input } from '@shared/components/ui/input';
 import { Textarea } from '@shared/components/ui/textarea';
+import { UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
 import { useEditorSave } from '@shared/hooks/use-editor-save';
 import AppLayout from '@shared/layouts/app-layout';
-import { LocalTrafficCard } from '@shared/components/local-traffic-card';
 import { type BreadcrumbItem } from '@shared/types';
 import type { BaseSyntheticEvent } from 'react';
 import { useForm } from 'react-hook-form';
@@ -84,7 +86,8 @@ export default function Edit({ tool, categories }: { tool: Tool; categories: Too
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Edit Tool: ${tool.title}`} />
-            <div className="content-editor">
+            <UnsavedChangesGuard dirty={form.formState.isDirty} />
+            <PageContainer className="content-editor">
                 <div className="w-full">
                     <ContentEditorHeader
                         title={form.watch('title') || 'New tool'}
@@ -211,7 +214,7 @@ export default function Edit({ tool, categories }: { tool: Tool; categories: Too
                         </form>
                     </Form>
                 </div>
-            </div>
+            </PageContainer>
         </AppLayout>
     );
 }

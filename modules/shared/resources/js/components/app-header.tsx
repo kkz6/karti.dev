@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { Breadcrumbs } from '@shared/components/breadcrumbs';
 import { Icon } from '@shared/components/icon';
+import { PageContainer } from '@shared/components/page-container';
 import { Avatar, AvatarFallback, AvatarImage } from '@shared/components/ui/avatar';
 import { Button } from '@shared/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
@@ -29,7 +30,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
     return (
         <>
             <div className="border-sidebar-border/80 border-b">
-                <div className="mx-auto flex h-16 items-center px-4 md:max-w-7xl">
+                <PageContainer padding="header" className="flex h-16 items-center">
                     {/* Mobile Menu */}
                     <div className="lg:hidden">
                         <Sheet>
@@ -148,13 +149,13 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
-                </div>
+                </PageContainer>
             </div>
             {breadcrumbs.length > 1 && (
                 <div className="border-sidebar-border/70 flex w-full border-b">
-                    <div className="mx-auto flex h-12 w-full items-center justify-start px-4 text-neutral-500 md:max-w-7xl">
+                    <PageContainer padding="header" className="flex h-12 items-center justify-start text-neutral-500">
                         <Breadcrumbs breadcrumbs={breadcrumbs} />
-                    </div>
+                    </PageContainer>
                 </div>
             )}
         </>

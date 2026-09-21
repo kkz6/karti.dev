@@ -3,17 +3,19 @@ import { SimpleAssetsField } from '@media/components/Field/SimpleAssetsField';
 import { SEOFields } from '@seo/components/SeoFields';
 import { seoSchema } from '@seo/types/seo-schema';
 import { CategoryPicker } from '@shared/components/category-picker';
-import { LocalTrafficCard } from '@shared/components/local-traffic-card';
 import { ContentEditorHeader, EditorErrorSummary, EditorPublishedControl, EditorViewLink } from '@shared/components/content-editor';
 import { EditorDateField } from '@shared/components/editor-date-field';
+import { LocalTrafficCard } from '@shared/components/local-traffic-card';
+import { PageContainer } from '@shared/components/page-container';
 import { FormSimpleEditor } from '@shared/components/tiptap/form-simple-editor';
 import { Card, CardContent } from '@shared/components/ui/card';
 import { Input } from '@shared/components/ui/input';
 import { Label } from '@shared/components/ui/label';
 import { Switch } from '@shared/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
-import { editorSaveOptions } from '@shared/hooks/use-editor-save';
+import { UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
 import { useAdminTab } from '@shared/hooks/use-admin-tab';
+import { editorSaveOptions } from '@shared/hooks/use-editor-save';
 import { useSlug } from '@shared/hooks/use-slug';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
@@ -37,7 +39,7 @@ export default function Create({ categories, photo }: PhotoGalleryCreateEditPage
     const [activeTab, setActiveTab] = useAdminTab(['main', 'content', 'seo'], 'main');
     const { handleTitleChange: handleSlugTitleChange } = useSlug({ autoGenerate: !isEdit });
 
-    const { data, setData, post, put, processing, errors } = useForm<PhotoGalleryFormData>({
+    const { data, setData, setDefaults, post, put, processing, errors, isDirty } = useForm<PhotoGalleryFormData>({
         title: photo?.title || '',
         slug: photo?.slug || '',
         description: photo?.description || '',
@@ -57,9 +59,15 @@ export default function Create({ categories, photo }: PhotoGalleryCreateEditPage
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         if (isEdit) {
-            put(route('admin.photography.update', { photography: photo!.slug }), editorSaveOptions(e, route('admin.photography.index')));
+            put(
+                route('admin.photography.update', { photography: photo!.slug }),
+                editorSaveOptions(e, route('admin.photography.index'), () => setDefaults()),
+            );
         } else {
-            post(route('admin.photography.store'), editorSaveOptions(e, route('admin.photography.index')));
+            post(
+                route('admin.photography.store'),
+                editorSaveOptions(e, route('admin.photography.index'), () => setDefaults()),
+            );
         }
     };
 
@@ -78,7 +86,8 @@ export default function Create({ categories, photo }: PhotoGalleryCreateEditPage
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isEdit ? `Edit ${photo!.title}` : 'Create Photo Gallery'} />
-            <div className="content-editor">
+            <UnsavedChangesGuard dirty={isDirty} />
+            <PageContainer className="content-editor">
                 <div className="w-full">
                     <ContentEditorHeader
                         title={data.title || 'New gallery'}
@@ -184,7 +193,10 @@ export default function Create({ categories, photo }: PhotoGalleryCreateEditPage
                                     <TabsContent value="seo" className="mt-0 space-y-6">
                                         <SEOFields
                                             fallbackTitle={data.title}
-                                            fallbackDescription={data.description.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()}
+                                            fallbackDescription={data.description
+                                                .replace(/<[^>]*>/g, ' ')
+                                                .replace(/\s+/g, ' ')
+                                                .trim()}
                                             previewPath={`/photography/${data.slug || 'gallery'}`}
                                             data={{
                                                 seo: data.seo,
@@ -287,7 +299,7 @@ export default function Create({ categories, photo }: PhotoGalleryCreateEditPage
                         </Tabs>
                     </form>
                 </div>
-            </div>
+            </PageContainer>
         </AppLayout>
     );
 }

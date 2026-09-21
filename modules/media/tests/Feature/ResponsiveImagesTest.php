@@ -104,6 +104,27 @@ it('uses optimized article images without changing external images or full-size 
         ->not->toContain('<img src="'.$image->getUrl().'"');
 });
 
+it('resolves article images from the configured cloud media disk', function () {
+    Storage::fake('s3');
+    config([
+        'filesystems.disks.s3.url' => 'https://media.example.test/site-assets',
+        'mediable.default_disk'    => 's3',
+        'mediable.allowed_disks'   => ['public', 's3'],
+    ]);
+    Storage::disk('s3')->put('blog/cloud-image.jpg', UploadedFile::fake()->image('cloud-image.jpg', 1200, 800)->getContent());
+    $image = Media::withoutEvents(fn () => Media::forceCreate([
+        'disk'      => 's3', 'directory' => 'blog', 'filename' => 'cloud-image', 'extension' => 'jpg',
+        'mime_type' => 'image/jpeg', 'aggregate_type' => 'image', 'size' => 100,
+    ]));
+
+    $html   = '<p>Cloud image</p><img src="'.$image->getUrl().'" alt="Cloud">';
+    $result = app(PublicImageSources::class)->html($html);
+
+    expect(app(PublicImageSources::class)->mediaForUrls([$image->getUrl()])[$image->getUrl()]->is($image))->toBeTrue()
+        ->and($result)->toContain('data-full-src="'.$image->getUrl().'"', 'loading="lazy"')
+        ->not->toContain('<img src="'.$image->getUrl().'"');
+});
+
 it('keeps original URLs for large previews and exposes named variants', function () {
     $image = responsiveTestImage();
     $data  = (new MediaResource($image))->resolve();

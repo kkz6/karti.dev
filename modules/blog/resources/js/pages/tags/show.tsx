@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { PageContainer } from '@shared/components/page-container';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import AppLayout from '@shared/layouts/app-layout';
@@ -65,7 +66,7 @@ export default function Show({ tag }: { tag: Tag }) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Tag: ${tag.name}`} />
-            <div className="flex h-full flex-col space-y-6 p-8 pt-6">
+            <PageContainer className="flex min-h-full flex-col space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
@@ -225,7 +226,7 @@ export default function Show({ tag }: { tag: Tag }) {
                         </Card>
                     </div>
                 </div>
-            </div>
+            </PageContainer>
         </AppLayout>
     );
 }

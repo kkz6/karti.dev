@@ -1,4 +1,5 @@
 import { Head, router } from '@inertiajs/react';
+import { PageContainer } from '@shared/components/page-container';
 import { Badge } from '@shared/components/ui/badge';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
@@ -43,7 +44,7 @@ export default function Show({ collection }: PhotoGalleryShowPageProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={collection.title} />
-            <div className="flex h-full flex-col space-y-4 p-8 pt-6">
+            <PageContainer className="flex min-h-full flex-col space-y-6">
                 <div className="flex items-center justify-between space-y-2">
                     <div>
                         <div className="flex items-center space-x-2">
@@ -93,11 +94,15 @@ export default function Show({ collection }: PhotoGalleryShowPageProps) {
                                     </div>
                                     <div>
                                         <h4 className="font-medium">Created</h4>
-                                        <p className="text-muted-foreground text-sm">{collection.created_at ? new Date(collection.created_at).toLocaleDateString() : 'N/A'}</p>
+                                        <p className="text-muted-foreground text-sm">
+                                            {collection.created_at ? new Date(collection.created_at).toLocaleDateString() : 'N/A'}
+                                        </p>
                                     </div>
                                     <div>
                                         <h4 className="font-medium">Updated</h4>
-                                        <p className="text-muted-foreground text-sm">{collection.updated_at ? new Date(collection.updated_at).toLocaleDateString() : 'N/A'}</p>
+                                        <p className="text-muted-foreground text-sm">
+                                            {collection.updated_at ? new Date(collection.updated_at).toLocaleDateString() : 'N/A'}
+                                        </p>
                                     </div>
                                     {collection.published_at && (
                                         <div>
@@ -191,7 +196,7 @@ export default function Show({ collection }: PhotoGalleryShowPageProps) {
                         </Card>
                     </div>
                 </div>
-            </div>
+            </PageContainer>
         </AppLayout>
     );
 }

@@ -3,6 +3,8 @@ import { Head, router } from '@inertiajs/react';
 import { SEOFields } from '@seo/components/SeoFields';
 import { ContentEditorHeader, EditorErrorSummary, EditorPublishedControl, EditorViewLink } from '@shared/components/content-editor';
 import { DateField } from '@shared/components/date-field';
+import { LocalTrafficCard } from '@shared/components/local-traffic-card';
+import { PageContainer } from '@shared/components/page-container';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { Checkbox } from '@shared/components/ui/checkbox';
@@ -10,14 +12,14 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from '@shared/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Textarea } from '@shared/components/ui/textarea';
+import { UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
+import { useAdminTab } from '@shared/hooks/use-admin-tab';
 import { useEditorSave } from '@shared/hooks/use-editor-save';
 import AppLayout from '@shared/layouts/app-layout';
-import { LocalTrafficCard } from '@shared/components/local-traffic-card';
 import { type BreadcrumbItem } from '@shared/types';
 import { X } from 'lucide-react';
 import type { BaseSyntheticEvent } from 'react';
 import { useState } from 'react';
-import { useAdminTab } from '@shared/hooks/use-admin-tab';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -102,7 +104,7 @@ export default function Edit({ project }: { project: Project }) {
     const handleAddTechnology = () => {
         if (techInput.trim()) {
             const currentTech = form.getValues('technologies');
-            form.setValue('technologies', [...currentTech, techInput.trim()]);
+            form.setValue('technologies', [...currentTech, techInput.trim()], { shouldDirty: true });
             setTechInput('');
         }
     };
@@ -112,6 +114,7 @@ export default function Edit({ project }: { project: Project }) {
         form.setValue(
             'technologies',
             currentTech.filter((_, i) => i !== index),
+            { shouldDirty: true },
         );
     };
 
@@ -134,7 +137,8 @@ export default function Edit({ project }: { project: Project }) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Edit Project: ${project.title}`} />
-            <div className="content-editor">
+            <UnsavedChangesGuard dirty={form.formState.isDirty} />
+            <PageContainer className="content-editor">
                 <div className="w-full">
                     <ContentEditorHeader
                         title={form.watch('title') || 'New project'}
@@ -393,7 +397,7 @@ export default function Edit({ project }: { project: Project }) {
                                                 }}
                                                 setData={(key, value) => {
                                                     if ((key === 'meta_title' || key === 'meta_description') && typeof value === 'string')
-                                                        form.setValue(key, value);
+                                                        form.setValue(key, value, { shouldDirty: true });
                                                 }}
                                                 errors={form.formState.errors}
                                                 fallbackTitle={form.watch('title')}
@@ -456,7 +460,7 @@ export default function Edit({ project }: { project: Project }) {
                         </form>
                     </Form>
                 </div>
-            </div>
+            </PageContainer>
         </AppLayout>
     );
 }

@@ -1,10 +1,12 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { IndexHeader } from '@shared/components/index-header';
+import { PageContainer } from '@shared/components/page-container';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { Input } from '@shared/components/ui/input';
 import { Label } from '@shared/components/ui/label';
 import { Textarea } from '@shared/components/ui/textarea';
+import { UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
 import AppLayout from '@shared/layouts/app-layout';
 import type { SharedData } from '@shared/types';
 import type { SiteSettings } from '@shared/types/site-settings';
@@ -59,7 +61,8 @@ export default function SiteSettingsPage({ settings }: { settings: SiteSettings 
     return (
         <AppLayout breadcrumbs={[{ title: 'Site settings', href: route('admin.settings.edit') }]}>
             <Head title="Site settings" />
-            <form onSubmit={submit} className="content-index space-y-6">
+            <UnsavedChangesGuard dirty={form.isDirty} />
+            <PageContainer as="form" onSubmit={submit} className="content-index space-y-6">
                 <IndexHeader
                     title="Site settings"
                     icon={Settings}
@@ -181,7 +184,7 @@ export default function SiteSettingsPage({ settings }: { settings: SiteSettings 
                         </p>
                     </aside>
                 </div>
-            </form>
+            </PageContainer>
         </AppLayout>
     );
 }

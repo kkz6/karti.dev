@@ -10,6 +10,7 @@ export function isRouteActive(currentRouteName: string | null | undefined, itemH
     if (path === '/admin/media-manager') return currentRouteName === 'media-manager';
     if (path === '/admin/settings') return ['admin.settings.edit', 'admin.settings.update'].includes(currentRouteName);
     if (path === '/admin/settings/media') return currentRouteName.startsWith('admin.settings.media.');
+    if (path === '/admin/settings/email') return currentRouteName.startsWith('admin.settings.email.');
 
     const sections: Record<string, string> = {
         '/admin/blog': 'admin.blog',

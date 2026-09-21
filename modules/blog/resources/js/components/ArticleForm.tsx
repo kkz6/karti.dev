@@ -4,18 +4,20 @@ import { Head } from '@inertiajs/react';
 import { SimpleAssetsField } from '@media/components/Field/SimpleAssetsField';
 import { SEOFields } from '@seo/components/SeoFields';
 import { CategoryPicker } from '@shared/components/category-picker';
-import { LocalTrafficCard } from '@shared/components/local-traffic-card';
 import { ContentEditorHeader, EditorErrorSummary, EditorPublishedControl, EditorViewLink } from '@shared/components/content-editor';
 import { EditorDateField } from '@shared/components/editor-date-field';
 import { EditorRelationsField } from '@shared/components/editor-relations-field';
+import { LocalTrafficCard } from '@shared/components/local-traffic-card';
+import { PageContainer } from '@shared/components/page-container';
 import { FormSimpleEditor } from '@shared/components/tiptap';
 import { Card, CardContent } from '@shared/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@shared/components/ui/form';
 import { Input } from '@shared/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Textarea } from '@shared/components/ui/textarea';
-import { useEditorSave } from '@shared/hooks/use-editor-save';
+import { UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
 import { useAdminTab } from '@shared/hooks/use-admin-tab';
+import { useEditorSave } from '@shared/hooks/use-editor-save';
 import { useSlug } from '@shared/hooks/use-slug';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
@@ -72,8 +74,9 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${pageTitle}: ${article?.title || 'New Article'}`} />
+            <UnsavedChangesGuard dirty={form.formState.isDirty} />
             <Form {...form}>
-                <form id="article-form" onSubmit={form.handleSubmit(onSubmit)} className="content-editor">
+                <PageContainer as="form" id="article-form" onSubmit={form.handleSubmit(onSubmit)} className="content-editor">
                     <div className="w-full">
                         <ContentEditorHeader
                             title={form.watch('title') || 'New article'}
@@ -129,7 +132,7 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
                                                                         const slug = form.getValues('slug');
                                                                         field.onChange(title);
                                                                         if (!isEditing && (!slug || slug === generateSlug(previous)))
-                                                                            form.setValue('slug', generateSlug(title));
+                                                                            form.setValue('slug', generateSlug(title), { shouldDirty: true });
                                                                     }}
                                                                 />
                                                             </FormControl>
@@ -211,9 +214,9 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
                                                 }}
                                                 setData={(key, value) => {
                                                     if (key === 'seo') {
-                                                        form.setValue('seo', value as Record<string, unknown>);
+                                                        form.setValue('seo', value as Record<string, unknown>, { shouldDirty: true });
                                                     } else {
-                                                        form.setValue(key as keyof ArticleFormData, value as string);
+                                                        form.setValue(key as keyof ArticleFormData, value as string, { shouldDirty: true });
                                                     }
                                                 }}
                                                 errors={form.formState.errors as Record<string, string>}
@@ -317,7 +320,7 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
                             </Tabs>
                         </div>
                     </div>
-                </form>
+                </PageContainer>
             </Form>
         </AppLayout>
     );

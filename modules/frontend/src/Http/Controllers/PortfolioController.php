@@ -281,6 +281,11 @@ class PortfolioController extends BaseController
                 'description'  => $article->excerpt,
                 'date'         => $article->published_at->format('Y-m-d'),
                 'author'       => $authorName,
+                'image'        => $article->featuredImageMedia ? [
+                    'src'     => $article->featuredImageMedia->imageUrl('content'),
+                    'fullSrc' => $article->featuredImageMedia->getUrl(),
+                    'alt'     => $article->featuredImageMedia->alt ?: $article->title,
+                ] : null,
                 'categories'   => $article->categories,
                 'tags'         => $article->tags,
                 'comments'     => $article->comments,

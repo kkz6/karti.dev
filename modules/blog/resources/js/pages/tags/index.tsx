@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { IndexHeader } from '@shared/components/index-header';
+import { PageContainer } from '@shared/components/page-container';
 import { Button } from '@shared/components/ui/button';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
@@ -35,7 +36,7 @@ export default function Index({ tags }: { tags: TableConfig<Tag> }) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Tags" />
-            <div className="content-index flex flex-col gap-8">
+            <PageContainer className="content-index flex flex-col gap-8">
                 {/* Header */}
                 <IndexHeader title="Tags" icon={TagsIcon} actions={<Button onClick={handleCreateTag}>Create tag</Button>} />
 
@@ -52,7 +53,7 @@ export default function Index({ tags }: { tags: TableConfig<Tag> }) {
                     }}
                     onCustomAction={handleCustomAction}
                 />
-            </div>
+            </PageContainer>
         </AppLayout>
     );
 }

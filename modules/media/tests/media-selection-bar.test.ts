@@ -13,7 +13,8 @@ test('manager and tables reuse the same animated floating selection shell', () =
     }
     assert.match(browser, /indexPage && browserSelectedAssets.length > 0 && \(\s*<FloatingSelectionBar/);
     assert.doesNotMatch(browser, /DropdownMenu|MoreHorizontal/);
-    assert.match(browser, /browserSelectedAssets.length > 0 \? 'pb-24'/);
+    assert.match(browser, /indexPage \? 'media-library-panel flex min-h-0 flex-1 flex-col' : 'contents'/);
+    assert.doesNotMatch(browser, /pb-24/);
 });
 
 test('media bar exposes direct actions with selection and permission guards', () => {

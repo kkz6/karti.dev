@@ -73,6 +73,8 @@ test('both table renderers expose one shared selection bar and retain exports wi
         assert.match(source, /<SelectionActionBar/);
         assert.match(source, /resource.hasExports && selectedItems.length === 0/);
         assert.match(source, /onClear=\{actions.removeSelection\}/);
+        assert.match(source, /className="it-wrapper relative"/);
+        assert.doesNotMatch(source, /pb-24/);
     }
 });
 
@@ -88,4 +90,5 @@ test('selection bar slides in from below only when motion is allowed', () => {
         assert.ok(source.includes(token));
     }
     assert.match(source, /if \(!count\) return null/);
+    assert.match(source, /pointer-events-none fixed inset-x-4 bottom-5/);
 });

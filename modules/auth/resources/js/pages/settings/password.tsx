@@ -1,9 +1,10 @@
+import { Transition } from '@headlessui/react';
+import { Head, useForm } from '@inertiajs/react';
 import InputError from '@shared/components/input-error';
+import { UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
 import AppLayout from '@shared/layouts/app-layout';
 import SettingsLayout from '@shared/layouts/settings/layout';
 import { type BreadcrumbItem } from '@shared/types';
-import { Transition } from '@headlessui/react';
-import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler, useRef } from 'react';
 
 import HeadingSmall from '@shared/components/heading-small';
@@ -22,7 +23,7 @@ export default function Password() {
     const passwordInput = useRef<HTMLInputElement>(null);
     const currentPasswordInput = useRef<HTMLInputElement>(null);
 
-    const { data, setData, errors, put, reset, processing, recentlySuccessful } = useForm({
+    const { data, setData, errors, put, reset, processing, recentlySuccessful, isDirty } = useForm({
         current_password: '',
         password: '',
         password_confirmation: '',
@@ -51,6 +52,7 @@ export default function Password() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Password settings" />
+            <UnsavedChangesGuard dirty={isDirty} />
 
             <SettingsLayout>
                 <div className="space-y-6">
@@ -108,7 +110,9 @@ export default function Password() {
                         </div>
 
                         <div className="flex items-center gap-4">
-                            <Button type="submit" disabled={processing}>Save password</Button>
+                            <Button type="submit" disabled={processing}>
+                                Save password
+                            </Button>
 
                             <Transition
                                 show={recentlySuccessful}

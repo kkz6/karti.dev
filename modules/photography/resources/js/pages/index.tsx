@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { IndexHeader } from '@shared/components/index-header';
 import { LocalTrafficCard } from '@shared/components/local-traffic-card';
+import { PageContainer } from '@shared/components/page-container';
 import { Button } from '@shared/components/ui/button';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
@@ -18,7 +19,7 @@ export default function Index({ photos }: { photos: TableConfig<PhotoGallery> })
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Photography" />
-            <div className="content-index flex flex-col gap-8">
+            <PageContainer className="content-index flex flex-col gap-8">
                 <IndexHeader title="Photography" icon={Camera} actions={<Button onClick={handleCreateGallery}>Create gallery</Button>} />
                 <LocalTrafficCard compact />
 
@@ -34,7 +35,7 @@ export default function Index({ photos }: { photos: TableConfig<PhotoGallery> })
                         },
                     }}
                 />
-            </div>
+            </PageContainer>
         </AppLayout>
     );
 }

@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { IndexHeader } from '@shared/components/index-header';
 import { LocalTrafficCard } from '@shared/components/local-traffic-card';
+import { PageContainer } from '@shared/components/page-container';
 import { Button } from '@shared/components/ui/button';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
@@ -18,7 +19,7 @@ export default function Index({ table }: { table: TableConfig }) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Tools" />
-            <div className="content-index flex flex-col gap-8">
+            <PageContainer className="content-index flex flex-col gap-8">
                 <IndexHeader title="Tools" icon={Wrench} actions={<Button onClick={handleCreateTool}>Create tool</Button>} />
                 <LocalTrafficCard compact />
 
@@ -37,7 +38,7 @@ export default function Index({ table }: { table: TableConfig }) {
                         }}
                     />
                 </div>
-            </div>
+            </PageContainer>
         </AppLayout>
     );
 }

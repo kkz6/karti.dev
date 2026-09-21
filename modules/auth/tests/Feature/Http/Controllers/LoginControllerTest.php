@@ -60,7 +60,7 @@ test('users cannot authenticate with invalid password', function () {
     ]);
 
     $this->assertGuest();
-    $response->assertSessionHasErrors('email');
+    $response->assertSessionHasErrors('password');
 });
 
 test('users cannot authenticate with non-existent email', function () {
@@ -71,7 +71,7 @@ test('users cannot authenticate with non-existent email', function () {
     ]);
 
     $this->assertGuest();
-    $response->assertSessionHasErrors('email');
+    $response->assertSessionHasErrors('password');
 });
 
 test('authenticated users can logout', function () {

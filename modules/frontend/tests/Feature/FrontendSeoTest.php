@@ -4,6 +4,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia;
 use Modules\Blog\Models\Article;
 use Modules\Blog\Models\Category;
+use Modules\Media\Models\Media;
 
 uses(RefreshDatabase::class);
 
@@ -70,6 +71,32 @@ test('article show page returns SEO data', function () {
         ->has('seo.description')
         ->has('seo.url')
     );
+});
+
+test('article show page renders the current featured image', function () {
+    $category = Category::factory()->create();
+    $original = Media::withoutEvents(fn () => Media::forceCreate([
+        'disk'      => 'public', 'directory' => 'blog', 'filename' => 'featured', 'extension' => 'jpg',
+        'mime_type' => 'image/jpeg', 'aggregate_type' => 'image', 'size' => 100, 'alt' => 'Article cover',
+    ]));
+    $content = Media::withoutEvents(fn () => Media::forceCreate([
+        'disk'         => 'public', 'directory' => 'conversions/'.$original->id, 'filename' => 'content-version', 'extension' => 'webp',
+        'mime_type'    => 'image/webp', 'aggregate_type' => 'image', 'size' => 80,
+        'variant_name' => 'content', 'original_media_id' => $original->id,
+    ]));
+    $article = Article::factory()->published()->create([
+        'title'          => 'Featured article',
+        'slug'           => 'featured-article',
+        'content'        => '<p>Article content</p>',
+        'category_id'    => $category->id,
+        'featured_image' => $original->id,
+    ]);
+
+    $this->get("/articles/{$article->slug}")->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('article.image.src', $content->getUrl())
+            ->where('article.image.fullSrc', $original->getUrl())
+            ->where('article.image.alt', 'Article cover'));
 });
 
 test('article show page returns Article JSON-LD structured data', function () {

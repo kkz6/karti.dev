@@ -39,9 +39,23 @@ test('existing section links remain selected on edit pages without matching neig
     assert.equal(isRouteActive('dashboard', '/dashboard'), true);
 });
 
-test('site and media settings highlight only their own sidebar link', () => {
-    const links = ['https://karti.dev.test/admin/settings', 'https://karti.dev.test/admin/settings/media'];
-    assert.deepEqual(links.map((href) => isRouteActive('admin.settings.edit', href)), [true, false]);
-    assert.deepEqual(links.map((href) => isRouteActive('admin.settings.media.edit', href)), [false, true]);
+test('site, media and email settings highlight only their own sidebar link', () => {
+    const links = [
+        'https://karti.dev.test/admin/settings',
+        'https://karti.dev.test/admin/settings/media',
+        'https://karti.dev.test/admin/settings/email',
+    ];
+    assert.deepEqual(
+        links.map((href) => isRouteActive('admin.settings.edit', href)),
+        [true, false, false],
+    );
+    assert.deepEqual(
+        links.map((href) => isRouteActive('admin.settings.media.edit', href)),
+        [false, true, false],
+    );
+    assert.deepEqual(
+        links.map((href) => isRouteActive('admin.settings.email.edit', href)),
+        [false, false, true],
+    );
     assert.equal(isRouteActive('admin.settings.media.edit', '/admin/settings/media/?tab=defaults'), true);
 });

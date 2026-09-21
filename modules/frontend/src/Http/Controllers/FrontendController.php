@@ -138,6 +138,11 @@ class FrontendController extends BaseController
             'date'        => $publishedAt,
             'content'     => app(\Modules\Media\Support\PublicImageSources::class)->html($article->content ?? ''),
             'author'      => $authorName,
+            'image'       => $article->featuredImageMedia ? [
+                'src'     => $article->featuredImageMedia->imageUrl('content'),
+                'fullSrc' => $article->featuredImageMedia->getUrl(),
+                'alt'     => $article->featuredImageMedia->alt ?: $article->title,
+            ] : null,
         ];
 
         // Article JSON-LD structured data

@@ -4,14 +4,15 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 import { Deferred, Head, Link, router } from '@inertiajs/react';
 import { IndexHeader } from '@shared/components/index-header';
+import { PageContainer } from '@shared/components/page-container';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@shared/components/ui/chart';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@shared/components/ui/tooltip';
-import AppLayout from '@shared/layouts/app-layout';
 import { useAdminTab } from '@shared/hooks/use-admin-tab';
+import AppLayout from '@shared/layouts/app-layout';
 import { cn } from '@shared/lib/utils';
 import { type BreadcrumbItem } from '@shared/types';
 import { GoogleReportSkeleton } from './components/google-report-skeleton';
@@ -497,7 +498,7 @@ export default function GoogleAnalyticsPage(props: { analytics?: AnalyticsData; 
     return (
         <AppLayout breadcrumbs={[...breadcrumbs, { title: 'Google Analytics', href: '/admin/seo/google' }]}>
             <Head title="SEO · Google Analytics" />
-            <div className="content-index space-y-6">
+            <PageContainer className="content-index space-y-6">
                 <IndexHeader
                     title="Google Analytics"
                     icon={BarChart3}
@@ -539,7 +540,7 @@ export default function GoogleAnalyticsPage(props: { analytics?: AnalyticsData; 
                         {props.analytics && <GoogleReport analytics={props.analytics} onRetry={() => loadReport()} isUpdating={isUpdating} />}
                     </Deferred>
                 </div>
-            </div>
+            </PageContainer>
         </AppLayout>
     );
 }

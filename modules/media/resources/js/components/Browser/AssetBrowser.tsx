@@ -557,13 +557,7 @@ export const AssetBrowser: React.FC<AssetBrowserProps> = ({
                         )}
                     </div>
 
-                    <div
-                        className={
-                            indexPage
-                                ? `media-library-panel flex min-h-0 flex-1 flex-col ${browserSelectedAssets.length > 0 ? 'pb-24' : ''}`
-                                : 'contents'
-                        }
-                    >
+                    <div className={indexPage ? 'media-library-panel flex min-h-0 flex-1 flex-col' : 'contents'}>
                         {indexPage && !restrictNavigation && (
                             <div className="media-location mb-3 shrink-0">
                                 <Breadcrumbs path={path} folder={folder} folders={folders} onNavigated={handleFolderSelected} />

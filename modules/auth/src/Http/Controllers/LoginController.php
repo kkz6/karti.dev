@@ -41,7 +41,7 @@ class LoginController extends BaseController
 
         if (! $user) {
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'password' => trans('auth.failed'),
             ]);
         }
 

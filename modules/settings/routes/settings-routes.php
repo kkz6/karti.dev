@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Settings\Http\Controllers\EmailSettingsController;
 use Modules\Settings\Http\Controllers\MediaSettingsController;
 use Modules\Settings\Http\Controllers\SiteSettingsController;
 
@@ -10,6 +11,8 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('admin/settings')->name('
     Route::get('/media', [MediaSettingsController::class, 'edit'])->name('media.edit');
     Route::put('/media', [MediaSettingsController::class, 'update'])->name('media.update');
     Route::post('/media/rebuild', [MediaSettingsController::class, 'rebuild'])->middleware('throttle:2,1')->name('media.rebuild');
+    Route::get('/email', [EmailSettingsController::class, 'edit'])->name('email.edit');
+    Route::put('/email', [EmailSettingsController::class, 'update'])->name('email.update');
 });
 
 // Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');

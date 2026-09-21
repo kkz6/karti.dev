@@ -2,13 +2,15 @@ import { Head, router, useForm } from '@inertiajs/react';
 import { SEOFields } from '@seo/components/SeoFields';
 import { seoSchema, type SeoData } from '@seo/types/seo-schema';
 import { ContentEditorHeader, EditorErrorSummary } from '@shared/components/content-editor';
+import { PageContainer } from '@shared/components/page-container';
 import { Card, CardContent } from '@shared/components/ui/card';
 import { Input } from '@shared/components/ui/input';
 import { Label } from '@shared/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Textarea } from '@shared/components/ui/textarea';
-import { editorSaveOptions } from '@shared/hooks/use-editor-save';
+import { UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
 import { useAdminTab } from '@shared/hooks/use-admin-tab';
+import { editorSaveOptions } from '@shared/hooks/use-editor-save';
 import { useSlug } from '@shared/hooks/use-slug';
 import AppLayout from '@shared/layouts/app-layout';
 import type { FormEvent } from 'react';
@@ -28,7 +30,7 @@ export default function TaxonomyForm({ kind, entry }: { kind: 'category' | 'tag'
     const backHref = route(`admin.${resource}.index`);
     const recordKey = entry ? (kind === 'category' ? entry.slug : entry.id) : undefined;
     const { handleTitleChange } = useSlug({ autoGenerate: !entry });
-    const { data, setData, post, put, processing, errors } = useForm({
+    const { data, setData, setDefaults, post, put, processing, errors, isDirty } = useForm({
         name: entry?.name ?? '',
         slug: entry?.slug ?? '',
         description: entry?.description ?? '',
@@ -39,7 +41,7 @@ export default function TaxonomyForm({ kind, entry }: { kind: 'category' | 'tag'
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        const options = editorSaveOptions(event, backHref);
+        const options = editorSaveOptions(event, backHref, () => setDefaults());
         if (entry) put(route(`admin.${resource}.update`, recordKey), options);
         else post(route(`admin.${resource}.store`), options);
     };
@@ -60,7 +62,8 @@ export default function TaxonomyForm({ kind, entry }: { kind: 'category' | 'tag'
             ]}
         >
             <Head title={entry ? `Edit ${label}: ${entry.name}` : `Create ${label}`} />
-            <form id="taxonomy-form" onSubmit={submit} className="content-editor">
+            <UnsavedChangesGuard dirty={isDirty} />
+            <PageContainer as="form" id="taxonomy-form" onSubmit={submit} className="content-editor">
                 <ContentEditorHeader
                     title={data.name || `New ${label.toLowerCase()}`}
                     formId="taxonomy-form"
@@ -163,7 +166,7 @@ export default function TaxonomyForm({ kind, entry }: { kind: 'category' | 'tag'
                         </aside>
                     </div>
                 </Tabs>
-            </form>
+            </PageContainer>
         </AppLayout>
     );
 }

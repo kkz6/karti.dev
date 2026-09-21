@@ -3,6 +3,8 @@ import { Head, router } from '@inertiajs/react';
 import { SEOFields } from '@seo/components/SeoFields';
 import { ContentEditorHeader, EditorErrorSummary, EditorPublishedControl, EditorViewLink } from '@shared/components/content-editor';
 import { DateField } from '@shared/components/date-field';
+import { LocalTrafficCard } from '@shared/components/local-traffic-card';
+import { PageContainer } from '@shared/components/page-container';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { Checkbox } from '@shared/components/ui/checkbox';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@shared/components/ui/form';
@@ -10,12 +12,12 @@ import { Input } from '@shared/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/tabs';
 import { Textarea } from '@shared/components/ui/textarea';
+import { UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
+import { useAdminTab } from '@shared/hooks/use-admin-tab';
 import { useEditorSave } from '@shared/hooks/use-editor-save';
 import AppLayout from '@shared/layouts/app-layout';
-import { LocalTrafficCard } from '@shared/components/local-traffic-card';
 import { type BreadcrumbItem } from '@shared/types';
 import type { BaseSyntheticEvent } from 'react';
-import { useAdminTab } from '@shared/hooks/use-admin-tab';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -106,7 +108,8 @@ export default function Edit({ event }: { event: SpeakingEvent }) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Edit Speaking Event: ${event.title}`} />
-            <div className="content-editor">
+            <UnsavedChangesGuard dirty={form.formState.isDirty} />
+            <PageContainer className="content-editor">
                 <div className="w-full">
                     <ContentEditorHeader
                         title={form.watch('title') || 'New speaking event'}
@@ -319,7 +322,7 @@ export default function Edit({ event }: { event: SpeakingEvent }) {
                                                 }}
                                                 setData={(key, value) => {
                                                     if ((key === 'meta_title' || key === 'meta_description') && typeof value === 'string')
-                                                        form.setValue(key, value);
+                                                        form.setValue(key, value, { shouldDirty: true });
                                                 }}
                                                 errors={form.formState.errors}
                                                 fallbackTitle={form.watch('title')}
@@ -382,7 +385,7 @@ export default function Edit({ event }: { event: SpeakingEvent }) {
                         </form>
                     </Form>
                 </div>
-            </div>
+            </PageContainer>
         </AppLayout>
     );
 }

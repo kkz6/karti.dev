@@ -5,6 +5,7 @@ use Modules\Analytics\Http\Controllers\DashboardController;
 use Modules\Analytics\Http\Controllers\SeoAnalyticsController;
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::redirect('admin', '/dashboard')->name('admin.index');
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('admin/seo', [SeoAnalyticsController::class, 'index'])->name('admin.seo.index');
     Route::get('admin/seo/google', [SeoAnalyticsController::class, 'google'])->name('admin.seo.google');

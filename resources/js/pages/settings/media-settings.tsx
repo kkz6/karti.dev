@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@shared/components/ui/input';
 import { Label } from '@shared/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components/ui/select';
+import { UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
 import { Crop, Image, Maximize, Pencil, Plus, RefreshCw, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { ImageProcessingDefaults, ServerCompressionDefaults } from './image-processing-defaults';
@@ -44,6 +45,8 @@ export function MediaSettingsForm({
     const [requestError, setRequestError] = useState('');
     const errors = form.errors as Record<string, string>;
     const builtIn = Boolean(editor && builtInNames.includes(editor.originalName));
+    const editorDefaults = editor ? (form.data.presets[editor.index] ?? blank) : null;
+    const editorDirty = Boolean(editor && editorDefaults && JSON.stringify(editor.draft) !== JSON.stringify(editorDefaults));
     const customPresets = form.data.presets.map((preset, index) => ({ preset, index })).filter(({ preset }) => !builtInNames.includes(preset.name));
     const errorFor = (key: keyof ImagePreset) => (editor ? errors[`presets.${editor.index}.${key}`] : undefined);
     const edit = (index: number) => {
@@ -72,6 +75,7 @@ export function MediaSettingsForm({
 
     return (
         <section aria-labelledby="image-defaults-heading">
+            <UnsavedChangesGuard dirty={form.isDirty || editorDirty} />
             <ImageProcessingDefaults presets={form.data.presets.filter((preset) => builtInNames.includes(preset.name))} />
             <div className="border-border/70 mt-7 border-t pt-7">
                 <div className="flex flex-wrap items-center justify-between gap-4 pb-3">
