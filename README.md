@@ -1,209 +1,164 @@
-# Gigcodes Laravel Modular Starter Kit
+# Karti.dev
 
-<div align="center">
-  <img src="https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel">
-  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React">
-  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
-  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
-</div>
+[![Tests](https://github.com/kkz6/karti.dev/actions/workflows/tests.yml/badge.svg)](https://github.com/kkz6/karti.dev/actions/workflows/tests.yml)
+[![Lint](https://github.com/kkz6/karti.dev/actions/workflows/lint.yml/badge.svg)](https://github.com/kkz6/karti.dev/actions/workflows/lint.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-0f8a4b.svg)](LICENSE)
+[![Sponsor](https://img.shields.io/badge/GitHub-Sponsor-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/kkz6)
 
-## 🚀 Overview
+Karti.dev is a self-hosted publishing platform for a personal website. It brings articles, photography, projects, speaking, tools, newsletters, media, SEO, and first-party analytics into one focused administration experience.
 
-The Gigcodes Laravel Modular Starter Kit is a modern, production-ready Laravel application featuring a modular architecture, passwordless authentication with passkeys, two-factor authentication, and a beautiful React + Inertia.js frontend.
+The application is built as a modern Laravel monolith with React and Inertia.js. The production site is available at [karti.dev](https://karti.dev).
 
-## ✨ Key Features
+## Screenshots
 
-### 🔐 Advanced Authentication
-- **Passkey Support** - WebAuthn/FIDO2 passwordless authentication
-- **Two-Factor Authentication (2FA)** - TOTP-based with QR code generation
-- **Progressive Login Flow** - Email-first authentication with smooth animations
-- **Password Recovery** - Secure password reset functionality
-- **Email Verification** - Built-in email verification system
+### Public photography gallery
 
-### 🏗️ Modular Architecture
-- **Module-based Structure** - Clean separation of concerns with dedicated modules
-- **Shared Module** - Common components, utilities, and services
-- **Auth Module** - Complete authentication system
-- **Easy Module Creation** - Structured approach for adding new modules
+![Public photography gallery showing the Japan collection](docs/images/public-gallery.png)
 
-### 🎨 Modern Frontend Stack
-- **React 19** - Latest React features and optimizations
-- **Inertia.js** - Seamless SPA experience without API complexity
-- **TypeScript** - Full type safety across the frontend
-- **Tailwind CSS v4** - Utility-first CSS framework
-- **Framer Motion** - Smooth animations and transitions
-- **Radix UI** - Accessible, unstyled UI components
-- **Dark Mode** - Built-in theme switching with system preference detection
+### Administration dashboard
 
-### 🛠️ Developer Experience
-- **Hot Module Replacement** - Instant feedback during development
-- **TypeScript Code Generation** - Auto-generated types from Laravel models
-- **ESLint & Prettier** - Consistent code formatting
-- **Laravel Pint** - PHP code styling
-- **Vite** - Lightning-fast build tool
-- **Concurrent Development** - Run all services with one command
+![Administration dashboard with traffic, newsletter, and publishing insights](docs/images/admin-dashboard.png)
 
-## 📋 Requirements
+### Article editor
 
-- PHP 8.2+
-- Node.js 18+
-- Composer 2.x
-- MySQL/PostgreSQL/SQLite
+![Article editor with the rich content editor and publishing controls](docs/images/article-editor.png)
 
-## 🚀 Quick Start
+### Media manager
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/gigcodes/laravel-modular-starter-kit.git
-   cd laravel-modular-starter-kit
-   ```
+![Media manager with folders, search, uploads, and list controls](docs/images/media-manager.png)
 
-2. **Install dependencies**
-   ```bash
-   composer install
-   npm install
-   ```
+## What is included
 
-3. **Environment setup**
-   ```bash
-   cp .env.example .env
-   php artisan key:generate
-   ```
+- **Publishing** — Manage articles, categories, tags, photography galleries, projects, speaking entries, and tools.
+- **Media library** — Organize assets into folders, upload in batches, edit images, inspect metadata, and use responsive image variants on the public site.
+- **Safe asset management** — Preserve references when files move and prevent deletion while media is still in use.
+- **Analytics and SEO** — Review first-party page traffic, Google Analytics data, per-entry performance, and search previews.
+- **Newsletter** — Collect confirmed subscriptions and monitor subscriber health from the dashboard.
+- **Site administration** — Configure site identity, mail delivery, media processing, responsive image presets, and other operational settings.
+- **Authentication** — Password login, email verification, passkeys, two-factor authentication, and recovery flows.
+- **Reusable admin UI** — Shared tables, filtering, bulk actions, trash and restore workflows, unsaved-change protection, responsive layouts, and light/dark themes.
 
-4. **Database setup**
-   ```bash
-   php artisan migrate
-   php artisan db:seed # Optional
-   ```
+## Technology
 
-5. **Start development servers**
-   ```bash
-   composer run dev
-   ```
+- PHP 8.2+ and Laravel 12
+- React 19, TypeScript, and Inertia.js 2
+- Tailwind CSS 4 and Radix UI
+- Vite for development and production builds
+- Laravel Horizon and queued media processing
+- SQLite, MySQL, or PostgreSQL
+- Local or Amazon S3-compatible media storage
+- Pest, PHPUnit, ESLint, Prettier, PHPStan, Rector, and Laravel Pint
 
-   This single command starts:
-   - Laravel development server
-   - Vite dev server with HMR
-   - Queue worker
-   - Laravel Pail for real-time logs
+## Requirements
 
-## 📁 Project Structure
+- PHP 8.2 or newer with the extensions required by Laravel
+- Composer 2
+- Node.js 22 and npm
+- A supported database
+- A queue worker for media metadata and derivative generation
+- GD or Imagick for image processing
+- The PHP EXIF extension if camera metadata should be extracted
 
-```
-├── app/                    # Core Laravel application
-├── modules/               # Modular components
-│   ├── auth/             # Authentication module
-│   │   ├── src/          # PHP source files
-│   │   ├── resources/    # Module-specific views/assets
-│   │   ├── routes/       # Module routes
-│   │   └── database/     # Migrations and seeders
-│   └── shared/           # Shared module
-│       ├── src/          # Common services/utilities
-│       └── resources/    # Shared components/layouts
-├── resources/            # Global resources
-├── database/             # Main database files
-└── public/               # Public assets
+## Installation
+
+```bash
+git clone https://github.com/kkz6/karti.dev.git
+cd karti.dev
+
+composer install
+npm install
+
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan storage:link
 ```
 
-## 🔧 Module System
+Configure the database and application URL in `.env`, then start the development services:
 
-### Creating a New Module
+```bash
+composer run dev
+```
 
-1. Create module directory structure:
-   ```bash
-   php artisan make:module MyModule
-   ```
+This starts Laravel, Vite, the queue listener, and Laravel Pail together. Open the URL printed by Laravel and sign in at `/login`.
 
-2. Register the module in `composer.json`:
-   ```json
-   "repositories": [
-     {
-       "type": "path",
-       "url": "modules/my-module"
-     }
-   ]
-   ```
+### Creating the first user
 
-3. Add to autoload:
-   ```json
-   "autoload": {
-     "psr-4": {
-       "Modules\\MyModule\\": "modules/my-module/src/"
-     }
-   }
-   ```
+The application does not expose public registration. Create an administrator from Tinker for a fresh installation:
 
-## 🔐 Authentication Features
+```bash
+php artisan tinker
+```
 
-### Passkeys
-- Browser-based biometric authentication
-- FIDO2/WebAuthn compliant
-- Automatic fallback for unsupported browsers
-- Multiple passkey management per user
+```php
+$user = new Modules\Auth\Models\User();
+$user->name = 'Admin';
+$user->email = 'admin@example.com';
+$user->password = 'change-this-password';
+$user->email_verified_at = now();
+$user->save();
+```
 
-### Two-Factor Authentication
-- TOTP-based authentication
-- QR code generation for authenticator apps
-- Recovery codes for account recovery
-- Seamless integration with login flow
+Laravel casts the password value before it is stored. Replace the example credentials and use a strong password.
 
-## 🎨 UI Components
+## Configuration
 
-The starter kit includes a comprehensive set of reusable UI components:
+### Queues
 
-- **Layout Components**: AppShell, Sidebar, Header
-- **Form Components**: Input, Select, Checkbox, Form validation
-- **Feedback**: Alert, Toast notifications
-- **Navigation**: Breadcrumbs, Navigation menu
-- **Data Display**: Cards, Badges, Avatars
-- **Overlays**: Modal, Sheet, Dropdown menu
+Several media operations run asynchronously. Keep a queue worker active outside the combined development command:
 
-## 📜 Available Scripts
+```bash
+php artisan queue:work
+```
 
-### Backend
-- `composer run dev` - Start all development services
-- `composer run test` - Run tests
-- `composer run lint` - Fix PHP code style
-- `composer run refactor` - Run Rector for code improvements
+For production, run the worker under a process supervisor or use Laravel Horizon.
 
-### Frontend
-- `npm run dev` - Start Vite dev server
-- `npm run build` - Build for production
-- `npm run lint` - Fix JS/TS code style
-- `npm run format` - Format code with Prettier
-- `npm run types` - Check TypeScript types
+### Media storage
 
-## 🔍 Key Technologies
+Local storage works out of the box. To use S3, set `FILESYSTEM_DISK=s3` and configure the `AWS_*` values in `.env`. Image presets and the code-managed compression defaults are visible under **Admin → Media settings**.
 
-- **Laravel 12** - The PHP framework for web artisans
-- **Inertia.js** - The modern monolith
-- **React 19** - A JavaScript library for building user interfaces
-- **TypeScript** - JavaScript with syntax for types
-- **Tailwind CSS v4** - A utility-first CSS framework
-- **Vite** - Next generation frontend tooling
-- **Ziggy** - JavaScript route handling for Laravel
-- **Spatie Laravel Data** - Powerful data objects for Laravel
+### Email
 
-## 🤝 Contributing
+Set the initial `MAIL_*` values in `.env`. After installation, delivery credentials and sender details can be managed under **Admin → Email settings**. Sensitive values are encrypted before storage.
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+### Analytics
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+First-party analytics are available without an external provider. Google Analytics reporting is optional and can be configured separately for the SEO reports.
 
-## 📄 License
+## Development
 
-This project is open-sourced software licensed under the [MIT license](LICENSE).
+```bash
+# Run the PHP test suite
+composer test
 
-## 🙏 Credits
+# Run frontend regression tests
+node --experimental-strip-types --test modules/shared/tests/*.test.* modules/media/tests/*.test.*
 
-Created and maintained by [Gigcodes](https://gigcodes.com)
+# Type-check and build the frontend
+npm run types
+npm run build
 
----
+# Check PHP formatting
+composer test:lint
+```
 
-<div align="center">
-  <p>Built with ❤️ by Gigcodes</p>
-</div>
+The codebase is organized into domain modules under `modules/`. Each module owns its backend code, routes, database files, frontend pages, and tests where applicable. Shared application components live in the `shared` and `table` modules.
+
+## Contributing
+
+Issues and pull requests are welcome. Before submitting a change:
+
+1. Create a focused branch from `main`.
+2. Add or update tests for behavioral changes.
+3. Run the relevant PHP and frontend checks.
+4. Open a pull request describing the problem and the approach taken.
+
+Please do not include secrets, production data, or private media in issues or pull requests.
+
+## Sponsorship
+
+If Karti.dev or its components help your work, you can support ongoing development through [GitHub Sponsors](https://github.com/sponsors/kkz6).
+
+## License
+
+Karti.dev is open-source software released under the [MIT License](LICENSE).
