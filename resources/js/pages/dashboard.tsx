@@ -180,7 +180,7 @@ export default function Dashboard({ overview }: { overview: DashboardOverview })
 
                 <section
                     aria-label={`${overview.period.label} summary`}
-                    className="grid divide-y border-y sm:grid-cols-2 sm:divide-x sm:divide-y-0 xl:grid-cols-4"
+                    className="grid divide-y border-b sm:grid-cols-2 sm:divide-x sm:divide-y-0 xl:grid-cols-4"
                 >
                     <Metric label="Page views" value={overview.traffic.views} trend={overview.traffic.viewsTrend} icon={Eye} />
                     <Metric label="Daily visitors" value={overview.traffic.dailyVisitors} trend={overview.traffic.visitorsTrend} icon={Users} />

@@ -10,7 +10,7 @@ Create a Turnstile widget for the site and add these values to the environment:
 TURNSTILE_ENABLED=true
 TURNSTILE_SITE_KEY=
 TURNSTILE_SECRET_KEY=
-CONTACT_NOTIFICATION_EMAIL=hello@example.com
+CONTACT_NOTIFICATION_EMAIL=hi@karti.dev
 ```
 
 Use separate widgets for local, staging, and production environments. If Turnstile is not configured, the form remains protected by the honeypot, minimum completion time, and request rate limits. The contact inbox reports whether Turnstile is active.

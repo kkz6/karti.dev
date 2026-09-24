@@ -17,7 +17,7 @@ const social = [
     { name: 'X', href: 'https://x.com/ikkarti' },
     { name: 'GitHub', href: 'https://github.com/kkz6' },
     { name: 'LinkedIn', href: 'https://linkedin.com/in/ikkarti' },
-    { name: 'Email', href: 'mailto:karthick@gigcodes.com' },
+    { name: 'Email', href: 'mailto:hi@karti.dev' },
 ];
 
 export function Footer() {

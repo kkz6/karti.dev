@@ -392,7 +392,7 @@ function Stay() {
                         </p>
 
                         <a
-                            href={AIRBNB_LISTING_URL || 'mailto:karthick@gigcodes.com?subject=Airbnb%20enquiry'}
+                            href={AIRBNB_LISTING_URL || 'mailto:hi@karti.dev?subject=Airbnb%20enquiry'}
                             {...(AIRBNB_LISTING_URL ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                             className="group mt-9 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-mono text-sm text-primary-foreground transition-transform duration-200 hover:-translate-y-0.5 active:translate-y-0"
                         >

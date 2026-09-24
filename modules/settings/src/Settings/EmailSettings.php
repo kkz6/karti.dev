@@ -9,6 +9,8 @@ class EmailSettings extends Settings
 {
     public bool $enabled = false;
 
+    public string $provider = 'smtp';
+
     public string $host = '';
 
     public int $port = 587;
@@ -17,6 +19,9 @@ class EmailSettings extends Settings
 
     #[ShouldBeEncrypted]
     public string $password = '';
+
+    #[ShouldBeEncrypted]
+    public string $resend_api_key = '';
 
     public string $encryption = 'tls';
 

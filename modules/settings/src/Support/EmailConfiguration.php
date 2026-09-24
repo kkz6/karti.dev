@@ -17,21 +17,33 @@ class EmailConfiguration
             return $callback();
         }
 
-        $original = config('mail');
+        return $this->runWith($settings, $callback);
+    }
+
+    public function runWith(EmailSettings $settings, Closure $callback): mixed
+    {
+        $originalMail     = config('mail');
+        $originalServices = config('services.resend');
         $this->apply($settings);
 
         try {
             return $callback();
         } finally {
-            config(['mail' => $original]);
+            config([
+                'mail'            => $originalMail,
+                'services.resend' => $originalServices,
+            ]);
             Mail::purge('smtp');
+            Mail::purge('resend');
         }
     }
 
     public function apply(EmailSettings $settings): void
     {
+        $provider = $settings->provider === 'resend' ? 'resend' : 'smtp';
+
         config([
-            'mail.default'                  => 'smtp',
+            'mail.default'                  => $provider,
             'mail.mailers.smtp.scheme'      => $settings->encryption === 'ssl' ? 'smtps' : 'smtp',
             'mail.mailers.smtp.url'         => null,
             'mail.mailers.smtp.host'        => $settings->host,
@@ -40,10 +52,12 @@ class EmailConfiguration
             'mail.mailers.smtp.password'    => $settings->password !== '' ? $settings->password : null,
             'mail.from.address'             => $settings->from_address,
             'mail.from.name'                => $settings->from_name,
+            'services.resend.key'           => $settings->resend_api_key,
         ]);
 
-        // Mailers are cached in long-lived workers, so rebuild SMTP after applying fresh settings.
+        // Mailers are cached in long-lived workers, so rebuild both configurable transports.
         Mail::purge('smtp');
+        Mail::purge('resend');
     }
 
     private function settings(): ?EmailSettings

@@ -97,7 +97,7 @@ export default function Speaking({ events = {}, seo }: SpeakingProps) {
                                     lineup, get in touch.
                                 </p>
                                 <a
-                                    href="mailto:karthick@gigcodes.com"
+                                    href="mailto:hi@karti.dev"
                                     className="group mt-8 inline-flex items-center gap-1.5 rounded-full border border-border px-5 py-2.5 font-mono text-sm text-foreground transition-colors duration-200 hover:border-primary/40 hover:text-primary"
                                 >
                                     Invite me to speak

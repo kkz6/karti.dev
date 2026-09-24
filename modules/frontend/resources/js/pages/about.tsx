@@ -126,8 +126,8 @@ export default function About({ portraitImage = '/images/about.jpg', seo, jsonLd
                                 <SocialLink href="https://linkedin.com/in/ikkarti" icon={LinkedInIcon}>
                                     Follow on LinkedIn
                                 </SocialLink>
-                                <SocialLink href="mailto:karthick@gigcodes.com" icon={MailIcon} className="pt-2">
-                                    karthick@gigcodes.com
+                                <SocialLink href="mailto:hi@karti.dev" icon={MailIcon} className="pt-2">
+                                    hi@karti.dev
                                 </SocialLink>
                             </ul>
                         </div>

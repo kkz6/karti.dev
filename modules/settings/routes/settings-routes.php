@@ -13,6 +13,7 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('admin/settings')->name('
     Route::post('/media/rebuild', [MediaSettingsController::class, 'rebuild'])->middleware('throttle:2,1')->name('media.rebuild');
     Route::get('/email', [EmailSettingsController::class, 'edit'])->name('email.edit');
     Route::put('/email', [EmailSettingsController::class, 'update'])->name('email.update');
+    Route::post('/email/test', [EmailSettingsController::class, 'test'])->middleware('throttle:5,1')->name('email.test');
 });
 
 // Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
