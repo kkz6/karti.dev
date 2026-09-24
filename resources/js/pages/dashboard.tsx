@@ -153,44 +153,46 @@ export default function Dashboard({ overview }: { overview: DashboardOverview })
         <AppLayout breadcrumbs={[{ title: 'Dashboard', href: route('dashboard') }]}>
             <Head title="Dashboard" />
             <PageContainer as="main" className="content-index space-y-8">
-                <header className="flex flex-col gap-5 border-b pb-6 sm:flex-row sm:items-end sm:justify-between">
-                    <div>
-                        <div className="text-muted-foreground mb-2 flex items-center gap-2 text-sm">
-                            <LayoutGrid className="size-4" aria-hidden="true" />
-                            Dashboard
+                <div>
+                    <header className="flex flex-col gap-5 border-b pb-6 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <div className="text-muted-foreground mb-2 flex items-center gap-2 text-sm">
+                                <LayoutGrid className="size-4" aria-hidden="true" />
+                                Dashboard
+                            </div>
+                            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Welcome back, {firstName}</h1>
+                            <p className="text-muted-foreground mt-1 text-sm">A clear view of what is happening across your site.</p>
                         </div>
-                        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Welcome back, {firstName}</h1>
-                        <p className="text-muted-foreground mt-1 text-sm">A clear view of what is happening across your site.</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        <Button asChild variant="outline">
-                            <Link href={route('admin.photography.create')}>
-                                <Camera className="size-4" aria-hidden="true" />
-                                New gallery
-                            </Link>
-                        </Button>
-                        <Button asChild>
-                            <Link href={route('admin.blog.create')}>
-                                <Plus className="size-4" aria-hidden="true" />
-                                New article
-                            </Link>
-                        </Button>
-                    </div>
-                </header>
+                        <div className="flex flex-wrap gap-2">
+                            <Button asChild variant="outline">
+                                <Link href={route('admin.photography.create')}>
+                                    <Camera className="size-4" aria-hidden="true" />
+                                    New gallery
+                                </Link>
+                            </Button>
+                            <Button asChild>
+                                <Link href={route('admin.blog.create')}>
+                                    <Plus className="size-4" aria-hidden="true" />
+                                    New article
+                                </Link>
+                            </Button>
+                        </div>
+                    </header>
 
-                <section
-                    aria-label={`${overview.period.label} summary`}
-                    className="grid divide-y border-b sm:grid-cols-2 sm:divide-x sm:divide-y-0 xl:grid-cols-4"
-                >
-                    <Metric label="Page views" value={overview.traffic.views} trend={overview.traffic.viewsTrend} icon={Eye} />
-                    <Metric label="Daily visitors" value={overview.traffic.dailyVisitors} trend={overview.traffic.visitorsTrend} icon={Users} />
-                    <Metric label="New subscribers" value={overview.newsletter.newSubscribers} trend={overview.newsletter.newTrend} icon={Mail} />
-                    <Metric
-                        label="Published content"
-                        value={overview.content.articles.published + overview.content.galleries.published + overview.content.projects.published}
-                        icon={CircleDot}
-                    />
-                </section>
+                    <section
+                        aria-label={`${overview.period.label} summary`}
+                        className="grid divide-y border-b sm:grid-cols-2 sm:divide-x sm:divide-y-0 xl:grid-cols-4"
+                    >
+                        <Metric label="Page views" value={overview.traffic.views} trend={overview.traffic.viewsTrend} icon={Eye} />
+                        <Metric label="Daily visitors" value={overview.traffic.dailyVisitors} trend={overview.traffic.visitorsTrend} icon={Users} />
+                        <Metric label="New subscribers" value={overview.newsletter.newSubscribers} trend={overview.newsletter.newTrend} icon={Mail} />
+                        <Metric
+                            label="Published content"
+                            value={overview.content.articles.published + overview.content.galleries.published + overview.content.projects.published}
+                            icon={CircleDot}
+                        />
+                    </section>
+                </div>
 
                 {!overview.traffic.enabled ? (
                     <div className="border-border bg-muted/30 rounded-lg border px-4 py-3 text-sm">

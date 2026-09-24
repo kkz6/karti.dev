@@ -33,7 +33,7 @@ export default function Newsletter({ mode, actionUrl }: { mode: 'confirm' | 'con
                             form.post(actionUrl);
                         }}
                     >
-                        <Button disabled={form.processing}>
+                        <Button type="submit" disabled={form.processing}>
                             {form.processing ? 'Please wait…' : mode === 'confirm' ? 'Confirm subscription' : 'Unsubscribe'}
                         </Button>
                     </form>
