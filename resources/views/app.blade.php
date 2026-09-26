@@ -36,7 +36,7 @@
             }
         </style>
 
-        @if (is_array(data_get($page, 'props.seo')))
+        @if (! request()->is('admin', 'admin/*') && is_array(data_get($page, 'props.seo')))
             @include('partials.seo', [
                 'seo' => data_get($page, 'props.seo'),
                 'jsonLd' => data_get($page, 'props.jsonLd'),

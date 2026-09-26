@@ -30,6 +30,22 @@ test('site settings render with the saved values and shared public identity', fu
         ->component('settings/site')->has('settings.name')->has('settings.favicon')->has('site.name')->missing('mediaSettings')->missing('mediaMessage'));
 });
 
+test('admin pages never render public SEO metadata', function () {
+    \Inertia\Inertia::share('seo', [
+        'title'        => 'Public SEO title',
+        'description'  => 'Public SEO description',
+        'url'          => 'https://example.com/public-page',
+        'twitter_card' => 'summary_large_image',
+    ]);
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('admin.settings.edit'))
+        ->assertOk()
+        ->assertDontSee('property="og:title"', false)
+        ->assertDontSee('name="twitter:card"', false)
+        ->assertDontSee('rel="canonical"', false);
+});
+
 test('settings persist and flow into admin identity and public HTML without rebuilding', function () {
     $this->actingAs(User::factory()->create());
     $this->put(route('admin.settings.update'), [...siteSettingsPayload(), 'mail_password' => 'never-store-this'])
