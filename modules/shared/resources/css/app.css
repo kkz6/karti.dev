@@ -752,7 +752,7 @@ body:has(.admin-workspace),
 }
 
 /* Subtle scanline effect for dark mode */
-.dark body:not(:has(.admin-workspace))::after {
+.dark body:not(:has(.admin-workspace, .public-reading))::after {
     content: '';
     position: fixed;
     inset: 0;
@@ -765,6 +765,110 @@ body:has(.admin-workspace),
     );
     pointer-events: none;
     z-index: var(--z-grain);
+}
+
+/* One typography scale for article headers and content. */
+.article-reading {
+    --reading-color: var(--foreground);
+}
+
+.article-title {
+    font-size: clamp(1.75rem, 1.25rem + 1.8vw, 2.375rem);
+    line-height: 1.25;
+    letter-spacing: -0.045em;
+    overflow-wrap: anywhere;
+}
+
+.article-intro,
+.article-reading .article-content {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--reading-color);
+}
+
+.article-reading .article-content {
+    --tw-prose-body: var(--reading-color);
+    --tw-prose-headings: var(--foreground);
+    --tw-prose-bold: var(--foreground);
+    --tw-prose-links: var(--primary);
+    --tw-prose-quotes: var(--foreground);
+    --tw-prose-invert-body: var(--reading-color);
+    --tw-prose-invert-headings: var(--foreground);
+    --tw-prose-invert-bold: var(--foreground);
+    --tw-prose-invert-links: var(--primary);
+    --tw-prose-invert-quotes: var(--foreground);
+    overflow-wrap: anywhere;
+}
+
+.article-reading .article-content :where(p, ul, ol, blockquote, pre, table) {
+    margin-block: 0 1rem;
+}
+
+.article-reading .article-content :where(h1, h2, h3, h4) {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.4;
+    margin-block: 2rem 0.75rem;
+    scroll-margin-top: 6rem;
+}
+
+.article-reading .article-content h1,
+.article-reading .article-content h2 {
+    font-size: 1.375rem;
+}
+
+.article-reading .article-content h3 {
+    font-size: 1.125rem;
+}
+
+.article-reading .article-content h4 {
+    font-size: 1rem;
+}
+
+.article-reading .article-content > :first-child {
+    margin-top: 0;
+}
+
+.article-reading .article-content li {
+    margin-block: 0.25rem;
+}
+
+.article-reading .article-content li p {
+    margin-block: 0.5rem;
+}
+
+.article-reading .article-content a {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+}
+
+.article-reading .article-content blockquote {
+    border-left-color: var(--border);
+    font-style: normal;
+    font-weight: 400;
+}
+
+.article-reading .article-content blockquote p::before,
+.article-reading .article-content blockquote p::after {
+    content: none;
+}
+
+.article-reading .article-content :where(img, figure) {
+    margin-block: 1.5rem;
+    border-radius: 0.5rem;
+}
+
+.article-reading .article-content table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    font-size: 0.875rem;
+}
+
+.article-reading .article-content pre {
+    box-shadow: none;
 }
 
 /* Article Content Code Block Styles */

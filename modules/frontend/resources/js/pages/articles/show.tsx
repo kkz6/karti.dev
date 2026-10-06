@@ -24,7 +24,7 @@ export default function ArticleShow({ article, seo, jsonLd }: ArticleProps) {
     return (
         <>
             <SeoHead seo={seo} jsonLd={jsonLd} />
-            <PublicLayout>
+            <PublicLayout reading>
                 <ArticleLayout article={article}>
                     <ArticleContent content={article.content} />
                 </ArticleLayout>

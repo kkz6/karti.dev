@@ -26,65 +26,54 @@ export function ArticleLayout({
     children: React.ReactNode;
 }) {
     return (
-        <Container className="mt-16 lg:mt-32">
-            <div className="xl:relative">
-                <div className="mx-auto max-w-2xl">
+        <Container className="mt-10 sm:mt-16">
+            <div className="article-reading mx-auto max-w-[44rem]">
+                <Link
+                    href="/articles"
+                    className="text-muted-foreground hover:text-primary mb-6 inline-flex min-h-11 items-center gap-2 text-sm transition-colors"
+                >
+                    <ArrowLeftIcon className="h-4 w-4 stroke-current" />
+                    All articles
+                </Link>
+                <article>
+                    <header>
+                        <h1 className="article-title text-foreground font-semibold">{article.title}</h1>
+                        <time dateTime={article.date} className="text-muted-foreground mt-4 block text-xs">
+                            {new Date(article.date).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                            })}
+                        </time>
+                        {article.description && <p className="article-intro mt-5">{article.description}</p>}
+                        {article.image && (
+                            <a
+                                href={article.image.fullSrc}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="focus-visible:outline-primary mt-6 block overflow-hidden rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4"
+                                aria-label={`Open full-size image: ${article.image.alt}`}
+                            >
+                                <img
+                                    src={article.image.src}
+                                    alt={article.image.alt}
+                                    className="aspect-[16/9] w-full object-cover"
+                                    loading="eager"
+                                    decoding="async"
+                                />
+                            </a>
+                        )}
+                    </header>
+                    <div className="mt-8">{children}</div>
+                </article>
+                <div className="border-border/60 mt-10 border-t pt-5">
                     <Link
                         href="/articles"
-                        aria-label="Go back to articles"
-                        className="group glass-card hover:border-primary/30 mb-8 flex h-10 w-10 items-center justify-center rounded-xl transition lg:absolute lg:-left-5 lg:-mt-2 lg:mb-0 xl:-top-1.5 xl:left-0 xl:mt-0"
+                        className="text-muted-foreground hover:text-primary inline-flex min-h-11 items-center gap-2 text-sm transition-colors"
                     >
-                        <ArrowLeftIcon className="stroke-muted-foreground group-hover:stroke-primary h-4 w-4 transition" />
+                        <ArrowLeftIcon className="h-4 w-4 stroke-current" />
+                        All articles
                     </Link>
-                    <article>
-                        <header className="flex flex-col">
-                            <time
-                                dateTime={article.date}
-                                className="text-muted-foreground order-first mb-5 flex items-center font-mono text-xs tracking-[0.06em]"
-                            >
-                                <span aria-hidden="true" className="bg-primary/50 h-4 w-0.5 rounded-full" />
-                                <span className="ml-3">
-                                    {new Date(article.date).toLocaleDateString('en-US', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                    })}
-                                </span>
-                            </time>
-                            <h1 className="display-2 text-foreground">{article.title}</h1>
-                            {article.description && <p className="text-muted-foreground mt-6 text-lg leading-relaxed">{article.description}</p>}
-                            {article.image && (
-                                <a
-                                    href={article.image.fullSrc}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="border-border/60 bg-muted focus-visible:ring-ring mt-8 block overflow-hidden rounded-2xl border focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-                                    aria-label={`Open full-size image: ${article.image.alt}`}
-                                >
-                                    <img
-                                        src={article.image.src}
-                                        alt={article.image.alt}
-                                        className="aspect-[16/9] w-full object-cover"
-                                        loading="eager"
-                                        decoding="async"
-                                    />
-                                </a>
-                            )}
-                        </header>
-                        <div className="border-border/60 prose prose-zinc dark:prose-invert prose-lg prose-headings:font-display prose-headings:font-semibold prose-headings:tracking-[-0.02em] prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-code:font-mono prose-img:rounded-xl mt-10 border-t pt-10">
-                            {children}
-                        </div>
-                    </article>
-
-                    <div className="border-border/60 mt-16 border-t pt-8">
-                        <Link
-                            href="/articles"
-                            className="group text-muted-foreground hover:text-primary inline-flex items-center gap-2 font-mono text-sm transition-colors duration-200"
-                        >
-                            <ArrowLeftIcon className="h-4 w-4 stroke-current transition-transform duration-300 ease-out group-hover:-translate-x-1" />
-                            All articles
-                        </Link>
-                    </div>
                 </div>
             </div>
         </Container>
