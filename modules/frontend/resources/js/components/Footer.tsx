@@ -31,7 +31,7 @@ export function Footer() {
                                 <div className="max-w-xs">
                                     <p className="font-display text-foreground text-base font-semibold tracking-[-0.015em]">Karthick</p>
                                     <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-                                        Developer and founder in Bangalore. Software, home automation, networks, and a spare room on Airbnb.
+                                        Developer and founder in Bangalore. A home for my projects, writing, and photographs.
                                     </p>
                                 </div>
                                 <div className="mt-auto">

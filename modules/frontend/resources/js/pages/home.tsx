@@ -1,11 +1,10 @@
 import { Link } from '@inertiajs/react';
-import { Button } from '@shared/components/ui/button';
 import { motion, useReducedMotion } from 'framer-motion';
 import React from 'react';
 import { Container } from '../components/Container';
 import { Reveal } from '../components/Reveal';
 import { SeoHead, type SeoData } from '../components/SeoHead';
-import { CodeGlyph, HeroDiagram, HomeGlyph, HouseScene, NetworkGlyph, VisaGlyph } from '../components/illustrations';
+import { CodeGlyph, HomeGlyph, VisaGlyph } from '../components/illustrations';
 import { useSpotlight } from '../components/useSpotlight';
 import PublicLayout from '../layouts/public-layout';
 
@@ -90,78 +89,52 @@ function Hero() {
     };
 
     return (
-        <section className="relative overflow-hidden pb-20 pt-6">
+        <section className="relative overflow-hidden pt-6 pb-20">
             <Container className="relative">
-                <motion.div
-                    variants={container}
-                    initial="hidden"
-                    animate="visible"
-                    className="grid grid-cols-1 items-center gap-x-8 gap-y-14 lg:grid-cols-12"
-                >
-                    <div className="lg:col-span-7">
-                    <motion.p variants={item} className="label-mono mb-8 flex items-center gap-2.5">
-                        <span className="relative flex h-1.5 w-1.5">
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
-                            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
-                        </span>
-                        bangalore, india &middot; open to consulting
-                    </motion.p>
+                <motion.div variants={container} initial="hidden" animate="visible" className="max-w-3xl">
+                    <div>
+                        <motion.p variants={item} className="label-mono mb-8 flex items-center gap-2.5">
+                            bangalore, india
+                        </motion.p>
 
-                    <motion.h1 variants={item} className="display-hero text-foreground">
-                        Software,
-                        <br />
-                        smart homes,
-                        <br />
-                        <span className="relative inline-block text-primary">
-                            smoother visas
-                            <svg
-                                aria-hidden="true"
-                                viewBox="0 0 300 12"
-                                preserveAspectRatio="none"
-                                className="absolute -bottom-1 left-0 h-[0.16em] w-full text-primary/40"
-                            >
-                                <path d="M2 8c60-5 120-6 180-3s90 4 116 1" stroke="currentColor" strokeWidth="6" fill="none" strokeLinecap="round" />
-                            </svg>
-                        </span>
-                    </motion.h1>
+                        <motion.h1 variants={item} className="display-hero text-foreground">
+                            Hi, I'm Karthick.
+                            <br />
+                            <span className="text-primary">I make things.</span>
+                        </motion.h1>
 
-                    <motion.p variants={item} className="prose-measure mt-10 text-lg leading-relaxed text-muted-foreground sm:text-xl">
-                        I'm Karthick — a developer and founder in Bangalore. I ship web products, consult on home
-                        automation, networking and visa applications, and host guests on Airbnb.
-                    </motion.p>
+                        <motion.p variants={item} className="prose-measure text-muted-foreground mt-10 text-lg leading-relaxed sm:text-xl">
+                            I'm a developer and founder. This is a place for things I build, notes on what I learn, and photographs from along the
+                            way.
+                        </motion.p>
 
-                    <motion.div variants={item} className="mt-11 flex flex-wrap items-center gap-3">
-                        <Button asChild size="lg" className="rounded-full px-7 font-mono">
-                            <Link href="/consulting">Work with me</Link>
-                        </Button>
-                        <Button asChild variant="outline" size="lg" className="rounded-full px-7 font-mono">
-                            <Link href="/projects">See my work</Link>
-                        </Button>
-                    </motion.div>
+                        <motion.div variants={item} className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 font-mono text-sm">
+                            <Link href="/about" className="text-primary decoration-primary/30 hover:decoration-primary underline underline-offset-4">
+                                A little about me &rarr;
+                            </Link>
+                            <Link href="/projects" className="text-muted-foreground hover:text-primary transition-colors">
+                                Things I've built &rarr;
+                            </Link>
+                        </motion.div>
 
-                    <motion.div variants={item} className="mt-11 flex flex-wrap items-center gap-x-6 gap-y-3">
-                        {socials.map(({ href, label, icon: Icon, name }) => (
-                            <a
-                                key={href}
-                                href={href}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label={`Follow on ${name}`}
-                                className="group flex items-center gap-2 font-mono text-sm text-muted-foreground transition-colors duration-200 hover:text-primary"
-                            >
-                                <Icon className="h-4 w-4 fill-current" />
-                                <span className="border-b border-transparent transition-colors duration-200 group-hover:border-primary/40">
-                                    {label}
-                                </span>
-                            </a>
-                        ))}
+                        <motion.div variants={item} className="mt-11 flex flex-wrap items-center gap-x-6 gap-y-3">
+                            {socials.map(({ href, label, icon: Icon, name }) => (
+                                <a
+                                    key={href}
+                                    href={href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label={`Follow on ${name}`}
+                                    className="group text-muted-foreground hover:text-primary flex items-center gap-2 font-mono text-sm transition-colors duration-200"
+                                >
+                                    <Icon className="h-4 w-4 fill-current" />
+                                    <span className="group-hover:border-primary/40 border-b border-transparent transition-colors duration-200">
+                                        {label}
+                                    </span>
+                                </a>
+                            ))}
                         </motion.div>
                     </div>
-
-                    {/* Diagram sits in its own column so the composition reads as one block */}
-                    <motion.div variants={item} className="hidden lg:col-span-5 lg:block">
-                        <HeroDiagram className="h-auto w-full opacity-90 dark:opacity-80" />
-                    </motion.div>
                 </motion.div>
             </Container>
         </section>
@@ -170,29 +143,33 @@ function Hero() {
 
 function SectionHeading({
     index,
+    id,
     eyebrow,
     title,
     action,
 }: {
     index: string;
+    id: string;
     eyebrow: string;
     title: string;
     action?: { href: string; label: string };
 }) {
     return (
-        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border/60 pb-6">
+        <div className="border-border/60 flex flex-wrap items-end justify-between gap-4 border-b pb-6">
             <div>
                 <p className="label-mono mb-4 flex items-center gap-3">
                     <span className="text-primary/70" data-numeric>
                         {index}
                     </span>
-                    <span aria-hidden="true" className="h-px w-6 bg-primary/40" />
+                    <span aria-hidden="true" className="bg-primary/40 h-px w-6" />
                     {eyebrow}
                 </p>
-                <h2 className="display-3 text-foreground">{title}</h2>
+                <h2 id={id} className="display-3 text-foreground">
+                    {title}
+                </h2>
             </div>
             {action && (
-                <Link href={action.href} className="group inline-flex items-center gap-1.5 font-mono text-sm text-primary">
+                <Link href={action.href} className="group text-primary inline-flex items-center gap-1.5 font-mono text-sm">
                     {action.label}
                     <span aria-hidden="true" className="transition-transform duration-300 ease-out group-hover:translate-x-1">
                         &rarr;
@@ -203,224 +180,38 @@ function SectionHeading({
     );
 }
 
-const capabilities = [
+const interests = [
     {
-        index: '01',
         title: 'Software',
-        body: 'Product work end to end — Laravel and React, from database schema through to the interface people actually touch.',
-        points: ['Web applications', 'APIs and integrations', 'Long-term maintenance'],
-        meta: 'laravel · react · typescript',
-        href: '/projects',
+        body: 'Most of my work lives on the web. I build with Laravel, React, and TypeScript.',
         Glyph: CodeGlyph,
     },
     {
-        index: '02',
-        title: 'Visa consultations',
-        body: 'Visa applications fail on paperwork far more often than on eligibility. I help you find the right route and get the documents right first time.',
-        points: ['Choosing a category', 'Document checklists', 'Timelines and appointments'],
-        meta: 'categories · documents · timelines',
-        href: '/consulting#visa',
-        Glyph: VisaGlyph,
-    },
-    {
-        index: '03',
-        title: 'Home automation',
-        body: 'Smart homes go wrong when the pieces do not talk to each other. I help you pick a stack that runs locally and stays easy to live with.',
-        points: ['Platform and protocols', 'Lighting and sensors', 'Local-first fallbacks'],
-        meta: 'local-first · sensors · lighting',
-        href: '/consulting#home-automation',
+        title: 'Homes and networks',
+        body: 'Away from the browser, I tinker with local automation, sensors, and home networks.',
         Glyph: HomeGlyph,
     },
     {
-        index: '04',
-        title: 'Networking',
-        body: 'Most home and small-office wifi problems are layout problems, not hardware problems. I design networks that cover the space and stay fast.',
-        points: ['Coverage and AP placement', 'VLANs and isolation', 'Remote access'],
-        meta: 'coverage · vlans · remote access',
-        href: '/consulting#networking',
-        Glyph: NetworkGlyph,
+        title: 'Travel and hosting',
+        body: 'Travel paperwork, hosting guests in Madurai, and the small details of being somewhere new.',
+        Glyph: VisaGlyph,
     },
 ];
 
-function CapabilityPanel({ capability, offset }: { capability: (typeof capabilities)[number]; offset: number }) {
-    const { onPointerMove } = useSpotlight<HTMLAnchorElement>();
-    const { Glyph } = capability;
-
+function Interests() {
     return (
-        // Each panel sticks a little lower than the last, so they pile up on scroll
-        <div className="sticky" style={{ top: `${7 + offset * 1.75}rem` }}>
-            <Link
-                href={capability.href}
-                onPointerMove={onPointerMove}
-                className="spotlight group relative block overflow-hidden rounded-3xl surface-elevated p-8 md:p-12"
-            >
-                <Glyph
-                    aria-hidden="true"
-                    className="pointer-events-none absolute -bottom-16 -right-12 h-72 w-72 text-primary/[0.05] transition-transform duration-700 ease-out group-hover:scale-105"
-                />
-
-                <div className="relative grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
-                    <div className="lg:col-span-1">
-                        <span className="font-mono text-sm text-primary" data-numeric>
-                            {capability.index}
-                        </span>
-                    </div>
-
-                    <div className="lg:col-span-7">
-                        <Glyph aria-hidden="true" className="h-9 w-9 text-primary" />
-                        <h3 className="mt-6 font-display text-3xl font-semibold tracking-[-0.025em] text-foreground transition-colors duration-200 group-hover:text-primary md:text-4xl">
-                            {capability.title}
-                        </h3>
-                        <p className="prose-measure mt-4 text-base leading-relaxed text-muted-foreground md:text-lg">
-                            {capability.body}
-                        </p>
-                        <span className="mt-7 inline-flex items-center gap-1.5 font-mono text-sm text-primary">
-                            Learn more
-                            <span aria-hidden="true" className="transition-transform duration-300 ease-out group-hover:translate-x-1">
-                                &rarr;
-                            </span>
-                        </span>
-                    </div>
-
-                    <ul role="list" className="lg:col-span-4 lg:border-l lg:border-border/60 lg:pl-8">
-                        {capability.points.map((point) => (
-                            <li
-                                key={point}
-                                className="flex gap-3 border-b border-border/50 py-3 text-sm text-muted-foreground last:border-0"
-                            >
-                                <span aria-hidden="true" className="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary" />
-                                {point}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            </Link>
-        </div>
-    );
-}
-
-function Capabilities() {
-    return (
-        <section className="mt-24 md:mt-32" aria-labelledby="capabilities-heading">
+        <section className="mt-20 md:mt-28" aria-labelledby="interests-heading">
             <Container>
-                <SectionHeading
-                    index="01"
-                    eyebrow="what i do"
-                    title="Four things, done properly"
-                    action={{ href: '/consulting', label: 'Consulting' }}
-                />
-            </Container>
-
-            <Container className="mt-10">
-                <div className="space-y-6 pb-24">
-                    {capabilities.map((capability, index) => (
-                        <CapabilityPanel key={capability.title} capability={capability} offset={index} />
+                <SectionHeading index="03" eyebrow="away from the page" title="Things I spend time on" id="interests-heading" />
+                <Reveal className="grid grid-cols-1 gap-8 pt-8 md:grid-cols-3 md:gap-10">
+                    {interests.map(({ title, body, Glyph }) => (
+                        <Reveal.Item key={title}>
+                            <Glyph aria-hidden="true" className="text-primary/70 h-7 w-7" />
+                            <h3 className="font-display text-foreground mt-4 text-xl font-semibold tracking-tight">{title}</h3>
+                            <p className="text-muted-foreground mt-3 text-base leading-relaxed">{body}</p>
+                        </Reveal.Item>
                     ))}
-                </div>
-            </Container>
-        </section>
-    );
-}
-
-// The stack this site and most of my client work runs on
-const stack = [
-    'Laravel',
-    'PHP',
-    'React',
-    'TypeScript',
-    'Inertia.js',
-    'Tailwind CSS',
-    'Vite',
-    'MySQL',
-    'Home Assistant',
-    'Microcontrollers',
-    'UniFi',
-];
-
-function StackMarquee() {
-    const track = [...stack, ...stack];
-
-    return (
-        <section className="marquee full-bleed mt-24 overflow-hidden border-y border-border/60 py-5 md:mt-32">
-            <h2 className="sr-only">Technologies I work with</h2>
-            <div className="marquee-track items-center gap-10">
-                {track.map((item, index) => (
-                    <span
-                        key={`${item}-${index}`}
-                        aria-hidden={index >= stack.length}
-                        className="flex shrink-0 items-center gap-10 font-mono text-sm text-muted-foreground"
-                    >
-                        {item}
-                        <span className="h-1 w-1 rounded-full bg-primary/50" />
-                    </span>
-                ))}
-            </div>
-        </section>
-    );
-}
-
-const AIRBNB_LISTING_URL = '';
-
-function Stay() {
-    return (
-        <section className="full-bleed relative mt-28 overflow-hidden md:mt-36" aria-labelledby="stay-heading">
-            <div aria-hidden="true" className="absolute inset-0 bg-card" />
-            <div
-                aria-hidden="true"
-                className="absolute inset-0"
-                style={{ background: 'radial-gradient(70% 70% at 72% 50%, var(--accent) 0%, transparent 70%)' }}
-            />
-            <div aria-hidden="true" className="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-card via-card/60 to-transparent" />
-
-            <Container className="relative py-24 md:py-32">
-                <div className="grid grid-cols-1 gap-14 lg:grid-cols-12 lg:items-center">
-                    <div className="lg:col-span-6">
-                        <p className="label-mono mb-4 flex items-center gap-3">
-                            <span className="text-primary" data-numeric>
-                                02
-                            </span>
-                            <span aria-hidden="true" className="h-px w-6 bg-primary/50" />
-                            the guest room
-                        </p>
-                        <h2 id="stay-heading" className="display-2 text-foreground">
-                            I host on Airbnb
-                        </h2>
-                        <p className="prose-measure mt-5 text-lg leading-relaxed text-muted-foreground">
-                            Somewhere between the software and the soldering iron, I run a place for guests. It is wired
-                            the way I'd wire my own home — fast wifi in every corner, lighting that behaves, and the
-                            automation kept quietly out of the way.
-                        </p>
-
-                        <a
-                            href={AIRBNB_LISTING_URL || 'mailto:hi@karti.dev?subject=Airbnb%20enquiry'}
-                            {...(AIRBNB_LISTING_URL ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                            className="group mt-9 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-mono text-sm text-primary-foreground transition-transform duration-200 hover:-translate-y-0.5 active:translate-y-0"
-                        >
-                            {AIRBNB_LISTING_URL ? 'View the listing' : 'Enquire about staying'}
-                            <span aria-hidden="true" className="transition-transform duration-300 ease-out group-hover:translate-x-1">
-                                &rarr;
-                            </span>
-                        </a>
-                    </div>
-
-                    <div className="lg:col-span-6">
-                        <HouseScene className="mx-auto h-auto w-full max-w-[26rem]" />
-
-                        <dl className="mt-10 grid grid-cols-2 gap-x-8 gap-y-7">
-                            {[
-                                { label: 'wifi', value: 'Mesh, full coverage' },
-                                { label: 'automation', value: 'Local-first, no cloud' },
-                                { label: 'workspace', value: 'Desk and fast upload' },
-                                { label: 'location', value: 'Madurai, India' },
-                            ].map((fact) => (
-                                <div key={fact.label} className="border-t border-border pt-4">
-                                    <dt className="label-mono">{fact.label}</dt>
-                                    <dd className="mt-2 text-sm font-medium text-foreground">{fact.value}</dd>
-                                </div>
-                            ))}
-                        </dl>
-                    </div>
-                </div>
+                </Reveal>
             </Container>
         </section>
     );
@@ -430,7 +221,7 @@ function PhotoCard({ photo, className, ...rest }: { photo: FeaturedPhoto; classN
     return (
         <Link
             href={photo.slug ? `/photography/${photo.slug}` : '/photography'}
-            className={`group relative block overflow-hidden rounded-2xl bg-muted ring-1 ring-border/50 ${className ?? ''}`}
+            className={`group bg-muted ring-border/50 relative block overflow-hidden rounded-2xl ring-1 ${className ?? ''}`}
             {...rest}
         >
             <img
@@ -448,59 +239,30 @@ function PhotoCard({ photo, className, ...rest }: { photo: FeaturedPhoto; classN
     );
 }
 
-function PhotoMarquee({ photos }: { photos: FeaturedPhoto[] }) {
+function Photography({ photos }: { photos: FeaturedPhoto[] }) {
     if (photos.length === 0) return null;
-
-    // A marquee needs enough cards to fill the viewport twice over; below that
-    // the loop reads as a stutter, so fall back to a static grid.
-    const canScroll = photos.length >= 4;
-    const track = canScroll ? [...photos, ...photos] : [];
 
     return (
         <section className="mt-28 md:mt-36" aria-labelledby="photography-heading">
             <Container>
                 <SectionHeading
-                    index="03"
+                    index="02"
+                    id="photography-heading"
                     eyebrow="through the lens"
                     title="Photography"
                     action={{ href: '/photography', label: 'View all' }}
                 />
             </Container>
 
-            {canScroll ? (
-                <div className="marquee full-bleed mt-10 overflow-hidden [mask-image:linear-gradient(to_right,transparent,#000_6%,#000_94%,transparent)]">
-                    <div className="marquee-track gap-5">
-                        {track.map((photo, index) => (
-                            <PhotoCard
-                                key={`${photo.slug}-${index}`}
-                                photo={photo}
-                                aria-hidden={index >= photos.length}
-                                tabIndex={index >= photos.length ? -1 : undefined}
-                                className="h-64 w-[22rem] shrink-0 sm:h-80 sm:w-[28rem]"
-                            />
-                        ))}
-                    </div>
-                </div>
-            ) : (
-                <Container className="mt-10">
-                    <Reveal
-                        className={
-                            photos.length === 1
-                                ? 'grid grid-cols-1'
-                                : 'grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3'
-                        }
-                    >
-                        {photos.map((photo, index) => (
-                            <Reveal.Item key={photo.slug ?? index}>
-                                <PhotoCard
-                                    photo={photo}
-                                    className={photos.length === 1 ? 'h-[26rem] w-full' : 'h-80 w-full'}
-                                />
-                            </Reveal.Item>
-                        ))}
-                    </Reveal>
-                </Container>
-            )}
+            <Container className="mt-10">
+                <Reveal className={photos.length === 1 ? 'grid grid-cols-1' : 'grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3'}>
+                    {photos.map((photo, index) => (
+                        <Reveal.Item key={photo.slug ?? index}>
+                            <PhotoCard photo={photo} className={photos.length === 1 ? 'h-[26rem] w-full' : 'h-80 w-full'} />
+                        </Reveal.Item>
+                    ))}
+                </Reveal>
+            </Container>
         </section>
     );
 }
@@ -514,21 +276,16 @@ function ArticleRow({ article }: { article: ArticleData }) {
             onPointerMove={onPointerMove}
             className="spotlight group grid grid-cols-1 gap-x-8 gap-y-3 rounded-2xl px-5 py-7 transition-colors duration-300 sm:grid-cols-[10rem_1fr] sm:px-7"
         >
-            <time
-                dateTime={article.date}
-                className="font-mono text-xs tracking-[0.06em] text-muted-foreground sm:pt-1.5"
-            >
+            <time dateTime={article.date} className="text-muted-foreground font-mono text-xs tracking-[0.06em] sm:pt-1.5">
                 {new Date(article.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' })}
             </time>
 
             <div>
-                <h3 className="font-display text-xl font-semibold tracking-[-0.02em] text-foreground transition-colors duration-200 group-hover:text-primary">
+                <h3 className="font-display text-foreground group-hover:text-primary text-xl font-semibold tracking-[-0.02em] transition-colors duration-200">
                     {article.title}
                 </h3>
-                <p className="prose-measure mt-2.5 text-[0.9375rem] leading-relaxed text-muted-foreground">
-                    {article.description}
-                </p>
-                <span className="mt-4 inline-flex items-center gap-1.5 font-mono text-sm text-primary">
+                <p className="prose-measure text-muted-foreground mt-2.5 text-[0.9375rem] leading-relaxed">{article.description}</p>
+                <span className="text-primary mt-4 inline-flex items-center gap-1.5 font-mono text-sm">
                     Read article
                     <span aria-hidden="true" className="transition-transform duration-300 ease-out group-hover:translate-x-1">
                         &rarr;
@@ -544,14 +301,15 @@ function Writing({ articles }: { articles: ArticleData[] }) {
         <section className="mt-28 md:mt-36" aria-labelledby="writing-heading">
             <Container>
                 <SectionHeading
-                    index="04"
+                    index="01"
+                    id="writing-heading"
                     eyebrow="latest writing"
                     title="Notes and essays"
                     action={articles.length > 0 ? { href: '/articles', label: 'All articles' } : undefined}
                 />
 
                 {articles.length > 0 ? (
-                    <Reveal className="divide-y divide-border/60 border-b border-border/60">
+                    <Reveal className="divide-border/60 border-border/60 divide-y border-b">
                         {articles.map((article) => (
                             <Reveal.Item key={article.slug} as="article">
                                 <ArticleRow article={article} />
@@ -559,10 +317,10 @@ function Writing({ articles }: { articles: ArticleData[] }) {
                         ))}
                     </Reveal>
                 ) : (
-                    <div className="mt-10 rounded-3xl border border-dashed border-border px-6 py-16 text-center">
-                        <p className="font-display text-lg font-semibold text-foreground">Nothing published yet</p>
-                        <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
-                            The first piece is in progress. Subscribe below and it'll land in your inbox.
+                    <div className="border-border mt-10 rounded-3xl border border-dashed px-6 py-16 text-center">
+                        <p className="font-display text-foreground text-lg font-semibold">Nothing published yet</p>
+                        <p className="text-muted-foreground mx-auto mt-2 max-w-sm text-sm leading-relaxed">
+                            A space for notes on software, everyday experiments, and things I'm figuring out.
                         </p>
                     </div>
                 )}
@@ -577,9 +335,9 @@ function Work({ roles }: { roles: Role[] }) {
     return (
         <section className="mt-28 md:mt-36" aria-labelledby="work-heading">
             <Container>
-                <SectionHeading index="05" eyebrow="experience" title="Where I've worked" />
+                <SectionHeading index="04" id="work-heading" eyebrow="experience" title="Where I've worked" />
 
-                <Reveal className="divide-y divide-border/60 border-b border-border/60">
+                <Reveal className="divide-border/60 border-border/60 divide-y border-b">
                     {roles.map((role) => (
                         <Reveal.Item key={`${role.company}-${role.start}`}>
                             <div className="flex items-center gap-4 py-6">
@@ -587,23 +345,21 @@ function Work({ roles }: { roles: Role[] }) {
                                     <img
                                         src={role.logo}
                                         alt=""
-                                        className="h-11 w-11 shrink-0 rounded-lg bg-card object-contain p-1.5 ring-1 ring-border/60"
+                                        className="bg-card ring-border/60 h-11 w-11 shrink-0 rounded-lg object-contain p-1.5 ring-1"
                                     />
                                 ) : (
                                     <div
                                         aria-hidden="true"
-                                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-card font-mono text-sm text-muted-foreground ring-1 ring-border/60"
+                                        className="bg-card text-muted-foreground ring-border/60 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg font-mono text-sm ring-1"
                                     >
                                         {role.company.charAt(0)}
                                     </div>
                                 )}
                                 <div className="min-w-0 flex-auto">
-                                    <p className="font-display text-base font-semibold tracking-[-0.01em] text-foreground">
-                                        {role.company}
-                                    </p>
-                                    <p className="mt-0.5 text-sm text-muted-foreground">{role.title}</p>
+                                    <p className="font-display text-foreground text-base font-semibold tracking-[-0.01em]">{role.company}</p>
+                                    <p className="text-muted-foreground mt-0.5 text-sm">{role.title}</p>
                                 </div>
-                                <p className="shrink-0 font-mono text-xs text-muted-foreground" data-numeric>
+                                <p className="text-muted-foreground shrink-0 font-mono text-xs" data-numeric>
                                     {role.start} &ndash; {role.end}
                                 </p>
                             </div>
@@ -620,11 +376,9 @@ export default function Home({ articles = [], featuredPhotos = [], roles = [], s
         <PublicLayout>
             <SeoHead seo={seo} jsonLd={jsonLd} />
             <Hero />
-            <StackMarquee />
-            <Capabilities />
-            <Stay />
-            <PhotoMarquee photos={featuredPhotos} />
             <Writing articles={articles} />
+            <Photography photos={featuredPhotos} />
+            <Interests />
             <Work roles={roles} />
         </PublicLayout>
     );

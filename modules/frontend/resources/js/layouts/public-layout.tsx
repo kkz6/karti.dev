@@ -32,7 +32,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
     }, [])
 
     return (
-        <div className="relative flex min-h-dvh w-full flex-col bg-background">
+        <div className="public-site relative flex min-h-dvh w-full flex-col bg-background">
             <SiteIdentityHead />
             <a href="#main" className="skip-link">
                 Skip to content

@@ -447,6 +447,12 @@ body:has(.admin-workspace),
     letter-spacing: -0.03em;
 }
 
+.public-site {
+    --font-sans: 'JetBrains Mono', ui-monospace, monospace;
+    --font-display: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: var(--font-sans);
+}
+
 /* Oversized hero type — big, but capped so the line doesn't sprawl on wide screens */
 .display-hero {
     @apply font-display font-semibold tracking-[-0.035em] leading-[1];
