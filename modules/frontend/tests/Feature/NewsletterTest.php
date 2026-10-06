@@ -110,7 +110,7 @@ test('public pages provide a usable newsletter token and keep subscribers on the
         ->assertRedirect($url)->assertSessionHas('newsletter_status');
     expect(NewsletterSubscriber::sole()->confirmed_at)->toBeNull();
     Queue::assertPushed(SendNewsletterConfirmation::class);
-})->with(['/', '/about', '/consulting', '/articles', '/projects', '/speaking', '/photography', '/uses']);
+})->with(['/', '/about', '/articles', '/projects', '/speaking', '/photography', '/uses']);
 
 test('invalid disposable and honeypot submissions do not create records', function (array $changes, string $field) {
     $this->from('/')->post(route('newsletter.subscribe'), array_replace($this->payload, $changes))

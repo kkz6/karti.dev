@@ -333,52 +333,6 @@ class PortfolioController extends BaseController
         ]);
     }
 
-    public function consulting()
-    {
-        $seoData = new SEOData(
-            title: 'Consulting - '.config('seo.site_name', config('app.name')),
-            description: 'Visa consultations, home automation, and network design. One-on-one help getting a visa application right or building a home that runs itself.',
-            author: config('seo.author', 'Karthick'),
-            image: config('seo.image'),
-            url: url('/consulting'),
-            type: 'website',
-            site_name: config('seo.site_name', config('app.name')),
-            twitter_card: config('seo.twitter.card', 'summary_large_image'),
-            twitter_site: config('seo.twitter.site'),
-            twitter_creator: config('seo.twitter.creator'),
-            robots: config('seo.robots', 'index,follow'),
-            locale: config('seo.locale', 'en_US'),
-        );
-
-        $jsonLd = [
-            '@context'          => 'https://schema.org',
-            '@type'             => 'ProfessionalService',
-            'name'              => 'Karthick — Consulting',
-            'provider'          => [
-                '@type' => 'Person',
-                'name'  => 'Karthick',
-                'url'   => url('/'),
-            ],
-            'description'       => 'Visa consultations, home automation design, and home or office network consulting.',
-            'url'               => url('/consulting'),
-            'areaServed'        => 'Worldwide',
-            'hasOfferCatalog'   => [
-                '@type'           => 'OfferCatalog',
-                'name'            => 'Consulting services',
-                'itemListElement' => [
-                    ['@type' => 'Offer', 'itemOffered' => ['@type' => 'Service', 'name' => 'Visa consultation']],
-                    ['@type' => 'Offer', 'itemOffered' => ['@type' => 'Service', 'name' => 'Home automation consulting']],
-                    ['@type' => 'Offer', 'itemOffered' => ['@type' => 'Service', 'name' => 'Network design consulting']],
-                ],
-            ],
-        ];
-
-        return Inertia::render('frontend::consulting', [
-            'seo'    => $this->getSeoArray($seoData),
-            'jsonLd' => $jsonLd,
-        ]);
-    }
-
     public function contact()
     {
         $socialLinks  = SocialLink::active()->ordered()->get();

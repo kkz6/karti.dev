@@ -451,6 +451,7 @@ body:has(.admin-workspace),
     --font-sans: 'JetBrains Mono', ui-monospace, monospace;
     --font-display: 'JetBrains Mono', ui-monospace, monospace;
     font-family: var(--font-sans);
+    font-size: 0.9375rem;
 }
 
 /* Oversized hero type — big, but capped so the line doesn't sprawl on wide screens */
@@ -459,7 +460,7 @@ body:has(.admin-workspace),
     font-size: clamp(2.75rem, 1.4rem + 4.6vw, 5rem);
 }
 
-/* Display scale — Geist tightened up so headlines carry weight */
+/* Display scale */
 .display-1 {
     @apply font-display font-semibold tracking-[-0.035em] leading-[1.05];
     font-size: clamp(2.5rem, 1.2rem + 4.2vw, 4.5rem);
@@ -473,6 +474,24 @@ body:has(.admin-workspace),
 .display-3 {
     @apply font-display font-semibold tracking-[-0.022em] leading-[1.15];
     font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2rem);
+}
+
+/* Keep the wider monospace letterforms compact on public pages. */
+.public-site .display-hero {
+    font-size: clamp(2rem, 1.2rem + 3.4vw, 4rem);
+    line-height: 1.12;
+}
+
+.public-site .display-1 {
+    font-size: clamp(2rem, 1.1rem + 3vw, 3.5rem);
+}
+
+.public-site .display-2 {
+    font-size: clamp(1.75rem, 1rem + 2vw, 2.5rem);
+}
+
+.public-site .display-3 {
+    font-size: clamp(1.25rem, 1rem + 0.8vw, 1.625rem);
 }
 
 /* Small uppercase-free label — lowercase mono with positive tracking */

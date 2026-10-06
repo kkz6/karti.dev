@@ -17,7 +17,6 @@ Route::middleware(['web'])->group(function () {
     Route::get('/projects', [ProjectsController::class, 'index'])->name('projects');
     Route::get('/photography', [PhotographyController::class, 'index'])->name('photography');
     Route::get('/photography/{slug}', [PhotographyController::class, 'show'])->name('photography.show');
-    Route::get('/consulting', [PortfolioController::class, 'consulting'])->name('consulting');
     Route::get('/contact', [ContactController::class, 'create'])->name('contact');
     Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:contact')->name('contact.store');
     Route::post('/newsletter/subscribe', [NewsletterController::class, 'store'])->middleware('throttle:newsletter')->name('newsletter.subscribe');

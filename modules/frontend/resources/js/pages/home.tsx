@@ -89,11 +89,11 @@ function Hero() {
     };
 
     return (
-        <section className="relative overflow-hidden pt-6 pb-20">
+        <section className="relative overflow-hidden pt-6 pb-12">
             <Container className="relative">
                 <motion.div variants={container} initial="hidden" animate="visible" className="max-w-3xl">
                     <div>
-                        <motion.p variants={item} className="label-mono mb-8 flex items-center gap-2.5">
+                        <motion.p variants={item} className="label-mono mb-6 flex items-center gap-2.5">
                             bangalore, india
                         </motion.p>
 
@@ -103,7 +103,7 @@ function Hero() {
                             <span className="text-primary">I make things.</span>
                         </motion.h1>
 
-                        <motion.p variants={item} className="prose-measure text-muted-foreground mt-10 text-lg leading-relaxed sm:text-xl">
+                        <motion.p variants={item} className="prose-measure text-muted-foreground mt-6 text-base leading-relaxed sm:text-lg">
                             I'm a developer and founder. This is a place for things I build, notes on what I learn, and photographs from along the
                             way.
                         </motion.p>
@@ -117,7 +117,7 @@ function Hero() {
                             </Link>
                         </motion.div>
 
-                        <motion.div variants={item} className="mt-11 flex flex-wrap items-center gap-x-6 gap-y-3">
+                        <motion.div variants={item} className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
                             {socials.map(({ href, label, icon: Icon, name }) => (
                                 <a
                                     key={href}
@@ -200,7 +200,7 @@ const interests = [
 
 function Interests() {
     return (
-        <section className="mt-20 md:mt-28" aria-labelledby="interests-heading">
+        <section className="mt-16 md:mt-24" aria-labelledby="interests-heading">
             <Container>
                 <SectionHeading index="03" eyebrow="away from the page" title="Things I spend time on" id="interests-heading" />
                 <Reveal className="grid grid-cols-1 gap-8 pt-8 md:grid-cols-3 md:gap-10">
@@ -243,7 +243,7 @@ function Photography({ photos }: { photos: FeaturedPhoto[] }) {
     if (photos.length === 0) return null;
 
     return (
-        <section className="mt-28 md:mt-36" aria-labelledby="photography-heading">
+        <section className="mt-16 md:mt-24" aria-labelledby="photography-heading">
             <Container>
                 <SectionHeading
                     index="02"
@@ -298,7 +298,7 @@ function ArticleRow({ article }: { article: ArticleData }) {
 
 function Writing({ articles }: { articles: ArticleData[] }) {
     return (
-        <section className="mt-28 md:mt-36" aria-labelledby="writing-heading">
+        <section className="mt-16 md:mt-24" aria-labelledby="writing-heading">
             <Container>
                 <SectionHeading
                     index="01"
@@ -333,7 +333,7 @@ function Work({ roles }: { roles: Role[] }) {
     if (roles.length === 0) return null;
 
     return (
-        <section className="mt-28 md:mt-36" aria-labelledby="work-heading">
+        <section className="mt-16 md:mt-24" aria-labelledby="work-heading">
             <Container>
                 <SectionHeading index="04" id="work-heading" eyebrow="experience" title="Where I've worked" />
 

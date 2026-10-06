@@ -90,7 +90,6 @@ const publicPages: Record<string, string> = {
     '/speaking': 'Speaking',
     '/uses': 'Uses / tools',
     '/about': 'About',
-    '/consulting': 'Consulting',
 };
 const periods: Record<number, string> = { 1: 'Today (UTC)', 7: 'Last 7 days', 30: 'Last 30 days', 90: 'Last 90 days' };
 type TrafficScope = { title: string; path?: string; description: string; url: string; backUrl: string };

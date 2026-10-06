@@ -8,7 +8,6 @@ import { ThemeToggle } from './ThemeToggle';
 
 const navigation = [
     { name: 'About', href: '/about' },
-    { name: 'Consulting', href: '/consulting' },
     { name: 'Articles', href: '/articles' },
     { name: 'Projects', href: '/projects' },
     { name: 'Speaking', href: '/speaking' },
