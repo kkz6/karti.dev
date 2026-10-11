@@ -47,3 +47,70 @@ test('cancelling the source invoice pauses future recurrence without generating 
     $this->artisan('billing:recurring')->assertSuccessful();
     expect(Invoice::count())->toBe(1)->and($this->schedule->fresh()->active)->toBeFalse();
 });
+
+test('recurring migration repairs a missing unique index without losing schedules or occurrences', function () {
+    $this->artisan('billing:recurring')->assertSuccessful();
+    $table = 'billing_recurrence_occurrences';
+    $before = \Illuminate\Support\Facades\DB::table($table)->orderBy('id')->get()->toJson();
+    $index = collect(\Illuminate\Support\Facades\Schema::getIndexes($table))
+        ->first(fn ($index) => $index['unique'] && $index['columns'] === ['recurring_invoice_id', 'scheduled_date']);
+    \Illuminate\Support\Facades\Schema::table($table, fn ($blueprint) => $blueprint->dropUnique($index['name']));
+
+    $migration = require base_path('modules/billing/database/migrations/2026_10_10_200000_create_recurring_invoices.php');
+    $migration->up();
+    $migration->up();
+
+    expect($this->schedule->fresh())->not->toBeNull()
+        ->and(\Illuminate\Support\Facades\DB::table($table)->orderBy('id')->get()->toJson())->toBe($before)
+        ->and(\Illuminate\Support\Facades\Schema::hasIndex($table, ['recurring_invoice_id', 'scheduled_date'], 'unique'))->toBeTrue();
+
+    $occurrence = (array) \Illuminate\Support\Facades\DB::table($table)->first();
+    unset($occurrence['id']);
+    expect(fn () => \Illuminate\Support\Facades\DB::table($table)->insert($occurrence))
+        ->toThrow(\Illuminate\Database\UniqueConstraintViolationException::class);
+});
+
+test('recurring migration generates MySQL identifiers within the 64 character limit', function () {
+    $connection = new class(fn () => throw new RuntimeException('No database connection expected')) extends \Illuminate\Database\MySqlConnection
+    {
+        public function isMaria()
+        {
+            return false;
+        }
+
+        public function getServerVersion(): string
+        {
+            return '8.0.36';
+        }
+    };
+    $connection->useDefaultSchemaGrammar();
+    $schema = \Illuminate\Support\Facades\Schema::getFacadeRoot();
+    $statements = [];
+    $mock = Mockery::mock(\Illuminate\Database\Schema\Builder::class);
+    $mock->shouldReceive('hasTable')->andReturnFalse();
+    $mock->shouldReceive('hasIndex')->andReturnFalse();
+    foreach (['create', 'table'] as $method) {
+        $mock->shouldReceive($method)->andReturnUsing(function ($table, $callback) use ($connection, &$statements, $method) {
+            $blueprint = new \Illuminate\Database\Schema\Blueprint($connection, $table);
+            if ($method === 'create') {
+                $blueprint->create();
+            }
+            $callback($blueprint);
+            array_push($statements, ...$blueprint->toSql());
+        });
+    }
+    \Illuminate\Support\Facades\Schema::swap($mock);
+    try {
+        $migration = require base_path('modules/billing/database/migrations/2026_10_10_200000_create_recurring_invoices.php');
+        $migration->up();
+    } finally {
+        \Illuminate\Support\Facades\Schema::swap($schema);
+    }
+
+    $sql = implode("\n", $statements);
+    expect($sql)->toContain('unique `billing_recurrence_schedule_unique`(`recurring_invoice_id`, `scheduled_date`)');
+    preg_match_all('/`([^`]+)`/', $sql, $matches);
+    foreach ($matches[1] as $identifier) {
+        expect(strlen($identifier))->toBeLessThanOrEqual(64);
+    }
+});
