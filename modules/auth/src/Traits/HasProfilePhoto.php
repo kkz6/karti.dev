@@ -12,18 +12,22 @@ trait HasProfilePhoto
      */
     public function updateProfilePhoto(UploadedFile $photo, string $storagePath = 'profile-photos'): void
     {
-        tap($this->profile_photo_path, function ($previous) use ($photo, $storagePath) {
-            $this->forceFill([
-                'profile_photo_path' => $photo->storePublicly(
-                    $storagePath,
-                    ['disk' => $this->profilePhotoDisk()]
-                ),
-            ])->save();
-
-            if ($previous) {
-                Storage::disk($this->profilePhotoDisk())->delete($previous);
-            }
-        });
+        $previous = $this->profile_photo_path;
+        $disk     = $this->profilePhotoDisk();
+        $path     = $photo->storePublicly($storagePath, ['disk' => $disk]);
+        if (! is_string($path) || $path === '') {
+            throw new \RuntimeException('Could not store the profile image. Your current photo was kept.');
+        }
+        try {
+            $this->forceFill(['profile_photo_path' => $path])->save();
+        } catch (\Throwable $error) {
+            Storage::disk($disk)->delete($path);
+            $this->profile_photo_path = $previous;
+            throw $error;
+        }
+        if ($previous) {
+            Storage::disk($disk)->delete($previous);
+        }
     }
 
     /**
@@ -35,11 +39,11 @@ trait HasProfilePhoto
             return;
         }
 
-        Storage::disk($this->profilePhotoDisk())->delete($this->profile_photo_path);
-
+        $previous = $this->profile_photo_path;
         $this->forceFill([
             'profile_photo_path' => null,
         ])->save();
+        Storage::disk($this->profilePhotoDisk())->delete($previous);
     }
 
     /**

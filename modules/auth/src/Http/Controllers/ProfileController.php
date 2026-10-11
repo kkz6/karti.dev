@@ -20,6 +20,7 @@ class ProfileController
         return Inertia::render('auth::settings/profile', [
             'mustVerifyEmail'                 => $user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail,
             'status'                          => session('status'),
+            'hasProfilePhoto'                 => filled($user->profile_photo_path),
             'confirmsTwoFactorAuthentication' => $user->two_factor_secret && ! $user->two_factor_confirmed_at,
         ]);
     }
@@ -41,6 +42,23 @@ class ProfileController
         }
 
         $request->user()->save();
+
+        return Redirect::route('profile.edit');
+    }
+
+    public function updatePhoto(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:max_width=4096,max_height=4096'],
+        ]);
+        $request->user()->updateProfilePhoto($request->file('photo'));
+
+        return Redirect::route('profile.edit');
+    }
+
+    public function destroyPhoto(Request $request): RedirectResponse
+    {
+        $request->user()->deleteProfilePhoto();
 
         return Redirect::route('profile.edit');
     }

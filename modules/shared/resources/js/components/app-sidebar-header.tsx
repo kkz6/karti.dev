@@ -66,7 +66,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="ml-1 size-9 rounded-sm p-0.5 hover:bg-white/10">
                             <Avatar className="size-7 rounded-sm">
-                                <AvatarImage src={auth.user.avatar} alt={auth.user.name} />
+                                <AvatarImage src={auth.user.avatar ?? undefined} alt={auth.user.name} />
                                 <AvatarFallback className="rounded-sm bg-white/15 text-xs text-white">{getInitials(auth.user.name)}</AvatarFallback>
                             </Avatar>
                             <span className="sr-only">Open user menu</span>

@@ -66,7 +66,7 @@ class User extends Authenticatable implements PasskeyUser
      *
      * @var array
      */
-    protected $appends = ['two_factor_enabled', 'profile_photo_url'];
+    protected $appends = ['two_factor_enabled', 'profile_photo_url', 'avatar'];
 
     /**
      * Determine if two-factor authentication is enabled.
@@ -82,5 +82,10 @@ class User extends Authenticatable implements PasskeyUser
     public function getProfilePhotoUrlAttribute(): string
     {
         return $this->profilePhotoUrl();
+    }
+
+    public function getAvatarAttribute(): ?string
+    {
+        return $this->profile_photo_path ? $this->profilePhotoUrl() : null;
     }
 }

@@ -1,7 +1,8 @@
+import { ProfilePhotoForm } from '@auth/components/profile-photo-form';
 import { Transition } from '@headlessui/react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { type BreadcrumbItem, type SharedData } from '@shared/types';
-import { FormEventHandler } from 'react';
+import { type FormEventHandler, useState } from 'react';
 
 import { PasskeyForm } from '@auth/components/passkey-form';
 import { TwoFactorForm } from '@auth/components/two-factor-form';
@@ -17,7 +18,7 @@ import SettingsLayout from '@shared/layouts/settings/layout';
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Profile settings',
-        href: '/settings/profile',
+        href: route('profile.edit'),
     },
 ];
 
@@ -26,7 +27,16 @@ type ProfileForm = {
     email: string;
 };
 
-export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
+export default function Profile({
+    mustVerifyEmail,
+    status,
+    hasProfilePhoto,
+}: {
+    mustVerifyEmail: boolean;
+    status?: string;
+    hasProfilePhoto: boolean;
+}) {
+    const [photoDirty, setPhotoDirty] = useState(false);
     const { auth } = usePage<SharedData>().props;
 
     const { data, setData, setDefaults, patch, errors, processing, recentlySuccessful, isDirty } = useForm<Required<ProfileForm>>({
@@ -46,9 +56,10 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Profile settings" />
-            <UnsavedChangesGuard dirty={isDirty} />
+            <UnsavedChangesGuard dirty={isDirty || photoDirty} />
 
             <SettingsLayout>
+                <ProfilePhotoForm hasPhoto={hasProfilePhoto} onDirtyChange={setPhotoDirty} />
                 <div className="space-y-6">
                     <HeadingSmall title="Profile information" description="Update your name and email address" />
 
