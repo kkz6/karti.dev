@@ -1,7 +1,6 @@
 import { type NavGroup, type NavItem } from '@shared/types';
 import {
     Banknote,
-    BriefcaseBusiness,
     Camera,
     FileMinus2,
     Files,
@@ -35,7 +34,6 @@ export const mainNavItems: NavItem[] = [
     { title: 'Credit notes', href: route('admin.credit-notes.index'), icon: FileMinus2 },
     { title: 'Recurring invoices', href: route('admin.recurring-invoices.index'), icon: Repeat2 },
     { title: 'Payment reconciliation', href: route('admin.billing.reconciliation'), icon: ListChecks },
-    { title: 'Services', href: route('admin.services.index'), icon: BriefcaseBusiness },
     { title: 'Billing settings', href: route('admin.settings.billing.edit'), icon: SlidersHorizontal },
     {
         title: 'Dashboard',
@@ -117,7 +115,7 @@ export const mainNavGroups: NavGroup[] = [
     {
         title: 'Business',
         items: mainNavItems.filter((item) =>
-            ['Customers', 'Invoices', 'Payments', 'Payment reconciliation', 'Credit notes', 'Recurring invoices', 'Services'].includes(item.title),
+            ['Customers', 'Invoices', 'Payments', 'Payment reconciliation', 'Credit notes', 'Recurring invoices'].includes(item.title),
         ),
     },
     {

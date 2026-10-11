@@ -3,6 +3,7 @@ import { Button } from '@shared/components/ui/button';
 import { Card } from '@shared/components/ui/card';
 import { Input } from '@shared/components/ui/input';
 import { Label } from '@shared/components/ui/label';
+import { PhoneInput } from '@shared/components/ui/phone-input';
 import { Switch } from '@shared/components/ui/switch';
 import { continueWithoutUnsavedChangesPrompt, UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
 import { useEffect, type FormEvent } from 'react';
@@ -12,12 +13,14 @@ import { useBillingConfirm } from './use-billing-confirm';
 export function ContactForm({
     customerId,
     contact,
+    defaultCountry,
     onClose,
     embedded = false,
     onStateChange,
 }: {
     customerId: number;
     contact?: Contact;
+    defaultCountry?: string | null;
     onClose: () => void;
     embedded?: boolean;
     onStateChange?: (dirty: boolean, busy: boolean) => void;
@@ -55,7 +58,7 @@ export function ContactForm({
                 {dialog}
                 <UnsavedChangesGuard dirty={form.isDirty && !form.processing} />
                 {!embedded && <h3 className="font-semibold">{contact ? 'Edit contact' : 'Add contact'}</h3>}
-                <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
+                <div className="grid gap-4">
                     {(
                         [
                             ['name', 'Name', 'text', 'name'],
@@ -69,16 +72,27 @@ export function ContactForm({
                                 {label}
                                 {(field === 'name' || field === 'email') && <span className="text-muted-foreground ml-0.5">*</span>}
                             </Label>
-                            <Input
-                                id={`contact-${field}`}
-                                type={type}
-                                autoComplete={autoComplete}
-                                placeholder={field === 'title' ? 'e.g. Finance manager' : undefined}
-                                value={form.data[field]}
-                                onChange={(e) => form.setData(field, e.target.value)}
-                                required={field === 'name' || field === 'email'}
-                                aria-invalid={!!form.errors[field]}
-                            />
+                            {field === 'phone' ? (
+                                <PhoneInput
+                                    id="contact-phone"
+                                    defaultCountry={defaultCountry}
+                                    value={form.data.phone}
+                                    onChange={(value) => form.setData('phone', value)}
+                                    disabled={form.processing}
+                                    aria-invalid={!!form.errors.phone}
+                                />
+                            ) : (
+                                <Input
+                                    id={`contact-${field}`}
+                                    type={type}
+                                    autoComplete={autoComplete}
+                                    placeholder={field === 'title' ? 'e.g. Finance manager' : undefined}
+                                    value={form.data[field]}
+                                    onChange={(e) => form.setData(field, e.target.value)}
+                                    required={field === 'name' || field === 'email'}
+                                    aria-invalid={!!form.errors[field]}
+                                />
+                            )}
                             {form.errors[field] && <p className="text-destructive text-sm">{form.errors[field]}</p>}
                         </div>
                     ))}

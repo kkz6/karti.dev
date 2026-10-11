@@ -7,11 +7,9 @@ use Illuminate\Support\ServiceProvider;
 use Modules\Billing\Console\Commands\BillingAccessCommand;
 use Modules\Billing\Console\Commands\CustomerAccessCommand;
 use Modules\Billing\Models\Customer;
-use Modules\Billing\Models\Service;
 use Modules\Billing\Models\TaxRate;
 use Modules\Billing\Policies\BillingSettingsPolicy;
 use Modules\Billing\Policies\CustomerPolicy;
-use Modules\Billing\Policies\ServicePolicy;
 use Modules\Billing\Policies\TaxRatePolicy;
 use Modules\Billing\Settings\BillingSettings;
 
@@ -33,7 +31,6 @@ class BillingServiceProvider extends ServiceProvider
         Gate::policy(\Modules\Billing\Models\CreditNote::class, \Modules\Billing\Policies\CreditNotePolicy::class);
         Gate::policy(Customer::class, CustomerPolicy::class);
         Gate::policy(\Modules\Billing\Models\Invoice::class, \Modules\Billing\Policies\InvoicePolicy::class);
-        Gate::policy(Service::class, ServicePolicy::class);
         Gate::policy(TaxRate::class, TaxRatePolicy::class);
         Gate::policy(BillingSettings::class, BillingSettingsPolicy::class);
         $this->callAfterResolving(\Illuminate\Console\Scheduling\Schedule::class, function ($schedule) {
@@ -41,6 +38,6 @@ class BillingServiceProvider extends ServiceProvider
             $schedule->command('billing:recurring')->hourly()->withoutOverlapping();
             $schedule->command('billing:reminders')->hourly()->withoutOverlapping();
         });
-        $this->commands([\Modules\Billing\Console\Commands\ReconcileOnlinePayments::class, \Modules\Billing\Console\Commands\GenerateRecurringInvoices::class, \Modules\Billing\Console\Commands\QueueInvoiceReminders::class, CustomerAccessCommand::class, BillingAccessCommand::class]);
+        $this->commands([\Modules\Billing\Console\Commands\ImportPerfexBilling::class, \Modules\Billing\Console\Commands\ReconcileOnlinePayments::class, \Modules\Billing\Console\Commands\GenerateRecurringInvoices::class, \Modules\Billing\Console\Commands\QueueInvoiceReminders::class, CustomerAccessCommand::class, BillingAccessCommand::class]);
     }
 }

@@ -1,7 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@shared/components/ui/button';
-import { Card } from '@shared/components/ui/card';
 import { GripVertical } from 'lucide-react';
 import type { ReactNode } from 'react';
 export function SortableInvoiceItem({
@@ -32,13 +31,15 @@ export function SortableInvoiceItem({
         </Button>
     );
     return (
-        <Card
+        <div
+            role="rowgroup"
             ref={setNodeRef}
             data-invoice-item={id}
-            style={{ transform: CSS.Transform.toString(transform), transition }}
-            className={`relative gap-3 rounded-none border-0 border-b bg-transparent p-3 shadow-none last:border-b-0 ${isDragging ? 'border-primary z-10 opacity-90 shadow-lg' : 'border-border'}`}
+            data-dragging={isDragging || undefined}
+            style={{ transform: CSS.Translate.toString(transform), transition }}
+            className={`bg-card relative border-b p-3 last:border-b-0 ${isDragging ? 'ring-primary/30 z-10 shadow-md ring-1 ring-inset' : ''}`}
         >
             {children(handle)}
-        </Card>
+        </div>
     );
 }

@@ -1,10 +1,11 @@
 import { Head, Link } from '@inertiajs/react';
 import { PageContainer } from '@shared/components/page-container';
+import { PageHeader } from '@shared/components/page-header';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
-import { ArrowLeft, Edit, FileText, Trash2 } from 'lucide-react';
+import { Edit, FileText, Trash2 } from 'lucide-react';
 
 interface Article {
     id: number;
@@ -68,28 +69,18 @@ export default function Show({ tag }: { tag: Tag }) {
             <Head title={`Tag: ${tag.name}`} />
             <PageContainer className="flex min-h-full flex-col space-y-6">
                 {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                        <Button variant="ghost" size="sm" asChild>
-                            <Link href={route('admin.tags.index')}>
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back to Tags
-                            </Link>
-                        </Button>
-                        <div className="flex items-center space-x-2">
-                            <div className="h-6 w-6 rounded-full border" style={{ backgroundColor: tag.color || '#64748b' }} />
-                            <h1 className="text-3xl font-bold tracking-tight">{tag.name}</h1>
-                        </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
+                <PageHeader
+                    title={tag.name}
+                    badges={<span className="size-3 rounded-full border" style={{ backgroundColor: tag.color || '#64748b' }} />}
+                    actions={
                         <Button asChild>
                             <Link href={route('admin.tags.edit', tag.id)}>
-                                <Edit className="mr-2 h-4 w-4" />
+                                <Edit className="size-4" />
                                 Edit Tag
                             </Link>
                         </Button>
-                    </div>
-                </div>
+                    }
+                />
 
                 <div className="grid gap-6 md:grid-cols-3">
                     <div className="space-y-6 md:col-span-2">

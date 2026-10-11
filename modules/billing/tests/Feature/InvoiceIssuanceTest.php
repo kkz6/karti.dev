@@ -186,3 +186,12 @@ test('issue and cancel permissions are independent from editing and viewing', fu
     $this->post(route('admin.invoices.cancel', $this->invoice), ['version' => 1, 'reason' => 'Not authorized'])->assertForbidden();
     $this->get(route('admin.invoices.show', $this->invoice))->assertOk()->assertInertia(fn (Assert $page) => $page->where('canIssue', false));
 });
+
+test('issuance cannot reuse a historical number even if the counter is reset', function () {
+    $historical = $this->invoice->replicate();
+    $historical->forceFill(['status' => 'issued', 'formatted_number' => 'INV-000001', 'number_scope' => 'legacy:example'])->save();
+    $this->post(route('admin.invoices.issue', $this->invoice), issuanceInput($this->invoice))->assertSessionHasErrors('review');
+    expect($this->invoice->fresh()->status)->toBe('draft')
+        ->and(DB::table('billing_invoice_sequences')->where('scope', 'invoices')->value('next_number'))->toBe(1)
+        ->and($this->invoice->activities()->where('event', 'issued')->count())->toBe(0);
+});

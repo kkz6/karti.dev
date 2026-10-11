@@ -1,6 +1,7 @@
 import { BillingSelect, BillingSelectItem } from '@billing/components/billing-select';
 import { Head, router } from '@inertiajs/react';
 import { PageContainer } from '@shared/components/page-container';
+import { PageHeader } from '@shared/components/page-header';
 import { Badge } from '@shared/components/ui/badge';
 import { Card, CardContent } from '@shared/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/components/ui/table';
@@ -29,10 +30,10 @@ export default function Bookings({
         <AppLayout breadcrumbs={[{ title: 'Consultation bookings', href: route('admin.bookings.index') }]}>
             <Head title="Consultation bookings" />
             <PageContainer className="space-y-6">
-                <h1 className="text-2xl font-semibold">Consultation bookings</h1>
-                <p className="text-muted-foreground text-sm">
-                    Customer associations are chosen explicitly. Payment and calendar verification control confirmation.
-                </p>
+                <PageHeader
+                    title="Consultation bookings"
+                    description="Customer associations are chosen explicitly. Payment and calendar verification control confirmation."
+                />
                 <Card>
                     <CardContent className="pt-6">
                         <Table>

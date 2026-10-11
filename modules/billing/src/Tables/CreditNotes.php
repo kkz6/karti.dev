@@ -23,14 +23,14 @@ class CreditNotes extends Table
         Gate::authorize('viewAny', CreditNote::class);
         Gate::authorize('view', new Invoice);
 
-        return CreditNote::query()->with(['allocations', 'refunds']);
+        return CreditNote::query()->with(['allocations', 'refunds', 'customer']);
     }
 
     public function columns(): array
     {
         return [
             Columns\TextColumn::make('formatted_number', 'Credit note', toggleable: false)->mapAs(fn ($v, CreditNote $c) =>$v ?: 'Draft #'.$c->id)->searchable()->sortable()->url(fn (CreditNote $c) =>Gate::allows('view', $c) ? route('admin.credit-notes.show', $c) : null),
-            Columns\TextColumn::make('customer', 'Customer')->mapAs(fn ($v, CreditNote $c) =>($c->customer_snapshot['legal_name'] ?? '') ?: ($c->customer_snapshot['display_name'] ?? '—')),
+            Columns\TextColumn::make('customer', 'Customer')->mapAs(fn ($v, CreditNote $c) =>($c->customer_snapshot['legal_name'] ?? '') ?: ($c->customer_snapshot['display_name'] ?? '—'))->url(fn (CreditNote $c) => $c->customer && Gate::allows('view', $c->customer) ? route('admin.customers.show', $c->customer_id) : null),
             Columns\DateColumn::make('credit_date', 'Date')->sortable(),
             Columns\TextColumn::make('total_minor', 'Total')->mapAs(fn ($v, CreditNote $c) =>InvoiceCalculator::money((string) $v, $c->currency_precision))->sortable(),
             Columns\TextColumn::make('available', 'Available')->mapAs(fn ($v, CreditNote $c) =>app(CreditBalance::class)->data($c)['available']),

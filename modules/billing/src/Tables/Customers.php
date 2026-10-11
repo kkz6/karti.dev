@@ -25,6 +25,7 @@ class Customers extends Table
     public function columns(): array
     {
         return [
+            Columns\TextColumn::make('id', 'ID', toggleable: false)->sortable(),
             Columns\TextColumn::make('display_name', 'Customer', toggleable: false)->searchable()->sortable()
                 ->url(fn (Customer $customer) => Gate::allows('view', $customer) ? route('admin.customers.show', $customer) : null),
             Columns\TextColumn::make('type', 'Type')->mapAs(fn ($type) => ucfirst($type)),

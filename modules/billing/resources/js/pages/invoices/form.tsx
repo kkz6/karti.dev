@@ -1,6 +1,6 @@
 import { BillingPageContainer as PageContainer } from '@billing/components/billing-page-container';
 import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { restrictToParentElement, restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { DateField } from '@shared/components/date-field';
@@ -24,7 +24,7 @@ import { BillingFeedback } from '../../components/billing-feedback';
 import { BillingSelect, BillingSelectItem } from '../../components/billing-select';
 import { CustomerPicker } from '../../components/customer-picker';
 import { InvoiceHistory, type InvoiceActivity } from '../../components/invoice-document';
-import { InvoiceItemEditor } from '../../components/invoice-item-editor';
+import { InvoiceItemEditor, InvoiceItemsHeader } from '../../components/invoice-item-editor';
 import { InvoicePdfButtons } from '../../components/invoice-pdf-buttons';
 import { SortableInvoiceItem } from '../../components/sortable-invoice-item';
 import { useBillingConfirm } from '../../components/use-billing-confirm';
@@ -37,6 +37,7 @@ import {
     type InvoiceLine,
     type InvoiceTotals,
 } from '../../invoice-types';
+import { lineAmounts } from '../../lib/line-amounts';
 import type { CurrencyOption, TaxRate } from '../../types';
 
 type Defaults = { currency: string; invoice_date: string; due_date: string; terms: string; payment_instructions: string };
@@ -51,7 +52,6 @@ export default function InvoiceForm({
     defaults,
     readOnly,
     canUpdate,
-    canUseCatalogue,
     message,
     canIssue,
     activities,
@@ -60,6 +60,7 @@ export default function InvoiceForm({
     onSaved,
     onReview,
     onModalStateChange,
+    onItemDragChange,
 }: {
     invoice: InvoiceData | null;
     canDownloadPdf: boolean;
@@ -70,7 +71,6 @@ export default function InvoiceForm({
     defaults: Defaults;
     readOnly: boolean;
     canUpdate: boolean;
-    canUseCatalogue: boolean;
     message?: string;
     canIssue: boolean;
     activities: InvoiceActivity[];
@@ -79,6 +79,7 @@ export default function InvoiceForm({
     onSaved?: (data: InvoiceFormSeed) => void;
     onReview?: (invoice: InvoiceData) => void;
     onModalStateChange?: (dirty: boolean, busy: boolean) => void;
+    onItemDragChange?: (dragging: boolean) => void;
 }) {
     const { confirm, dialog } = useBillingConfirm();
 
@@ -262,6 +263,7 @@ export default function InvoiceForm({
     };
     const selectedCustomer = choices.find((customer) => String(customer.id) === form.data.customer_id);
     const precision = currencies.find((currency) => currency.code === form.data.currency)?.precision ?? 2;
+    const liveAmounts = lineAmounts(form.data, precision);
     const editorActions = (
         <div className="flex flex-wrap items-center justify-end gap-3">
             <Button
@@ -464,14 +466,17 @@ export default function InvoiceForm({
                                 </Card>
                             )}
 
-                            <section className="space-y-5">
+                            <section className="space-y-3">
                                 <h2 className="text-lg font-semibold">Invoice items</h2>
                                 <p className="text-muted-foreground text-xs">Drag handles to reorder items. Use the item menu for more actions.</p>
                                 <DndContext
                                     sensors={sensors}
                                     collisionDetection={closestCenter}
-                                    modifiers={[restrictToVerticalAxis]}
+                                    modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+                                    onDragStart={() => onItemDragChange?.(true)}
+                                    onDragCancel={() => onItemDragChange?.(false)}
                                     onDragEnd={({ active, over }) => {
+                                        onItemDragChange?.(false);
                                         if (!readOnly && !busy && over && active.id !== over.id) {
                                             form.setData(
                                                 'items',
@@ -485,45 +490,55 @@ export default function InvoiceForm({
                                     }}
                                 >
                                     <SortableContext items={form.data.items.map((item) => item.key)} strategy={verticalListSortingStrategy}>
-                                        <div className="overflow-hidden rounded-lg border">
-                                            {form.data.items.map((line, index) => (
-                                                <SortableInvoiceItem key={line.key} id={line.key} number={index + 1} disabled={readOnly || busy}>
-                                                    {(handle) => (
-                                                        <InvoiceItemEditor
-                                                            line={line}
-                                                            index={index}
-                                                            handle={handle}
-                                                            total={totals?.lines.find((item) => item.key === line.key)?.total}
-                                                            currency={form.data.currency}
-                                                            taxRates={taxRates}
-                                                            readOnly={readOnly || busy}
-                                                            canUseCatalogue={canUseCatalogue}
-                                                            canRemove={form.data.items.length > 1}
-                                                            canDuplicate={form.data.items.length < 100}
-                                                            canMoveUp={index > 0}
-                                                            canMoveDown={index < form.data.items.length - 1}
-                                                            onChange={(patch) => updateLine(index, patch)}
-                                                            onMove={(direction) => move(index, direction)}
-                                                            onRemove={() =>
-                                                                form.setData(
-                                                                    'items',
-                                                                    form.data.items.filter((item) => item.key !== line.key),
-                                                                )
-                                                            }
-                                                            onDuplicate={() => {
-                                                                const items = [...form.data.items];
-                                                                items.splice(index + 1, 0, {
-                                                                    ...line,
-                                                                    key: blankLine().key,
-                                                                    taxes: line.taxes.map((tax) => ({ ...tax })),
-                                                                });
-                                                                form.setData('items', items);
-                                                            }}
-                                                            errors={fieldErrors}
-                                                        />
-                                                    )}
-                                                </SortableInvoiceItem>
-                                            ))}
+                                        <div role="table" aria-label="Invoice items" aria-colcount={7} className="overflow-hidden rounded-lg border">
+                                            <InvoiceItemsHeader />
+                                            <div data-invoice-items-body className="relative isolate overflow-hidden">
+                                                {form.data.items.map((line, index) => (
+                                                    <SortableInvoiceItem
+                                                        key={line.key}
+                                                        id={line.key}
+                                                        number={index + 1}
+                                                        disabled={readOnly || busy || form.data.items.length < 2}
+                                                    >
+                                                        {(handle) => (
+                                                            <InvoiceItemEditor
+                                                                line={line}
+                                                                index={index}
+                                                                handle={handle}
+                                                                total={
+                                                                    readOnly
+                                                                        ? totals?.lines.find((item) => item.key === line.key)?.total
+                                                                        : liveAmounts[line.key]
+                                                                }
+                                                                taxRates={taxRates}
+                                                                readOnly={readOnly || busy}
+                                                                canRemove={form.data.items.length > 1}
+                                                                canDuplicate={form.data.items.length < 100}
+                                                                canMoveUp={index > 0}
+                                                                canMoveDown={index < form.data.items.length - 1}
+                                                                onChange={(patch) => updateLine(index, patch)}
+                                                                onMove={(direction) => move(index, direction)}
+                                                                onRemove={() =>
+                                                                    form.setData(
+                                                                        'items',
+                                                                        form.data.items.filter((item) => item.key !== line.key),
+                                                                    )
+                                                                }
+                                                                onDuplicate={() => {
+                                                                    const items = [...form.data.items];
+                                                                    items.splice(index + 1, 0, {
+                                                                        ...line,
+                                                                        key: blankLine().key,
+                                                                        taxes: line.taxes.map((tax) => ({ ...tax })),
+                                                                    });
+                                                                    form.setData('items', items);
+                                                                }}
+                                                                errors={fieldErrors}
+                                                            />
+                                                        )}
+                                                    </SortableInvoiceItem>
+                                                ))}
+                                            </div>
                                         </div>
                                     </SortableContext>
                                 </DndContext>
@@ -684,7 +699,6 @@ export type InvoiceFormSeed = {
     defaults: Defaults;
     readOnly: boolean;
     canUpdate: boolean;
-    canUseCatalogue: boolean;
     message?: string;
     canIssue: boolean;
     activities: InvoiceActivity[];

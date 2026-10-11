@@ -9,15 +9,13 @@ import type { ComponentProps, ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import CustomerForm from '../pages/customers/form';
 import RecurringForm from '../pages/recurring/form';
-import ServiceForm from '../pages/services/form';
 import TaxRateForm from '../pages/tax-rates/form';
 import { BillingFeedback } from './billing-feedback';
 import { BillingPageContainer } from './billing-page-container';
 import { useBillingConfirm } from './use-billing-confirm';
-type Kind = 'customer' | 'service' | 'tax' | 'recurring';
+type Kind = 'customer' | 'tax' | 'recurring';
 const config = {
     customer: { title: 'Add customer', description: 'Billing details and preferred invoice currency.', route: 'admin.customers.create' },
-    service: { title: 'Add service', description: 'Save a reusable service and its price.', route: 'admin.services.create' },
     tax: { title: 'Add tax preset', description: 'Give the percentage rate a name for future invoices.', route: 'admin.tax-rates.create' },
     recurring: {
         title: 'Create recurring schedule',
@@ -120,8 +118,6 @@ export function BillingCreateModal({ kind, open, onClose }: { kind: Kind; open: 
                                 <Context.Provider value={modal}>
                                     {kind === 'customer' ? (
                                         <CustomerForm {...(seed as ComponentProps<typeof CustomerForm>)} />
-                                    ) : kind === 'service' ? (
-                                        <ServiceForm {...(seed as ComponentProps<typeof ServiceForm>)} />
                                     ) : kind === 'tax' ? (
                                         <TaxRateForm {...(seed as ComponentProps<typeof TaxRateForm>)} />
                                     ) : (

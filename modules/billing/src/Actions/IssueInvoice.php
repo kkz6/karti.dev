@@ -40,7 +40,11 @@ class IssueInvoice
                 }
                 $sequence = DB::table('billing_invoice_sequences')->where('scope', 'invoices')->lockForUpdate()->first();
                 abort_unless($sequence && $sequence->next_number < PHP_INT_MAX, 409, 'Invoice numbering is unavailable.');
-                $number = (int) $sequence->next_number;
+                $number          = (int) $sequence->next_number;
+                $formattedNumber = $review['prefix'].str_pad((string) $number, $review['padding'], '0', STR_PAD_LEFT);
+                if (Invoice::where('formatted_number', $formattedNumber)->where('number_scope', '!=', 'native')->exists()) {
+                    throw ValidationException::withMessages(['review' => 'This number is already used by a historical invoice. Advance the invoice sequence before issuing.']);
+                }
                 DB::table('billing_invoice_sequences')->where('scope', 'invoices')->update(['next_number' => $number + 1]);
                 $seller = $review['seller'];
                 if ($logo = $review['logo']) {
@@ -57,7 +61,8 @@ class IssueInvoice
                 $locked->sequence_number   = $number;
                 $locked->number_prefix     = $review['prefix'];
                 $locked->number_padding    = $review['padding'];
-                $locked->formatted_number  = $review['prefix'].str_pad((string) $number, $review['padding'], '0', STR_PAD_LEFT);
+                $locked->number_scope      = 'native';
+                $locked->formatted_number  = $formattedNumber;
                 $locked->status            = 'issued';
                 $locked->issued_at         = now();
                 $locked->version++;

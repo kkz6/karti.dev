@@ -10,6 +10,7 @@ export default function ImportReview({
     report,
     reviewToken,
     message,
+    hasSourceArchive,
 }: {
     batch: { id: number; source: string; state: string };
     report: {
@@ -20,11 +21,17 @@ export default function ImportReview({
     };
     reviewToken: string;
     message?: string;
+    hasSourceArchive?: boolean;
 }) {
     const form = useForm({ review_token: reviewToken, confirmed: false });
     return (
         <BillingSettingsWorkspace section="imports">
             <h2 className="text-lg font-semibold">Import review - {batch.source}</h2>
+            {hasSourceArchive && (
+                <Button variant="outline" size="sm" asChild>
+                    <a href={route('admin.billing.imports.archive', batch.id)}>Download imported source records</a>
+                </Button>
+            )}
             {message && <BillingFeedback kind="success">{message}</BillingFeedback>}
             <Card>
                 <CardHeader>

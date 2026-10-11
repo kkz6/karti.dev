@@ -1,11 +1,12 @@
 import { Head, Link } from '@inertiajs/react';
 import { PageContainer } from '@shared/components/page-container';
+import { PageHeader } from '@shared/components/page-header';
 import { Badge } from '@shared/components/ui/badge';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
-import { Calendar, Edit, ExternalLink, MapPin, Mic } from 'lucide-react';
+import { Edit, ExternalLink } from 'lucide-react';
 import type { ComponentProps } from 'react';
 
 interface SpeakingEvent {
@@ -51,50 +52,37 @@ export default function Show({ event }: { event: SpeakingEvent }) {
             <Head title={event.title} />
             <PageContainer className="flex min-h-full flex-col space-y-6">
                 {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">{event.title}</h1>
-                        <div className="text-muted-foreground mt-2 flex items-center space-x-4 text-sm">
-                            <div className="flex items-center">
-                                <Mic className="mr-1 h-4 w-4" />
-                                {event.event_name}
-                            </div>
-                            {event.event_date && (
-                                <div className="flex items-center">
-                                    <Calendar className="mr-1 h-4 w-4" />
-                                    {new Date(event.event_date).toLocaleDateString()}
-                                </div>
-                            )}
-                            {event.location && (
-                                <div className="flex items-center">
-                                    <MapPin className="mr-1 h-4 w-4" />
-                                    {event.location}
-                                </div>
-                            )}
-                        </div>
-                        <div className="mt-2 flex items-center space-x-2">
+                <PageHeader
+                    title={event.title}
+                    description={[event.event_name, event.event_date && new Date(event.event_date).toLocaleDateString(), event.location]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    badges={
+                        <>
                             <Badge variant={eventTypeColors[event.event_type]}>{event.event_type}</Badge>
                             <Badge variant={statusColors[event.status]}>{event.status}</Badge>
                             {event.featured && <Badge variant="default">Featured</Badge>}
-                        </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        {event.url && (
-                            <Button variant="outline" asChild>
-                                <a href={event.url} target="_blank" rel="noopener noreferrer">
-                                    <ExternalLink className="mr-2 h-4 w-4" />
-                                    {event.cta_text}
-                                </a>
+                        </>
+                    }
+                    actions={
+                        <>
+                            {event.url && (
+                                <Button variant="outline" asChild>
+                                    <a href={event.url} target="_blank" rel="noopener noreferrer">
+                                        <ExternalLink className="mr-2 h-4 w-4" />
+                                        {event.cta_text}
+                                    </a>
+                                </Button>
+                            )}
+                            <Button asChild>
+                                <Link href={route('admin.speaking.edit', event.slug)}>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Edit Event
+                                </Link>
                             </Button>
-                        )}
-                        <Button asChild>
-                            <Link href={route('admin.speaking.edit', event.slug)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit Event
-                            </Link>
-                        </Button>
-                    </div>
-                </div>
+                        </>
+                    }
+                />
 
                 {/* Main Content */}
                 <div className="grid gap-6 md:grid-cols-3">

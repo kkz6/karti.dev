@@ -21,7 +21,7 @@ class Payments extends Table
         Gate::authorize('viewAny', Payment::class);
         Gate::authorize('view', new Payment);
 
-        return Payment::query()->with('invoice');
+        return Payment::query()->with('invoice.customer');
     }
 
     public function columns(): array
@@ -29,7 +29,7 @@ class Payments extends Table
         return [
             Columns\TextColumn::make('id', 'Payment')->mapAs(fn ($id) => '#'.$id)->sortable(),
             Columns\TextColumn::make('invoice.formatted_number', 'Invoice')->searchable()->url(fn (Payment $payment) => Gate::allows('view', $payment->invoice) ? route('admin.invoices.show', $payment->invoice_id) : null),
-            Columns\TextColumn::make('invoice.customer_name', 'Customer')->searchable(),
+            Columns\TextColumn::make('invoice.customer_name', 'Customer')->searchable()->url(fn (Payment $payment) => $payment->invoice?->customer && Gate::allows('view', $payment->invoice->customer) ? route('admin.customers.show', $payment->invoice->customer_id) : null),
             Columns\DateColumn::make('payment_date', 'Payment date')->sortable(),
             Columns\TextColumn::make('amount_minor', 'Amount')->mapAs(fn ($minor, Payment $payment) => InvoiceCalculator::money((string) $minor, $payment->currency_precision))->sortable(),
             Columns\TextColumn::make('currency', 'Currency'),

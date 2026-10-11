@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { IndexHeader } from '@shared/components/index-header';
 import { PageContainer } from '@shared/components/page-container';
+import { StatSummary } from '@shared/components/stat-summary';
 import AppLayout from '@shared/layouts/app-layout';
 import type { TableConfig } from '@table/components';
 import { InertiaTableWrapper } from '@table/components/Table/inertia-table-wrapper';
@@ -16,14 +17,13 @@ export default function Subscribers({ table, counts }: { table: TableConfig; cou
                     Only confirmed, active addresses are eligible for newsletters. Pending addresses have not opted in. Campaign sending is not
                     enabled here.
                 </p>
-                <dl className="grid gap-4 sm:grid-cols-3">
-                    {Object.entries(counts).map(([key, value]) => (
-                        <div key={key} className="bg-card rounded-lg border p-4">
-                            <dt className="text-muted-foreground text-sm capitalize">{key}</dt>
-                            <dd className="mt-2 text-2xl font-semibold tabular-nums">{value.toLocaleString()}</dd>
-                        </div>
-                    ))}
-                </dl>
+                <StatSummary
+                    items={Object.entries(counts).map(([key, value]) => ({
+                        label: key.charAt(0).toUpperCase() + key.slice(1),
+                        value: value.toLocaleString(),
+                        icon: Mail,
+                    }))}
+                />
                 <InertiaTableWrapper
                     resource={table}
                     emptyState={{

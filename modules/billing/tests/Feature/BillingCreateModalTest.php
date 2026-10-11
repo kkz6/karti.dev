@@ -12,10 +12,9 @@ beforeEach(function () {
 });
 test('creation dialogs receive options through authorized JSON routes', function (string $name) {
     $this->getJson(route($name))->assertOk()->assertHeader('Content-Type', 'application/json');
-})->with(['admin.customers.create', 'admin.services.create', 'admin.tax-rates.create', 'admin.recurring-invoices.create']);
-test('modal customer service and tax creation returns to their lists', function () {
+})->with(['admin.customers.create', 'admin.tax-rates.create', 'admin.recurring-invoices.create']);
+test('modal customer and tax creation returns to their lists', function () {
     $this->withHeaders(['X-Billing-Modal'=>'1'])->post(route('admin.customers.store'), ['type'=>'business', 'display_name'=>'Modal customer', 'default_currency'=>'EUR'])->assertRedirect(route('admin.customers.index'));
-    $this->withHeaders(['X-Billing-Modal'=>'1'])->post(route('admin.services.store'), ['name'=>'Modal service', 'unit'=>'item', 'rate'=>'12.50', 'currency'=>'EUR', 'tax_rate_ids'=>[]])->assertRedirect(route('admin.services.index'));
     $this->withHeaders(['X-Billing-Modal'=>'1'])->post(route('admin.tax-rates.store'), ['name'=>'Modal tax', 'percentage'=>'5'])->assertRedirect(route('admin.settings.billing.edit', ['section'=>'taxes']));
 });
 test('modal validation preserves the form without writing records', function () {

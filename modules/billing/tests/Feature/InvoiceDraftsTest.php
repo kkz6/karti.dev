@@ -182,3 +182,26 @@ test('customer options omit archived customers and private notes', function () {
     Customer::factory()->create(['display_name' => 'Archived', 'archived_at' => now()]);
     $this->getJson(route('admin.invoices.customer-options', ['search' => 'Original']))->assertOk()->assertJsonCount(1, 'customers')->assertJsonMissingPath('customers.0.internal_notes')->assertJsonMissingPath('customers.0.tax_identifier');
 });
+
+test('invoice table shows IDs and sorts by creation time with an ID tie breaker', function () {
+    $older = createDraftForTest($this->customer->id);
+    $older->forceFill(['created_at' => '2025-01-01 10:00:00'])->save();
+    $newer = createDraftForTest($this->customer->id);
+    $newer->forceFill(['created_at' => '2026-01-01 10:00:00'])->save();
+    $imported = createDraftForTest($this->customer->id);
+    $imported->forceFill(['created_at' => '2020-01-01 10:00:00'])->save();
+    $sameTime = createDraftForTest($this->customer->id);
+    $sameTime->forceFill(['created_at' => '2026-01-01 10:00:00'])->save();
+    $table = fn (array $query = []) => Invoices::make()->setRequest(\Illuminate\Http\Request::create('/', 'GET', $query))->toArray();
+    $data  = $table();
+    expect($data['columns'][0]['attribute'])->toBe('id')
+        ->and(array_column($data['results']['data'], 'id'))->toBe([$sameTime->id, $newer->id, $older->id, $imported->id])
+        ->and(array_column($table(['sort' => 'id'])['results']['data'], 'id'))->toBe([$older->id, $newer->id, $imported->id, $sameTime->id]);
+});
+
+test('invoice table customer links point to the related customer independently of invoice preview', function () {
+    $invoice = createDraftForTest($this->customer->id);
+    $row = Invoices::make()->toArray()['results']['data'][0];
+    expect($row['_column_urls']['customer_name'])->toBe(route('admin.customers.show', $this->customer->id))
+        ->and($row['_column_urls']['formatted_number'])->toBe(route('admin.invoices.index', ['invoice'=>$invoice->id]));
+});

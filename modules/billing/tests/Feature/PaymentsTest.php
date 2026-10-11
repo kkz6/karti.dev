@@ -156,3 +156,10 @@ test('idempotency keys cannot be reused on another invoice', function () {
     $this->postJson(route('admin.invoices.payments.store', $other), [...$this->input, 'version' => $other->version])->assertJsonValidationErrors('request_key');
     expect(Payment::count())->toBe(1)->and(app(InvoiceBalance::class)->data($other)['balance'])->toBe('100.00');
 });
+
+test('payment table links the invoice and customer to their own records', function () {
+    $this->post(route('admin.invoices.payments.store', $this->invoice), $this->input)->assertSessionHasNoErrors();
+    $row = \Modules\Billing\Tables\Payments::make()->toArray()['results']['data'][0];
+    expect($row['_column_urls']['invoice.formatted_number'])->toBe(route('admin.invoices.show', $this->invoice->id))
+        ->and($row['_column_urls']['invoice.customer_name'])->toBe(route('admin.customers.show', $this->customer->id));
+});

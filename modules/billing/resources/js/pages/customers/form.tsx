@@ -3,6 +3,7 @@ import { IndexHeader } from '@shared/components/index-header';
 import { Button } from '@shared/components/ui/button';
 import { Input } from '@shared/components/ui/input';
 import { Label } from '@shared/components/ui/label';
+import { PhoneInput } from '@shared/components/ui/phone-input';
 import { Textarea } from '@shared/components/ui/textarea';
 import { continueWithoutUnsavedChangesPrompt, UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
 import { Users as BillingPageIcon } from 'lucide-react';
@@ -92,7 +93,17 @@ export default function CustomerForm({ customer, currencies = [] }: { customer?:
                                     {label}
                                     {key === 'display_name' ? ' *' : ''}
                                 </Label>
-                                {key === 'default_currency' ? (
+                                {key === 'phone' ? (
+                                    <PhoneInput
+                                        id={key}
+                                        defaultCountry={form.data.billing_country}
+                                        value={form.data.phone}
+                                        onChange={(value) => form.setData('phone', value)}
+                                        disabled={form.processing}
+                                        aria-invalid={!!form.errors.phone}
+                                        aria-describedby={form.errors.phone ? 'phone-error' : undefined}
+                                    />
+                                ) : key === 'default_currency' ? (
                                     <BillingSelect
                                         id={key}
                                         value={form.data.default_currency || 'company'}

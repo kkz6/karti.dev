@@ -1,4 +1,6 @@
 import { Link } from '@inertiajs/react';
+import { PageHeader } from '@shared/components/page-header';
+import { Badge } from '@shared/components/ui/badge';
 import { Button } from '@shared/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
 import { Switch } from '@shared/components/ui/switch';
@@ -31,86 +33,89 @@ export function ContentEditorHeader({
     };
 
     return (
-        <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex min-w-0 items-center gap-3">
-                {status && (
-                    <span className={`size-2 shrink-0 rounded-full ${published ? 'bg-emerald-500' : 'bg-zinc-400'}`} role="img" aria-label={status} />
-                )}
-                <h1 data-editor-title className="min-w-0 text-2xl font-semibold tracking-tight break-words">{title}</h1>
-            </div>
-            <div className="flex shrink-0 items-center gap-3">
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button type="button" variant="ghost" size="icon" disabled={processing} aria-label="Entry actions">
-                            <MoreHorizontal className="size-5" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                            <Link href={backHref}>
-                                <ArrowLeft />
-                                Back to list
-                            </Link>
-                        </DropdownMenuItem>
-                        {onArchive && (
-                            <DropdownMenuItem onSelect={onArchive}>
-                                <Archive />
-                                {status === 'archived' ? 'Restore as draft' : 'Mark as archived'}
-                            </DropdownMenuItem>
-                        )}
-                        {onDelete && (
-                            <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onSelect={onDelete} className="text-destructive focus:text-destructive">
-                                    <Trash2 />
-                                    Delete entry
-                                </DropdownMenuItem>
-                            </>
-                        )}
-                    </DropdownMenuContent>
-                </DropdownMenu>
-                <div className="editor-save-group flex items-stretch" role="group" aria-label="Save entry">
-                    <Button ref={saveSubmitter} type="submit" form={formId} value="save" disabled={processing} className="rounded-r-none">
-                        {processing
-                            ? 'Saving…'
-                            : published
-                              ? 'Save & publish'
-                              : status === 'archived'
-                                ? 'Save archived entry'
-                                : status === 'draft'
-                                  ? 'Save draft'
-                                  : 'Save changes'}
-                    </Button>
+        <PageHeader
+            title={title}
+            className="mb-8"
+            stickyActions={
+                <Button type="button" disabled={processing} onClick={() => submit(false)}>
+                    {processing ? 'Saving…' : published ? 'Save & publish' : status === 'draft' ? 'Save draft' : 'Save changes'}
+                </Button>
+            }
+            actions={
+                <div className="flex shrink-0 items-center gap-3">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button
-                                type="button"
-                                size="icon"
-                                disabled={processing}
-                                className="rounded-l-none border-l border-black/20"
-                                aria-label="Save options"
-                            >
-                                <ChevronDown className="size-4" />
+                            <Button type="button" variant="ghost" size="icon" disabled={processing} aria-label="Entry actions">
+                                <MoreHorizontal className="size-5" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem onSelect={() => submit(false)}>Save</DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => submit(true)}>Save & close</DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                                <Link href={backHref}>
+                                    <ArrowLeft />
+                                    Back to list
+                                </Link>
+                            </DropdownMenuItem>
+                            {onArchive && (
+                                <DropdownMenuItem onSelect={onArchive}>
+                                    <Archive />
+                                    {status === 'archived' ? 'Restore as draft' : 'Mark as archived'}
+                                </DropdownMenuItem>
+                            )}
+                            {onDelete && (
+                                <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onSelect={onDelete} className="text-destructive focus:text-destructive">
+                                        <Trash2 />
+                                        Delete entry
+                                    </DropdownMenuItem>
+                                </>
+                            )}
                         </DropdownMenuContent>
                     </DropdownMenu>
+                    <div className="editor-save-group flex items-stretch" role="group" aria-label="Save entry">
+                        <Button ref={saveSubmitter} type="submit" form={formId} value="save" disabled={processing} className="rounded-r-none">
+                            {processing
+                                ? 'Saving…'
+                                : published
+                                  ? 'Save & publish'
+                                  : status === 'archived'
+                                    ? 'Save archived entry'
+                                    : status === 'draft'
+                                      ? 'Save draft'
+                                      : 'Save changes'}
+                        </Button>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    type="button"
+                                    size="icon"
+                                    disabled={processing}
+                                    className="rounded-l-none border-l border-black/20"
+                                    aria-label="Save options"
+                                >
+                                    <ChevronDown className="size-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onSelect={() => submit(false)}>Save</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => submit(true)}>Save & close</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                    <button
+                        ref={closeSubmitter}
+                        type="submit"
+                        form={formId}
+                        value="save-and-close"
+                        disabled={processing}
+                        hidden
+                        aria-hidden="true"
+                        tabIndex={-1}
+                    />
                 </div>
-                <button
-                    ref={closeSubmitter}
-                    type="submit"
-                    form={formId}
-                    value="save-and-close"
-                    disabled={processing}
-                    hidden
-                    aria-hidden="true"
-                    tabIndex={-1}
-                />
-            </div>
-        </header>
+            }
+        />
     );
 }
 
@@ -137,6 +142,7 @@ export function EditorPublishedControl<T extends string>({
     draftValue,
     disabled,
     error,
+    viewHref,
 }: {
     value: T;
     onChange: (value: T) => void;
@@ -144,32 +150,52 @@ export function EditorPublishedControl<T extends string>({
     draftValue: T;
     disabled?: boolean;
     error?: string;
+    viewHref?: string;
 }) {
     const id = useId();
+    const published = value === publishedValue;
     return (
-        <div>
-            <div className="editor-published-control bg-muted flex items-center justify-between gap-4 rounded-xl px-5 py-4">
+        <section className="bg-card rounded-lg border p-4" aria-labelledby={`${id}-heading`}>
+            <div className="flex items-center justify-between gap-3">
+                <h2 id={`${id}-heading`} className="text-sm font-semibold">
+                    Publication
+                </h2>
+                <Badge variant={published ? 'success' : value === 'archived' ? 'warning' : 'muted'}>
+                    {published ? 'Published' : value === 'archived' ? 'Archived' : 'Draft'}
+                </Badge>
+            </div>
+            <div className="mt-4 flex items-center justify-between gap-4">
                 <label htmlFor={id} className="text-sm font-medium">
-                    Published
+                    Publish on site
                 </label>
                 <Switch
                     id={id}
-                    checked={value === publishedValue}
+                    checked={published}
                     onCheckedChange={(checked) => onChange(checked ? publishedValue : draftValue)}
                     disabled={disabled}
                     aria-describedby={`${id}-help`}
                     aria-invalid={!!error}
                 />
             </div>
-            <p id={`${id}-help`} className={value === 'archived' ? 'text-muted-foreground mt-2 text-xs' : 'sr-only'}>
-                {value === 'archived' ? 'Archived. Turn on Published to restore this entry, then save.' : 'Visibility changes apply when you save.'}
+            <p id={`${id}-help`} className="text-muted-foreground mt-2 text-xs leading-relaxed">
+                {value === 'archived' ? 'Turn on publishing and save to restore this entry.' : 'Changes apply when you save.'}
             </p>
             {error && (
-                <p className="text-destructive mt-2 text-sm" role="alert">
+                <p className="text-destructive mt-2 text-xs" role="alert">
                     {error}
                 </p>
             )}
-        </div>
+            {viewHref && (
+                <div className="mt-4 border-t pt-3">
+                    <Button variant="outline" size="sm" asChild className="w-full">
+                        <a href={viewHref} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="size-3.5" />
+                            View page
+                        </a>
+                    </Button>
+                </div>
+            )}
+        </section>
     );
 }
 

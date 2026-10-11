@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use Modules\Billing\Http\Controllers\BillingSettingsController;
 use Modules\Billing\Http\Controllers\ContactsController;
 use Modules\Billing\Http\Controllers\CustomersController;
-use Modules\Billing\Http\Controllers\ServicesController;
 use Modules\Billing\Http\Controllers\TaxRatesController;
 
 Route::middleware(['web', 'auth', 'verified', \Modules\Billing\Http\Middleware\PreserveInvoicePanel::class])->prefix('admin')->name('admin.')->group(function () {
@@ -15,6 +14,7 @@ Route::middleware(['web', 'auth', 'verified', \Modules\Billing\Http\Middleware\P
     Route::get('billing/imports', [\Modules\Billing\Http\Controllers\BillingImportsController::class, 'index'])->name('billing.imports.index');
     Route::post('billing/imports/dry-run', [\Modules\Billing\Http\Controllers\BillingImportsController::class, 'stage'])->name('billing.imports.stage');
     Route::get('billing/imports/{batch}', [\Modules\Billing\Http\Controllers\BillingImportsController::class, 'show'])->name('billing.imports.show');
+    Route::get('billing/imports/{batch}/archive', [\Modules\Billing\Http\Controllers\BillingImportsController::class, 'archive'])->name('billing.imports.archive');
     Route::post('billing/imports/{batch}/commit', [\Modules\Billing\Http\Controllers\BillingImportsController::class, 'commit'])->name('billing.imports.commit');
     Route::get('customers/{customer}/statement', \Modules\Billing\Http\Controllers\CustomerStatementController::class)->name('customers.statement');
     Route::get('credit-notes/{creditNote}/pdf', [\Modules\Billing\Http\Controllers\CreditNotesController::class, 'pdf'])->name('credit-notes.pdf');
@@ -50,10 +50,6 @@ Route::middleware(['web', 'auth', 'verified', \Modules\Billing\Http\Middleware\P
     Route::post('payments/{payment}/reverse', [\Modules\Billing\Http\Controllers\PaymentsController::class, 'reverse'])->name('payments.reverse');
     Route::get('settings/billing', [BillingSettingsController::class, 'edit'])->name('settings.billing.edit');
     Route::put('settings/billing', [BillingSettingsController::class, 'update'])->name('settings.billing.update');
-    Route::get('services/lookup', [ServicesController::class, 'lookup'])->name('services.lookup');
-    Route::resource('services', ServicesController::class)->except('destroy');
-    Route::post('services/{service}/archive', [ServicesController::class, 'archive'])->name('services.archive');
-    Route::post('services/{service}/restore', [ServicesController::class, 'restore'])->name('services.restore');
     Route::resource('tax-rates', TaxRatesController::class)->parameters(['tax-rates' => 'taxRate'])->except('destroy');
     Route::post('tax-rates/{taxRate}/archive', [TaxRatesController::class, 'archive'])->name('tax-rates.archive');
     Route::post('tax-rates/{taxRate}/restore', [TaxRatesController::class, 'restore'])->name('tax-rates.restore');

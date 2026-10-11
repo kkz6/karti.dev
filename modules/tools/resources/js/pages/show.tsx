@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { PageContainer } from '@shared/components/page-container';
+import { PageHeader } from '@shared/components/page-header';
 import { Badge } from '@shared/components/ui/badge';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
@@ -38,32 +39,35 @@ export default function Show({ tool }: { tool: Tool }) {
             <Head title={tool.title} />
             <PageContainer className="flex min-h-full flex-col space-y-6">
                 {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">{tool.title}</h1>
-                        <div className="mt-1 flex items-center space-x-2">
+                <PageHeader
+                    title={tool.title}
+                    description={tool.description}
+                    badges={
+                        <>
                             <Badge variant={tool.status === 'active' ? 'success' : 'secondary'}>{tool.status}</Badge>
                             {tool.featured && <Badge variant="default">Featured</Badge>}
                             <Badge variant="outline">{tool.category.name}</Badge>
-                        </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        {tool.url && (
-                            <Button variant="outline" asChild>
-                                <a href={tool.url} target="_blank" rel="noopener noreferrer">
-                                    <ExternalLink className="mr-2 h-4 w-4" />
-                                    Visit Tool
-                                </a>
+                        </>
+                    }
+                    actions={
+                        <>
+                            {tool.url && (
+                                <Button variant="outline" asChild>
+                                    <a href={tool.url} target="_blank" rel="noopener noreferrer">
+                                        <ExternalLink className="mr-2 h-4 w-4" />
+                                        Visit Tool
+                                    </a>
+                                </Button>
+                            )}
+                            <Button asChild>
+                                <Link href={route('admin.tools.edit', tool.id)}>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Edit Tool
+                                </Link>
                             </Button>
-                        )}
-                        <Button asChild>
-                            <Link href={route('admin.tools.edit', tool.id)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit Tool
-                            </Link>
-                        </Button>
-                    </div>
-                </div>
+                        </>
+                    }
+                />
 
                 {/* Main Content */}
                 <div className="grid gap-6 md:grid-cols-3">

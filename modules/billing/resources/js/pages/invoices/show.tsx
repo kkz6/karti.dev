@@ -22,7 +22,7 @@ import { cn } from '@shared/lib/utils';
 import { BadgeCheck, Ban, CreditCard, Download, Ellipsis, FileText, Mail, Pencil, Receipt, StickyNote, Wallet } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { BillingFeedback } from '../../components/billing-feedback';
-import { AsideCard, Detail, DetailHeader, DetailStickyBar, DetailTabs, initialTab, useStuckHeader } from '../../components/detail-page';
+import { AsideCard, Detail, DetailHeader, DetailTabs, initialTab } from '../../components/detail-page';
 import { InvoiceComposer } from '../../components/invoice-composer';
 import { InvoiceCreditNotes, type CreditData } from '../../components/invoice-credit-notes';
 import type { Delivery } from '../../components/invoice-delivery';
@@ -108,7 +108,6 @@ export default function InvoiceDetail({
           : (({ paid: 'Paid', partial: 'Partially paid', settled: 'Settled' } as Record<string, string>)[settlement.state] ?? 'Unpaid');
     const requestedTab = new URL(url, 'http://localhost').searchParams.get('tab') ?? 'overview';
     const [tab, setTab] = useState(initialTab(url, ['overview', 'payments', 'credits', 'history']));
-    const { headerRef, stuck } = useStuckHeader();
     const [sharingOpen, setSharingOpen] = useState(requestedTab === 'sharing' || !!shareUrl);
     const moreActionsRef = useRef<HTMLButtonElement>(null);
     const hasSharing = canRemind || canShare || canSend || links !== null || deliveries !== null;
@@ -244,33 +243,21 @@ export default function InvoiceDetail({
             ]}
         >
             <Head title={title} />
-            <DetailStickyBar
-                stuck={stuck}
-                title={title}
-                badges={
-                    <>
-                        {statusBadge}
-                        <span className="text-muted-foreground hidden min-w-0 truncate text-sm md:block">{customerName}</span>
-                    </>
-                }
-                meta={
-                    !cancelled && (
-                        <>
-                            <span className="text-muted-foreground">{draft ? 'Total' : 'Due'} </span>
-                            <span className="font-semibold">
-                                {settlement.balance} {invoice.currency}
-                            </span>
-                        </>
-                    )
-                }
-                actions={primaryAction('sm')}
-            />
+
             <PageContainer className="content-editor">
                 <InvoiceNotification message={message} response={invoice} />
                 <DetailHeader
-                    headerRef={headerRef}
-                    backHref={route('admin.invoices.index')}
-                    backLabel="All invoices"
+                    stickyMeta={
+                        !cancelled && (
+                            <>
+                                <span className="text-muted-foreground">{draft ? 'Total' : 'Due'} </span>
+                                <span className="font-semibold">
+                                    {settlement.balance} {invoice.currency}
+                                </span>
+                            </>
+                        )
+                    }
+                    stickyActions={primaryAction('sm')}
                     title={title}
                     badges={
                         <>

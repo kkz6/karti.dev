@@ -26,9 +26,11 @@ class Invoices extends Table
     public function columns(): array
     {
         return [
+            Columns\TextColumn::make('id', 'ID', toggleable: false)->sortable(),
             Columns\TextColumn::make('formatted_number', 'Invoice', toggleable: false)->mapAs(fn ($number, Invoice $invoice) => $number ?: 'Draft #'.$invoice->id)->url(fn (Invoice $invoice) => Gate::allows('view', $invoice) ? route('admin.invoices.index', ['invoice'=>$invoice->id]) : null)->searchable()->sortable(),
-            Columns\TextColumn::make('customer_name', 'Customer')->searchable(),
+            Columns\TextColumn::make('customer_name', 'Customer')->searchable()->url(fn (Invoice $invoice) => $invoice->customer && Gate::allows('view', $invoice->customer) ? route('admin.customers.show', $invoice->customer_id) : null),
             Columns\DateColumn::make('invoice_date', 'Invoice date')->sortable(), Columns\DateColumn::make('due_date', 'Due date')->sortable(),
+            Columns\DateColumn::make('created_at', 'Created')->hidden()->sortable()->sortUsing(fn (Builder $query, \Modules\Table\Enums\SortDirection $direction) => $query->orderBy('created_at', $direction->value)->orderBy('id', $direction->value)),
             Columns\TextColumn::make('currency', 'Currency'),
             Columns\TextColumn::make('total_minor', 'Total')->mapAs(fn ($minor, Invoice $invoice) => InvoiceCalculator::money((string) $minor, $invoice->currency_precision))->sortable(),
             Columns\TextColumn::make('balance', 'Balance')->mapAs(fn ($value, Invoice $invoice) => $invoice->status === 'issued' ? app(\Modules\Billing\Services\InvoiceBalance::class)->data($invoice)['balance'] : '—'),

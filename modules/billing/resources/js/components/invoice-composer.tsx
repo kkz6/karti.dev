@@ -25,7 +25,7 @@ export function InvoiceComposer({
     open,
     onClose,
     invoiceId,
-    reloadOnly = ['table', 'selectedInvoice'],
+    reloadOnly = ['table', 'selectedInvoice', 'summary'],
 }: {
     open: boolean;
     onClose: () => void;
@@ -33,6 +33,7 @@ export function InvoiceComposer({
     /** Props refreshed after a save; null reloads the whole page (detail pages). */
     reloadOnly?: string[] | null;
 }) {
+    const [draggingItem, setDraggingItem] = useState(false);
     const [footerTarget, setFooterTarget] = useState<HTMLDivElement | null>(null);
     const [seed, setSeed] = useState<InvoiceFormSeed | null>(null),
         [review, setReview] = useState<Review | null>(null),
@@ -53,6 +54,7 @@ export function InvoiceComposer({
     useEffect(() => {
         if (!open) return;
         const abort = new AbortController();
+        setDraggingItem(false);
         setSeed(null);
         setReview(null);
         setStage('edit');
@@ -151,7 +153,7 @@ export function InvoiceComposer({
                     onInteractOutside={(e) => e.preventDefault()}
                     onEscapeKeyDown={(e) => {
                         e.preventDefault();
-                        void close();
+                        if (!draggingItem) void close();
                     }}
                 >
                     <DialogHeader className="bg-card shrink-0 border-b px-5 py-4 pr-12 text-left sm:px-6">
@@ -201,6 +203,7 @@ export function InvoiceComposer({
                                 embedded
                                 footerTarget={footerTarget}
                                 onModalStateChange={onFormState}
+                                onItemDragChange={setDraggingItem}
                                 onSaved={(data) => {
                                     setSeed(data);
                                     setSaved(true);

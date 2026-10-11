@@ -3,7 +3,7 @@ import { SimpleAssetsField } from '@media/components/Field/SimpleAssetsField';
 import { SEOFields } from '@seo/components/SeoFields';
 import { seoSchema } from '@seo/types/seo-schema';
 import { CategoryPicker } from '@shared/components/category-picker';
-import { ContentEditorHeader, EditorErrorSummary, EditorPublishedControl, EditorViewLink } from '@shared/components/content-editor';
+import { ContentEditorHeader, EditorErrorSummary, EditorPublishedControl } from '@shared/components/content-editor';
 import { EditorDateField } from '@shared/components/editor-date-field';
 import { LocalTrafficCard } from '@shared/components/local-traffic-card';
 import { PageContainer } from '@shared/components/page-container';
@@ -216,11 +216,8 @@ export default function Create({ categories, photo }: PhotoGalleryCreateEditPage
                                 {/* Sidebar - 2/6 */}
                                 <div className="content-editor-aside space-y-6">
                                     <LocalTrafficCard />
-                                    <EditorViewLink
-                                        href={photo?.id ? route('photography.show', photo.slug) : undefined}
-                                        published={photo?.status === 'published'}
-                                    />
                                     <EditorPublishedControl
+                                        viewHref={photo?.id ? route('photography.show', photo.slug) : undefined}
                                         value={data.status}
                                         publishedValue="published"
                                         draftValue="draft"

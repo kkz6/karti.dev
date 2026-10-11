@@ -5,12 +5,12 @@ namespace Modules\Billing\Services;
 class InvoicePdfLayout
 {
     /** Explicit bounded lines prevent oversized table cells and long unbroken tokens. */
-    public static function lines(?string $text, int $width = 90): array
+    public static function lines(?string $text, int $width = 90, ?float $points = null, bool $bold = true): array
     {
         static $metrics = null;
         $metrics ??= (new \Dompdf\Dompdf(BillingPdfFonts::options()))->getFontMetrics();
-        $font  = $metrics->getFont('FreeSans', 'bold');
-        $fits  = fn (string $value) => mb_strlen($value) <= $width && $metrics->getTextWidth($value, $font, 10) <= $width * 5.2;
+        $font  = $metrics->getFont('FreeSans', $bold ? 'bold' : 'normal');
+        $fits  = fn (string $value) => mb_strlen($value) <= $width && $metrics->getTextWidth($value, $font, 10) <= ($points ?? $width * 5.2);
         $lines = [];
         foreach (explode("\n", str_replace(["\r\n", "\r"], "\n", $text ?? '')) as $paragraph) {
             if ($paragraph === '') {
@@ -120,21 +120,26 @@ class InvoicePdfLayout
     {
         $hasTax = collect($items)->contains(fn ($item) => count($item['taxes']) > 0);
         $large  = collect($items)->contains(fn ($item) => strlen($item['gross']) > 14 || strlen($item['rate']) > 13);
-        $width  = $large ? 32 : ($hasTax ? 40 : 52);
+        // A4 minus 36pt margins and the item cell's horizontal padding.
+        $points = (595.28 - 72) * ($large ? 0.36 : ($hasTax ? 0.46 : 0.58)) - 18;
         $rows   = [];
         foreach ($items as $i => $item) {
-            $main   = self::lines($item['description'], $width);
-            $detail = self::lines($item['additional_description'] ?? '', $width);
-            $fits   = count($main) + count($detail) <= 18;
-            $rows[] = ['item' => $item, 'number' => $i + 1, 'continued' => false, 'lines' => array_slice($main, 0, 18), 'detailLines' => $fits ? $detail : []];
-            $tail   = implode("\n", array_slice($main, 18));
-            if (! $fits && ($item['additional_description'] ?? '')) {
-                $tail .= ($tail ? "\n" : '').$item['additional_description'];
-            }
-            if ($tail !== '') {
-                foreach (array_chunk(self::lines($tail), 18) as $lines) {
-                    $rows[] = ['item' => $item, 'number' => $i + 1, 'continued' => true, 'lines' => $lines];
-                }
+            $main        = self::lines(preg_replace('/\s+/u', ' ', trim($item['description'])), 256, $points);
+            $description = InvoiceText::description($item['additional_description'] ?? null);
+            $detail      = $description ? self::lines($description, 256, $points, false) : [];
+            $content     = [
+                ...array_map(fn ($line) => ['text' => $line, 'bold' => true], $main),
+                ...array_map(fn ($line) => ['text' => $line, 'bold' => false], $detail),
+            ];
+            // Small rows let Dompdf paginate naturally without moving the whole
+            // description to another page or changing its column width.
+            foreach (array_chunk($content, 4) as $part => $lines) {
+                $rows[] = [
+                    'item'      => $item, 'number' => $i + 1,
+                    'continued' => $part > 0,
+                    'last'      => ($part + 1) * 4 >= count($content),
+                    'content'   => $lines,
+                ];
             }
         }
 

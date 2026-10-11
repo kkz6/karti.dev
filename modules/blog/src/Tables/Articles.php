@@ -12,34 +12,35 @@ use Modules\Table\Table;
 
 class Articles extends Table
 {
+    protected ?string $defaultSort = '-created_at';
+
     public function resource(): \Illuminate\Contracts\Database\Eloquent\Builder|string
     {
-        return app(\Modules\Analytics\Services\ContentTraffic::class)->withViewCount(Article::query(), 'article');
+        return app(\Modules\Analytics\Services\ContentTraffic::class)->withViewCount(Article::query()->with('user:id,name'), 'article');
     }
 
     protected ?string $resource = Article::class;
 
     public function columns(): array
     {
+        $trash         = $this->getTableRequest()->filters()['deleted_at'];
+        $showDeletedAt = $trash->enabled && in_array($trash->clause, [Filters\Clause::OnlyTrashed, Filters\Clause::WithTrashed], true);
+
         return [
-            Columns\TextColumn::make('id', 'ID', stickable: true)
+            Columns\TextColumn::make('title', 'Title', toggleable: false)->searchable()->sortable()->wrap()
                 ->url(fn (Article $article) => $article->trashed() ? null : route('admin.blog.edit', ['blog' => $article->id])),
-            Columns\TextColumn::make('title', 'Title', toggleable: false)
-                ->url(fn (Article $article) => $article->trashed() ? null : route('admin.blog.edit', ['blog' => $article->id]))->searchable(),
-            Columns\TextColumn::make('slug', 'Slug', toggleable: false)
-                ->url(fn (Article $article) => $article->trashed() ? null : route('admin.blog.edit', ['blog' => $article->id]))->sortable(),
-            Columns\BadgeColumn::make('status', 'Status', toggleable: false)
-                ->variant([
-                    'published' => Variant::Success,
-                    'draft'     => Variant::Warning,
-                    'archived'  => Variant::Secondary,
-                ]),
-            Columns\DateColumn::make('created_at', 'Created At', toggleable: false),
-            Columns\NumericColumn::make('local_views', 'Views (30d)')->sortable()
+            Columns\BadgeColumn::make('author_name', 'Author')->variant(fn () => Variant::Outline)
+                ->mapAs(fn ($name, Article $article) => $name ?: ($article->user?->name ?? '—')),
+            Columns\DateColumn::make('created_at', 'Date', toggleable: false)->sortable(),
+            ...($showDeletedAt ? [Columns\DateColumn::make('deleted_at', 'Deleted at', toggleable: false)->sortable()] : []),
+            Columns\TextColumn::make('id', 'ID')->hidden()->sortable(),
+            Columns\TextColumn::make('slug', 'Slug')->hidden()->searchable()->sortable(),
+            Columns\BadgeColumn::make('status', 'Status')->hidden()->variant([
+                'published' => Variant::Success, 'draft' => Variant::Warning, 'archived' => Variant::Secondary,
+            ]),
+            Columns\NumericColumn::make('local_views', 'Views (30d)')->hidden()->sortable()
                 ->url(fn (Article $article) => $article->trashed() ? null : route('admin.seo.content', ['type' => 'article', 'id' => $article->id])),
-            Columns\DateColumn::make('updated_at', 'Updated At', toggleable: false),
-            Columns\DateColumn::make('deleted_at', 'Deleted at')->sortable(),
-            Columns\ActionColumn::new(),
+            Columns\ActionColumn::new(asDropdown: true),
         ];
     }
 
@@ -49,7 +50,7 @@ class Articles extends Table
             Filters\SetFilter::make('status', 'Status')->options(['published' => 'Published', 'draft' => 'Draft', 'archived' => 'Archived']),
             Filters\TextFilter::make('id', 'ID'),
             Filters\DateFilter::make('created_at'),
-            Filters\TrashedFilter::make('deleted_at', 'Trash'),
+            Filters\TrashedFilter::make('deleted_at', 'Trashed'),
         ];
     }
 

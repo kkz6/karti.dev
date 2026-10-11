@@ -4,7 +4,7 @@ import { Head } from '@inertiajs/react';
 import { SimpleAssetsField } from '@media/components/Field/SimpleAssetsField';
 import { SEOFields } from '@seo/components/SeoFields';
 import { CategoryPicker } from '@shared/components/category-picker';
-import { ContentEditorHeader, EditorErrorSummary, EditorPublishedControl, EditorViewLink } from '@shared/components/content-editor';
+import { ContentEditorHeader, EditorErrorSummary, EditorPublishedControl } from '@shared/components/content-editor';
 import { EditorDateField } from '@shared/components/editor-date-field';
 import { EditorRelationsField } from '@shared/components/editor-relations-field';
 import { LocalTrafficCard } from '@shared/components/local-traffic-card';
@@ -230,11 +230,8 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
 
                                     <div className="content-editor-aside space-y-6">
                                         <LocalTrafficCard />
-                                        <EditorViewLink
-                                            href={article?.id ? route('articles.show', article.slug) : undefined}
-                                            published={article?.status === 'published'}
-                                        />
                                         <EditorPublishedControl
+                                            viewHref={article?.id ? route('articles.show', article.slug) : undefined}
                                             value={form.watch('status')}
                                             publishedValue="published"
                                             draftValue="draft"

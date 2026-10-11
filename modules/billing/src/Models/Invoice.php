@@ -11,7 +11,9 @@ class Invoice extends Model
 {
     protected $table = 'billing_invoices';
 
-    protected $guarded = ['id', 'status', 'formatted_number', 'version', 'sequence_number', 'number_prefix', 'number_padding', 'issued_at', 'cancelled_at', 'cancellation_reason'];
+    protected $guarded = ['id', 'number_scope', 'status', 'formatted_number', 'version', 'sequence_number', 'number_prefix', 'number_padding', 'issued_at', 'cancelled_at', 'cancellation_reason'];
+
+    protected $hidden = ['number_scope'];
 
     protected function casts(): array
     {

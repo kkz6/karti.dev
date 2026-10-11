@@ -61,7 +61,6 @@ class HandleInertiaRequests extends Middleware
                 'viewPayments'       => ($request->user()?->can('viewAny', \Modules\Billing\Models\Payment::class) ?? false) && ($request->user()?->can('view', new \Modules\Billing\Models\Payment) ?? false),
                 'viewInvoices'       => $request->user()?->can('viewAny', \Modules\Billing\Models\Invoice::class) ?? false,
                 'viewCustomers'      => $request->user()?->can('viewAny', \Modules\Billing\Models\Customer::class) ?? false,
-                'viewServices'       => $request->user()?->can('viewAny', \Modules\Billing\Models\Service::class) ?? false,
                 'viewTaxRates'       => $request->user()?->can('viewAny', \Modules\Billing\Models\TaxRate::class) ?? false,
                 'viewSettings'       => $request->user()?->can('view', \Modules\Billing\Settings\BillingSettings::class) ?? false,
             ],

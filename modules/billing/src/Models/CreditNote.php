@@ -18,6 +18,11 @@ class CreditNote extends Model
         return ['invoice_id'=>'integer', 'customer_id'=>'integer', 'total_minor'=>'integer', 'subtotal_minor'=>'integer', 'currency_precision'=>'integer', 'version'=>'integer', 'taxes'=>'array', 'seller_snapshot'=>'array', 'customer_snapshot'=>'array', 'credit_date'=>'date:Y-m-d', 'issued_at'=>'datetime', 'cancelled_at'=>'datetime'];
     }
 
+    public function customer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
     public function allocations(): HasMany
     {
         return $this->hasMany(CreditAllocation::class);

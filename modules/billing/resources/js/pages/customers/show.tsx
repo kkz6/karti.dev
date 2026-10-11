@@ -4,6 +4,7 @@ import { Badge } from '@shared/components/ui/badge';
 import { Button } from '@shared/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@shared/components/ui/tooltip';
 import AppLayout from '@shared/layouts/app-layout';
 import { cn } from '@shared/lib/utils';
 import { Archive, Building2, Ellipsis, FileText, Mail, Pencil, Phone, Plus, RotateCcw, StickyNote, Users, Wallet } from 'lucide-react';
@@ -11,7 +12,7 @@ import { useCallback, useState } from 'react';
 import { BillingFeedback } from '../../components/billing-feedback';
 import { ContactForm } from '../../components/contact-form';
 import { CustomerInvoiceTable } from '../../components/customer-financials';
-import { AsideCard, Detail, DetailHeader, DetailStickyBar, DetailTabs, initialTab, useStuckHeader } from '../../components/detail-page';
+import { AsideCard, Detail, DetailHeader, DetailTabs, initialTab } from '../../components/detail-page';
 import { PaymentHistory } from '../../components/invoice-payments';
 import { useBillingConfirm } from '../../components/use-billing-confirm';
 import type { CustomerFinancials as Financials } from '../../payment-types';
@@ -32,7 +33,6 @@ export default function CustomerDetail({
 }) {
     const { url } = usePage();
     const { confirm, dialog } = useBillingConfirm();
-    const { headerRef, stuck } = useStuckHeader();
     const [tab, setTab] = useState(initialTab(url, ['contacts', 'invoices', 'payments']));
 
     const [editing, setEditing] = useState<Contact | 'new' | null>(null);
@@ -152,42 +152,89 @@ export default function CustomerDetail({
                     </div>
                 </div>
             ) : (
-                <ul className="divide-y rounded-lg border">
+                <ul className="divide-y border-t">
                     {customer.contacts.map((contact) => (
-                        <li key={contact.id} className="flex flex-wrap items-start justify-between gap-4 p-4">
-                            <div className={cn('min-w-0', contact.archived_at && 'opacity-60')}>
+                        <li key={contact.id} className="flex items-start gap-3 py-4 last:pb-0">
+                            <div
+                                className="text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-full border text-xs font-medium"
+                                aria-hidden="true"
+                            >
+                                {contact.name
+                                    .trim()
+                                    .split(/\s+/)
+                                    .slice(0, 2)
+                                    .map((part) => part[0])
+                                    .join('')
+                                    .toUpperCase()}
+                            </div>
+                            <div className={cn('min-w-0 flex-1', contact.archived_at && 'text-muted-foreground')}>
                                 <div className="flex flex-wrap items-center gap-2">
                                     <h3 className="text-sm font-medium">{contact.name}</h3>
-                                    {contact.is_primary && <Badge variant="secondary">Primary</Badge>}
+                                    {contact.is_primary && <Badge variant="info">Primary</Badge>}
                                     {contact.archived_at && <Badge variant="outline">Archived</Badge>}
                                 </div>
                                 {contact.title && <p className="text-muted-foreground mt-0.5 text-xs">{contact.title}</p>}
-                                <div className="text-muted-foreground mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                                <div className="text-muted-foreground mt-1.5 flex flex-col gap-1.5 text-xs sm:flex-row sm:flex-wrap sm:gap-x-4">
                                     <a href={`mailto:${contact.email}`} className="hover:text-foreground inline-flex items-center gap-1.5 break-all">
                                         <Mail className="size-3.5 shrink-0" />
                                         {contact.email}
                                     </a>
                                     {contact.phone && (
-                                        <span className="inline-flex items-center gap-1.5">
+                                        <a href={`tel:${contact.phone}`} className="hover:text-foreground inline-flex items-center gap-1.5">
                                             <Phone className="size-3.5 shrink-0" />
                                             {contact.phone}
-                                        </span>
+                                        </a>
                                     )}
                                 </div>
                                 <p className="text-muted-foreground mt-2 text-xs">
-                                    {contact.invoice_emails ? 'Receives invoice emails' : 'Invoice emails disabled'}
+                                    <span
+                                        className={cn(
+                                            'mr-1.5 inline-block size-1.5 rounded-full',
+                                            contact.invoice_emails && !contact.archived_at ? 'bg-emerald-500' : 'bg-muted-foreground/50',
+                                        )}
+                                        aria-hidden="true"
+                                    />
+                                    {contact.archived_at
+                                        ? 'Contact archived'
+                                        : contact.invoice_emails
+                                          ? 'Invoice emails enabled'
+                                          : 'Invoice emails disabled'}
                                 </p>
                             </div>
                             {canEditContacts && (
-                                <div className="flex gap-1">
+                                <div className="flex shrink-0 gap-1">
                                     {!contact.archived_at && (
-                                        <Button variant="ghost" size="sm" onClick={() => setEditing(contact)} disabled={editing !== null}>
-                                            Edit
-                                        </Button>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="size-7"
+                                                    aria-label={`Edit ${contact.name}`}
+                                                    onClick={() => setEditing(contact)}
+                                                    disabled={editing !== null}
+                                                >
+                                                    <Pencil className="size-3.5" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>Edit contact</TooltipContent>
+                                        </Tooltip>
                                     )}
-                                    <Button variant="ghost" size="sm" onClick={() => toggleContact(contact)} disabled={editing !== null}>
-                                        {contact.archived_at ? 'Restore' : 'Archive'}
-                                    </Button>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="text-muted-foreground size-7"
+                                                aria-label={`${contact.archived_at ? 'Restore' : 'Archive'} ${contact.name}`}
+                                                onClick={() => toggleContact(contact)}
+                                                disabled={editing !== null}
+                                            >
+                                                {contact.archived_at ? <RotateCcw className="size-3.5" /> : <Archive className="size-3.5" />}
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>{contact.archived_at ? 'Restore contact' : 'Archive contact'}</TooltipContent>
+                                    </Tooltip>
                                 </div>
                             )}
                         </li>
@@ -206,27 +253,20 @@ export default function CustomerDetail({
         >
             {dialog}
             <Head title={customer.display_name} />
-            <DetailStickyBar
-                stuck={stuck}
-                title={customer.display_name}
-                badges={badges}
-                meta={
-                    lead && (
-                        <>
-                            <span className="text-muted-foreground">Balance </span>
-                            <span className="font-semibold">
-                                {lead.net_balance} {lead.currency}
-                            </span>
-                        </>
-                    )
-                }
-                actions={primaryAction('sm')}
-            />
+
             <PageContainer className="content-editor">
                 <DetailHeader
-                    headerRef={headerRef}
-                    backHref={route('admin.customers.index')}
-                    backLabel="All customers"
+                    stickyMeta={
+                        lead && (
+                            <>
+                                <span className="text-muted-foreground">Balance </span>
+                                <span className="font-semibold">
+                                    {lead.net_balance} {lead.currency}
+                                </span>
+                            </>
+                        )
+                    }
+                    stickyActions={primaryAction('sm')}
                     title={customer.display_name}
                     badges={badges}
                     subtitle={
@@ -377,7 +417,7 @@ export default function CustomerDetail({
                     if (!open) void closeContact();
                 }}
             >
-                <DialogContent className="sm:max-w-xl" onInteractOutside={(event) => event.preventDefault()}>
+                <DialogContent className="sm:max-w-lg" onInteractOutside={(event) => event.preventDefault()}>
                     <DialogHeader>
                         <DialogTitle>{editing === 'new' ? 'Add contact' : 'Edit contact'}</DialogTitle>
                         <DialogDescription>Manage this customer’s billing contact details.</DialogDescription>
@@ -388,6 +428,7 @@ export default function CustomerDetail({
                             onStateChange={contactState}
                             key={editing === 'new' ? 'new' : editing.id}
                             customerId={customer.id}
+                            defaultCountry={customer.billing_country}
                             contact={editing === 'new' ? undefined : editing}
                             onClose={() => setEditing(null)}
                         />

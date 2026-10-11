@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, router } from '@inertiajs/react';
 import { SEOFields } from '@seo/components/SeoFields';
-import { ContentEditorHeader, EditorErrorSummary, EditorPublishedControl, EditorViewLink } from '@shared/components/content-editor';
+import { ContentEditorHeader, EditorErrorSummary, EditorPublishedControl } from '@shared/components/content-editor';
 import { DateField } from '@shared/components/date-field';
 import { LocalTrafficCard } from '@shared/components/local-traffic-card';
 import { PageContainer } from '@shared/components/page-container';
@@ -409,8 +409,8 @@ export default function Edit({ project }: { project: Project }) {
                                     {/* Right column - fixed - 2/6 */}
                                     <div className="content-editor-aside space-y-6">
                                         <LocalTrafficCard />
-                                        <EditorViewLink href={route('projects')} published={project.status === 'published'} />
                                         <EditorPublishedControl
+                                            viewHref={route('projects')}
                                             value={form.watch('status')}
                                             publishedValue="published"
                                             draftValue="draft"

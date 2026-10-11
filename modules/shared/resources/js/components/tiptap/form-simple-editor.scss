@@ -1,5 +1,5 @@
 .form-simple-editor {
-    --editor-chrome: var(--background);
+    --editor-chrome: color-mix(in srgb, var(--muted) 65%, var(--card));
     --editor-hover: var(--sidebar-accent);
     --editor-ink: var(--sidebar-accent-foreground, var(--foreground));
     --editor-focus-border: color-mix(in srgb, var(--muted-foreground) 15%, var(--border));
@@ -12,7 +12,8 @@
 
     .tiptap-toolbar[data-variant='fixed'] {
         position: sticky;
-        top: 0;
+        top: var(--page-sticky-header-height, 0px);
+        z-index: 20;
         bottom: auto;
         height: auto;
         width: 100%;
@@ -118,5 +119,46 @@
         &__footer {
             padding-inline: 1rem;
         }
+    }
+}
+
+/* Fullscreen has its own scroll surface and never inherits the page header offset. */
+.editor-fullscreen-dialog {
+    --page-sticky-header-height: 0px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+
+    > button:last-child {
+        display: none;
+    }
+    .form-simple-editor {
+        display: flex;
+        flex-direction: column;
+        border: 0;
+        border-radius: 0;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+    }
+    .form-simple-editor .tiptap-toolbar[data-variant='fixed'] {
+        flex-shrink: 0;
+        border-radius: 0;
+        top: 0;
+    }
+    .form-simple-editor__body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        max-width: 56rem;
+        margin-inline: auto;
+        padding: clamp(1rem, 4vw, 3rem);
+    }
+    .form-simple-editor__footer {
+        flex-shrink: 0;
+        border-radius: 0;
     }
 }

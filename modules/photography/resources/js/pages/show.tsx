@@ -1,11 +1,12 @@
 import { Head, router } from '@inertiajs/react';
 import { PageContainer } from '@shared/components/page-container';
+import { PageHeader } from '@shared/components/page-header';
 import { Badge } from '@shared/components/ui/badge';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
-import { ArrowLeft, Edit, Image, Trash2 } from 'lucide-react';
+import { Edit, Image, Trash2 } from 'lucide-react';
 import { type PhotoGalleryShowPageProps } from '../types';
 
 export default function Show({ collection }: PhotoGalleryShowPageProps) {
@@ -45,36 +46,32 @@ export default function Show({ collection }: PhotoGalleryShowPageProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={collection.title} />
             <PageContainer className="flex min-h-full flex-col space-y-6">
-                <div className="flex items-center justify-between space-y-2">
-                    <div>
-                        <div className="flex items-center space-x-2">
-                            <h2 className="text-3xl font-bold tracking-tight">{collection.title}</h2>
+                <PageHeader
+                    title={collection.title}
+                    description={collection.description}
+                    badges={
+                        <>
                             <Badge className={getStatusColor(collection.status)}>{collection.status}</Badge>
                             {collection.featured && <Badge variant="secondary">Featured</Badge>}
-                        </div>
-                        <p className="text-muted-foreground">{collection.description}</p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <Button variant="outline" onClick={handleManagePhotos}>
-                            <Image className="mr-2 h-4 w-4" />
-                            Manage Gallery ({collection.photos?.length || 0})
-                        </Button>
-                        <Button variant="outline" onClick={handleEdit}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                        </Button>
-                        <Button variant="destructive" onClick={handleDelete}>
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                        </Button>
-                        <Button variant="outline" asChild>
-                            <a href={route('admin.photography.index')}>
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back to Collections
-                            </a>
-                        </Button>
-                    </div>
-                </div>
+                        </>
+                    }
+                    actions={
+                        <>
+                            <Button variant="outline" onClick={handleManagePhotos}>
+                                <Image className="size-4" />
+                                Manage Gallery ({collection.photos?.length || 0})
+                            </Button>
+                            <Button variant="outline" onClick={handleEdit}>
+                                <Edit className="size-4" />
+                                Edit
+                            </Button>
+                            <Button variant="destructive" onClick={handleDelete}>
+                                <Trash2 className="size-4" />
+                                Delete
+                            </Button>
+                        </>
+                    }
+                />
 
                 <div className="grid gap-6 md:grid-cols-3">
                     <div className="md:col-span-2">

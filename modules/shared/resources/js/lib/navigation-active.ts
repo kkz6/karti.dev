@@ -27,7 +27,6 @@ export function isRouteActive(currentRouteName: string | null | undefined, itemH
         '/admin/payments': 'admin.payments',
         '/admin/credit-notes': 'admin.credit-notes',
         '/admin/recurring-invoices': 'admin.recurring-invoices',
-        '/admin/services': 'admin.services',
         '/admin/tax-rates': 'admin.tax-rates',
         '/admin/billing/reconciliation': 'admin.billing.reconciliation',
         '/admin/blog': 'admin.blog',

@@ -5,7 +5,6 @@ namespace Modules\Billing\Support;
 class BillingPermissions
 {
     public const CATALOGUE = [
-        'view any service', 'view service', 'create service', 'update service', 'archive service', 'restore service',
         'view any tax rate', 'view tax rate', 'create tax rate', 'update tax rate', 'archive tax rate', 'restore tax rate',
         'view billing settings', 'update billing settings',
     ];

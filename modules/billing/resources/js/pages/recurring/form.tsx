@@ -13,7 +13,7 @@ import type { ReactNode } from 'react';
 import { BillingFormFrame, useBillingModalForm } from '../../components/billing-create-modal';
 import { BillingFeedback } from '../../components/billing-feedback';
 import { BillingSelect, BillingSelectItem } from '../../components/billing-select';
-import { AsideCard, Detail, DetailHeader, DetailStickyBar, useStuckHeader } from '../../components/detail-page';
+import { AsideCard, Detail, DetailHeader } from '../../components/detail-page';
 import type { RecurringSchedule } from './index';
 
 type Occurrence = { id: number; scheduled_date: string; invoice_id: number | null; state: string; error: string | null };
@@ -61,7 +61,6 @@ export default function RecurringForm({
         version: schedule?.version ?? null,
     });
     const modal = useBillingModalForm(form);
-    const { headerRef, stuck } = useStuckHeader();
     const locked = !!schedule && schedule.cycles_done > 0;
     const formId = schedule ? `recurring-form-${schedule.id}` : 'recurring-form-new';
     const source = sources.find((s) => String(s.id) === form.data.source_invoice_id);
@@ -249,18 +248,11 @@ export default function RecurringForm({
     return (
         <BillingFormFrame breadcrumbs={[{ title: 'Recurring invoices', href: route('admin.recurring-invoices.index') }]}>
             <Head title={title} />
-            <DetailStickyBar
-                stuck={stuck}
-                title={title}
-                badges={statusBadge}
-                meta={schedule && <span className="text-muted-foreground">Next {schedule.next_date?.slice(0, 10) ?? '—'}</span>}
-                actions={saveButton('sm')}
-            />
+
             <PageContainer className="content-editor">
                 <DetailHeader
-                    headerRef={headerRef}
-                    backHref={route('admin.recurring-invoices.index')}
-                    backLabel="All schedules"
+                    stickyMeta={schedule && <span className="text-muted-foreground">Next {schedule.next_date?.slice(0, 10) ?? '—'}</span>}
+                    stickyActions={saveButton('sm')}
                     title={title}
                     badges={statusBadge}
                     subtitle={[cadence, source?.customer_name].filter(Boolean).join(' · ')}

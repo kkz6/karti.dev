@@ -17,9 +17,9 @@ use Modules\Billing\Http\Requests\IssueInvoiceRequest;
 use Modules\Billing\Http\Requests\SaveInvoiceRequest;
 use Modules\Billing\Models\Customer;
 use Modules\Billing\Models\Invoice;
-use Modules\Billing\Models\Service;
 use Modules\Billing\Models\TaxRate;
 use Modules\Billing\Services\InvoiceCalculator;
+use Modules\Billing\Services\BillingDashboard;
 use Modules\Billing\Services\InvoiceIssueReview;
 use Modules\Billing\Services\InvoicePresentation;
 use Modules\Billing\Settings\BillingSettings;
@@ -43,7 +43,7 @@ class InvoicesController extends BaseController
             $this->authorize('view', $selected);
         }
 
-        return Inertia::render('billing::invoices/index', ['table' => Invoices::make()->setRequest($request), 'canCreate' => $request->user()->can('create', Invoice::class), 'openComposer' => $request->boolean('compose'), 'editInvoiceId'=>$editing?->id, 'selectedInvoice'=>$selected ? $this->detailData($request, $selected) : null]);
+        return Inertia::render('billing::invoices/index', ['summary' => fn () => app(BillingDashboard::class)->get(includeDrafts: true), 'table' => Invoices::make()->setRequest($request), 'canCreate' => $request->user()->can('create', Invoice::class), 'openComposer' => $request->boolean('compose'), 'editInvoiceId'=>$editing?->id, 'selectedInvoice'=>$selected ? $this->detailData($request, $selected) : null]);
     }
 
     public function create(Request $request): Response|JsonResponse|RedirectResponse
@@ -220,7 +220,7 @@ class InvoicesController extends BaseController
             'readOnly'        => $readOnly, 'canUpdate' => $invoice && $request->user()->can('update', $invoice) && $invoice->status === 'draft',
             'canIssue'        => $request->user()->can('issue', $invoice ?? new Invoice) && (! $invoice || $invoice->status === 'draft'),
             'activities'      => $invoice ? $this->activities($invoice) : [],
-            'canUseCatalogue' => $request->user()->can('viewAny', Service::class), 'message' => $request->session()->get('billing_message'),
+            'message' => $request->session()->get('billing_message'),
         ];
 
         return $request->expectsJson() ? response()->json($data) : Inertia::render('billing::invoices/form', $data);

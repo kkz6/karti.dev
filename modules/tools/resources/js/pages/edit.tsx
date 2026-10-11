@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, router } from '@inertiajs/react';
 import { CategoryPicker } from '@shared/components/category-picker';
-import { ContentEditorHeader, EditorErrorSummary, EditorPublishedControl, EditorViewLink } from '@shared/components/content-editor';
+import { ContentEditorHeader, EditorErrorSummary, EditorPublishedControl } from '@shared/components/content-editor';
 import { LocalTrafficCard } from '@shared/components/local-traffic-card';
 import { PageContainer } from '@shared/components/page-container';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
@@ -161,8 +161,8 @@ export default function Edit({ tool, categories }: { tool: Tool; categories: Too
                                 {/* Right column - 2/6 */}
                                 <div className="content-editor-aside space-y-6">
                                     <LocalTrafficCard />
-                                    <EditorViewLink href={route('uses')} published={tool.status === 'active'} />
                                     <EditorPublishedControl
+                                        viewHref={route('uses')}
                                         value={form.watch('status')}
                                         publishedValue="active"
                                         draftValue="inactive"

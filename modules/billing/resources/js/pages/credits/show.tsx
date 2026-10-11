@@ -14,7 +14,7 @@ import { ArrowRightLeft, BadgeCheck, Ban, Download, Ellipsis, FileMinus2, FileTe
 import { useState, type ReactNode } from 'react';
 import { BillingFeedback } from '../../components/billing-feedback';
 import { BillingSelect, BillingSelectItem } from '../../components/billing-select';
-import { AsideCard, Detail, DetailHeader, DetailStickyBar, DetailTabs, initialTab, useStuckHeader } from '../../components/detail-page';
+import { AsideCard, Detail, DetailHeader, DetailTabs, initialTab } from '../../components/detail-page';
 import type { CreditData } from '../../components/invoice-credit-notes';
 import { useBillingConfirm } from '../../components/use-billing-confirm';
 import type { PaymentMethod } from '../../payment-types';
@@ -62,7 +62,6 @@ export default function CreditShow({
     const issued = credit.status === 'issued';
     const { url } = usePage();
     const [tab, setTab] = useState(initialTab(url, ['overview', 'allocations', 'refunds']));
-    const { headerRef, stuck } = useStuckHeader();
     const errors = (values: Record<string, string>) =>
         Object.values(values).length > 0 && (
             <BillingFeedback kind="error">
@@ -193,27 +192,20 @@ export default function CreditShow({
         >
             {dialog}
             <Head title={credit.formatted_number ?? 'Draft credit'} />
-            <DetailStickyBar
-                stuck={stuck}
-                title={credit.formatted_number ?? `Draft credit #${credit.id}`}
-                badges={statusBadge}
-                meta={
-                    issued && (
-                        <>
-                            <span className="text-muted-foreground">Available </span>
-                            <span className="font-semibold">
-                                {credit.settlement.available} {credit.currency}
-                            </span>
-                        </>
-                    )
-                }
-                actions={primaryAction('sm')}
-            />
+
             <PageContainer className="content-editor">
                 <DetailHeader
-                    headerRef={headerRef}
-                    backHref={route('admin.credit-notes.index')}
-                    backLabel="All credit notes"
+                    stickyMeta={
+                        issued && (
+                            <>
+                                <span className="text-muted-foreground">Available </span>
+                                <span className="font-semibold">
+                                    {credit.settlement.available} {credit.currency}
+                                </span>
+                            </>
+                        )
+                    }
+                    stickyActions={primaryAction('sm')}
                     title={credit.formatted_number ?? `Draft credit #${credit.id}`}
                     badges={statusBadge}
                     subtitle={`${customerName} · ${credit.total} ${credit.currency}`}

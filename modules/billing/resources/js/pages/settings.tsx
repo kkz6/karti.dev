@@ -5,6 +5,7 @@ import { Button } from '@shared/components/ui/button';
 import { Checkbox } from '@shared/components/ui/checkbox';
 import { Input } from '@shared/components/ui/input';
 import { Label } from '@shared/components/ui/label';
+import { PhoneInput } from '@shared/components/ui/phone-input';
 import { Textarea } from '@shared/components/ui/textarea';
 import { continueWithoutUnsavedChangesPrompt, UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
 import { useMemo, useState, type FormEvent } from 'react';
@@ -78,13 +79,24 @@ export default function Settings({
                             {identity.map(([key, label]) => (
                                 <div key={key} className="space-y-2">
                                     <Label htmlFor={key}>{label}</Label>
-                                    <Input
-                                        id={key}
-                                        value={form.data[key]}
-                                        type={key === 'email' ? 'email' : 'text'}
-                                        maxLength={key === 'country' ? 2 : undefined}
-                                        onChange={(e) => form.setData(key, e.target.value)}
-                                    />
+                                    {key === 'phone' ? (
+                                        <PhoneInput
+                                            id={key}
+                                            defaultCountry={form.data.country}
+                                            value={form.data.phone}
+                                            onChange={(value) => form.setData('phone', value)}
+                                            disabled={!canUpdate || form.processing}
+                                            aria-invalid={!!form.errors.phone}
+                                        />
+                                    ) : (
+                                        <Input
+                                            id={key}
+                                            value={form.data[key]}
+                                            type={key === 'email' ? 'email' : 'text'}
+                                            maxLength={key === 'country' ? 2 : undefined}
+                                            onChange={(e) => form.setData(key, e.target.value)}
+                                        />
+                                    )}
                                     {key === 'country' && <p className="text-muted-foreground text-xs">Two-letter code, such as IN or US.</p>}
                                 </div>
                             ))}
@@ -175,7 +187,7 @@ export default function Settings({
                                     ))}
                                 </BillingSelect>
                                 <p className="text-muted-foreground text-xs">
-                                    Select your default before issuing invoices. Service prices keep their own currency.
+                                    Select your default currency for new invoices. Existing invoices keep their original currency.
                                 </p>
                             </div>
                             <div className="space-y-2">

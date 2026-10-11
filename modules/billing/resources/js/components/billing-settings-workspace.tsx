@@ -3,6 +3,7 @@ import Heading from '@shared/components/heading';
 import { Button } from '@shared/components/ui/button';
 import { Label } from '@shared/components/ui/label';
 import AppLayout from '@shared/layouts/app-layout';
+import { cn } from '@shared/lib/utils';
 import type { ReactNode } from 'react';
 import { BillingPageContainer } from './billing-page-container';
 import { BillingSelect, BillingSelectItem } from './billing-select';
@@ -38,9 +39,13 @@ export function BillingSettingsWorkspace({
                                 <Button
                                     key={s.id}
                                     size="sm"
-                                    variant={section === s.id ? 'secondary' : 'ghost'}
+                                    variant="ghost"
                                     asChild
-                                    className="w-full justify-start"
+                                    className={cn(
+                                        'relative w-full justify-start border border-transparent shadow-none',
+                                        section === s.id &&
+                                            'border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 hover:text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300',
+                                    )}
                                 >
                                     <Link
                                         href={route('admin.settings.billing.edit', { section: s.id })}

@@ -157,15 +157,17 @@ test('pdf layout breaks long descriptions into bounded continuation rows and esc
     $rows                           = InvoicePdfLayout::rows([$item]);
     expect(count($rows))->toBeGreaterThan(5)->and($rows[0]['continued'])->toBeFalse()->and($rows[1]['continued'])->toBeTrue();
     foreach ($rows as $row) {
-        expect(count($row['lines']))->toBeLessThanOrEqual(18);
-        foreach ($row['lines'] as $line) {
-            expect(mb_strlen($line))->toBeLessThanOrEqual($row['continued'] ? 90 : 52);
+        expect(count($row['content']))->toBeLessThanOrEqual(4);
+        foreach ($row['content'] as $line) {
+            $metrics = (new \Dompdf\Dompdf(\Modules\Billing\Services\BillingPdfFonts::options()))->getFontMetrics();
+            $font    = $metrics->getFont('FreeSans', $line['bold'] ? 'bold' : 'normal');
+            expect($metrics->getTextWidth($line['text'], $font, 10))->toBeLessThanOrEqual((595.28 - 72) * 0.46 - 18);
         }
     }
     $data         = app(InvoicePdf::class)->data($this->invoice);
     $data['rows'] = $rows;
     $html         = view('billing::pdf.invoice', $data)->render();
-    expect($html)->toContain('&lt;script&gt;', 'FINAL-SCOPE-MARKER')->not->toContain('<script>alert');
+    expect($html)->toContain('&lt;script&gt;', 'FINAL-SCOPE-MARKER')->not->toContain('<script>alert', ' - continued');
 });
 
 test('pdf settlement stays current while transaction details follow permission and exclude reversed receipts', function () {
@@ -190,4 +192,21 @@ test('issued internal notes can change with audit while customer pdf data and im
     $this->patch(route('admin.invoices.internal-note', $this->invoice), ['version'=>$this->invoice->version, 'internal_note'=>'PRIVATE STAFF FOLLOW-UP'])->assertSessionHasNoErrors();
     expect($this->invoice->fresh()->only(array_keys($before)))->toBe($before)->and($this->invoice->fresh()->internal_note)->toBe('PRIVATE STAFF FOLLOW-UP')->and($this->invoice->activities()->where('event', 'internal_note_updated')->count())->toBe(1);
     expect(app(InvoicePdf::class)->data($this->invoice->fresh())['invoice'])->not->toHaveKey('internal_note');
+});
+
+test('legacy description breaks are compact in presentation and pdf without rewriting stored history', function () {
+    $source = "Table\n\r\n1. First field\n\r\n2. Second field\n\r\n\n\r\n\n\r\nPayment screen\n\r\n1. Last field";
+    $item   = $this->invoice->items()->first();
+    $item->update(['description' => "Consulting\r\nDelivery", 'additional_description' => $source]);
+    $data = app(InvoicePdf::class)->data($this->invoice->fresh());
+    expect($data['invoice']['items'][0]['additional_description'])->toBe("Table\n1. First field\n2. Second field\n\nPayment screen\n1. Last field")
+        ->and($item->fresh()->additional_description)->toBe($source)
+        ->and(array_column($data['rows'][0]['content'], 'text'))->toBe(['Consulting Delivery', 'Table', '1. First field', '2. Second field']);
+    $allLines = collect($data['rows'])->flatMap(fn ($row) => array_column($row['content'], 'text'))->all();
+    expect($allLines)->toBe(['Consulting Delivery', 'Table', '1. First field', '2. Second field', '', 'Payment screen', '1. Last field']);
+});
+
+test('ordinary paragraph breaks and unicode descriptions remain readable', function () {
+    expect(\Modules\Billing\Services\InvoiceText::description("Résumé\r\n\r\nDelivery\r\nNext line"))->toBe("Résumé\n\nDelivery\nNext line")
+        ->and(\Modules\Billing\Services\InvoiceText::description(null))->toBeNull();
 });

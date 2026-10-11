@@ -5,12 +5,12 @@
     <title>{{ $label }}</title>
     <style>
         @page { margin: 36pt 36pt 48pt; }
-        body { font-family: "FreeSans", sans-serif; font-size: 10pt; line-height: 1.25; color: #030712; }
+        body { font-family: "FreeSans", sans-serif; font-size: 10pt; line-height: 1.0; color: #030712; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         p { margin: 0; }
         h1 { font-size: 20pt; line-height: 1.1; color: #030712; margin: 0; font-weight: bold; }
         h2 { font-size: 10pt; color: #030712; margin: 22pt 0 4pt; font-weight: bold; page-break-after: avoid; }
-        .heading { margin-bottom: 28pt; }
+        .heading { margin-bottom: 24pt; }
         .heading td { width: 50%; vertical-align: top; }
         .logo { max-width: 155pt; max-height: 58pt; }
         .invoice-heading { text-align: right; }
@@ -41,14 +41,15 @@
         .number-cell { text-align: right; white-space: nowrap; }
         .unit { color: #424242; font-size: 7pt; text-align: right; }
         .taxes { text-align: right; }
-        .continued { font-size: 8pt; color: #6b7280; margin-bottom: 3pt; }
-        .description-line { line-height: 1.25; }
+        .items .item-continuation td { padding-top: 0; }
+        .items .item-open td { padding-bottom: 0; }
+        .description-line { line-height: 1.0; }
         .summary { margin-top: 23pt; font-size: 10.5pt; }
         .summary td { padding: 4.5pt 6pt; vertical-align: top; text-align: right; }
         .summary .label { width: 85%; font-weight: bold; color: #030712; }
         .summary .amount { width: 15%; white-space: nowrap; color: #030712; }
         .total td { background: #e5e7eb; color: #030712; }
-        .text-line { line-height: 1.25; color: #030712; }
+        .text-line { line-height: 1.0; color: #030712; }
         .words { text-align: center; font-weight: bold; color: #030712; margin: 12pt 0 0; }
         .transactions { margin-top: 0; }
         .transactions th { width: 25%; text-align: left; border-bottom: 0.75pt solid #000000; font-weight: normal; color: #000000; padding: 4pt; }
@@ -121,25 +122,20 @@
         </tr></thead>
         <tbody>
             @foreach($rows as $row)
-                @if($row['continued'])
-                    <tr class="item-row"><td class="number"></td><td colspan="{{ $hasTax ? 5 : 4 }}" class="details">
-                        <p class="continued">Item {{ $row['number'] }} - continued</p>
-                        @foreach($row['lines'] as $line)<div class="description-line">{{ $line }}@if($line === '')&nbsp;@endif</div>@endforeach
-                    </td></tr>
-                @else
-                    <tr class="item-row">
-                        <td class="number">{{ $row['number'] }}</td>
-                        <td><div class="description">@foreach($row['lines'] as $line)<div class="description-line">{{ $line }}@if($line === '')&nbsp;@endif</div>@endforeach</div>
-                            @foreach($row['detailLines'] as $line)<div class="details description-line">{{ $line }}@if($line === '')&nbsp;@endif</div>@endforeach
-                        </td>
-                        <td class="number-cell">{{ rtrim(rtrim($row['item']['quantity'], '0'), '.') }}@if($row['item']['unit'] && $row['item']['unit'] !== 'item') {{ $row['item']['unit'] }}@endif</td>
-                        <td class="number-cell">{{ trim(\Modules\Billing\Services\InvoicePdfLayout::amount(\Modules\Billing\Services\InvoicePdfLayout::rate($row['item']['rate'], $invoice['totals']['precision']), '')) }}</td>
-                        @if($hasTax)<td class="taxes">
+                <tr class="item-row {{ $row['continued'] ? 'item-continuation' : '' }} {{ ! $row['last'] ? 'item-open' : '' }}">
+                    <td class="number">{{ $row['continued'] ? '' : $row['number'] }}</td>
+                    <td>
+                        @foreach($row['content'] as $line)<div class="description-line {{ $line['bold'] ? 'description' : 'details' }}">{{ $line['text'] }}@if($line['text'] === '')&nbsp;@endif</div>@endforeach
+                    </td>
+                    <td class="number-cell">@unless($row['continued']){{ rtrim(rtrim($row['item']['quantity'], '0'), '.') }}@if($row['item']['unit'] && $row['item']['unit'] !== 'item') {{ $row['item']['unit'] }}@endif @endunless</td>
+                    <td class="number-cell">@unless($row['continued']){{ trim(\Modules\Billing\Services\InvoicePdfLayout::amount(\Modules\Billing\Services\InvoicePdfLayout::rate($row['item']['rate'], $invoice['totals']['precision']), '')) }}@endunless</td>
+                    @if($hasTax)<td class="taxes">
+                        @unless($row['continued'])
                             @forelse($row['item']['taxes'] as $tax)<div>{{ rtrim(rtrim($tax['percentage'], '0'), '.') }}%</div>@empty 0% @endforelse
-                        </td>@endif
-                        <td class="number-cell" @if(strlen($row['item']['gross']) > 15)style="font-size:7pt"@endif>{{ trim(\Modules\Billing\Services\InvoicePdfLayout::amount($row['item']['gross'], '')) }}</td>
-                    </tr>
-                @endif
+                        @endunless
+                    </td>@endif
+                    <td class="number-cell" @if(strlen($row['item']['gross']) > 15)style="font-size:7pt"@endif>@unless($row['continued']){{ trim(\Modules\Billing\Services\InvoicePdfLayout::amount($row['item']['gross'], '')) }}@endunless</td>
+                </tr>
             @endforeach
         </tbody>
     </table>

@@ -12,7 +12,7 @@ export function CatalogueActions({
     id: number;
     archived: boolean;
     can: CataloguePermissions;
-    prefix: 'admin.services' | 'admin.tax-rates';
+    prefix: 'admin.tax-rates';
 }) {
     const { confirm, dialog } = useBillingConfirm();
 

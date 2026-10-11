@@ -1,5 +1,8 @@
+import { Button as AppButton } from '@shared/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@shared/components/ui/dialog';
 import { DOMParser as ProseMirrorDOMParser } from '@tiptap/pm/model';
 import { EditorContent, EditorContext, useEditor, useEditorState } from '@tiptap/react';
+import { Maximize2, Minimize2 } from 'lucide-react';
 import { marked } from 'marked';
 import * as React from 'react';
 
@@ -185,6 +188,9 @@ interface FormSimpleEditorProps {
 
 export function FormSimpleEditor({ content: initialContent = '', onChange, placeholder }: FormSimpleEditorProps) {
     const isMobile = useIsMobile();
+    const [fullscreen, setFullscreen] = React.useState(false);
+    const expandRef = React.useRef<HTMLButtonElement>(null);
+    const inlineHeight = React.useRef(0);
     const [mobileView, setMobileView] = React.useState<'main' | 'highlighter' | 'link'>('main');
     const editorContainerRef = React.useRef<HTMLDivElement>(null);
     const toolbarRef = React.useRef<HTMLDivElement>(null);
@@ -218,7 +224,7 @@ export function FormSimpleEditor({ content: initialContent = '', onChange, place
             observer.disconnect();
             if (frame !== null) cancelAnimationFrame(frame);
         };
-    }, []);
+    }, [fullscreen]);
 
     const editor = useEditor({
         immediatelyRender: false,
@@ -321,10 +327,21 @@ export function FormSimpleEditor({ content: initialContent = '', onChange, place
         }
     }, [initialContent, editor]);
 
-    return (
+    const toggleFullscreen = () => {
+        if (!fullscreen) inlineHeight.current = editorContainerRef.current?.getBoundingClientRect().height ?? 0;
+        setFullscreen(!fullscreen);
+    };
+    const editorSurface = (
         <div ref={editorContainerRef} className="form-simple-editor w-full rounded-lg border">
             <EditorContext.Provider value={{ editor }}>
                 <Toolbar ref={toolbarRef} aria-label="Text formatting" data-stuck={toolbarStuck}>
+                    {!fullscreen && (
+                        <ToolbarGroup>
+                            <Button ref={expandRef} aria-label="Enter fullscreen editor" tooltip="Fullscreen editor" onClick={toggleFullscreen}>
+                                <Maximize2 className="tiptap-button-icon" />
+                            </Button>
+                        </ToolbarGroup>
+                    )}
                     {mobileView === 'main' ? (
                         <MainToolbarContent
                             onHighlighterClick={() => setMobileView('highlighter')}
@@ -347,5 +364,35 @@ export function FormSimpleEditor({ content: initialContent = '', onChange, place
                 </div>
             </EditorContext.Provider>
         </div>
+    );
+    return (
+        <>
+            {fullscreen ? <div aria-hidden="true" style={{ height: inlineHeight.current }} /> : editorSurface}
+            <Dialog open={fullscreen} onOpenChange={setFullscreen}>
+                <DialogContent
+                    className="editor-fullscreen-dialog !inset-0 !h-dvh !w-screen !max-w-none !translate-x-0 !translate-y-0 !rounded-none !border-0"
+                    onOpenAutoFocus={(event) => {
+                        event.preventDefault();
+                        requestAnimationFrame(() => editor?.commands.focus());
+                    }}
+                    onCloseAutoFocus={(event) => {
+                        event.preventDefault();
+                        requestAnimationFrame(() => expandRef.current?.focus({ preventScroll: true }));
+                    }}
+                >
+                    <div className="bg-card flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
+                        <div>
+                            <DialogTitle>Fullscreen editor</DialogTitle>
+                            <DialogDescription className="mt-1 text-xs">Exit fullscreen to save your changes.</DialogDescription>
+                        </div>
+                        <AppButton type="button" variant="outline" onClick={() => setFullscreen(false)}>
+                            <Minimize2 className="size-4" />
+                            Exit fullscreen
+                        </AppButton>
+                    </div>
+                    {fullscreen && editorSurface}
+                </DialogContent>
+            </Dialog>
+        </>
     );
 }

@@ -32,16 +32,6 @@ export type Customer = {
 export type CurrencyOption = { code: string; name: string; precision: number };
 export type CataloguePermissions = { update: boolean; archive: boolean; restore: boolean };
 export type TaxRate = { id: number; name: string; percentage: string; archived_at: string | null };
-export type Service = {
-    id: number;
-    name: string;
-    description: string | null;
-    unit: string;
-    rate: string;
-    currency: string;
-    archived_at: string | null;
-    tax_rates: TaxRate[];
-};
 export type BillingSettings = {
     payment_methods: string[];
     display_name: string;

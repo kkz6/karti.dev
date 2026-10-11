@@ -25,8 +25,9 @@ class InvoicePresentation
         $groups        = [];
         $lines         = [];
         $data['items'] = $invoice->items->map(function ($item) use (&$groups, &$lines, $precision) {
-            $line          = $item->only(['key', 'service_id', 'description', 'additional_description', 'unit', 'quantity', 'rate']);
-            $line['taxes'] = $item->taxes->map(function ($tax) use (&$groups, $precision) {
+            $line                           = $item->only(['key', 'service_id', 'description', 'additional_description', 'unit', 'quantity', 'rate']);
+            $line['additional_description'] = InvoiceText::description($line['additional_description']);
+            $line['taxes']                  = $item->taxes->map(function ($tax) use (&$groups, $precision) {
                 $key = strtolower(trim($tax->name)).'|'.$tax->percentage;
                 $groups[$key] ??= ['name' => $tax->name, 'percentage' => $tax->percentage, 'minor' => BigInteger::zero()];
                 $groups[$key]['minor'] = $groups[$key]['minor']->plus($tax->amount_minor);

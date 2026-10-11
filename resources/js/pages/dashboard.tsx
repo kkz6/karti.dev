@@ -1,5 +1,7 @@
+import { BillingDashboardSummary, type BillingDashboardData } from '@billing/components/billing-dashboard-summary';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { PageContainer } from '@shared/components/page-container';
+import { PageHeader } from '@shared/components/page-header';
 import { Button } from '@shared/components/ui/button';
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@shared/components/ui/chart';
 import AppLayout from '@shared/layouts/app-layout';
@@ -101,13 +103,13 @@ function TrendLabel({ trend }: { trend: Trend }) {
 
 function Metric({ label, value, trend, icon: Icon }: { label: string; value: number; trend?: Trend; icon: typeof Eye }) {
     return (
-        <div className="min-w-0 px-5 py-4 first:pl-0 last:pr-0 sm:px-6">
+        <div className="min-w-0">
             <div className="text-muted-foreground flex items-center gap-2 text-xs font-medium tracking-wide uppercase">
                 <Icon className="size-4" aria-hidden="true" />
                 {label}
             </div>
             <div className="mt-2 flex items-end gap-2">
-                <strong className="text-foreground text-3xl font-semibold tracking-tight tabular-nums">{value.toLocaleString()}</strong>
+                <strong className="text-foreground text-2xl font-semibold tracking-tight tabular-nums">{value.toLocaleString()}</strong>
                 {trend ? <TrendLabel trend={trend} /> : null}
             </div>
         </div>
@@ -143,7 +145,15 @@ function formatDate(value: string | null): string {
     return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(value));
 }
 
-export default function Dashboard({ overview }: { overview: DashboardOverview }) {
+export default function Dashboard({
+    overview,
+    billing,
+    canCreateInvoice,
+}: {
+    overview: DashboardOverview;
+    billing?: BillingDashboardData | null;
+    canCreateInvoice?: boolean;
+}) {
     const { auth } = usePage<SharedData>().props;
     const firstName = auth.user.name.trim().split(/\s+/)[0];
     const maxPageViews = Math.max(...overview.traffic.topPages.map((page) => page.views), 1);
@@ -154,34 +164,33 @@ export default function Dashboard({ overview }: { overview: DashboardOverview })
             <Head title="Dashboard" />
             <PageContainer as="main" className="content-index space-y-8">
                 <div>
-                    <header className="flex flex-col gap-5 border-b pb-6 sm:flex-row sm:items-end sm:justify-between">
-                        <div>
-                            <div className="text-muted-foreground mb-2 flex items-center gap-2 text-sm">
-                                <LayoutGrid className="size-4" aria-hidden="true" />
-                                Dashboard
-                            </div>
-                            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Welcome back, {firstName}</h1>
-                            <p className="text-muted-foreground mt-1 text-sm">A clear view of what is happening across your site.</p>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                            <Button asChild variant="outline">
-                                <Link href={route('admin.photography.create')}>
-                                    <Camera className="size-4" aria-hidden="true" />
-                                    New gallery
-                                </Link>
-                            </Button>
-                            <Button asChild>
-                                <Link href={route('admin.blog.create')}>
-                                    <Plus className="size-4" aria-hidden="true" />
-                                    New article
-                                </Link>
-                            </Button>
-                        </div>
-                    </header>
+                    <PageHeader
+                        title={`Welcome back, ${firstName}`}
+                        eyebrow="Dashboard"
+                        icon={LayoutGrid}
+                        description="A clear view of what is happening across your site."
+                        actions={
+                            <>
+                                <Button asChild variant="outline">
+                                    <Link href={route('admin.photography.create')}>
+                                        <Camera className="size-4" aria-hidden="true" />
+                                        New gallery
+                                    </Link>
+                                </Button>
+                                <Button asChild>
+                                    <Link href={route('admin.blog.create')}>
+                                        <Plus className="size-4" aria-hidden="true" />
+                                        New article
+                                    </Link>
+                                </Button>
+                            </>
+                        }
+                        className="border-b pb-6"
+                    />
 
                     <section
                         aria-label={`${overview.period.label} summary`}
-                        className="grid divide-y border-b sm:grid-cols-2 sm:divide-x sm:divide-y-0 xl:grid-cols-4"
+                        className="grid grid-cols-2 gap-x-6 gap-y-4 border-b py-4 xl:grid-cols-4"
                     >
                         <Metric label="Page views" value={overview.traffic.views} trend={overview.traffic.viewsTrend} icon={Eye} />
                         <Metric label="Daily visitors" value={overview.traffic.dailyVisitors} trend={overview.traffic.visitorsTrend} icon={Users} />
@@ -193,6 +202,8 @@ export default function Dashboard({ overview }: { overview: DashboardOverview })
                         />
                     </section>
                 </div>
+
+                {billing && <BillingDashboardSummary data={billing} canCreate={!!canCreateInvoice} />}
 
                 {!overview.traffic.enabled ? (
                     <div className="border-border bg-muted/30 rounded-lg border px-4 py-3 text-sm">
@@ -312,23 +323,23 @@ export default function Dashboard({ overview }: { overview: DashboardOverview })
                             </div>
                         </div>
                         <dl className="mt-7 divide-y text-sm">
-                            <div className="flex items-center justify-between py-3">
+                            <div className="flex items-center justify-between gap-4 py-3">
                                 <dt className="text-muted-foreground">Active subscribers</dt>
                                 <dd className="font-semibold tabular-nums">{overview.newsletter.active}</dd>
                             </div>
-                            <div className="flex items-center justify-between py-3">
+                            <div className="flex items-center justify-between gap-4 py-3">
                                 <dt className="text-muted-foreground">Awaiting confirmation</dt>
                                 <dd className="font-semibold tabular-nums">{overview.newsletter.pending}</dd>
                             </div>
-                            <div className="flex items-center justify-between py-3">
+                            <div className="flex items-center justify-between gap-4 py-3">
                                 <dt className="text-muted-foreground">Unsubscribed</dt>
                                 <dd className="font-semibold tabular-nums">{overview.newsletter.unsubscribed}</dd>
                             </div>
-                            <div className="flex items-center justify-between pt-3">
+                            <div className="flex items-center justify-between gap-4 py-3">
                                 <dt className="text-muted-foreground">Pending consultations</dt>
                                 <dd className="font-semibold tabular-nums">{overview.bookings.pending}</dd>
                             </div>
-                            <div className="flex items-center justify-between pt-3">
+                            <div className="flex items-center justify-between gap-4 py-3">
                                 <dt className="text-muted-foreground">Open contact messages</dt>
                                 <dd className="font-semibold tabular-nums">{overview.contacts.open}</dd>
                             </div>

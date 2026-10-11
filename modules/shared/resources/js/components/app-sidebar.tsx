@@ -13,7 +13,6 @@ export function AppSidebar() {
             viewReconciliation: boolean;
             viewCredits: boolean;
             viewImports: boolean;
-            viewServices: boolean;
             viewTaxRates: boolean;
             viewSettings: boolean;
         };
@@ -27,7 +26,6 @@ export function AppSidebar() {
         'Recurring invoices': billingAccess?.viewRecurring ?? false,
         Payments: billingAccess?.viewPayments ?? false,
         Invoices: billingAccess?.viewInvoices ?? false,
-        Services: billingAccess?.viewServices ?? false,
         'Tax presets': billingAccess?.viewTaxRates ?? false,
         'Billing automation': billingAccess?.viewSettings ?? false,
         'Billing settings': (billingAccess?.viewSettings || billingAccess?.viewImports || billingAccess?.viewTaxRates) ?? false,

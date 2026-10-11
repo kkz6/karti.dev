@@ -9,15 +9,18 @@ import { useState } from 'react';
 import { InvoiceComposer } from '../../components/invoice-composer';
 import { InvoiceNotification } from '../../components/invoice-notification';
 import { InvoicePreviewDialog, type InvoiceViewData } from '../../components/invoice-preview-dialog';
+import { InvoiceStats, type InvoiceSummaryData } from '../../components/invoice-stats';
 
 export default function InvoiceIndex({
     table,
+    summary,
     canCreate,
     openComposer = false,
     selectedInvoice,
     editInvoiceId,
 }: {
     table: TableConfig;
+    summary: InvoiceSummaryData;
     canCreate: boolean;
     openComposer?: boolean;
     selectedInvoice?: InvoiceViewData | null;
@@ -57,9 +60,22 @@ export default function InvoiceIndex({
                     description={<> Manage drafts, issued invoices and cancellations. Permanent numbers are assigned on issuance. </>}
                 />
 
+                <InvoiceStats data={summary} />
+
                 <div id="invoice-list-heading" tabIndex={-1} className="invoice-list min-w-0 outline-none">
                     <InertiaTableWrapper
                         resource={table}
+                        cell={{
+                            formatted_number: ({ item, value }) => (
+                                <button
+                                    type="button"
+                                    className="text-left underline-offset-4 hover:underline focus-visible:underline"
+                                    onClick={() => selectInvoice(Number(item._primary_key))}
+                                >
+                                    {String(value)}
+                                </button>
+                            ),
+                        }}
                         onCustomAction={(action, keys, onFinish) => {
                             const id = Number(keys[0]);
                             if (id) {
@@ -84,7 +100,8 @@ export default function InvoiceIndex({
                             }
                             onFinish?.();
                         }}
-                        onRowClick={(item) => {
+                        onRowClick={(item, column) => {
+                            if (column.attribute === 'customer_name') return;
                             if (item._primary_key) selectInvoice(Number(item._primary_key));
                         }}
                         emptyState={{

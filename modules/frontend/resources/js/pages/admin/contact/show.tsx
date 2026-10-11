@@ -1,9 +1,10 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { PageContainer } from '@shared/components/page-container';
+import { PageHeader } from '@shared/components/page-header';
 import { Badge } from '@shared/components/ui/badge';
 import { Button } from '@shared/components/ui/button';
 import AppLayout from '@shared/layouts/app-layout';
-import { ArrowLeft, CheckCircle2, ExternalLink, Mail, MailOpen, RotateCcw } from 'lucide-react';
+import { CheckCircle2, ExternalLink, Mail, MailOpen, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 
 type Submission = {
@@ -50,51 +51,44 @@ export default function ContactSubmissionShow({ submission }: { submission: Subm
         >
             <Head title={submission.subject} />
             <PageContainer className="space-y-7">
-                <Link
-                    href={route('admin.contact.index')}
-                    className="text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex items-center gap-2 rounded-sm text-sm focus-visible:ring-2 focus-visible:outline-none"
-                >
-                    <ArrowLeft className="size-4" aria-hidden="true" />
-                    Contact inbox
-                </Link>
-
-                <header className="flex flex-col gap-5 border-b pb-6 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-3">
-                            <Badge variant={statusVariant[submission.status]}>{submission.status}</Badge>
-                            <span className="text-muted-foreground text-sm">{formatDate(submission.createdAt)}</span>
-                        </div>
-                        <h1 className="mt-3 max-w-4xl text-2xl font-semibold tracking-tight sm:text-3xl">{submission.subject}</h1>
-                        <p className="text-muted-foreground mt-2 text-sm">
+                <PageHeader
+                    title={submission.subject}
+                    description={
+                        <>
                             From <span className="text-foreground font-medium">{submission.name}</span> ({submission.email})
-                        </p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        <Button variant="outline" asChild>
-                            <a href={`mailto:${submission.email}?subject=${encodeURIComponent(`Re: ${submission.subject}`)}`}>
-                                <Mail className="size-4" aria-hidden="true" />
-                                Reply
-                            </a>
-                        </Button>
-                        {submission.status === 'new' ? (
-                            <Button variant="outline" onClick={() => updateStatus('read')} disabled={processing}>
-                                <MailOpen className="size-4" aria-hidden="true" />
-                                Mark as read
+                        </>
+                    }
+                    badges={<Badge variant={statusVariant[submission.status]}>{submission.status}</Badge>}
+                    stickyMeta={formatDate(submission.createdAt)}
+                    actions={
+                        <>
+                            <Button variant="outline" asChild>
+                                <a href={`mailto:${submission.email}?subject=${encodeURIComponent(`Re: ${submission.subject}`)}`}>
+                                    <Mail className="size-4" aria-hidden="true" />
+                                    Reply
+                                </a>
                             </Button>
-                        ) : null}
-                        {submission.status === 'resolved' ? (
-                            <Button variant="outline" onClick={() => updateStatus('read')} disabled={processing}>
-                                <RotateCcw className="size-4" aria-hidden="true" />
-                                Reopen
-                            </Button>
-                        ) : (
-                            <Button onClick={() => updateStatus('resolved')} disabled={processing}>
-                                <CheckCircle2 className="size-4" aria-hidden="true" />
-                                Resolve
-                            </Button>
-                        )}
-                    </div>
-                </header>
+                            {submission.status === 'new' ? (
+                                <Button variant="outline" onClick={() => updateStatus('read')} disabled={processing}>
+                                    <MailOpen className="size-4" aria-hidden="true" />
+                                    Mark as read
+                                </Button>
+                            ) : null}
+                            {submission.status === 'resolved' ? (
+                                <Button variant="outline" onClick={() => updateStatus('read')} disabled={processing}>
+                                    <RotateCcw className="size-4" aria-hidden="true" />
+                                    Reopen
+                                </Button>
+                            ) : (
+                                <Button onClick={() => updateStatus('resolved')} disabled={processing}>
+                                    <CheckCircle2 className="size-4" aria-hidden="true" />
+                                    Resolve
+                                </Button>
+                            )}
+                        </>
+                    }
+                    className="border-b pb-6"
+                />
 
                 <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_20rem]">
                     <article aria-label="Message" className="min-w-0">

@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { PageContainer } from '@shared/components/page-container';
+import { PageHeader } from '@shared/components/page-header';
 import { Badge } from '@shared/components/ui/badge';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
@@ -47,11 +48,11 @@ export default function Show({ project }: { project: Project }) {
             <Head title={project.title} />
             <PageContainer className="flex min-h-full flex-col space-y-6">
                 {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">{project.title}</h1>
-                        {project.short_description && <p className="text-muted-foreground mt-2 text-lg">{project.short_description}</p>}
-                        <div className="mt-2 flex items-center space-x-2">
+                <PageHeader
+                    title={project.title}
+                    description={project.short_description}
+                    badges={
+                        <>
                             <Badge variant={statusColors[project.status]}>{project.status}</Badge>
                             {project.featured && (
                                 <Badge variant="default">
@@ -60,33 +61,35 @@ export default function Show({ project }: { project: Project }) {
                                 </Badge>
                             )}
                             {project.client && <Badge variant="outline">{project.client}</Badge>}
-                        </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        {project.project_url && (
-                            <Button variant="outline" asChild>
-                                <a href={project.project_url} target="_blank" rel="noopener noreferrer">
-                                    <Globe className="mr-2 h-4 w-4" />
-                                    View Live
-                                </a>
+                        </>
+                    }
+                    actions={
+                        <>
+                            {project.project_url && (
+                                <Button variant="outline" asChild>
+                                    <a href={project.project_url} target="_blank" rel="noopener noreferrer">
+                                        <Globe className="mr-2 h-4 w-4" />
+                                        View Live
+                                    </a>
+                                </Button>
+                            )}
+                            {project.github_url && (
+                                <Button variant="outline" asChild>
+                                    <a href={project.github_url} target="_blank" rel="noopener noreferrer">
+                                        <Github className="mr-2 h-4 w-4" />
+                                        Source Code
+                                    </a>
+                                </Button>
+                            )}
+                            <Button asChild>
+                                <Link href={route('admin.projects.edit', project.slug)}>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Edit Project
+                                </Link>
                             </Button>
-                        )}
-                        {project.github_url && (
-                            <Button variant="outline" asChild>
-                                <a href={project.github_url} target="_blank" rel="noopener noreferrer">
-                                    <Github className="mr-2 h-4 w-4" />
-                                    Source Code
-                                </a>
-                            </Button>
-                        )}
-                        <Button asChild>
-                            <Link href={route('admin.projects.edit', project.slug)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit Project
-                            </Link>
-                        </Button>
-                    </div>
-                </div>
+                        </>
+                    }
+                />
 
                 {/* Main Content */}
                 <div className="grid gap-6 md:grid-cols-3">

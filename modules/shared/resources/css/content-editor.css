@@ -1,8 +1,4 @@
 /* Shared content-editing canvas. Keep media dialogs and nested widgets untouched. */
-.admin-workspace #main-content:has(.content-editor .tiptap-toolbar[data-stuck='true']) {
-    /* Let sticky editor toolbars meet the header without the shell's top gutter. */
-    margin-top: 0;
-}
 
 .content-index {
     width: 100%;
