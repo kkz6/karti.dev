@@ -62,7 +62,7 @@ export default function SiteSettingsPage({ settings }: { settings: SiteSettings 
         <AppLayout breadcrumbs={[{ title: 'Site settings', href: route('admin.settings.edit') }]}>
             <Head title="Site settings" />
             <UnsavedChangesGuard dirty={form.isDirty} />
-            <PageContainer as="form" onSubmit={submit} className="content-index space-y-6">
+            <PageContainer as="form" id="site-settings-form" onSubmit={submit} className="content-index space-y-6">
                 <IndexHeader
                     title="Site settings"
                     icon={Settings}
@@ -80,7 +80,7 @@ export default function SiteSettingsPage({ settings }: { settings: SiteSettings 
                                     ''
                                 )}
                             </span>
-                            <Button type="submit" disabled={processing || !form.isDirty}>
+                            <Button type="submit" form="site-settings-form" disabled={processing || !form.isDirty}>
                                 <Save className="size-4" />
                                 {processing ? 'Saving…' : 'Save changes'}
                             </Button>

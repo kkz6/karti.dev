@@ -108,7 +108,7 @@ export default function EmailSettingsPage({
         <AppLayout breadcrumbs={[{ title: 'Email settings', href: route('admin.settings.email.edit') }]}>
             <Head title="Email settings" />
             <UnsavedChangesGuard dirty={form.isDirty} />
-            <PageContainer as="form" onSubmit={submit} className="content-index space-y-6">
+            <PageContainer as="form" id="email-settings-form" onSubmit={submit} className="content-index space-y-6">
                 <IndexHeader
                     title="Email settings"
                     icon={Mail}
@@ -126,7 +126,7 @@ export default function EmailSettingsPage({
                                     ''
                                 )}
                             </span>
-                            <Button type="submit" disabled={processing || !form.isDirty}>
+                            <Button type="submit" form="email-settings-form" disabled={processing || !form.isDirty}>
                                 <Save className="size-4" aria-hidden="true" />
                                 {processing ? 'Saving…' : 'Save changes'}
                             </Button>
