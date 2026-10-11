@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { AdminPageContent } from '@shared/components/admin-page-content';
+import { PageContainer } from '@shared/components/page-container';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -13,78 +13,102 @@ import {
 import { Badge } from '@shared/components/ui/badge';
 import { Button } from '@shared/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
 import { Label } from '@shared/components/ui/label';
-import { ContentTabs } from '@shared/components/ui/tabs-in-cell-for-navigation';
 import { Textarea } from '@shared/components/ui/textarea';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@shared/components/ui/tooltip';
 import AppLayout from '@shared/layouts/app-layout';
 import { statusTone } from '@shared/lib/status-colors';
-import { ArrowLeft, CreditCard, Ellipsis, FileMinus2, FileText, History, Mail, StickyNote } from 'lucide-react';
+import { cn } from '@shared/lib/utils';
+import { BadgeCheck, Ban, CreditCard, Download, Ellipsis, FileText, Mail, Pencil, Receipt, StickyNote, Wallet } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { BillingFeedback } from '../../components/billing-feedback';
+import { AsideCard, Detail, DetailHeader, DetailStickyBar, DetailTabs, initialTab, useStuckHeader } from '../../components/detail-page';
+import { InvoiceComposer } from '../../components/invoice-composer';
 import { InvoiceCreditNotes, type CreditData } from '../../components/invoice-credit-notes';
 import type { Delivery } from '../../components/invoice-delivery';
 import { InvoiceHistory, type InvoiceActivity } from '../../components/invoice-document';
 import type { PrivateInvoiceLink } from '../../components/invoice-links';
 import { InvoiceNotification } from '../../components/invoice-notification';
 import { InvoicePayments } from '../../components/invoice-payments';
-import { InvoicePdfButtons } from '../../components/invoice-pdf-buttons';
 import { InvoicePreview } from '../../components/invoice-preview';
 import { InvoiceSharingDialog } from '../../components/invoice-sharing-dialog';
 import type { InvoiceData } from '../../invoice-types';
 import type { PaymentData, PaymentMethod, Settlement } from '../../payment-types';
 
-export default function IssuedInvoice({
-    canUpdateInternalNote,
-    canCreateCredit,
-    credits,
-    canCheckout,
-    remindersDisabled,
-    canRemind,
-    canShare,
-    links,
-    shareUrl,
-    canSend,
-    deliveries,
+export default function InvoiceDetail({
+    draft = false,
+    canUpdate = false,
+    canIssue = false,
+    canUpdateInternalNote = false,
+    canCreateCredit = false,
+    credits = null,
+    canCheckout = false,
+    remindersDisabled = false,
+    canRemind = false,
+    canShare = false,
+    links = null,
+    shareUrl = null,
+    canSend = false,
+    deliveries = null,
     canDownloadPdf,
     pdfError,
     invoice,
-    settlement,
-    payments,
-    canRecordPayment,
-    paymentMethods,
-    today,
-    canCancel,
+    settlement: issuedSettlement,
+    payments = null,
+    canRecordPayment = false,
+    paymentMethods = [],
+    today = '',
+    canCancel = false,
     activities,
     message,
 }: {
-    canUpdateInternalNote: boolean;
-    canCreateCredit: boolean;
-    credits: CreditData[] | null;
-    canCheckout: boolean;
-    remindersDisabled: boolean;
-    canRemind: boolean;
-    canShare: boolean;
-    links: PrivateInvoiceLink[] | null;
-    shareUrl: string | null;
-    canSend: boolean;
-    deliveries: Delivery[] | null;
+    /** Drafts render this page with a smaller payload; editing happens in the invoice composer modal. */
+    draft?: boolean;
+    canUpdate?: boolean;
+    canIssue?: boolean;
+    canUpdateInternalNote?: boolean;
+    canCreateCredit?: boolean;
+    credits?: CreditData[] | null;
+    canCheckout?: boolean;
+    remindersDisabled?: boolean;
+    canRemind?: boolean;
+    canShare?: boolean;
+    links?: PrivateInvoiceLink[] | null;
+    shareUrl?: string | null;
+    canSend?: boolean;
+    deliveries?: Delivery[] | null;
     canDownloadPdf: boolean;
     pdfError?: string;
     invoice: InvoiceData;
-    settlement: Settlement;
-    payments: PaymentData[] | null;
-    canRecordPayment: boolean;
-    paymentMethods: PaymentMethod[];
-    today: string;
-    canCancel: boolean;
+    settlement?: Settlement;
+    payments?: PaymentData[] | null;
+    canRecordPayment?: boolean;
+    paymentMethods?: PaymentMethod[];
+    today?: string;
+    canCancel?: boolean;
     activities: InvoiceActivity[];
     message?: string;
 }) {
     const { url } = usePage();
+    const settlement: Settlement = issuedSettlement ?? {
+        credited: '0',
+        state: 'draft',
+        paid: '0',
+        balance: invoice.totals.total,
+        overdue: false,
+        can_receive: false,
+    };
+    const [composing, setComposing] = useState(false);
+    const title = draft ? `Draft #${invoice.id}` : (invoice.formatted_number ?? 'Invoice');
+    const cancelled = invoice.status === 'cancelled';
+    const statusLabel = draft
+        ? 'Draft'
+        : cancelled
+          ? 'Cancelled'
+          : (({ paid: 'Paid', partial: 'Partially paid', settled: 'Settled' } as Record<string, string>)[settlement.state] ?? 'Unpaid');
     const requestedTab = new URL(url, 'http://localhost').searchParams.get('tab') ?? 'overview';
-    const initialTab = ['overview', 'payments', 'credits', 'notes', 'history'].includes(requestedTab) ? requestedTab : 'overview';
+    const [tab, setTab] = useState(initialTab(url, ['overview', 'payments', 'credits', 'history']));
+    const { headerRef, stuck } = useStuckHeader();
     const [sharingOpen, setSharingOpen] = useState(requestedTab === 'sharing' || !!shareUrl);
     const moreActionsRef = useRef<HTMLButtonElement>(null);
     const hasSharing = canRemind || canShare || canSend || links !== null || deliveries !== null;
@@ -107,137 +131,183 @@ export default function IssuedInvoice({
                 form.reset();
             },
         });
+    const total = Number(invoice.totals.total) || 0;
+    const settledShare = total > 0 ? Math.min(100, ((Number(settlement.paid) + Number(settlement.credited)) / total) * 100) : 0;
+    const customerName = invoice.customer_snapshot.legal_name || invoice.customer_snapshot.display_name;
+    const openNoteEditor = () => {
+        noteForm.clearErrors();
+        noteForm.setData({ version: invoice.version, internal_note: invoice.internal_note ?? '' });
+        setEditingNote(true);
+    };
+    const reviewLink = route('admin.invoices.issue-review', invoice.id);
+    const moreActions = (hasSharing || canCheckout || canUpdateInternalNote || canCancel || (draft && (canDownloadPdf || canIssue))) && (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button ref={moreActionsRef} variant="ghost" size="icon" aria-label="More actions">
+                    <Ellipsis className="size-5" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                {draft && canIssue && canUpdate && (
+                    <DropdownMenuItem asChild>
+                        <Link href={reviewLink}>
+                            <BadgeCheck />
+                            Review and issue
+                        </Link>
+                    </DropdownMenuItem>
+                )}
+                {hasSharing && (
+                    <DropdownMenuItem onSelect={() => setSharingOpen(true)}>
+                        <Mail />
+                        Email & sharing
+                    </DropdownMenuItem>
+                )}
+                {canDownloadPdf && (
+                    <DropdownMenuItem asChild>
+                        <a href={route('admin.invoices.pdf', invoice.id)} target="_blank" rel="noopener noreferrer">
+                            <FileText />
+                            {draft ? 'Preview draft PDF' : 'Preview PDF'}
+                        </a>
+                    </DropdownMenuItem>
+                )}
+                {draft && canDownloadPdf && (
+                    <DropdownMenuItem asChild>
+                        <a href={route('admin.invoices.pdf', { invoice: invoice.id, download: 1 })}>
+                            <Download />
+                            Download PDF
+                        </a>
+                    </DropdownMenuItem>
+                )}
+                {canUpdateInternalNote && (
+                    <DropdownMenuItem onSelect={openNoteEditor}>
+                        <StickyNote />
+                        Edit internal note
+                    </DropdownMenuItem>
+                )}
+                {canCheckout && (
+                    <DropdownMenuItem
+                        onSelect={() => router.post(route('admin.invoices.checkout', invoice.id), { request_key: crypto.randomUUID() })}
+                    >
+                        <CreditCard />
+                        Open online checkout
+                    </DropdownMenuItem>
+                )}
+                {canCancel && (
+                    <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onSelect={() => {
+                                form.clearErrors();
+                                form.setData('version', invoice.version);
+                                setCancelling(true);
+                            }}
+                        >
+                            <Ban />
+                            Cancel invoice
+                        </DropdownMenuItem>
+                    </>
+                )}
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+    const primaryAction = (size: 'sm' | 'default') =>
+        draft && canUpdate ? (
+            <Button size={size} onClick={() => setComposing(true)}>
+                <Pencil className="size-4" />
+                Edit draft
+            </Button>
+        ) : draft && canIssue ? (
+            <Button size={size} asChild>
+                <Link href={reviewLink}>
+                    <BadgeCheck className="size-4" />
+                    Review and issue
+                </Link>
+            </Button>
+        ) : (
+            canDownloadPdf && (
+                <Button asChild size={size}>
+                    <a href={route('admin.invoices.pdf', { invoice: invoice.id, download: 1 })}>
+                        <Download className="size-4" />
+                        Download PDF
+                    </a>
+                </Button>
+            )
+        );
+    const statusBadge = <Badge variant={draft ? 'muted' : statusTone(cancelled ? 'cancelled' : settlement.state)}>{statusLabel}</Badge>;
+
     return (
         <AppLayout
             breadcrumbs={[
                 { title: 'Invoices', href: route('admin.invoices.index') },
-                { title: invoice.formatted_number ?? 'Invoice', href: route('admin.invoices.show', invoice.id) },
+                { title, href: route('admin.invoices.show', invoice.id) },
             ]}
         >
-            <Head title={invoice.formatted_number ?? 'Invoice'} />
-            <AdminPageContent>
+            <Head title={title} />
+            <DetailStickyBar
+                stuck={stuck}
+                title={title}
+                badges={
+                    <>
+                        {statusBadge}
+                        <span className="text-muted-foreground hidden min-w-0 truncate text-sm md:block">{customerName}</span>
+                    </>
+                }
+                meta={
+                    !cancelled && (
+                        <>
+                            <span className="text-muted-foreground">{draft ? 'Total' : 'Due'} </span>
+                            <span className="font-semibold">
+                                {settlement.balance} {invoice.currency}
+                            </span>
+                        </>
+                    )
+                }
+                actions={primaryAction('sm')}
+            />
+            <PageContainer className="content-editor">
                 <InvoiceNotification message={message} response={invoice} />
-                <header className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="space-y-2">
-                        <Link
-                            href={route('admin.invoices.index')}
-                            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-xs"
-                        >
-                            <ArrowLeft className="size-3.5" />
-                            All invoices
-                        </Link>
-                        <div className="flex flex-wrap items-center gap-2">
-                            <h1 className="text-2xl font-semibold tracking-tight">{invoice.formatted_number ?? 'Invoice'}</h1>
-                            <Badge variant={statusTone(invoice.status === 'cancelled' ? 'cancelled' : settlement.state)}>
-                                {invoice.status === 'cancelled'
-                                    ? 'Cancelled'
-                                    : settlement.state === 'paid'
-                                      ? 'Paid'
-                                      : settlement.state === 'partial'
-                                        ? 'Partially paid'
-                                        : settlement.state === 'settled'
-                                          ? 'Settled'
-                                          : 'Unpaid'}
-                            </Badge>
-                        </div>
-                        <p className="text-muted-foreground text-sm">
-                            {invoice.customer_snapshot.legal_name || invoice.customer_snapshot.display_name}
-                        </p>
-                        <dl className="flex flex-wrap gap-x-5 gap-y-2 pt-1 text-xs">
-                            <div className="flex gap-2">
-                                <dt className="text-muted-foreground">Invoice date</dt>
-                                <dd className="font-medium">{invoice.invoice_date}</dd>
-                            </div>
-                            <div className="flex gap-2">
-                                <dt className="text-muted-foreground">Due date</dt>
-                                <dd className="font-medium">{invoice.due_date || '—'}</dd>
-                            </div>
-                            <div className="flex gap-2">
-                                <dt className="text-muted-foreground">Currency</dt>
-                                <dd className="font-medium">{invoice.currency}</dd>
-                            </div>
-                        </dl>
-                    </div>
-                    <div className="invoice-toolbar flex flex-wrap items-center gap-2">
-                        {canDownloadPdf && <InvoicePdfButtons invoiceId={invoice.id} iconOnly />}
-                        {(hasSharing || canCheckout || canUpdateInternalNote || canCancel) && (
-                            <DropdownMenu>
-                                <TooltipProvider delayDuration={150}>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button ref={moreActionsRef} variant="outline" size="icon" aria-label="More actions">
-                                                    <Ellipsis />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                        </TooltipTrigger>
-                                        <TooltipContent>More actions</TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                                <DropdownMenuContent align="end">
-                                    {hasSharing && (
-                                        <DropdownMenuItem onSelect={() => setSharingOpen(true)}>
-                                            <Mail />
-                                            Email & sharing
-                                        </DropdownMenuItem>
-                                    )}
-                                    {canUpdateInternalNote && (
-                                        <DropdownMenuItem
-                                            onSelect={() => {
-                                                noteForm.clearErrors();
-                                                noteForm.setData({ version: invoice.version, internal_note: invoice.internal_note ?? '' });
-                                                setEditingNote(true);
-                                            }}
-                                        >
-                                            Edit internal note
-                                        </DropdownMenuItem>
-                                    )}
-                                    {canCheckout && (
-                                        <DropdownMenuItem
-                                            onSelect={() =>
-                                                router.post(route('admin.invoices.checkout', invoice.id), { request_key: crypto.randomUUID() })
-                                            }
-                                        >
-                                            Open online checkout
-                                        </DropdownMenuItem>
-                                    )}
-                                    {canCancel && (
-                                        <DropdownMenuItem
-                                            className="text-destructive"
-                                            onSelect={() => {
-                                                form.clearErrors();
-                                                form.setData('version', invoice.version);
-                                                setCancelling(true);
-                                            }}
-                                        >
-                                            Cancel invoice
-                                        </DropdownMenuItem>
-                                    )}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        )}
-                    </div>
-                </header>
-                {pdfError && <BillingFeedback kind="error">{pdfError}</BillingFeedback>}
-                {invoice.status === 'cancelled' && (
-                    <BillingFeedback kind="error" title="Cancelled invoice">
-                        {invoice.cancellation_reason || 'This invoice was cancelled. Its number and history are preserved.'}
-                    </BillingFeedback>
-                )}
-                <ContentTabs
-                    defaultValue={initialTab}
+                <DetailHeader
+                    headerRef={headerRef}
+                    backHref={route('admin.invoices.index')}
+                    backLabel="All invoices"
+                    title={title}
+                    badges={
+                        <>
+                            {statusBadge}
+                            {!cancelled && settlement.overdue && <Badge variant="destructive">Overdue</Badge>}
+                        </>
+                    }
+                    subtitle={`${customerName} · ${invoice.totals.total} ${invoice.currency}`}
+                    actions={
+                        <>
+                            {moreActions}
+                            {primaryAction('default')}
+                        </>
+                    }
+                />
+                <div className="space-y-4 empty:hidden">
+                    {pdfError && <BillingFeedback kind="error">{pdfError}</BillingFeedback>}
+                    {cancelled && (
+                        <BillingFeedback kind="error" title="Cancelled invoice">
+                            {invoice.cancellation_reason || 'This invoice was cancelled. Its number and history are preserved.'}
+                        </BillingFeedback>
+                    )}
+                </div>
+                <DetailTabs
+                    label="Invoice"
+                    value={tab}
+                    onValueChange={setTab}
                     tabs={[
                         {
                             value: 'overview',
                             label: 'Overview',
-                            icon: FileText,
-                            content: <InvoicePreview embedded showMetadata={false} invoice={invoice} settlement={settlement} />,
+                            content: <InvoicePreview embedded invoice={invoice} settlement={draft ? undefined : settlement} />,
                         },
                         {
                             value: 'payments',
                             label: 'Payments',
                             count: payments?.length,
-                            icon: CreditCard,
                             content: (
                                 <InvoicePayments
                                     embedded
@@ -253,7 +323,6 @@ export default function IssuedInvoice({
                         {
                             value: 'credits',
                             label: 'Credits',
-                            icon: FileMinus2,
                             count: credits?.length,
                             content: (
                                 <InvoiceCreditNotes
@@ -267,41 +336,119 @@ export default function IssuedInvoice({
                             ),
                         },
                         {
-                            value: 'notes',
-                            label: 'Notes',
-                            icon: StickyNote,
-                            content: (
-                                <section className="space-y-3">
-                                    <div>
-                                        <h2 className="font-semibold">Internal note</h2>
-                                        <p className="text-muted-foreground mt-1 text-xs">Visible to staff only; excluded from customer documents.</p>
-                                    </div>
-                                    <p className="text-sm leading-6 whitespace-pre-line">{invoice.internal_note || 'No internal note added.'}</p>
-                                    {canUpdateInternalNote && (
-                                        <Button
-                                            variant="outline"
-                                            onClick={() => {
-                                                noteForm.clearErrors();
-                                                noteForm.setData({ version: invoice.version, internal_note: invoice.internal_note ?? '' });
-                                                setEditingNote(true);
-                                            }}
-                                        >
-                                            Edit internal note
-                                        </Button>
-                                    )}
-                                </section>
-                            ),
-                        },
-                        {
                             value: 'history',
                             label: 'Activity',
                             count: activities.length,
-                            icon: History,
                             content: <InvoiceHistory embedded activities={activities} />,
                         },
-                    ]}
+                    ].filter((t) => !draft || t.value === 'overview' || t.value === 'history')}
+                    aside={
+                        <>
+                            {draft ? (
+                                <AsideCard title="Draft total" icon={Receipt} description="Not yet issued — no invoice number assigned.">
+                                    <p className="text-2xl font-semibold tracking-tight tabular-nums">
+                                        {invoice.totals.total} <span className="text-muted-foreground text-xs font-normal">{invoice.currency}</span>
+                                    </p>
+                                    <dl className="space-y-2 border-t pt-3 text-sm">
+                                        <Detail label="Items">{invoice.items.length}</Detail>
+                                        <Detail label="Subtotal">{invoice.totals.subtotal}</Detail>
+                                        <Detail label="Discount">{invoice.totals.discount}</Detail>
+                                        <Detail label="Tax">{invoice.totals.tax}</Detail>
+                                    </dl>
+                                    {canIssue && (
+                                        <Button variant="outline" size="sm" className="w-full" asChild>
+                                            <Link href={reviewLink}>
+                                                <BadgeCheck className="size-4" />
+                                                Review and issue
+                                            </Link>
+                                        </Button>
+                                    )}
+                                </AsideCard>
+                            ) : (
+                                <AsideCard title="Balance" icon={Wallet} description={`Settlement in ${invoice.currency}`}>
+                                    <div>
+                                        <p className="text-muted-foreground text-xs">{cancelled ? 'Voided amount' : 'Amount due'}</p>
+                                        <p
+                                            className={cn(
+                                                'mt-1 text-2xl font-semibold tracking-tight tabular-nums',
+                                                cancelled && 'text-muted-foreground',
+                                                !cancelled && settlement.overdue && 'text-red-700 dark:text-red-300',
+                                            )}
+                                        >
+                                            {settlement.balance} <span className="text-muted-foreground text-xs font-normal">{invoice.currency}</span>
+                                        </p>
+                                        {!cancelled && (
+                                            <div
+                                                className="bg-muted mt-3 h-1.5 overflow-hidden rounded-full"
+                                                role="progressbar"
+                                                aria-label="Settled"
+                                                aria-valuemin={0}
+                                                aria-valuemax={100}
+                                                aria-valuenow={Math.round(settledShare)}
+                                            >
+                                                <div className="h-full rounded-full bg-emerald-500" style={{ width: `${settledShare}%` }} />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <dl className="space-y-2 border-t pt-3 text-sm">
+                                        <Detail label="Total">{invoice.totals.total}</Detail>
+                                        <Detail label="Paid">{settlement.paid}</Detail>
+                                        <Detail label="Credit applied">{settlement.credited}</Detail>
+                                    </dl>
+                                    {!cancelled && payments !== null && (
+                                        <Button variant="outline" size="sm" className="w-full" onClick={() => setTab('payments')}>
+                                            <CreditCard className="size-4" />
+                                            {canRecordPayment && settlement.can_receive ? 'Record a payment' : 'View payments'}
+                                        </Button>
+                                    )}
+                                </AsideCard>
+                            )}
+
+                            <AsideCard title="Details">
+                                <dl className="space-y-3 text-sm">
+                                    <Detail label="Customer">
+                                        <Link href={route('admin.customers.show', invoice.customer_id)} className="font-medium hover:underline">
+                                            {customerName}
+                                        </Link>
+                                    </Detail>
+                                    <Detail label="Invoice date">{invoice.invoice_date}</Detail>
+                                    <Detail label="Due date">
+                                        <span className={cn(!cancelled && settlement.overdue && 'font-medium text-red-700 dark:text-red-300')}>
+                                            {invoice.due_date || '—'}
+                                        </span>
+                                    </Detail>
+                                    <Detail label="Currency">{invoice.currency}</Detail>
+                                    {invoice.issued_at && <Detail label="Issued">{formatDateTime(invoice.issued_at)}</Detail>}
+                                    {invoice.cancelled_at && <Detail label="Cancelled">{formatDateTime(invoice.cancelled_at)}</Detail>}
+                                </dl>
+                            </AsideCard>
+
+                            <AsideCard
+                                title="Internal note"
+                                icon={StickyNote}
+                                action={
+                                    canUpdateInternalNote && (
+                                        <Button variant="ghost" size="sm" className="-my-1 -mr-2 h-7" onClick={openNoteEditor}>
+                                            {invoice.internal_note ? 'Edit' : 'Add'}
+                                        </Button>
+                                    )
+                                }
+                            >
+                                <p
+                                    className={cn(
+                                        'text-sm leading-6 break-words whitespace-pre-line',
+                                        !invoice.internal_note && 'text-muted-foreground',
+                                    )}
+                                >
+                                    {invoice.internal_note || 'No internal note added.'}
+                                </p>
+                                <p className="text-muted-foreground text-xs">Staff only — excluded from customer documents.</p>
+                            </AsideCard>
+                        </>
+                    }
                 />
-            </AdminPageContent>
+            </PageContainer>
+            {draft && canUpdate && <InvoiceComposer invoiceId={invoice.id} open={composing} onClose={() => setComposing(false)} reloadOnly={null} />}
             {hasSharing && (
                 <InvoiceSharingDialog
                     open={sharingOpen}
@@ -415,4 +562,9 @@ export default function IssuedInvoice({
             </AlertDialog>
         </AppLayout>
     );
+}
+
+function formatDateTime(value: string): string {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }

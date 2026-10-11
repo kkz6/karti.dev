@@ -43,7 +43,7 @@ test('draft save ignores submitted totals numbers lifecycle and snapshots', func
     $invoice = createDraftForTest($this->customer->id, ['total_minor' => 1, 'subtotal_minor' => 1, 'formatted_number' => 'INV-000001', 'status' => 'paid', 'seller_snapshot' => ['legal_name' => 'Injected'], 'version' => 999]);
     expect($invoice->status)->toBe('draft')->and($invoice->formatted_number)->toBeNull()->and($invoice->version)->toBe(1)->and($invoice->total_minor)->toBe(265500)->and($invoice->items()->count())->toBe(2)->and($invoice->seller_snapshot['legal_name'])->toBe('');
     $this->get(route('admin.invoices.index'))->assertOk();
-    $this->get(route('admin.invoices.show', $invoice))->assertOk()->assertInertia(fn (Assert $page) => $page->component('billing::invoices/form')->where('readOnly', true)->where('invoice.totals.total', '2655.00')->where('invoice.invoice_date', '2026-10-10')->where('invoice.due_date', '2026-11-09'));
+    $this->get(route('admin.invoices.show', $invoice))->assertOk()->assertInertia(fn (Assert $page) => $page->component('billing::invoices/show')->where('draft', true)->where('invoice.totals.total', '2655.00')->where('invoice.invoice_date', '2026-10-10')->where('invoice.due_date', '2026-11-09'));
     $this->get(route('admin.invoices.edit', $invoice))->assertRedirect(route('admin.invoices.index', ['edit'=>$invoice->id]));
     $this->delete('/admin/invoices/'.$invoice->id)->assertStatus(405);
 });
@@ -164,7 +164,7 @@ test('read only access cannot edit or preview an editable draft', function () {
     TaxRate::factory()->create(['name' => 'Unrelated tax']);
     app(BillingSettings::class)->fill(['payment_instructions' => 'New private instructions'])->save();
     $reader  = User::factory()->create()->givePermissionTo(['view any invoice', 'view invoice']);
-    $this->actingAs($reader)->get(route('admin.invoices.show', $invoice))->assertOk()->assertInertia(fn (Assert $page) => $page->where('canUpdate', false)->has('customers', 1)->has('taxRates', 0)->where('defaults.payment_instructions', 'Bank transfer'));
+    $this->actingAs($reader)->get(route('admin.invoices.show', $invoice))->assertOk()->assertInertia(fn (Assert $page) => $page->component('billing::invoices/show')->where('canUpdate', false)->missing('customers')->missing('taxRates')->where('invoice.payment_instructions', 'Bank transfer'));
     $this->get(route('admin.invoices.edit', $invoice))->assertForbidden();
     $this->postJson(route('admin.invoices.draft-preview', $invoice), invoiceDraftPayload($this->customer->id, ['version' => 1]))->assertForbidden();
 });

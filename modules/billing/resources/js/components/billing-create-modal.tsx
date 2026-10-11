@@ -1,10 +1,10 @@
 import { Button } from '@shared/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
+import { Skeleton } from '@shared/components/ui/skeleton';
 import { continueWithoutUnsavedChangesPrompt } from '@shared/components/unsaved-changes-guard';
 import AppLayout from '@shared/layouts/app-layout';
 import type { BreadcrumbItem } from '@shared/types';
 import axios from 'axios';
-import { LoaderCircle } from 'lucide-react';
 import type { ComponentProps, ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import CustomerForm from '../pages/customers/form';
@@ -113,25 +113,22 @@ export function BillingCreateModal({ kind, open, onClose }: { kind: Kind; open: 
                         <DialogDescription>{config[kind].description}</DialogDescription>
                     </DialogHeader>
                     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5">
-                        {loading && (
-                            <div role="status" className="text-muted-foreground flex items-center justify-center gap-2 py-8 text-sm">
-                                <LoaderCircle className="size-4 animate-spin" />
-                                Loading…
-                            </div>
-                        )}
+                        {loading && <FormSkeleton fields={kind === 'tax' ? 2 : kind === 'recurring' ? 8 : 6} />}
                         {error && <BillingFeedback kind="error">{error}</BillingFeedback>}
                         {seed && (
-                            <Context.Provider value={modal}>
-                                {kind === 'customer' ? (
-                                    <CustomerForm {...(seed as ComponentProps<typeof CustomerForm>)} />
-                                ) : kind === 'service' ? (
-                                    <ServiceForm {...(seed as ComponentProps<typeof ServiceForm>)} />
-                                ) : kind === 'tax' ? (
-                                    <TaxRateForm {...(seed as ComponentProps<typeof TaxRateForm>)} />
-                                ) : (
-                                    <RecurringForm {...(seed as ComponentProps<typeof RecurringForm>)} />
-                                )}
-                            </Context.Provider>
+                            <div className="animate-in fade-in-0 duration-200">
+                                <Context.Provider value={modal}>
+                                    {kind === 'customer' ? (
+                                        <CustomerForm {...(seed as ComponentProps<typeof CustomerForm>)} />
+                                    ) : kind === 'service' ? (
+                                        <ServiceForm {...(seed as ComponentProps<typeof ServiceForm>)} />
+                                    ) : kind === 'tax' ? (
+                                        <TaxRateForm {...(seed as ComponentProps<typeof TaxRateForm>)} />
+                                    ) : (
+                                        <RecurringForm {...(seed as ComponentProps<typeof RecurringForm>)} />
+                                    )}
+                                </Context.Provider>
+                            </div>
                         )}
                     </div>
                     {error && (
@@ -145,5 +142,25 @@ export function BillingCreateModal({ kind, open, onClose }: { kind: Kind; open: 
             </Dialog>
             {dialog}
         </>
+    );
+}
+
+/** Holds the dialog at roughly its final height while the form loads, so it opens without a size jump. */
+function FormSkeleton({ fields }: { fields: number }) {
+    return (
+        <div role="status" aria-label="Loading form" className="space-y-6">
+            <div className="grid gap-x-5 gap-y-5 sm:grid-cols-2">
+                {Array.from({ length: fields }, (_, i) => (
+                    <div key={i} className="space-y-2">
+                        <Skeleton className="h-3.5 w-24" />
+                        <Skeleton className="h-9 w-full" />
+                    </div>
+                ))}
+            </div>
+            <div className="flex justify-end gap-2 border-t pt-4">
+                <Skeleton className="h-9 w-20" />
+                <Skeleton className="h-9 w-32" />
+            </div>
+        </div>
     );
 }

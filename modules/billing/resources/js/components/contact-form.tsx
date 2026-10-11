@@ -1,9 +1,9 @@
 import { useForm } from '@inertiajs/react';
 import { Button } from '@shared/components/ui/button';
 import { Card } from '@shared/components/ui/card';
-import { Checkbox } from '@shared/components/ui/checkbox';
 import { Input } from '@shared/components/ui/input';
 import { Label } from '@shared/components/ui/label';
+import { Switch } from '@shared/components/ui/switch';
 import { continueWithoutUnsavedChangesPrompt, UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
 import { useEffect, type FormEvent } from 'react';
 import type { Contact } from '../types';
@@ -55,15 +55,25 @@ export function ContactForm({
                 {dialog}
                 <UnsavedChangesGuard dirty={form.isDirty && !form.processing} />
                 {!embedded && <h3 className="font-semibold">{contact ? 'Edit contact' : 'Add contact'}</h3>}
-                <div className="grid gap-4 sm:grid-cols-2">
-                    {(['name', 'email', 'phone', 'title'] as const).map((field) => (
+                <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
+                    {(
+                        [
+                            ['name', 'Name', 'text', 'name'],
+                            ['email', 'Email', 'email', 'email'],
+                            ['phone', 'Phone', 'tel', 'tel'],
+                            ['title', 'Role or job title', 'text', 'organization-title'],
+                        ] as const
+                    ).map(([field, label, type, autoComplete]) => (
                         <div key={field} className="space-y-2">
                             <Label htmlFor={`contact-${field}`}>
-                                {field === 'title' ? 'Role or job title' : field === 'name' ? 'Name *' : field === 'email' ? 'Email *' : 'Phone'}
+                                {label}
+                                {(field === 'name' || field === 'email') && <span className="text-muted-foreground ml-0.5">*</span>}
                             </Label>
                             <Input
                                 id={`contact-${field}`}
-                                type={field === 'email' ? 'email' : field === 'phone' ? 'tel' : 'text'}
+                                type={type}
+                                autoComplete={autoComplete}
+                                placeholder={field === 'title' ? 'e.g. Finance manager' : undefined}
                                 value={form.data[field]}
                                 onChange={(e) => form.setData(field, e.target.value)}
                                 required={field === 'name' || field === 'email'}
@@ -73,24 +83,26 @@ export function ContactForm({
                         </div>
                     ))}
                 </div>
-                <div className="space-y-3">
-                    {(['is_primary', 'invoice_emails'] as const).map((field) => (
-                        <div key={field}>
-                            <Label className="flex items-center gap-2 text-sm">
-                                <Checkbox checked={form.data[field]} onCheckedChange={(checked) => form.setData(field, checked === true)} />
-                                {field === 'is_primary' ? 'Primary billing contact' : 'Receive invoice emails'}
-                            </Label>
-                            {form.errors[field] && <p className="text-destructive text-sm">{form.errors[field]}</p>}
+                <div className="divide-y rounded-lg border">
+                    {(
+                        [
+                            ['is_primary', 'Primary billing contact', 'Default recipient for invoices. Replaces the current primary contact.'],
+                            ['invoice_emails', 'Receive invoice emails', 'Included when invoices and reminders are emailed.'],
+                        ] as const
+                    ).map(([field, label, hint]) => (
+                        <div key={field} className="flex items-center justify-between gap-4 px-4 py-3">
+                            <div>
+                                <Label htmlFor={`contact-${field}`} className="text-sm font-medium">
+                                    {label}
+                                </Label>
+                                <p className="text-muted-foreground mt-0.5 text-xs">{hint}</p>
+                                {form.errors[field] && <p className="text-destructive mt-1 text-sm">{form.errors[field]}</p>}
+                            </div>
+                            <Switch id={`contact-${field}`} checked={form.data[field]} onCheckedChange={(checked) => form.setData(field, checked)} />
                         </div>
                     ))}
-                    <p className="text-muted-foreground text-xs">
-                        The first active contact becomes primary automatically. Choosing a new primary contact replaces the previous one.
-                    </p>
                 </div>
-                <div className="flex gap-3">
-                    <Button type="submit" disabled={form.processing}>
-                        {form.processing ? 'Saving…' : 'Save contact'}
-                    </Button>
+                <div className={embedded ? '-mx-6 -mb-6 flex justify-end gap-2 border-t px-6 py-4' : 'flex justify-end gap-2'}>
                     <Button
                         type="button"
                         variant="outline"
@@ -99,6 +111,9 @@ export function ContactForm({
                         }}
                     >
                         Cancel
+                    </Button>
+                    <Button type="submit" disabled={form.processing}>
+                        {form.processing ? 'Saving…' : contact ? 'Save changes' : 'Add contact'}
                     </Button>
                 </div>
             </form>

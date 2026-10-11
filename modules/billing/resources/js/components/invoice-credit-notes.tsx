@@ -66,7 +66,7 @@ export function InvoiceCreditNotes({
                     </Button>
                 )}
                 {credits?.length === 0 && (
-                    <div className="bg-muted/40 flex items-start gap-3 rounded-md p-4">
+                    <div className="flex items-start gap-3 rounded-lg border border-dashed px-4 py-5">
                         <FileMinus2 className="text-muted-foreground mt-0.5 size-5 shrink-0" aria-hidden="true" />
                         <div>
                             <p className="text-sm font-medium">No credit notes yet</p>
@@ -74,7 +74,7 @@ export function InvoiceCreditNotes({
                         </div>
                     </div>
                 )}
-                <ol className="divide-y">
+                <ol className="divide-y empty:hidden">
                     {credits?.map((c) => (
                         <li className="flex flex-wrap justify-between gap-3 py-3 text-sm" key={c.id}>
                             <Link className="underline" href={route('admin.credit-notes.show', c.id)}>

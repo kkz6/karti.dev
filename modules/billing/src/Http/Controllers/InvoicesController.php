@@ -69,7 +69,7 @@ class InvoicesController extends BaseController
             return Inertia::render('billing::invoices/show', $this->detailData($request, $invoice));
         }
 
-        return $this->form($request, $invoice, true);
+        return Inertia::render('billing::invoices/show', [...$this->detailData($request, $invoice), 'pdfError' => $request->session()->get('billing_pdf_error')]);
     }
 
     public function edit(Request $request, Invoice $invoice): Response|JsonResponse|RedirectResponse

@@ -20,10 +20,12 @@ export function PaymentHistory({
     payments,
     onReverse,
     embedded = false,
+    emptyDescription = 'Payments received for this invoice will appear here.',
 }: {
     payments: PaymentData[];
     onReverse?: (payment: PaymentData) => void;
     embedded?: boolean;
+    emptyDescription?: string;
 }) {
     return (
         <Card className={embedded ? 'rounded-none border-0 bg-transparent' : undefined}>
@@ -32,11 +34,11 @@ export function PaymentHistory({
             </CardHeader>
             <CardContent className={embedded ? 'p-0' : undefined}>
                 {payments.length === 0 ? (
-                    <div className="bg-muted/40 flex items-start gap-3 rounded-md p-4">
+                    <div className="flex items-start gap-3 rounded-lg border border-dashed px-4 py-5">
                         <CreditCard className="text-muted-foreground mt-0.5 size-5 shrink-0" aria-hidden="true" />
                         <div>
                             <p className="text-sm font-medium">No payments recorded</p>
-                            <p className="text-muted-foreground mt-1 text-sm">Payments received for this invoice will appear here.</p>
+                            <p className="text-muted-foreground mt-1 text-sm">{emptyDescription}</p>
                         </div>
                     </div>
                 ) : (

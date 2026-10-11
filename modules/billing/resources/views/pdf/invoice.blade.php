@@ -5,50 +5,54 @@
     <title>{{ $label }}</title>
     <style>
         @page { margin: 36pt 36pt 48pt; }
-        body { font-family: "FreeSans", sans-serif; font-size: 10pt; line-height: 1.25; color: #424242; }
+        body { font-family: "FreeSans", sans-serif; font-size: 10pt; line-height: 1.25; color: #030712; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         p { margin: 0; }
-        h1 { font-size: 21pt; color: #030712; margin: 0 0 2pt; font-weight: bold; }
-        h2 { font-size: 10pt; color: #030712; margin: 16pt 0 5pt; page-break-after: avoid; }
-        .heading { margin-bottom: 27pt; }
+        h1 { font-size: 20pt; line-height: 1.1; color: #030712; margin: 0; font-weight: bold; }
+        h2 { font-size: 10pt; color: #030712; margin: 22pt 0 4pt; font-weight: bold; page-break-after: avoid; }
+        .heading { margin-bottom: 28pt; }
         .heading td { width: 50%; vertical-align: top; }
         .logo { max-width: 155pt; max-height: 58pt; }
         .invoice-heading { text-align: right; }
         .invoice-number { color: #4e4e4e; font-size: 10pt; font-weight: bold; }
-        .document-state { font-size: 9pt; color: #4e4e4e; margin-top: 5pt; }
-        .parties { margin-bottom: 30pt; }
+        .document-state { font-size: 10pt; color: #727b90; text-transform: uppercase; }
+        .state-paid, .state-settled { color: #00bf36; }
+        .state-unpaid { color: #fc2d42; }
+        .state-partial { color: #ff6f00; }
+        .state-cancelled { color: #727b90; }
+        .parties { margin-bottom: 17pt; }
         .parties td { width: 50%; vertical-align: top; }
-        .seller { padding-right: 18pt; }
-        .customer { text-align: right; padding-left: 18pt; }
-        .party-name, .bill-to { font-weight: bold; color: #030712; }
-        .bill-to { margin-bottom: 3pt; }
-        .party-line { margin-bottom: 1pt; }
-        .dates { margin-top: 12pt; }
-        .dates p { margin-bottom: 2pt; }
+        .parties .seller { width: 60%; padding-right: 18pt; }
+        .parties .customer { width: 40%; text-align: right; padding-left: 18pt; }
+        .bill-to, .seller .party-name { font-weight: bold; color: #030712; }
+        .customer .party-name { font-weight: bold; color: #4e4e4e; }
+        .bill-to { margin-bottom: 0; }
+        .party-line { margin: 0; color: #424242; }
+        .dates { margin-top: 12.5pt; color: #030712; }
+        .dates p { margin: 0; }
         .draft-notice { border: 0.5pt solid #d1d5db; padding: 8pt 10pt; margin-bottom: 16pt; font-size: 9pt; color: #4e4e4e; }
         thead { display: table-header-group; }
-        .items th { background: #323a45; color: #ffffff; font-size: 10pt; font-weight: normal; padding: 7pt 5pt; text-align: left; font-weight: normal; }
-        .items td { padding: 5pt 5pt; vertical-align: top; }
+        .items th { background: #323a45; color: #ffffff; font-size: 10pt; line-height: 1; font-weight: normal; padding: 6pt 8pt; text-align: left; border: 0; }
+        .items td { padding: 5pt 8pt; vertical-align: top; color: #030712; }
         .item-row td { border-bottom: none; }
-        .number { text-align: center; font-size: 9pt; }
+        .number { text-align: center; }
         .description { font-weight: bold; color: #030712; }
-        .details { color: #424242; font-size: 9pt; }
-        .number-cell { text-align: right; font-size: 9pt; white-space: nowrap; }
+        .details { color: #424242; }
+        .number-cell { text-align: right; white-space: nowrap; }
         .unit { color: #424242; font-size: 7pt; text-align: right; }
-        .taxes { text-align: right; font-size: 9pt; }
+        .taxes { text-align: right; }
         .continued { font-size: 8pt; color: #6b7280; margin-bottom: 3pt; }
-        .description-line { line-height: 1.15; }
-        .summary { margin-top: 40pt; }
-        .summary td { padding: 6pt; vertical-align: top; text-align: right; }
-        .summary .label { width: 80%; font-weight: bold; }
-        .summary .amount { width: 20%; white-space: nowrap; }
+        .description-line { line-height: 1.25; }
+        .summary { margin-top: 23pt; font-size: 10.5pt; }
+        .summary td { padding: 4.5pt 6pt; vertical-align: top; text-align: right; }
+        .summary .label { width: 85%; font-weight: bold; color: #030712; }
+        .summary .amount { width: 15%; white-space: nowrap; color: #030712; }
         .total td { background: #e5e7eb; color: #030712; }
-        .text-line { line-height: 1.25; }
-        .words { text-align: center; font-weight: bold; margin: 18pt 0 22pt; }
-        .transactions { margin-top: 14pt; }
-        .transactions th { text-align: left; border-bottom: 0.8pt solid #424242; font-weight: normal; padding: 6pt 3pt; }
-        .transactions td { padding: 5pt 3pt; }
-        .signature { margin-top: 30pt; }
+        .text-line { line-height: 1.25; color: #030712; }
+        .words { text-align: center; font-weight: bold; color: #030712; margin: 12pt 0 0; }
+        .transactions { margin-top: 0; }
+        .transactions th { width: 25%; text-align: left; border-bottom: 0.75pt solid #000000; font-weight: normal; color: #000000; padding: 4pt; }
+        .transactions td { padding: 4pt; color: #030712; }
 
     </style>
 </head>
@@ -61,8 +65,8 @@
                 <h1>{{ ($invoice['status'] === 'draft' ? 'DRAFT ' : '').($documentType === 'credit_note' ? 'CREDIT NOTE' : 'INVOICE') }}</h1>
                 <p class="invoice-number"># {{ $label }}</p>
                 @if($documentType === 'credit_note')<p class="document-state">For invoice {{ $sourceNumber }}</p>@endif
-                @if($invoice['status'] === 'cancelled')<p class="document-state">CANCELLED - DO NOT PAY</p>
-                @elseif($invoice['status'] === 'issued' && $documentType === 'invoice')<p class="document-state">{{ $settlement['state'] === 'settled' ? 'SETTLED WITH CREDIT' : ($settlement['state'] === 'paid' ? 'PAID' : ($settlement['state'] === 'partial' ? 'PARTIALLY PAID' : 'UNPAID')) }}</p>@endif
+                @if($invoice['status'] === 'cancelled')<p class="document-state state-cancelled">CANCELLED - DO NOT PAY</p>
+                @elseif($invoice['status'] === 'issued' && $documentType === 'invoice')<p class="document-state state-{{ in_array($settlement['state'], ['settled', 'paid', 'partial'], true) ? $settlement['state'] : 'unpaid' }}">{{ $settlement['state'] === 'settled' ? 'SETTLED WITH CREDIT' : ($settlement['state'] === 'paid' ? 'PAID' : ($settlement['state'] === 'partial' ? 'PARTIALLY PAID' : 'UNPAID')) }}</p>@endif
             </td>
         </tr>
     </table>
@@ -76,7 +80,7 @@
                     @foreach($sellerLines as $line)<div class="party-line {{ $loop->first ? 'party-name' : '' }}">{{ $line }}</div>@endforeach
                 </td>
                 <td class="customer">
-                    <p class="bill-to">Bill To</p>
+                    <p class="bill-to">Bill To:</p>
                     @foreach($customerLines as $line)<div class="party-line {{ $loop->first ? 'party-name' : '' }}">{{ $line }}</div>@endforeach
                     <div class="dates">
                         <p>{{ $documentType === 'credit_note' ? 'Credit Date:' : 'Invoice Date:' }} {{ $invoice['invoice_date'] }}</p>
@@ -89,7 +93,7 @@
     @else
         <h2>Issued by</h2>
         @foreach($sellerLines as $line)<div class="party-line">{{ $line }}</div>@endforeach
-        <h2>Bill To</h2>
+        <h2>Bill To:</h2>
         @foreach($customerLines as $line)<div class="party-line">{{ $line }}</div>@endforeach
         <div class="dates" style="margin-bottom:20pt">
             <p>{{ $documentType === 'credit_note' ? 'Credit Date:' : 'Invoice Date:' }} {{ $invoice['invoice_date'] }}</p>
@@ -128,14 +132,12 @@
                         <td><div class="description">@foreach($row['lines'] as $line)<div class="description-line">{{ $line }}@if($line === '')&nbsp;@endif</div>@endforeach</div>
                             @foreach($row['detailLines'] as $line)<div class="details description-line">{{ $line }}@if($line === '')&nbsp;@endif</div>@endforeach
                         </td>
-                        <td class="number-cell">{{ rtrim(rtrim($row['item']['quantity'], '0'), '.') }}
-                            @foreach(\Modules\Billing\Services\InvoicePdfLayout::lines($row['item']['unit'], 9) as $line)<div class="unit">{{ $line }}</div>@endforeach
-                        </td>
-                        <td class="number-cell">{{ \Modules\Billing\Services\InvoicePdfLayout::rate($row['item']['rate'], $invoice['totals']['precision']) }}</td>
+                        <td class="number-cell">{{ rtrim(rtrim($row['item']['quantity'], '0'), '.') }}@if($row['item']['unit'] && $row['item']['unit'] !== 'item') {{ $row['item']['unit'] }}@endif</td>
+                        <td class="number-cell">{{ trim(\Modules\Billing\Services\InvoicePdfLayout::amount(\Modules\Billing\Services\InvoicePdfLayout::rate($row['item']['rate'], $invoice['totals']['precision']), '')) }}</td>
                         @if($hasTax)<td class="taxes">
                             @forelse($row['item']['taxes'] as $tax)<div>{{ rtrim(rtrim($tax['percentage'], '0'), '.') }}%</div>@empty 0% @endforelse
                         </td>@endif
-                        <td class="number-cell" @if(strlen($row['item']['gross']) > 15)style="font-size:7pt"@endif>{{ $row['item']['gross'] }}</td>
+                        <td class="number-cell" @if(strlen($row['item']['gross']) > 15)style="font-size:7pt"@endif>{{ trim(\Modules\Billing\Services\InvoicePdfLayout::amount($row['item']['gross'], '')) }}</td>
                     </tr>
                 @endif
             @endforeach
@@ -154,7 +156,7 @@
             @if($settlement['paid'] !== \Modules\Billing\Services\InvoiceCalculator::money('0', $invoice['totals']['precision']))
                 <tr><td class="label">Total Paid</td><td class="amount">-{{ \Modules\Billing\Services\InvoicePdfLayout::amount($settlement['paid'], $invoice['currency']) }}</td></tr>
             @endif
-            @if(($settlement['credited'] ?? '0') !== \Modules\Billing\Services\InvoiceCalculator::money('0', $invoice['totals']['precision']))<tr><td class="label">Credit Applied</td><td class="amount">-{{ \Modules\Billing\Services\InvoicePdfLayout::amount($settlement['credited'], $invoice['currency']) }}</td></tr>@endif
+            @if(($settlement['credited'] ?? '0') !== \Modules\Billing\Services\InvoiceCalculator::money('0', $invoice['totals']['precision']))<tr><td class="label">Applied Credits</td><td class="amount">-{{ \Modules\Billing\Services\InvoicePdfLayout::amount($settlement['credited'], $invoice['currency']) }}</td></tr>@endif
             <tr class="total"><td class="label">Amount Due</td><td class="amount">{{ \Modules\Billing\Services\InvoicePdfLayout::amount($settlement['balance'], $invoice['currency']) }}</td></tr>
         @endif
     </table>
@@ -163,17 +165,16 @@
     @endif
     <p class="words">With words: {{ \Modules\Billing\Services\InvoicePdfLayout::words($invoice['totals']['total'], $invoice['currency']) }}</p>
     @if(count($payments))
-        <h2>Transactions:</h2>
+        <h2 style="margin-bottom:11pt">Transactions:</h2>
         <table class="transactions"><thead><tr><th>Payment #</th><th>Payment Mode</th><th>Date</th><th>Amount</th></tr></thead><tbody>
             @foreach($payments as $payment)<tr><td>{{ $payment['id'] }}</td><td>{{ $payment['method'] }}</td><td>{{ $payment['date'] }}</td><td>{{ \Modules\Billing\Services\InvoicePdfLayout::amount($payment['amount'], $invoice['currency']) }}</td></tr>@endforeach
         </tbody></table>
     @endif
-    @foreach(['customer_note' => 'Note', 'terms' => 'Terms & Conditions', 'payment_instructions' => 'Offline Payment:'] as $field => $title)
+    @foreach(['payment_instructions' => 'Offline Payment:', 'customer_note' => 'Note:', 'terms' => 'Terms & Conditions:'] as $field => $title)
         @if($invoice[$field])
             <h2>{{ $title }}</h2>
             @foreach(\Modules\Billing\Services\InvoicePdfLayout::lines($invoice[$field]) as $line)<div class="text-line">{{ $line }}@if($line === '')&nbsp;@endif</div>@endforeach
         @endif
     @endforeach
-<p class="signature">Authorized Signature</p>
 </body>
 </html>

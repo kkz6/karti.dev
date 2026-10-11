@@ -1,20 +1,20 @@
-import { BillingPageContainer as PageContainer } from '@billing/components/billing-page-container';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { DateField } from '@shared/components/date-field';
-import { IndexHeader } from '@shared/components/index-header';
+import { PageContainer } from '@shared/components/page-container';
 import { Badge } from '@shared/components/ui/badge';
 import { Button } from '@shared/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
 import { Input } from '@shared/components/ui/input';
 import { Label } from '@shared/components/ui/label';
 import { Textarea } from '@shared/components/ui/textarea';
 import AppLayout from '@shared/layouts/app-layout';
-import { FileMinus2 as BillingPageIcon } from 'lucide-react';
-import { useState } from 'react';
+import { cn } from '@shared/lib/utils';
+import { ArrowRightLeft, BadgeCheck, Ban, Download, Ellipsis, FileMinus2, FileText, Undo2, Wallet } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
 import { BillingFeedback } from '../../components/billing-feedback';
 import { BillingSelect, BillingSelectItem } from '../../components/billing-select';
-import { BillingSummary } from '../../components/billing-summary';
+import { AsideCard, Detail, DetailHeader, DetailStickyBar, DetailTabs, initialTab, useStuckHeader } from '../../components/detail-page';
 import type { CreditData } from '../../components/invoice-credit-notes';
 import { useBillingConfirm } from '../../components/use-billing-confirm';
 import type { PaymentMethod } from '../../payment-types';
@@ -60,6 +60,9 @@ export default function CreditShow({
     const correction = useForm({ reason: '' });
     const edit = useForm({ version: credit.version, reason: credit.reason });
     const issued = credit.status === 'issued';
+    const { url } = usePage();
+    const [tab, setTab] = useState(initialTab(url, ['overview', 'allocations', 'refunds']));
+    const { headerRef, stuck } = useStuckHeader();
     const errors = (values: Record<string, string>) =>
         Object.values(values).length > 0 && (
             <BillingFeedback kind="error">
@@ -68,6 +71,119 @@ export default function CreditShow({
                 ))}
             </BillingFeedback>
         );
+    const total = Number(credit.total) || 0;
+    const usedShare = total > 0 ? Math.min(100, ((Number(credit.settlement.allocated) + Number(credit.settlement.refunded)) / total) * 100) : 0;
+    const customerName = credit.customer_snapshot.legal_name || credit.customer_snapshot.display_name;
+    const statusBadge = (
+        <Badge variant={credit.status === 'issued' ? 'success' : credit.status === 'cancelled' ? 'destructive' : 'outline'}>
+            {credit.status.charAt(0).toUpperCase() + credit.status.slice(1)}
+        </Badge>
+    );
+    const canIssue = credit.status === 'draft' && can.issue && !!reviewToken;
+    const issueCredit = async () => {
+        if (await confirm('Issue this credit with a permanent number?')) {
+            issue.transform(() => ({ version: credit.version, review_token: reviewToken ?? '' }));
+            issue.post(route('admin.credit-notes.issue', credit.id));
+        }
+    };
+    const openAllocate = () => {
+        allocation.clearErrors();
+        allocation.setData({ invoice_id: '', amount: credit.settlement.available, request_key: crypto.randomUUID() });
+        setAllocateOpen(true);
+    };
+    const openRefund = () => {
+        refund.clearErrors();
+        refund.setData({
+            amount: '',
+            refund_date: today,
+            method: methods[0]?.value ?? '',
+            reference: '',
+            reason: '',
+            request_key: crypto.randomUUID(),
+        });
+        setRefundOpen(true);
+    };
+    const openCorrection = (kind: 'cancel' | 'allocation' | 'refund', id?: number) => {
+        correction.clearErrors();
+        correction.setData('reason', '');
+        setCorrecting({ kind, id });
+    };
+    const primaryAction = (size: 'sm' | 'default') =>
+        canIssue ? (
+            <Button size={size} disabled={issue.processing} onClick={issueCredit}>
+                <BadgeCheck className="size-4" />
+                Issue credit note
+            </Button>
+        ) : (
+            <Button size={size} asChild>
+                <a href={route('admin.credit-notes.pdf', credit.id)}>
+                    <Download className="size-4" />
+                    Download PDF
+                </a>
+            </Button>
+        );
+    const moreActions = (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="More actions">
+                    <Ellipsis className="size-5" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                    <Link href={route('admin.invoices.show', credit.invoice_id)}>
+                        <FileText />
+                        Original invoice
+                    </Link>
+                </DropdownMenuItem>
+                {canIssue && (
+                    <DropdownMenuItem asChild>
+                        <a href={route('admin.credit-notes.pdf', credit.id)}>
+                            <Download />
+                            Download PDF
+                        </a>
+                    </DropdownMenuItem>
+                )}
+                {issued && can.allocate && (
+                    <DropdownMenuItem onSelect={openAllocate}>
+                        <ArrowRightLeft />
+                        Allocate credit
+                    </DropdownMenuItem>
+                )}
+                {issued && can.refund && (
+                    <DropdownMenuItem onSelect={openRefund} disabled={methods.length === 0}>
+                        <Undo2 />
+                        Record refund
+                    </DropdownMenuItem>
+                )}
+                {credit.status !== 'cancelled' && can.cancel && (
+                    <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => openCorrection('cancel')}>
+                            <Ban />
+                            Cancel credit
+                        </DropdownMenuItem>
+                    </>
+                )}
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+    const emptyState = (title: string, description: string) => (
+        <div className="flex items-start gap-3 rounded-lg border border-dashed px-4 py-5">
+            <FileMinus2 className="text-muted-foreground mt-0.5 size-5 shrink-0" aria-hidden="true" />
+            <div>
+                <p className="text-sm font-medium">{title}</p>
+                <p className="text-muted-foreground mt-1 text-sm">{description}</p>
+            </div>
+        </div>
+    );
+    const sectionHeading = (title: string, action?: ReactNode) => (
+        <div className="flex items-center justify-between gap-3">
+            <h2 className="text-[0.9375rem] font-semibold">{title}</h2>
+            {action}
+        </div>
+    );
+
     return (
         <AppLayout
             breadcrumbs={[
@@ -77,197 +193,276 @@ export default function CreditShow({
         >
             {dialog}
             <Head title={credit.formatted_number ?? 'Draft credit'} />
-            <PageContainer className="max-w-5xl space-y-6">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <IndexHeader title={credit.formatted_number ?? `Draft credit #${credit.id}`} icon={BillingPageIcon} />
-                        <Badge variant={credit.status === 'issued' ? 'success' : 'outline'}>
-                            {credit.status.charAt(0).toUpperCase() + credit.status.slice(1)}
-                        </Badge>
-                    </div>
-                    <Button variant="outline" asChild>
-                        <Link href={route('admin.invoices.show', credit.invoice_id)}>Original invoice</Link>
-                    </Button>
-                </div>
-                {message && <BillingFeedback kind="success">{message}</BillingFeedback>}
-                {reviewError && <BillingFeedback kind="error">{reviewError}</BillingFeedback>}
-                {errors(issue.errors)}
-                <div className="flex flex-wrap gap-3">
-                    {credit.status === 'draft' && can.issue && reviewToken && (
-                        <Button
-                            disabled={issue.processing}
-                            onClick={async () => {
-                                if (await confirm('Issue this credit with a permanent number?')) {
-                                    issue.transform(() => ({ version: credit.version, review_token: reviewToken }));
-                                    issue.post(route('admin.credit-notes.issue', credit.id));
-                                }
-                            }}
-                        >
-                            Issue credit note
-                        </Button>
-                    )}
-                    {issued && can.allocate && (
-                        <Button
-                            variant="outline"
-                            onClick={() => {
-                                allocation.clearErrors();
-                                allocation.setData({ invoice_id: '', amount: credit.settlement.available, request_key: crypto.randomUUID() });
-                                setAllocateOpen(true);
-                            }}
-                        >
-                            Allocate credit
-                        </Button>
-                    )}
-                    {issued && can.refund && (
-                        <Button
-                            variant="outline"
-                            disabled={methods.length === 0}
-                            onClick={() => {
-                                refund.clearErrors();
-                                refund.setData({
-                                    amount: '',
-                                    refund_date: today,
-                                    method: methods[0]?.value ?? '',
-                                    reference: '',
-                                    reason: '',
-                                    request_key: crypto.randomUUID(),
-                                });
-                                setRefundOpen(true);
-                            }}
-                        >
-                            Record refund
-                        </Button>
-                    )}
-                    {credit.status !== 'cancelled' && can.cancel && (
-                        <Button
-                            variant="outline"
-                            onClick={() => {
-                                correction.clearErrors();
-                                correction.setData('reason', '');
-                                setCorrecting({ kind: 'cancel' });
-                            }}
-                        >
-                            Cancel credit
-                        </Button>
-                    )}
-                </div>
-                <Button variant="outline" asChild>
-                    <a href={route('admin.credit-notes.pdf', credit.id)}>Download credit PDF</a>
-                </Button>
-                <BillingSummary
-                    items={[
-                        { label: 'Credit total', value: credit.total, currency: credit.currency },
-                        { label: 'Allocated to invoices', value: credit.settlement.allocated, currency: credit.currency },
-                        { label: 'Refunded', value: credit.settlement.refunded, currency: credit.currency },
-                        { label: 'Available credit', value: credit.settlement.available, currency: credit.currency, emphasis: true },
-                    ]}
+            <DetailStickyBar
+                stuck={stuck}
+                title={credit.formatted_number ?? `Draft credit #${credit.id}`}
+                badges={statusBadge}
+                meta={
+                    issued && (
+                        <>
+                            <span className="text-muted-foreground">Available </span>
+                            <span className="font-semibold">
+                                {credit.settlement.available} {credit.currency}
+                            </span>
+                        </>
+                    )
+                }
+                actions={primaryAction('sm')}
+            />
+            <PageContainer className="content-editor">
+                <DetailHeader
+                    headerRef={headerRef}
+                    backHref={route('admin.credit-notes.index')}
+                    backLabel="All credit notes"
+                    title={credit.formatted_number ?? `Draft credit #${credit.id}`}
+                    badges={statusBadge}
+                    subtitle={`${customerName} · ${credit.total} ${credit.currency}`}
+                    actions={
+                        <>
+                            {moreActions}
+                            {primaryAction('default')}
+                        </>
+                    }
                 />
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Credit details</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                        <p>{credit.credit_date}</p>
-                        <p>{credit.customer_snapshot.legal_name || credit.customer_snapshot.display_name}</p>
-                        <p className="whitespace-pre-wrap">{credit.reason}</p>
-                        <p>
-                            Before tax: {credit.subtotal} {credit.currency}
-                        </p>
-                        {credit.taxes.map((t, i) => (
-                            <p key={i}>
-                                {t.name} ({t.percentage}%): {t.amount} {credit.currency}
-                            </p>
-                        ))}
-                        {credit.cancellation_reason && <p>Cancelled: {credit.cancellation_reason}</p>}
-                    </CardContent>
-                </Card>
-                {credit.status === 'draft' && can.update && (
-                    <Card>
-                        <CardContent className="pt-6">
-                            <form
-                                className="space-y-3"
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    edit.transform((d) => ({ ...d, version: credit.version }));
-                                    edit.patch(route('admin.credit-notes.update', credit.id));
-                                }}
-                            >
-                                <Label htmlFor="edit-credit-reason">Draft reason</Label>
-                                <Textarea id="edit-credit-reason" value={edit.data.reason} onChange={(e) => edit.setData('reason', e.target.value)} />
-                                {errors(edit.errors)}
-                                <Button type="submit" variant="outline" disabled={edit.processing}>
-                                    Update reason
-                                </Button>
-                            </form>
-                        </CardContent>
-                    </Card>
-                )}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Allocations</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ol className="divide-y">
-                            {allocations.map((a) => (
-                                <li key={a.id} className="flex flex-wrap justify-between gap-3 py-3 text-sm">
-                                    <span>
-                                        Invoice #{a.invoice_id}: {a.amount} {credit.currency} · {a.reversed_at ? 'Reversed' : 'Active'}
-                                        {a.reversal_reason && ` - ${a.reversal_reason}`}
-                                    </span>
-                                    {!a.reversed_at && can['reverse allocation'] && (
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => {
-                                                correction.clearErrors();
-                                                correction.setData('reason', '');
-                                                setCorrecting({ kind: 'allocation', id: a.id });
+                <div className="space-y-4 empty:hidden">
+                    {message && <BillingFeedback kind="success">{message}</BillingFeedback>}
+                    {reviewError && <BillingFeedback kind="error">{reviewError}</BillingFeedback>}
+                    {errors(issue.errors)}
+                    {credit.status === 'cancelled' && (
+                        <BillingFeedback kind="error" title="Cancelled credit note">
+                            {credit.cancellation_reason || 'This credit note was cancelled. Its history is preserved.'}
+                        </BillingFeedback>
+                    )}
+                </div>
+                <DetailTabs
+                    label="Credit note"
+                    value={tab}
+                    onValueChange={setTab}
+                    tabs={[
+                        {
+                            value: 'overview',
+                            label: 'Overview',
+                            content: (
+                                <section className="space-y-6">
+                                    <div>
+                                        <p className="text-muted-foreground text-[0.6875rem] font-medium tracking-wider uppercase">Reason</p>
+                                        <p className="mt-1.5 text-sm leading-6 break-words whitespace-pre-wrap">{credit.reason}</p>
+                                    </div>
+                                    <div className="flex justify-end border-t pt-5">
+                                        <dl className="w-full max-w-xs space-y-2.5 text-sm tabular-nums">
+                                            <Detail label="Before tax">
+                                                {credit.subtotal} <span className="text-muted-foreground text-xs">{credit.currency}</span>
+                                            </Detail>
+                                            {credit.taxes.map((t, i) => (
+                                                <Detail key={i} label={`${t.name} (${t.percentage}%)`}>
+                                                    {t.amount} <span className="text-muted-foreground text-xs">{credit.currency}</span>
+                                                </Detail>
+                                            ))}
+                                            <div className="flex items-baseline justify-between gap-4 border-t pt-3 font-semibold">
+                                                <dt>Credit total</dt>
+                                                <dd className="text-base">
+                                                    {credit.total}{' '}
+                                                    <span className="text-muted-foreground text-xs font-normal">{credit.currency}</span>
+                                                </dd>
+                                            </div>
+                                        </dl>
+                                    </div>
+                                    {credit.status === 'draft' && can.update && (
+                                        <form
+                                            className="space-y-3 border-t pt-6"
+                                            onSubmit={(e) => {
+                                                e.preventDefault();
+                                                edit.transform((d) => ({ ...d, version: credit.version }));
+                                                edit.patch(route('admin.credit-notes.update', credit.id));
                                             }}
                                         >
-                                            Reverse allocation
-                                        </Button>
-                                    )}
-                                </li>
-                            ))}
-                        </ol>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Refund records</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ol className="divide-y">
-                            {refunds.map((r) => (
-                                <li key={r.id} className="space-y-2 py-3 text-sm">
-                                    <div className="flex flex-wrap justify-between gap-3">
-                                        <span>
-                                            {r.amount} {credit.currency} · {r.refund_date} · {r.method} · {r.reversed_at ? 'Reversed' : 'Active'}
-                                        </span>
-                                        {!r.reversed_at && can.refund && (
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => {
-                                                    correction.clearErrors();
-                                                    correction.setData('reason', '');
-                                                    setCorrecting({ kind: 'refund', id: r.id });
-                                                }}
-                                            >
-                                                Reverse refund record
+                                            <Label htmlFor="edit-credit-reason">Draft reason</Label>
+                                            <Textarea
+                                                id="edit-credit-reason"
+                                                value={edit.data.reason}
+                                                onChange={(e) => edit.setData('reason', e.target.value)}
+                                            />
+                                            {errors(edit.errors)}
+                                            <Button type="submit" variant="outline" disabled={edit.processing}>
+                                                Update reason
                                             </Button>
-                                        )}
-                                    </div>
-                                    <p>
-                                        {r.reason}
-                                        {r.reference && ` - ${r.reference}`}
+                                        </form>
+                                    )}
+                                </section>
+                            ),
+                        },
+                        {
+                            value: 'allocations',
+                            label: 'Allocations',
+                            count: allocations.length,
+                            content: (
+                                <section className="space-y-4">
+                                    {sectionHeading(
+                                        'Allocations',
+                                        issued && can.allocate && (
+                                            <Button variant="outline" size="sm" onClick={openAllocate}>
+                                                <ArrowRightLeft className="size-4" />
+                                                Allocate credit
+                                            </Button>
+                                        ),
+                                    )}
+                                    {allocations.length === 0 ? (
+                                        emptyState('No allocations yet', 'Credit applied to invoices will appear here.')
+                                    ) : (
+                                        <ul className="divide-y rounded-lg border">
+                                            {allocations.map((a) => (
+                                                <li key={a.id} className="flex flex-wrap items-start justify-between gap-3 p-4 text-sm">
+                                                    <div className="min-w-0">
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            <Link
+                                                                href={route('admin.invoices.show', a.invoice_id)}
+                                                                className="font-medium hover:underline"
+                                                            >
+                                                                {invoices.find((i) => i.id === a.invoice_id)?.number ?? `Invoice #${a.invoice_id}`}
+                                                            </Link>
+                                                            <Badge variant={a.reversed_at ? 'muted' : 'success'}>
+                                                                {a.reversed_at ? 'Reversed' : 'Active'}
+                                                            </Badge>
+                                                        </div>
+                                                        {a.reversal_reason && (
+                                                            <p className="text-muted-foreground mt-1 text-xs">{a.reversal_reason}</p>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <span
+                                                            className={cn(
+                                                                'font-medium tabular-nums',
+                                                                a.reversed_at && 'text-muted-foreground line-through',
+                                                            )}
+                                                        >
+                                                            {a.amount}{' '}
+                                                            <span className="text-muted-foreground text-xs font-normal">{credit.currency}</span>
+                                                        </span>
+                                                        {!a.reversed_at && can['reverse allocation'] && (
+                                                            <Button size="sm" variant="ghost" onClick={() => openCorrection('allocation', a.id)}>
+                                                                Reverse
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </section>
+                            ),
+                        },
+                        {
+                            value: 'refunds',
+                            label: 'Refunds',
+                            count: refunds.length,
+                            content: (
+                                <section className="space-y-4">
+                                    {sectionHeading(
+                                        'Refund records',
+                                        issued && can.refund && (
+                                            <Button variant="outline" size="sm" onClick={openRefund} disabled={methods.length === 0}>
+                                                <Undo2 className="size-4" />
+                                                Record refund
+                                            </Button>
+                                        ),
+                                    )}
+                                    {refunds.length === 0 ? (
+                                        emptyState('No refunds recorded', 'Refunds paid out from unused credit will appear here.')
+                                    ) : (
+                                        <ul className="divide-y rounded-lg border">
+                                            {refunds.map((r) => (
+                                                <li key={r.id} className="flex flex-wrap items-start justify-between gap-3 p-4 text-sm">
+                                                    <div className="min-w-0 space-y-1">
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            <span className="font-medium">{r.method}</span>
+                                                            <span className="text-muted-foreground tabular-nums">{r.refund_date}</span>
+                                                            <Badge variant={r.reversed_at ? 'muted' : 'success'}>
+                                                                {r.reversed_at ? 'Reversed' : 'Active'}
+                                                            </Badge>
+                                                        </div>
+                                                        <p className="text-muted-foreground break-words">
+                                                            {r.reason}
+                                                            {r.reference && ` · ${r.reference}`}
+                                                        </p>
+                                                        {r.reversal_reason && <p className="text-muted-foreground text-xs">{r.reversal_reason}</p>}
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <span
+                                                            className={cn(
+                                                                'font-medium tabular-nums',
+                                                                r.reversed_at && 'text-muted-foreground line-through',
+                                                            )}
+                                                        >
+                                                            {r.amount}{' '}
+                                                            <span className="text-muted-foreground text-xs font-normal">{credit.currency}</span>
+                                                        </span>
+                                                        {!r.reversed_at && can.refund && (
+                                                            <Button size="sm" variant="ghost" onClick={() => openCorrection('refund', r.id)}>
+                                                                Reverse
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </section>
+                            ),
+                        },
+                    ]}
+                    aside={
+                        <>
+                            <AsideCard title="Credit balance" icon={Wallet} description={`Credit in ${credit.currency}`}>
+                                <div>
+                                    <p className="text-muted-foreground text-xs">Available credit</p>
+                                    <p className={cn('mt-1 text-2xl font-semibold tracking-tight tabular-nums', !issued && 'text-muted-foreground')}>
+                                        {credit.settlement.available}{' '}
+                                        <span className="text-muted-foreground text-xs font-normal">{credit.currency}</span>
                                     </p>
-                                    {r.reversal_reason && <p>{r.reversal_reason}</p>}
-                                </li>
-                            ))}
-                        </ol>
-                    </CardContent>
-                </Card>
+                                    {issued && (
+                                        <div
+                                            className="bg-muted mt-3 h-1.5 overflow-hidden rounded-full"
+                                            role="progressbar"
+                                            aria-label="Used"
+                                            aria-valuemin={0}
+                                            aria-valuemax={100}
+                                            aria-valuenow={Math.round(usedShare)}
+                                        >
+                                            <div className="h-full rounded-full bg-emerald-500" style={{ width: `${usedShare}%` }} />
+                                        </div>
+                                    )}
+                                </div>
+                                <dl className="space-y-2 border-t pt-3 text-sm">
+                                    <Detail label="Credit total">{credit.total}</Detail>
+                                    <Detail label="Allocated">{credit.settlement.allocated}</Detail>
+                                    <Detail label="Refunded">{credit.settlement.refunded}</Detail>
+                                </dl>
+                                {issued && can.allocate && (
+                                    <Button variant="outline" size="sm" className="w-full" onClick={openAllocate}>
+                                        <ArrowRightLeft className="size-4" />
+                                        Allocate credit
+                                    </Button>
+                                )}
+                            </AsideCard>
+                            <AsideCard title="Details">
+                                <dl className="space-y-3 text-sm">
+                                    <Detail label="Customer">
+                                        <Link href={route('admin.customers.show', credit.customer_id)} className="font-medium hover:underline">
+                                            {customerName}
+                                        </Link>
+                                    </Detail>
+                                    <Detail label="Invoice">
+                                        <Link href={route('admin.invoices.show', credit.invoice_id)} className="font-medium hover:underline">
+                                            View original
+                                        </Link>
+                                    </Detail>
+                                    <Detail label="Credit date">{credit.credit_date}</Detail>
+                                    <Detail label="Currency">{credit.currency}</Detail>
+                                </dl>
+                            </AsideCard>
+                        </>
+                    }
+                />
             </PageContainer>
             <Dialog
                 open={allocateOpen}

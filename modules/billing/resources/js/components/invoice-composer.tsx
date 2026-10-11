@@ -21,7 +21,18 @@ type Review = {
     prefix: string;
     padding: number;
 };
-export function InvoiceComposer({ open, onClose, invoiceId }: { open: boolean; onClose: () => void; invoiceId?: number }) {
+export function InvoiceComposer({
+    open,
+    onClose,
+    invoiceId,
+    reloadOnly = ['table', 'selectedInvoice'],
+}: {
+    open: boolean;
+    onClose: () => void;
+    invoiceId?: number;
+    /** Props refreshed after a save; null reloads the whole page (detail pages). */
+    reloadOnly?: string[] | null;
+}) {
     const [footerTarget, setFooterTarget] = useState<HTMLDivElement | null>(null);
     const [seed, setSeed] = useState<InvoiceFormSeed | null>(null),
         [review, setReview] = useState<Review | null>(null),
@@ -72,7 +83,7 @@ export function InvoiceComposer({ open, onClose, invoiceId }: { open: boolean; o
         if (saved || issued) {
             setBusy(true);
             router.reload({
-                only: ['table', 'selectedInvoice'],
+                ...(reloadOnly ? { only: reloadOnly } : {}),
                 onFinish: () => {
                     setBusy(false);
                     onClose();
