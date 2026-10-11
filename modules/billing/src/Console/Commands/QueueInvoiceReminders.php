@@ -4,10 +4,7 @@ namespace Modules\Billing\Console\Commands;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
-use Illuminate\Support\Str;
-use Modules\Billing\Actions\QueueInvoiceDelivery;
 use Modules\Billing\Models\Invoice;
-use Modules\Billing\Models\InvoiceDelivery;
 use Modules\Billing\Services\InvoiceBalance;
 use Modules\Billing\Settings\BillingAutomationSettings;
 use Modules\Billing\Settings\BillingSettings;
@@ -28,7 +25,7 @@ class QueueInvoiceReminders extends Command
         }
         $today=CarbonImmutable::now(app(BillingSettings::class)->timezone)->startOfDay();
         $count=0;
-        Invoice::where('status', 'issued')->where('reminders_disabled', false)->whereNotNull('due_date')->whereDate('due_date', '<=', $today->toDateString())->with('payments')->chunkById(100, function ($invoices) use ($today, $settings, &$count) {
+        Invoice::where('status', 'issued')->where('reminders_disabled', false)->whereNotNull('due_date')->whereDate('due_date', '<=', $today->addDays(30)->toDateString())->with('payments')->chunkById(100, function ($invoices) use ($today, $settings, &$count) {
             foreach ($invoices as $invoice) {
                 if (! app(InvoiceBalance::class)->data($invoice)['can_receive']) {
                     continue;
@@ -38,20 +35,7 @@ class QueueInvoiceReminders extends Command
                     continue;
                 }
                 $key='reminder:'.$invoice->id.':'.$invoice->due_date->format('Y-m-d').':'.$days;
-                if (InvoiceDelivery::where('occurrence_key', $key)->exists()) {
-                    continue;
-                }
-                $recipients=array_values(array_unique(array_filter(array_column($invoice->customer_snapshot['contacts'] ?? [], 'email'))));
-                if (! $recipients) {
-                    continue;
-                }
-                try {
-                    app(QueueInvoiceDelivery::class)->handle($invoice, ['request_key'=>(string) Str::uuid(), 'kind'=>'reminder', 'occurrence_key'=>$key, 'recipients'=>$recipients, 'subject'=>'Payment reminder: '.$invoice->formatted_number, 'message'=>'Your invoice is due for payment. Please see the attached invoice for the current amount due.']);
-                    $count++;
-                } catch (\Throwable $e) {
-                    report($e);
-                    $this->error('Unable to queue reminder for invoice '.$invoice->id.'.');
-                }
+                $count += app(\Modules\Billing\Services\InvoiceNotifications::class)->queue($invoice, $days > 0 ? 'overdue' : 'due', $key);
             }
         });
         $this->info($count.' invoice reminders queued.');

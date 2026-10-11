@@ -18,8 +18,8 @@ use Modules\Billing\Http\Requests\SaveInvoiceRequest;
 use Modules\Billing\Models\Customer;
 use Modules\Billing\Models\Invoice;
 use Modules\Billing\Models\TaxRate;
-use Modules\Billing\Services\InvoiceCalculator;
 use Modules\Billing\Services\BillingDashboard;
+use Modules\Billing\Services\InvoiceCalculator;
 use Modules\Billing\Services\InvoiceIssueReview;
 use Modules\Billing\Services\InvoicePresentation;
 use Modules\Billing\Settings\BillingSettings;
@@ -182,7 +182,17 @@ class InvoicesController extends BaseController
             'shareUrl'              => $request->user()->can('share', $invoice) ? $request->session()->get('billing_share_url') : null,
             'links'                 => $request->user()->can('share', $invoice) ? $invoice->links()->latest('id')->get(['id', 'label', 'expires_at', 'revoked_at'])->toArray() : null,
             'canSend'               => $invoice->status === 'issued' && $request->user()->can('send', $invoice),
-            'deliveries'            => $request->user()->can('send', $invoice) ? \Modules\Billing\Models\InvoiceDelivery::where('invoice_id', $invoice->id)->latest('id')->get()->map(fn ($delivery) => $delivery->only(['id', 'recipients', 'subject', 'kind', 'state', 'error', 'created_at', 'sent_at', 'provider_reference', 'actor_name']))->all() : null,
+            'deliveryConfiguration' => $request->user()->can('send', $invoice) ? (function () use ($invoice) {
+                $settings                  = app(\Modules\Billing\Settings\BillingDeliverySettings::class);
+                $variables                 = \Modules\Billing\Support\DeliveryTemplates::variables($invoice);
+                $variables['invoice_link'] = '{invoice_link}';
+
+                return ['smsEnabled' => $settings->sms_enabled, 'smsProvider' => $settings->sms_provider,
+                    'smsMessage'     => \Modules\Billing\Support\DeliveryTemplates::render($settings->templates['invoice']['sms_message'], $variables),
+                    'emailSubject'   => \Modules\Billing\Support\DeliveryTemplates::render($settings->templates['invoice']['email_subject'], $variables),
+                    'emailMessage'   => \Modules\Billing\Support\DeliveryTemplates::render($settings->templates['invoice']['email_message'], $variables)];
+            })() : null,
+            'deliveries'            => $request->user()->can('send', $invoice) ? \Modules\Billing\Models\InvoiceDelivery::where('invoice_id', $invoice->id)->latest('id')->get()->map(fn ($delivery) => $delivery->only(['id', 'recipients', 'subject', 'kind', 'channel', 'provider', 'state', 'error', 'created_at', 'sent_at', 'provider_reference', 'actor_name']))->all() : null,
             'canDownloadPdf'        => $request->user()->can('download', $invoice), 'pdfError' => $request->session()->get('billing_pdf_error'),
             'settlement'            => $settlement,
             'payments'              => $request->user()->can('view', new \Modules\Billing\Models\Payment) ? $invoice->payments->map(fn ($payment) => [...$balance->paymentData($payment), 'canReverse' => $payment->reversed_at === null && $payment->provider === null && $request->user()->can('reverse', $payment)])->all() : null,
@@ -220,7 +230,7 @@ class InvoicesController extends BaseController
             'readOnly'        => $readOnly, 'canUpdate' => $invoice && $request->user()->can('update', $invoice) && $invoice->status === 'draft',
             'canIssue'        => $request->user()->can('issue', $invoice ?? new Invoice) && (! $invoice || $invoice->status === 'draft'),
             'activities'      => $invoice ? $this->activities($invoice) : [],
-            'message' => $request->session()->get('billing_message'),
+            'message'         => $request->session()->get('billing_message'),
         ];
 
         return $request->expectsJson() ? response()->json($data) : Inertia::render('billing::invoices/form', $data);

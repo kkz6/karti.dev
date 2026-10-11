@@ -25,7 +25,7 @@ import { BillingFeedback } from '../../components/billing-feedback';
 import { AsideCard, Detail, DetailHeader, DetailTabs, initialTab } from '../../components/detail-page';
 import { InvoiceComposer } from '../../components/invoice-composer';
 import { InvoiceCreditNotes, type CreditData } from '../../components/invoice-credit-notes';
-import type { Delivery } from '../../components/invoice-delivery';
+import type { Delivery, DeliveryConfiguration } from '../../components/invoice-delivery';
 import { InvoiceHistory, type InvoiceActivity } from '../../components/invoice-document';
 import type { PrivateInvoiceLink } from '../../components/invoice-links';
 import { InvoiceNotification } from '../../components/invoice-notification';
@@ -50,6 +50,7 @@ export default function InvoiceDetail({
     shareUrl = null,
     canSend = false,
     deliveries = null,
+    deliveryConfiguration = null,
     canDownloadPdf,
     pdfError,
     invoice,
@@ -77,6 +78,7 @@ export default function InvoiceDetail({
     shareUrl?: string | null;
     canSend?: boolean;
     deliveries?: Delivery[] | null;
+    deliveryConfiguration?: DeliveryConfiguration | null;
     canDownloadPdf: boolean;
     pdfError?: string;
     invoice: InvoiceData;
@@ -158,7 +160,7 @@ export default function InvoiceDetail({
                 {hasSharing && (
                     <DropdownMenuItem onSelect={() => setSharingOpen(true)}>
                         <Mail />
-                        Email & sharing
+                        Send & sharing
                     </DropdownMenuItem>
                 )}
                 {canDownloadPdf && (
@@ -450,6 +452,7 @@ export default function InvoiceDetail({
                     shareUrl={shareUrl}
                     canSend={canSend}
                     deliveries={deliveries}
+                    configuration={deliveryConfiguration}
                     canRemind={canRemind}
                     remindersDisabled={remindersDisabled}
                 />

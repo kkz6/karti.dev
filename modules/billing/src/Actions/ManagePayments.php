@@ -81,6 +81,11 @@ class ManagePayments
             $locked->save();
             $locked->recordActivity('payment_recorded', 'Payment #'.$payment->id.' recorded: '.InvoiceCalculator::money((string) $minor, $precision).' '.$locked->currency.' via '.$payment->method_label.'.', $actor);
 
+            $automation = app(\Modules\Billing\Settings\BillingAutomationSettings::class);
+            if ($automation->receipt_email || $automation->receipt_sms) {
+                \Modules\Billing\Jobs\QueuePaymentReceipt::dispatch($payment->id)->onQueue('billing')->afterCommit();
+            }
+
             return $payment;
         }, 5);
     }

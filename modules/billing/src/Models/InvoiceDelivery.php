@@ -11,11 +11,11 @@ class InvoiceDelivery extends Model
 
     protected $guarded = ['id'];
 
-    protected $hidden = ['request_key', 'request_hash', 'pdf_path', 'pdf_hash', 'invoice_url'];
+    protected $hidden = ['request_key', 'request_hash', 'pdf_path', 'pdf_hash', 'invoice_url', 'provider_payload'];
 
     protected function casts(): array
     {
-        return ['recipients' => 'array', 'started_at' => 'datetime', 'sent_at' => 'datetime', 'invoice_url' => 'encrypted'];
+        return ['recipients' => 'array', 'started_at' => 'datetime', 'sent_at' => 'datetime', 'invoice_url' => 'encrypted', 'provider_payload' => 'encrypted:array'];
     }
 
     public function invoice(): BelongsTo

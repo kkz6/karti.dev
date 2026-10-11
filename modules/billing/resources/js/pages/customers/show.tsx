@@ -197,8 +197,8 @@ export default function CustomerDetail({
                                     {contact.archived_at
                                         ? 'Contact archived'
                                         : contact.invoice_emails
-                                          ? 'Invoice emails enabled'
-                                          : 'Invoice emails disabled'}
+                                          ? 'Billing notifications enabled'
+                                          : 'Billing notifications disabled'}
                                 </p>
                             </div>
                             {canEditContacts && (

@@ -21,9 +21,27 @@ class BillingAutomationController extends BaseController
     public function update(Request $request)
     {
         $this->authorize('update', BillingSettings::class);
-        $data=$request->validate(['reminders_enabled'=>['required', 'boolean'], 'reminder_offsets'=>['required', 'array', 'min:1', 'max:10'], 'reminder_offsets.*'=>['integer', 'distinct', 'between:0,365']]);
-        if ($data['reminders_enabled']) {
+        $data=$request->validate(['reminders_enabled'=>['required', 'boolean'], 'reminder_offsets'=>['required', 'array', 'min:1', 'max:10'], 'reminder_offsets.*'=>['integer', 'distinct', 'between:-30,365']]);
+        $data += $request->validate([
+            'reminder_email' => ['sometimes', 'boolean'], 'reminder_sms' => ['sometimes', 'boolean'],
+            'receipt_email'  => ['sometimes', 'boolean'], 'receipt_sms' => ['sometimes', 'boolean'],
+        ]);
+        if ($data['reminders_enabled'] || ($data['receipt_email'] ?? false) || ($data['receipt_sms'] ?? false)) {
             $this->authorize('send', new Invoice);
+        }
+        $delivery = app(\Modules\Billing\Settings\BillingDeliverySettings::class);
+        if (($data['reminder_sms'] ?? false) || ($data['receipt_sms'] ?? false)) {
+            if (! $delivery->sms_enabled) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['reminder_sms' => 'Enable an SMS driver in Delivery settings first.']);
+            }
+            if ($delivery->sms_provider === 'msg91') {
+                $events = [...(($data['reminder_sms'] ?? false) ? ['due', 'overdue'] : []), ...(($data['receipt_sms'] ?? false) ? ['payment'] : [])];
+                foreach ($events as $event) {
+                    if (empty($delivery->msg91_templates[$event]['id'])) {
+                        throw \Illuminate\Validation\ValidationException::withMessages(['reminder_sms' => 'Configure the MSG91 '.$event.' template in Delivery settings first.']);
+                    }
+                }
+            }
         }
         sort($data['reminder_offsets']);
         app(BillingAutomationSettings::class)->fill($data)->save();

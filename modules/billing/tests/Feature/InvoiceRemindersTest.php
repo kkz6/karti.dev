@@ -22,6 +22,7 @@ beforeEach(function () {
     $this->admin=User::factory()->create()->assignRole('admin');
     $this->actingAs($this->admin);
     $customer     =Customer::factory()->create();
+    \Modules\Billing\Models\Contact::factory()->create(['customer_id' => $customer->id, 'email' => 'billing@example.test', 'phone' => '+919880952222']);
     $this->invoice=app(SaveInvoiceDraft::class)->handle(['customer_id'=>$customer->id, 'invoice_date'=>'2026-10-01', 'due_date'=>'2026-10-11', 'currency'=>'INR', 'discount_mode'=>'none', 'discount_value'=>'0', 'items'=>[['key'=>(string) Str::uuid(), 'description'=>'Service', 'unit'=>'hour', 'quantity'=>'1', 'rate'=>'100', 'taxes'=>[]]]]);
     $this->invoice->forceFill(['status'=>'issued', 'formatted_number'=>'INV-000001', 'customer_snapshot'=>[...$this->invoice->customer_snapshot, 'contacts'=>[['name'=>'Billing', 'email'=>'billing@example.test']]]])->save();
     app(BillingAutomationSettings::class)->fill(['reminders_enabled'=>true, 'reminder_offsets'=>[0, 3]])->save();

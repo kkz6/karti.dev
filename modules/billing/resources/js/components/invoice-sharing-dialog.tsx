@@ -6,7 +6,7 @@ import { Switch } from '@shared/components/ui/switch';
 import type { ComponentProps } from 'react';
 import { useState } from 'react';
 import type { InvoiceData } from '../invoice-types';
-import { InvoiceDelivery, type Delivery } from './invoice-delivery';
+import { InvoiceDelivery, type Delivery, type DeliveryConfiguration } from './invoice-delivery';
 import { InvoiceLinks, type PrivateInvoiceLink } from './invoice-links';
 
 export function InvoiceSharingDialog({
@@ -19,6 +19,7 @@ export function InvoiceSharingDialog({
     shareUrl,
     canSend,
     deliveries,
+    configuration = null,
     canRemind,
     remindersDisabled,
 }: {
@@ -31,6 +32,7 @@ export function InvoiceSharingDialog({
     shareUrl: string | null;
     canSend: boolean;
     deliveries: Delivery[] | null;
+    configuration?: DeliveryConfiguration | null;
     canRemind: boolean;
     remindersDisabled: boolean;
 }) {
@@ -43,7 +45,7 @@ export function InvoiceSharingDialog({
                 onCloseAutoFocus={onCloseAutoFocus}
             >
                 <DialogHeader className="border-b p-5 pr-10 text-left sm:p-6 sm:pr-12">
-                    <DialogTitle>Email & sharing</DialogTitle>
+                    <DialogTitle>Send & sharing</DialogTitle>
                     <DialogDescription>{invoice.formatted_number} · Manage customer access and delivery.</DialogDescription>
                 </DialogHeader>
                 <div className="min-h-0 space-y-6 overflow-y-auto p-5 sm:p-6 [&>section:not(:last-child)]:border-b [&>section:not(:last-child)]:pb-6">
@@ -54,7 +56,7 @@ export function InvoiceSharingDialog({
                     )}
                     {(canSend || deliveries !== null) && (
                         <section>
-                            <InvoiceDelivery embedded invoice={invoice} canSend={canSend} deliveries={deliveries} />
+                            <InvoiceDelivery embedded invoice={invoice} canSend={canSend} deliveries={deliveries} configuration={configuration} />
                         </section>
                     )}
                     {canRemind && (

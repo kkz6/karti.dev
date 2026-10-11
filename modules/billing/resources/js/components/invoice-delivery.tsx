@@ -5,12 +5,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@shared/components/ui/
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
 import { Input } from '@shared/components/ui/input';
 import { Label } from '@shared/components/ui/label';
+import { PhoneInput } from '@shared/components/ui/phone-input';
 import { Textarea } from '@shared/components/ui/textarea';
 import { statusTone } from '@shared/lib/status-colors';
 import { useState } from 'react';
 import type { InvoiceData } from '../invoice-types';
 import { BillingFeedback } from './billing-feedback';
+import { BillingSelect, BillingSelectItem } from './billing-select';
+export type DeliveryConfiguration = {
+    smsEnabled: boolean;
+    smsProvider: 'twilio' | 'msg91';
+    smsMessage: string;
+    emailSubject: string;
+    emailMessage: string;
+};
 export type Delivery = {
+    channel?: 'email' | 'sms';
+    provider?: string | null;
     id: number;
     recipients: string[];
     subject: string;
@@ -26,43 +37,62 @@ export function InvoiceDelivery({
     invoice,
     canSend,
     deliveries,
+    configuration = null,
     reloadKey = 'deliveries',
     embedded = false,
 }: {
     invoice: InvoiceData;
     canSend: boolean;
     deliveries: Delivery[] | null;
+    configuration?: DeliveryConfiguration | null;
     reloadKey?: string;
     embedded?: boolean;
 }) {
     const [open, setOpen] = useState(false);
-    const form = useForm({ request_key: '', recipients: '', subject: `Invoice ${invoice.formatted_number}`, message: '' });
-    const contacts = (invoice.customer_snapshot as { contacts?: { email?: string }[] }).contacts ?? [];
+    const form = useForm({
+        channel: 'email' as 'email' | 'sms',
+        request_key: '',
+        recipients: '',
+        subject: `Invoice ${invoice.formatted_number}`,
+        message: '',
+    });
+    const contacts = (invoice.customer_snapshot as { contacts?: { email?: string; phone?: string }[] }).contacts ?? [];
+    const sms = form.data.channel === 'sms';
+    function compose(channel: 'email' | 'sms') {
+        form.clearErrors();
+        form.setData({
+            channel,
+            request_key: crypto.randomUUID(),
+            recipients:
+                channel === 'sms'
+                    ? (contacts.find((contact) => contact.phone)?.phone ?? '')
+                    : contacts
+                          .map((contact) => contact.email)
+                          .filter(Boolean)
+                          .join(', '),
+            subject: configuration?.emailSubject ?? `Invoice ${invoice.formatted_number}`,
+            message:
+                channel === 'sms'
+                    ? (configuration?.smsMessage ?? 'Invoice {invoice_number}: {currency} {amount_due}. {invoice_link}')
+                    : (configuration?.emailMessage ?? ''),
+        });
+    }
     return (
         <>
             <Card className={embedded ? 'rounded-none border-0 bg-transparent' : undefined}>
                 <CardHeader className={embedded ? 'px-0 pt-0 pb-3' : undefined}>
-                    <CardTitle>Invoice email</CardTitle>
+                    <CardTitle>Email & SMS</CardTitle>
                 </CardHeader>
                 <CardContent className={embedded ? 'space-y-4 p-0' : 'space-y-4'}>
                     {canSend && (
                         <Button
                             variant="outline"
                             onClick={() => {
-                                form.clearErrors();
-                                form.setData({
-                                    request_key: crypto.randomUUID(),
-                                    recipients: contacts
-                                        .map((contact) => contact.email)
-                                        .filter(Boolean)
-                                        .join(', '),
-                                    subject: `Invoice ${invoice.formatted_number}`,
-                                    message: '',
-                                });
+                                compose('email');
                                 setOpen(true);
                             }}
                         >
-                            Email invoice
+                            Send invoice
                         </Button>
                     )}
                     {deliveries !== null && (
@@ -74,13 +104,19 @@ export function InvoiceDelivery({
                                 </Button>
                             </div>
                             {deliveries.length === 0 ? (
-                                <p className="text-muted-foreground text-sm">No email attempts.</p>
+                                <p className="text-muted-foreground text-sm">No delivery attempts.</p>
                             ) : (
                                 <ol className="divide-y">
                                     {deliveries.map((delivery) => (
                                         <li key={delivery.id} className="space-y-2 py-3">
                                             <div className="flex flex-wrap gap-2">
-                                                <Badge variant={statusTone(delivery.state)}>{delivery.state}</Badge>
+                                                <Badge variant="outline">
+                                                    {delivery.channel === 'sms' ? 'SMS' : 'Email'}
+                                                    {delivery.provider ? ` · ${delivery.provider.toUpperCase()}` : ''}
+                                                </Badge>
+                                                <Badge variant={statusTone(delivery.state)}>
+                                                    {delivery.state === 'sent' ? 'Provider accepted' : delivery.state}
+                                                </Badge>
                                                 <span className="text-sm">{delivery.subject}</span>
                                             </div>
                                             <p className="text-muted-foreground text-sm break-all">
@@ -112,9 +148,11 @@ export function InvoiceDelivery({
             >
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Email invoice</DialogTitle>
+                        <DialogTitle>Send invoice</DialogTitle>
                         <DialogDescription>
-                            The selected recipients will receive the saved invoice PDF. Sending again creates a new delivery attempt.
+                            {sms
+                                ? 'Send a private invoice link by SMS. Each phone number has its own delivery attempt.'
+                                : 'The selected recipients receive the saved invoice PDF and a private link. Sending again creates a new attempt.'}
                         </DialogDescription>
                     </DialogHeader>
                     <form
@@ -123,10 +161,13 @@ export function InvoiceDelivery({
                             event.preventDefault();
                             form.transform((data) => ({
                                 ...data,
-                                recipients: data.recipients
-                                    .split(/[\n,;]+/)
-                                    .map((email) => email.trim())
-                                    .filter(Boolean),
+                                recipients:
+                                    data.channel === 'sms'
+                                        ? [data.recipients]
+                                        : data.recipients
+                                              .split(/[\n,;]+/)
+                                              .map((email) => email.trim())
+                                              .filter(Boolean),
                             }));
                             form.post(route('admin.invoices.send', invoice.id), { preserveScroll: true, onSuccess: () => setOpen(false) });
                         }}
@@ -139,43 +180,81 @@ export function InvoiceDelivery({
                             </BillingFeedback>
                         )}
                         <div className="space-y-2">
-                            <Label htmlFor="invoice-email-recipients">Recipients</Label>
-                            <Textarea
-                                id="invoice-email-recipients"
-                                value={form.data.recipients}
-                                onChange={(e) => form.setData('recipients', e.target.value)}
-                                required
+                            <Label htmlFor="invoice-delivery-channel">Channel</Label>
+                            <BillingSelect
+                                id="invoice-delivery-channel"
+                                value={form.data.channel}
                                 disabled={form.processing}
-                            />
-                            <p className="text-muted-foreground text-xs">Separate email addresses with commas. Up to ten recipients.</p>
+                                onValueChange={(value) => compose(value as 'email' | 'sms')}
+                            >
+                                <BillingSelectItem value="email">Email</BillingSelectItem>
+                                {configuration?.smsEnabled && (
+                                    <BillingSelectItem value="sms">SMS · {configuration.smsProvider.toUpperCase()}</BillingSelectItem>
+                                )}
+                            </BillingSelect>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="invoice-email-subject">Subject</Label>
-                            <Input
-                                id="invoice-email-subject"
-                                value={form.data.subject}
-                                onChange={(e) => form.setData('subject', e.target.value)}
-                                maxLength={255}
-                                required
-                                disabled={form.processing}
-                            />
+                            <Label htmlFor="invoice-email-recipients">{sms ? 'Phone number' : 'Recipients'}</Label>
+                            {sms ? (
+                                <PhoneInput
+                                    id="invoice-email-recipients"
+                                    value={form.data.recipients}
+                                    onChange={(value) => form.setData('recipients', value)}
+                                    defaultCountry={String(invoice.customer_snapshot.billing_country ?? 'IN')}
+                                    disabled={form.processing}
+                                />
+                            ) : (
+                                <Textarea
+                                    id="invoice-email-recipients"
+                                    value={form.data.recipients}
+                                    onChange={(e) => form.setData('recipients', e.target.value)}
+                                    required
+                                    disabled={form.processing}
+                                />
+                            )}
+                            <p className="text-muted-foreground text-xs">
+                                {sms
+                                    ? 'Use an international number with its country code.'
+                                    : 'Separate email addresses with commas. Up to ten recipients.'}
+                            </p>
                         </div>
+                        {!sms && (
+                            <div className="space-y-2">
+                                <Label htmlFor="invoice-email-subject">Subject</Label>
+                                <Input
+                                    id="invoice-email-subject"
+                                    value={form.data.subject}
+                                    onChange={(e) => form.setData('subject', e.target.value)}
+                                    maxLength={255}
+                                    required
+                                    disabled={form.processing}
+                                />
+                            </div>
+                        )}
                         <div className="space-y-2">
-                            <Label htmlFor="invoice-email-message">Message</Label>
+                            <Label htmlFor="invoice-email-message">
+                                {sms && configuration?.smsProvider === 'msg91' ? 'Approved message preview' : 'Message'}
+                            </Label>
                             <Textarea
                                 id="invoice-email-message"
                                 value={form.data.message}
                                 onChange={(e) => form.setData('message', e.target.value)}
-                                maxLength={5000}
+                                maxLength={sms ? 1600 : 5000}
+                                readOnly={sms && configuration?.smsProvider === 'msg91'}
                                 disabled={form.processing}
                             />
                         </div>
+                        {sms && configuration?.smsProvider === 'msg91' && (
+                            <p className="text-muted-foreground text-xs">
+                                MSG91 sends the approved invoice template and variable mapping from Delivery settings.
+                            </p>
+                        )}
                         <DialogFooter>
                             <Button type="button" variant="outline" disabled={form.processing} onClick={() => setOpen(false)}>
                                 Close
                             </Button>
                             <Button type="submit" disabled={form.processing}>
-                                {form.processing ? 'Queueing…' : 'Queue email'}
+                                {form.processing ? 'Queueing…' : sms ? 'Queue SMS' : 'Queue email'}
                             </Button>
                         </DialogFooter>
                     </form>

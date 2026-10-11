@@ -101,7 +101,11 @@ export function ContactForm({
                     {(
                         [
                             ['is_primary', 'Primary billing contact', 'Default recipient for invoices. Replaces the current primary contact.'],
-                            ['invoice_emails', 'Receive invoice emails', 'Included when invoices and reminders are emailed.'],
+                            [
+                                'invoice_emails',
+                                'Receive billing notifications',
+                                'Receive invoice emails, reminders and SMS notices through enabled channels.',
+                            ],
                         ] as const
                     ).map(([field, label, hint]) => (
                         <div key={field} className="flex items-center justify-between gap-4 px-4 py-3">

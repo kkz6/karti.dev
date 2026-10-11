@@ -17,9 +17,21 @@ class InvoiceDeliveryController extends BaseController
         if (is_string($request->input('request_key'))) {
             $request->merge(['request_key' => strtolower(trim($request->input('request_key')))]);
         }
-        $input = $request->validate(['request_key' => ['required', 'uuid'], 'recipients' => ['required', 'array', 'min:1', 'max:10'], 'recipients.*' => ['required', 'email:rfc', 'distinct', 'max:254'], 'subject' => ['required', 'string', 'max:255', 'not_regex:/[\r\n]/'], 'message' => ['nullable', 'string', 'max:5000']]);
+        $sms   = $request->input('channel', 'email') === 'sms';
+        $input = $request->validate([
+            'channel'      => ['sometimes', \Illuminate\Validation\Rule::in(['email', 'sms'])],
+            'request_key'  => ['required', 'uuid'],
+            'recipients'   => ['required', 'array', 'min:1', 'max:'.($sms ? '1' : '10')],
+            'recipients.*' => $sms ? ['required', 'string', 'max:50', function ($attribute, $value, $fail) {
+                if (! \Modules\Billing\Support\DeliveryTemplates::phone($value)) {
+                    $fail('Enter a phone number with its international country code.');
+                }
+            }] : ['required', 'email:rfc', 'distinct', 'max:254'],
+            'subject' => ['required', 'string', 'max:255', 'not_regex:/[\r\n]/'],
+            'message' => [$sms ? 'required' : 'nullable', 'string', 'max:'.($sms ? '1600' : '5000')],
+        ]);
         $action->handle($invoice, $input, $request->user());
 
-        return to_route('admin.invoices.show', $invoice)->with('billing_message', 'Invoice email queued. Delivery history will update after the billing queue worker runs.');
+        return to_route('admin.invoices.show', $invoice)->with('billing_message', 'Invoice '.($sms ? 'SMS' : 'email').' queued. Delivery history will update after the billing queue worker runs.');
     }
 }

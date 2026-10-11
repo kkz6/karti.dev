@@ -35,6 +35,8 @@ Route::middleware(['web', 'auth', 'verified', \Modules\Billing\Http\Middleware\P
     Route::post('invoices/{invoice}/checkout', [\Modules\Billing\Http\Controllers\OnlinePaymentsController::class, 'create'])->name('invoices.checkout');
     Route::post('bookings/{booking}/customer', [\Modules\Billing\Http\Controllers\OnlinePaymentsController::class, 'associate'])->name('bookings.customer');
     Route::resource('recurring-invoices', \Modules\Billing\Http\Controllers\RecurringInvoicesController::class)->parameters(['recurring-invoices' => 'recurringInvoice'])->except(['show', 'destroy']);
+    Route::put('billing/delivery', [\Modules\Billing\Http\Controllers\BillingDeliverySettingsController::class, 'update'])->name('billing.delivery.update');
+    Route::post('billing/delivery/test', [\Modules\Billing\Http\Controllers\BillingDeliverySettingsController::class, 'test'])->middleware('throttle:5,1')->name('billing.delivery.test');
     Route::get('billing/automation', [\Modules\Billing\Http\Controllers\BillingAutomationController::class, 'edit'])->name('billing.automation.edit');
     Route::put('billing/automation', [\Modules\Billing\Http\Controllers\BillingAutomationController::class, 'update'])->name('billing.automation.update');
     Route::post('invoices/{invoice}/reminders', [\Modules\Billing\Http\Controllers\BillingAutomationController::class, 'reminder'])->name('invoices.reminders');
