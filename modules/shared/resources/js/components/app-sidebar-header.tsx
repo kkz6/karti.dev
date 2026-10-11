@@ -48,7 +48,12 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
             </div>
 
             <div className="ml-auto flex shrink-0 items-center gap-1">
-                <Button asChild variant="ghost" size="sm" className="hidden gap-1.5 text-white/70 hover:bg-white/10 hover:text-white sm:inline-flex">
+                <Button
+                    asChild
+                    variant="ghost"
+                    size="sm"
+                    className="hover:bg-accent hover:text-foreground text-muted-foreground hidden gap-1.5 sm:inline-flex"
+                >
                     <a href="/" target="_blank" rel="noopener noreferrer">
                         View site
                         <ArrowUpRight className="size-3.5" />

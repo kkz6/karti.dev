@@ -1,6 +1,6 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import { AdminPageContent } from '@shared/components/admin-page-content';
 import { IndexHeader } from '@shared/components/index-header';
-import { PageContainer } from '@shared/components/page-container';
 import { Button } from '@shared/components/ui/button';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
@@ -19,7 +19,7 @@ interface Tag {
     _primary_key: number;
 }
 
-export default function Index({ tags }: { tags: TableConfig<Tag> }) {
+export default function Index({ tags, canCreate }: { tags: TableConfig<Tag>; canCreate: boolean }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Blog Management', href: route('admin.blog.index') },
         { title: 'Tags', href: route('admin.tags.index') },
@@ -30,30 +30,32 @@ export default function Index({ tags }: { tags: TableConfig<Tag> }) {
     };
 
     const handleCreateTag = () => {
-        window.location.href = route('admin.tags.create');
+        router.visit(route('admin.tags.create'));
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Tags" />
-            <PageContainer className="content-index flex flex-col gap-8">
+            <AdminPageContent>
                 {/* Header */}
-                <IndexHeader title="Tags" icon={TagsIcon} actions={<Button onClick={handleCreateTag}>Create tag</Button>} />
+                <IndexHeader title="Tags" icon={TagsIcon} actions={canCreate ? <Button onClick={handleCreateTag}>Create tag</Button> : undefined} />
 
                 <InertiaTableWrapper
                     resource={tags}
                     emptyState={{
-                        title: 'No tags found',
+                        title: 'No tags yet',
                         description: 'Get started by creating your first tag to organize your content.',
                         icons: [TagsIcon, Tag, Plus],
-                        action: {
-                            label: 'Create Tag',
-                            onClick: handleCreateTag,
-                        },
+                        action: canCreate
+                            ? {
+                                  label: 'Create Tag',
+                                  onClick: handleCreateTag,
+                              }
+                            : undefined,
                     }}
                     onCustomAction={handleCustomAction}
                 />
-            </PageContainer>
+            </AdminPageContent>
         </AppLayout>
     );
 }

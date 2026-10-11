@@ -123,7 +123,7 @@ export function getWebAuthnErrorMessage(error: Error): string {
  * Check if the current context supports passkeys
  */
 export function canUsePasskeys(): boolean {
-    return isWebAuthnSupported() && window.isSecureContext && (window.location.protocol === 'https:' || window.location.hostname === 'localhost');
+    return isWebAuthnSupported() && window.isSecureContext;
 }
 
 /**

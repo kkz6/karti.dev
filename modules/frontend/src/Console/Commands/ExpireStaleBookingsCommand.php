@@ -16,6 +16,7 @@ class ExpireStaleBookingsCommand extends Command
     public function handle(): void
     {
         $stale = ConsultationBooking::pending()
+            ->whereNull('paid_at')
             ->where('created_at', '<', now()->subMinutes(30))
             ->get();
 

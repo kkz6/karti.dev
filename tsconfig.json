@@ -117,6 +117,7 @@
             "@table/*": ["./modules/table/resources/js/*"],
             "@seo/*": ["./modules/seo/resources/js/*"],
             "@media/*": ["./modules/media/resources/js/*"],
+            "@billing/*": ["./modules/billing/resources/js/*"],
             "@blog/*": ["./modules/blog/resources/js/*"]
         },
         "jsx": "react-jsx"

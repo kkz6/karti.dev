@@ -31,7 +31,7 @@ export default function Show({ collection }: PhotoGalleryShowPageProps) {
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'published':
-                return 'bg-green-100 text-green-800';
+                return 'bg-secondary text-secondary-foreground';
             case 'draft':
                 return 'bg-yellow-100 text-yellow-800';
             case 'archived':

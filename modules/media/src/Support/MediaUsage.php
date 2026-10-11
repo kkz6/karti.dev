@@ -125,6 +125,17 @@ class MediaUsage
             }
         }
 
+        $logoId = app(\Modules\Billing\Settings\BillingSettings::class)->logo_media_id;
+        if ($logoId !== null && in_array($logoId, [$media->id, $media->original_media_id], true)) {
+            $add('Billing settings', 'Invoice branding', 'Logo', route('admin.settings.billing.edit'));
+        }
+        if (\Illuminate\Support\Facades\Schema::hasTable('billing_invoices')) {
+            \Modules\Billing\Models\Invoice::whereIn('seller_snapshot->logo_media_id', array_filter([$media->id, $media->original_media_id]))
+                ->select(['id', 'status'])->each(function ($invoice) use ($add) {
+                    $add('Invoice', 'Draft #'.$invoice->id, 'Logo', route('admin.invoices.show', $invoice));
+                });
+        }
+
         return ['id' => (string) $media->id, 'title' => $media->title ?: $media->filename, 'usages' => $usages];
     }
 }

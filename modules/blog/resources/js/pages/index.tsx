@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
+import { AdminPageContent } from '@shared/components/admin-page-content';
 import { IndexHeader } from '@shared/components/index-header';
 import { LocalTrafficCard } from '@shared/components/local-traffic-card';
-import { PageContainer } from '@shared/components/page-container';
 import { Button } from '@shared/components/ui/button';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
@@ -57,7 +57,7 @@ export default function Index({ articles, categories }: { articles: TableConfig<
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Blog Management" />
-            <PageContainer className="content-index flex flex-col gap-8">
+            <AdminPageContent>
                 <IndexHeader
                     title="Articles"
                     icon={FileText}
@@ -83,7 +83,7 @@ export default function Index({ articles, categories }: { articles: TableConfig<
                     }}
                     onCustomAction={handleCustomAction}
                 />
-            </PageContainer>
+            </AdminPageContent>
         </AppLayout>
     );
 }

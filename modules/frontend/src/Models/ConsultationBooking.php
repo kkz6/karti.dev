@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class ConsultationBooking extends Model
 {
     protected $fillable = [
+        'expected_amount_minor', 'expected_currency', 'return_token_hash', 'fulfillment_state', 'billing_customer_id',
         'name',
         'email',
         'profession',
@@ -25,11 +26,14 @@ class ConsultationBooking extends Model
         'paid_at',
     ];
 
+    protected $hidden = ['return_token_hash'];
+
     protected $casts = [
-        'slot_start'   => 'datetime',
-        'slot_end'     => 'datetime',
-        'paid_at'      => 'datetime',
-        'calcom_data'  => 'array',
+        'expected_amount_minor' => 'integer', 'billing_customer_id' => 'integer',
+        'slot_start'            => 'datetime',
+        'slot_end'              => 'datetime',
+        'paid_at'               => 'datetime',
+        'calcom_data'           => 'array',
     ];
 
     protected $attributes = [
@@ -64,10 +68,10 @@ class ConsultationBooking extends Model
     public function markConfirmed(?string $calcomBookingUid = null, ?array $calcomData = null): void
     {
         $this->update([
-            'status'            => 'confirmed',
-            'paid_at'           => now(),
+            'status'             => 'confirmed',
+            'paid_at'            => now(),
             'calcom_booking_uid' => $calcomBookingUid,
-            'calcom_data'       => $calcomData,
+            'calcom_data'        => $calcomData,
         ]);
     }
 

@@ -22,11 +22,10 @@ const buttonVariants = cva(
                 secondary: 'bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80',
                 ghost: 'hover:bg-accent hover:text-accent-foreground',
                 link: 'ui-button-link text-primary underline-offset-4 hover:underline',
-                info: 'bg-blue-500 text-white shadow-xs hover:bg-blue-500/90 focus-visible:ring-blue-500/20 dark:focus-visible:ring-blue-500/40',
+                info: 'bg-blue-600 text-white shadow-xs hover:bg-blue-700 focus-visible:ring-blue-500/20 dark:focus-visible:ring-blue-500/40',
                 success:
-                    'bg-emerald-500 text-white shadow-xs hover:bg-emerald-500/90 focus-visible:ring-emerald-500/20 dark:focus-visible:ring-emerald-500/40',
-                warning:
-                    'bg-amber-500 text-white shadow-xs hover:bg-amber-500/90 focus-visible:ring-amber-500/20 dark:focus-visible:ring-amber-500/40',
+                    'bg-emerald-600 text-white shadow-xs hover:bg-emerald-700 focus-visible:ring-emerald-500/20 dark:focus-visible:ring-emerald-500/40',
+                warning: 'bg-amber-700 text-white shadow-xs hover:bg-amber-800 focus-visible:ring-amber-500/20 dark:focus-visible:ring-amber-500/40',
             },
             size: {
                 control: 'h-9 px-3',
@@ -63,6 +62,7 @@ function Button({
             type={type ?? (asChild ? undefined : 'button')}
             role={role}
             data-slot="button"
+            data-variant={resolvedVariant}
             className={cn(buttonVariants({ variant: resolvedVariant, size: resolvedVariant === 'control' ? 'control' : size, className }))}
             {...props}
         />

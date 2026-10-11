@@ -36,6 +36,7 @@ return [
     ],
 
     'dodo_payments' => [
+        'webhook_key'             => env('DODO_PAYMENTS_WEBHOOK_KEY', ''),
         'api_key'                 => env('DODO_PAYMENTS_API_KEY', ''),
         'product_id'              => env('DODO_PAYMENTS_UPWORK_PRODUCT_ID', ''),
         'upwork_consultation_url' => env('DODO_PAYMENTS_UPWORK_CONSULTATION_URL', '#'),

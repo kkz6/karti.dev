@@ -1,0 +1,69 @@
+{
+    "version": 1,
+    "source": "demo-perfex-live-dry-run",
+    "mapping": {
+        "timezone": "Asia/Kolkata",
+        "rounding_policy": "verify",
+        "customers": "tblclients",
+        "invoices": "tblinvoices + tblitemable",
+        "payments": "tblinvoicepaymentrecords"
+    },
+    "customers": [
+        {
+            "external_id": "demo-client",
+            "type": "business",
+            "display_name": "DEMO import inventory only",
+            "billing_address": "Demo street",
+            "billing_country": "IN",
+            "default_currency": "INR"
+        }
+    ],
+    "invoices": [
+        {
+            "external_id": "demo-invoice",
+            "customer_external_id": "demo-client",
+            "number": "LEGACY-DEMO-00104",
+            "status": "issued",
+            "currency": "INR",
+            "invoice_date": "2025-10-01",
+            "due_date": "2025-10-31",
+            "issued_at": "2025-10-01T09:00:00+05:30",
+            "discount_mode": "none",
+            "discount_value": "0",
+            "items": [
+                {
+                    "description": "Historical demo service",
+                    "unit": "hour",
+                    "quantity": "1",
+                    "rate": "100",
+                    "taxes": []
+                }
+            ],
+            "subtotal": "100.00",
+            "discount": "0.00",
+            "tax": "0.00",
+            "total": "100.00",
+            "seller_snapshot": {
+                "legal_name": "Demo historical issuer",
+                "address": "Issuer street",
+                "country": "IN"
+            },
+            "customer_snapshot": {
+                "display_name": "Demo historical customer",
+                "billing_address": "Customer street",
+                "billing_country": "IN"
+            }
+        }
+    ],
+    "payments": [
+        {
+            "external_id": "demo-payment",
+            "invoice_external_id": "demo-invoice",
+            "amount": "40.00",
+            "currency": "INR",
+            "payment_date": "2025-10-05",
+            "method_label": "Bank",
+            "created_at": "2025-10-05T10:00:00+05:30"
+        }
+    ]
+}

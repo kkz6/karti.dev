@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
+import { AdminPageContent } from '@shared/components/admin-page-content';
 import { IndexHeader } from '@shared/components/index-header';
-import { PageContainer } from '@shared/components/page-container';
+import { StatSummary } from '@shared/components/stat-summary';
 import { Button } from '@shared/components/ui/button';
 import AppLayout from '@shared/layouts/app-layout';
 import { InertiaTableWrapper, type TableConfig } from '@table/components';
@@ -34,7 +35,7 @@ export default function ContactInbox({ table, counts, protection }: ContactInbox
     return (
         <AppLayout breadcrumbs={[{ title: 'Contact inbox', href: route('admin.contact.index') }]}>
             <Head title="Contact inbox" />
-            <PageContainer className="content-index space-y-7">
+            <AdminPageContent>
                 <IndexHeader
                     title="Contact inbox"
                     icon={Inbox}
@@ -48,17 +49,7 @@ export default function ContactInbox({ table, counts, protection }: ContactInbox
                     }
                 />
 
-                <div className="grid border-y sm:grid-cols-3 sm:divide-x">
-                    {metrics.map(({ key, label, icon: Icon }) => (
-                        <div key={key} className="flex items-center gap-3 px-1 py-4 sm:px-5 sm:first:pl-1">
-                            <Icon className="text-muted-foreground size-4" aria-hidden="true" />
-                            <div>
-                                <p className="text-muted-foreground text-xs font-medium">{label}</p>
-                                <p className="mt-0.5 text-2xl font-semibold tracking-tight tabular-nums">{counts[key].toLocaleString()}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                <StatSummary items={metrics.map(({ key, label, icon }) => ({ label, icon, value: counts[key].toLocaleString() }))} />
 
                 <div
                     className={
@@ -90,7 +81,7 @@ export default function ContactInbox({ table, counts, protection }: ContactInbox
                         icons: [Inbox],
                     }}
                 />
-            </PageContainer>
+            </AdminPageContent>
         </AppLayout>
     );
 }

@@ -1,11 +1,42 @@
 import { type NavGroup, type NavItem } from '@shared/types';
-import { Camera, Files, FileText, Folder, FolderOpen, Image, Inbox, LayoutGrid, Mail, Mic, Search, Settings, Tags, Wrench } from 'lucide-react';
+import {
+    Banknote,
+    BriefcaseBusiness,
+    Camera,
+    FileMinus2,
+    Files,
+    FileText,
+    Folder,
+    FolderOpen,
+    Image,
+    Inbox,
+    LayoutGrid,
+    ListChecks,
+    Mail,
+    Mic,
+    Receipt,
+    Repeat2,
+    Search,
+    Settings,
+    SlidersHorizontal,
+    Tags,
+    Users,
+    Wrench,
+} from 'lucide-react';
 
 /**
  * Main navigation items for the admin panel
  * These represent the actionable modules in the system
  */
 export const mainNavItems: NavItem[] = [
+    { title: 'Customers', href: route('admin.customers.index'), icon: Users },
+    { title: 'Invoices', href: route('admin.invoices.index'), icon: Receipt },
+    { title: 'Payments', href: route('admin.payments.index'), icon: Banknote },
+    { title: 'Credit notes', href: route('admin.credit-notes.index'), icon: FileMinus2 },
+    { title: 'Recurring invoices', href: route('admin.recurring-invoices.index'), icon: Repeat2 },
+    { title: 'Payment reconciliation', href: route('admin.billing.reconciliation'), icon: ListChecks },
+    { title: 'Services', href: route('admin.services.index'), icon: BriefcaseBusiness },
+    { title: 'Billing settings', href: route('admin.settings.billing.edit'), icon: SlidersHorizontal },
     {
         title: 'Dashboard',
         href: route('dashboard'),
@@ -84,8 +115,17 @@ export const mainNavGroups: NavGroup[] = [
         items: mainNavItems.filter((item) => ['Articles', 'Photography', 'Media Manager', 'Projects', 'Speaking'].includes(item.title)),
     },
     {
+        title: 'Business',
+        items: mainNavItems.filter((item) =>
+            ['Customers', 'Invoices', 'Payments', 'Payment reconciliation', 'Credit notes', 'Recurring invoices', 'Services'].includes(item.title),
+        ),
+    },
+    {
         title: 'Tools',
         items: mainNavItems.filter((item) => ['Tools', 'SEO', 'Newsletter', 'Contact inbox'].includes(item.title)),
     },
-    { title: 'Settings', items: mainNavItems.filter((item) => ['Site settings', 'Media settings', 'Email settings'].includes(item.title)) },
+    {
+        title: 'Settings',
+        items: mainNavItems.filter((item) => ['Site settings', 'Media settings', 'Email settings', 'Billing settings'].includes(item.title)),
+    },
 ];

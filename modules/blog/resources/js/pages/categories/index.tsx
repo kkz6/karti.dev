@@ -1,6 +1,6 @@
 import { Head, router } from '@inertiajs/react';
+import { AdminPageContent } from '@shared/components/admin-page-content';
 import { IndexHeader } from '@shared/components/index-header';
-import { PageContainer } from '@shared/components/page-container';
 import { Button } from '@shared/components/ui/button';
 import AppLayout from '@shared/layouts/app-layout';
 import { type BreadcrumbItem } from '@shared/types';
@@ -21,7 +21,7 @@ export default function Index({ categories }: { categories: TableConfig }) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Categories" />
-            <PageContainer className="content-index flex flex-col gap-8">
+            <AdminPageContent>
                 <IndexHeader title="Categories" icon={TagsIcon} actions={<Button onClick={handleCreateCategory}>Create category</Button>} />
                 <div className="flex-1">
                     <InertiaTableWrapper
@@ -37,7 +37,7 @@ export default function Index({ categories }: { categories: TableConfig }) {
                         }}
                     />
                 </div>
-            </PageContainer>
+            </AdminPageContent>
         </AppLayout>
     );
 }

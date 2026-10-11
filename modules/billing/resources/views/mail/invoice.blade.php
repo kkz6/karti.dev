@@ -1,0 +1,1 @@
+<!doctype html><html lang="en"><body><h1>Invoice {{ $invoiceNumber }}</h1><p>Please find your invoice attached.</p>@foreach(explode("\n", $emailMessage) as $line)<p>{{ $line }}</p>@endforeach @if($invoiceUrl)<p><a href="{{ $invoiceUrl }}">View your invoice</a></p>@endif</body></html>

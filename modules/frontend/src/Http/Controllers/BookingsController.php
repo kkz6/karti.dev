@@ -27,9 +27,12 @@ class BookingsController extends BaseController
         $request->validate([
             'start_date' => ['required', 'date'],
             'end_date'   => ['required', 'date', 'after_or_equal:start_date'],
-            'timezone'   => ['sometimes', 'string'],
+            'timezone'   => ['sometimes', 'timezone'],
         ]);
 
+        if (\Carbon\CarbonImmutable::parse($request->input('start_date'))->diffInDays(\Carbon\CarbonImmutable::parse($request->input('end_date'))) > 31) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['end_date' => 'Choose an availability range of at most 31 days.']);
+        }
         $slots = $this->calComService->getAvailableSlots(
             $request->input('start_date'),
             $request->input('end_date'),
@@ -46,17 +49,19 @@ class BookingsController extends BaseController
             'email'      => ['required', 'email', 'max:255'],
             'profession' => ['required', 'string', 'max:255'],
             'message'    => ['nullable', 'string', 'max:2000'],
-            'slot_start' => ['required', 'string'],
-            'timezone'   => ['required', 'string'],
+            'slot_start' => ['required', 'date', 'after:now'],
+            'timezone'   => ['required', 'timezone'],
         ]);
 
-        $slotStart = $request->input('slot_start');
+        abort_unless(config('services.dodo_payments.api_key') && config('services.dodo_payments.product_id'), 503, 'Consultation checkout is not configured.');
+        $returnToken = bin2hex(random_bytes(32));
+        $slotStart   = $request->input('slot_start');
 
         // Try to reserve the slot on Cal.com (best-effort)
         $reservationUid = null;
 
         try {
-            $reservation = $this->calComService->reserveSlot($slotStart);
+            $reservation    = $this->calComService->reserveSlot($slotStart);
             $reservationUid = $reservation['reservationUid'] ?? null;
         } catch (\Exception $e) {
             report($e);
@@ -64,15 +69,16 @@ class BookingsController extends BaseController
 
         // Create booking record in DB as pending
         $booking = ConsultationBooking::create([
-            'name'            => $request->input('name'),
-            'email'           => $request->input('email'),
-            'profession'      => $request->input('profession'),
-            'message'         => $request->input('message', ''),
-            'timezone'        => $request->input('timezone'),
-            'slot_start'      => $slotStart,
-            'slot_end'        => Carbon::parse($slotStart)->addHour()->toISOString(),
-            'status'          => 'pending',
-            'reservation_uid' => $reservationUid,
+            'name'              => $request->input('name'),
+            'email'             => $request->input('email'),
+            'profession'        => $request->input('profession'),
+            'message'           => $request->input('message', ''),
+            'timezone'          => $request->input('timezone'),
+            'slot_start'        => $slotStart,
+            'slot_end'          => Carbon::parse($slotStart)->addHour()->toISOString(),
+            'return_token_hash' => hash('sha256', $returnToken),
+            'status'            => 'pending',
+            'reservation_uid'   => $reservationUid,
         ]);
 
         // Create Dodo payment
@@ -93,7 +99,7 @@ class BookingsController extends BaseController
                 ['product_id' => config('services.dodo_payments.product_id'), 'quantity' => 1],
             ],
             paymentLink: true,
-            returnURL: route('upwork.bookingConfirmed', ['booking' => $booking->id]),
+            returnURL: route('upwork.bookingConfirmed', ['booking' => $booking->id, 'token' => $returnToken]),
             redirectImmediately: true,
             metadata: [
                 'booking_id' => (string) $booking->id,
@@ -102,9 +108,11 @@ class BookingsController extends BaseController
             ],
         );
 
+        $verified = $dodo->payments->retrieve($payment->paymentID);
         $booking->update([
-            'payment_id'   => $payment->paymentID,
-            'payment_link' => $payment->paymentLink,
+            'expected_amount_minor' => $payment->totalAmount, 'expected_currency' => $verified->currency,
+            'payment_id'            => $payment->paymentID,
+            'payment_link'          => $payment->paymentLink,
         ]);
 
         return response()->json(['payment_link' => $payment->paymentLink]);
@@ -112,46 +120,10 @@ class BookingsController extends BaseController
 
     public function bookingConfirmed(Request $request): InertiaResponse
     {
-        $booking = ConsultationBooking::find($request->query('booking'));
+        $booking=ConsultationBooking::find($request->query('booking'));
+        $token  =$request->query('token');
+        abort_unless($booking && is_string($token) && strlen($token) === 64 && $booking->return_token_hash && hash_equals($booking->return_token_hash, hash('sha256', $token)), 404);
 
-        if (! $booking || ! $booking->isPending()) {
-            return Inertia::render('frontend::upwork-booking-confirmed', [
-                'booking'   => null,
-                'name'      => $booking?->name,
-                'email'     => $booking?->email,
-                'slotStart' => $booking?->slot_start?->toISOString(),
-                'timezone'  => $booking?->timezone,
-                'paymentId' => $booking?->payment_id,
-                'alreadyConfirmed' => $booking?->isConfirmed(),
-            ]);
-        }
-
-        // Confirm the Cal.com booking
-        $calcomData = null;
-        $calcomBookingUid = null;
-
-        try {
-            $calcomData = $this->calComService->createBooking(
-                $booking->slot_start->toISOString(),
-                $booking->name,
-                $booking->email,
-                $booking->timezone,
-                ['payment_id' => $booking->payment_id ?? '', 'booking_id' => (string) $booking->id],
-            );
-            $calcomBookingUid = $calcomData['uid'] ?? null;
-        } catch (\Exception $e) {
-            report($e);
-        }
-
-        $booking->markConfirmed($calcomBookingUid, $calcomData);
-
-        return Inertia::render('frontend::upwork-booking-confirmed', [
-            'booking'   => $calcomData,
-            'name'      => $booking->name,
-            'email'     => $booking->email,
-            'slotStart' => $booking->slot_start->toISOString(),
-            'timezone'  => $booking->timezone,
-            'paymentId' => $booking->payment_id,
-        ]);
+        return Inertia::render('billing::booking-return', ['state'=>$booking->isConfirmed() && $booking->fulfillment_state === 'confirmed' ? 'confirmed' : ($booking->isPending() ? 'pending' : $booking->status), 'needsReview'=>$booking->fulfillment_state === 'uncertain', 'name'=>$booking->name, 'slotStart'=>$booking->slot_start?->toIso8601String()]);
     }
 }

@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import Heading from '@shared/components/heading';
 import { PageContainer } from '@shared/components/page-container';
 import { Button } from '@shared/components/ui/button';
@@ -26,12 +26,8 @@ const sidebarNavItems: NavItem[] = [
 ];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
-    // When server-side rendering, we only render the layout on the client...
-    if (typeof window === 'undefined') {
-        return null;
-    }
-
-    const currentPath = window.location.pathname;
+    const { url } = usePage();
+    const currentPath = new URL(url, 'https://navigation.invalid').pathname;
 
     return (
         <PageContainer>
@@ -44,13 +40,17 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                             <Button
                                 key={`${item.href}-${index}`}
                                 size="sm"
-                                variant="ghost"
+                                variant={currentPath === new URL(item.href, 'https://navigation.invalid').pathname ? 'secondary' : 'ghost'}
                                 asChild
                                 className={cn('w-full justify-start', {
-                                    'bg-muted': currentPath === item.href,
+                                    'bg-muted font-medium': currentPath === new URL(item.href, 'https://navigation.invalid').pathname,
                                 })}
                             >
-                                <Link href={item.href} prefetch>
+                                <Link
+                                    href={item.href}
+                                    prefetch
+                                    aria-current={currentPath === new URL(item.href, 'https://navigation.invalid').pathname ? 'page' : undefined}
+                                >
                                     {item.title}
                                 </Link>
                             </Button>

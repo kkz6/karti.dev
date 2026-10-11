@@ -1,0 +1,130 @@
+import { BillingPageContainer as PageContainer } from '@billing/components/billing-page-container';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { IndexHeader } from '@shared/components/index-header';
+import { Button } from '@shared/components/ui/button';
+import { Checkbox } from '@shared/components/ui/checkbox';
+import { Label } from '@shared/components/ui/label';
+import AppLayout from '@shared/layouts/app-layout';
+import { Receipt as BillingPageIcon } from 'lucide-react';
+import { useState } from 'react';
+import { BillingFeedback } from '../../components/billing-feedback';
+import { InvoiceDocument } from '../../components/invoice-document';
+import { useBillingConfirm } from '../../components/use-billing-confirm';
+import type { InvoiceData } from '../../invoice-types';
+
+type Review = {
+    invoice: InvoiceData;
+    seller: InvoiceData['seller_snapshot'];
+    customer: InvoiceData['customer_snapshot'];
+    errors: string[];
+    token: string;
+    prefix: string;
+    padding: number;
+};
+
+export default function IssueReview({
+    review,
+    refreshSeller,
+    refreshCustomer,
+}: {
+    review: Review;
+    refreshSeller: boolean;
+    refreshCustomer: boolean;
+}) {
+    const { confirm, dialog } = useBillingConfirm();
+    const [selection, setSelection] = useState({ seller: refreshSeller, customer: refreshCustomer });
+    const [refreshing, setRefreshing] = useState(false);
+    const form = useForm({
+        version: review.invoice.version,
+        review_token: review.token,
+        refresh_seller: refreshSeller,
+        refresh_customer: refreshCustomer,
+    });
+    const refresh = (seller: boolean, customer: boolean) => {
+        setSelection({ seller, customer });
+        setRefreshing(true);
+        router.get(
+            route('admin.invoices.issue-review', review.invoice.id),
+            { refresh_seller: seller ? 1 : 0, refresh_customer: customer ? 1 : 0 },
+            {
+                preserveScroll: true,
+                preserveState: false,
+                onError: () => setSelection({ seller: refreshSeller, customer: refreshCustomer }),
+                onFinish: () => setRefreshing(false),
+            },
+        );
+    };
+    const issue = async () => {
+        if (await confirm('Issue this invoice? Its number and financial details will become permanent.'))
+            form.post(route('admin.invoices.issue', review.invoice.id));
+    };
+    return (
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Invoices', href: route('admin.invoices.index') },
+                { title: `Draft #${review.invoice.id}`, href: route('admin.invoices.show', review.invoice.id) },
+                { title: 'Review and issue', href: route('admin.invoices.issue-review', review.invoice.id) },
+            ]}
+        >
+            {dialog}
+            <Head title="Review and issue invoice" />
+            <PageContainer className="max-w-6xl space-y-6">
+                <div>
+                    <IndexHeader title={'Review and issue invoice'} icon={BillingPageIcon} />
+                    <p className="text-muted-foreground mt-2 text-sm">
+                        Confirm the billing details and totals. A permanent number is assigned when the invoice is issued.
+                    </p>
+                </div>
+                <div className="flex flex-wrap gap-6">
+                    <Label className="flex items-center gap-2">
+                        <Checkbox
+                            checked={selection.seller}
+                            disabled={form.processing || refreshing}
+                            onCheckedChange={(checked) => refresh(checked === true, selection.customer)}
+                        />
+                        Use current company details
+                    </Label>
+                    <Label className="flex items-center gap-2">
+                        <Checkbox
+                            checked={selection.customer}
+                            disabled={form.processing || refreshing}
+                            onCheckedChange={(checked) => refresh(selection.seller, checked === true)}
+                        />
+                        Use current customer billing details
+                    </Label>
+                </div>
+                {review.errors.length > 0 && (
+                    <BillingFeedback kind="error">
+                        <p>Complete these details before issuing:</p>
+                        {review.errors.map((error, i) => (
+                            <p key={i}>{error}</p>
+                        ))}
+                    </BillingFeedback>
+                )}
+                {Object.values(form.errors).length > 0 && (
+                    <BillingFeedback kind="error">
+                        {Object.values(form.errors).map((error, i) => (
+                            <p key={i}>{error}</p>
+                        ))}
+                        <Button variant="outline" type="button" onClick={() => refresh(refreshSeller, refreshCustomer)}>
+                            Reload review
+                        </Button>
+                    </BillingFeedback>
+                )}
+                <p className="text-muted-foreground text-sm">
+                    Number format example: {review.prefix}
+                    {'1'.padStart(review.padding, '0')}
+                </p>
+                <InvoiceDocument invoice={{ ...review.invoice, seller_snapshot: review.seller, customer_snapshot: review.customer }} />
+                <div className="flex gap-3">
+                    <Button disabled={form.processing || refreshing || review.errors.length > 0} onClick={issue}>
+                        {form.processing ? 'Issuing…' : 'Issue invoice'}
+                    </Button>
+                    <Button variant="outline" asChild>
+                        <Link href={route('admin.invoices.edit', review.invoice.id)}>Back to draft</Link>
+                    </Button>
+                </div>
+            </PageContainer>
+        </AppLayout>
+    );
+}

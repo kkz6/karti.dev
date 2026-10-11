@@ -8,7 +8,6 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Blog\DTO\TagData;
 use Modules\Blog\Interfaces\TagServiceInterface;
-use Modules\Blog\Models\Tag;
 use Modules\Blog\Tables\Tags;
 use Modules\Shared\Http\Controllers\BaseController;
 
@@ -24,8 +23,9 @@ class TagController extends BaseController
     public function index(Request $request): Response
     {
         return Inertia::render('blog::tags/index', [
-            'tags'    => Tags::make(),
-            'filters' => $request->only(['search', 'name']),
+            'tags'      => Tags::make(),
+            'canCreate' => true,
+            'filters'   => $request->only(['search', 'name']),
         ]);
     }
 

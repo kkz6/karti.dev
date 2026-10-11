@@ -10,6 +10,9 @@ use Modules\Frontend\Http\Controllers\PortfolioController;
 use Modules\Frontend\Http\Controllers\ProjectsController;
 
 Route::middleware(['web'])->group(function () {
+    Route::get('/consultations/slots', [\Modules\Frontend\Http\Controllers\BookingsController::class, 'getSlots'])->middleware('throttle:30,1')->name('consultations.slots');
+    Route::get('/consultations/confirmation', [\Modules\Frontend\Http\Controllers\BookingsController::class, 'bookingConfirmed'])->name('upwork.bookingConfirmed');
+    Route::post('/consultations/checkout', [\Modules\Frontend\Http\Controllers\BookingsController::class, 'createPayment'])->middleware('throttle:10,1')->name('consultations.checkout');
     // Main routes matching Spotlight theme
     Route::get('/', [PortfolioController::class, 'home'])->name('home');
     Route::get('/articles', [PortfolioController::class, 'articles'])->name('articles.index');

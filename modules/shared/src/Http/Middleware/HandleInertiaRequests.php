@@ -53,6 +53,18 @@ class HandleInertiaRequests extends Middleware
             'auth'             => [
                 'user' => $request->user(),
             ],
+            'billingAccess' => [
+                'viewImports'        => ($request->user()?->hasRole('super-admin') ?? false) || ($request->user()?->can('import billing data') ?? false),
+                'viewCredits'        => $request->user()?->can('viewAny', \Modules\Billing\Models\CreditNote::class) ?? false,
+                'viewReconciliation' => ($request->user()?->hasRole('super-admin') ?? false) || ($request->user()?->can('view payment reconciliation') ?? false),
+                'viewRecurring'      => ($request->user()?->can('viewAny', \Modules\Billing\Models\RecurringInvoice::class) ?? false) && ($request->user()?->can('viewAny', \Modules\Billing\Models\Invoice::class) ?? false),
+                'viewPayments'       => ($request->user()?->can('viewAny', \Modules\Billing\Models\Payment::class) ?? false) && ($request->user()?->can('view', new \Modules\Billing\Models\Payment) ?? false),
+                'viewInvoices'       => $request->user()?->can('viewAny', \Modules\Billing\Models\Invoice::class) ?? false,
+                'viewCustomers'      => $request->user()?->can('viewAny', \Modules\Billing\Models\Customer::class) ?? false,
+                'viewServices'       => $request->user()?->can('viewAny', \Modules\Billing\Models\Service::class) ?? false,
+                'viewTaxRates'       => $request->user()?->can('viewAny', \Modules\Billing\Models\TaxRate::class) ?? false,
+                'viewSettings'       => $request->user()?->can('view', \Modules\Billing\Settings\BillingSettings::class) ?? false,
+            ],
             'route' => [
                 'name' => $request->route()?->getName(),
             ],
