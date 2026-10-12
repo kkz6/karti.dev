@@ -3,7 +3,6 @@ import { FormControl, FormItem, FormLabel, FormMessage } from '@shared/component
 import { cn } from '@shared/lib/utils';
 import { FolderOpen, Upload, X } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { MediaService } from '../../services/MediaService';
 import { AssetFieldProps, AssetUpload, DisplayMode } from '../../types/asset-field';
 import { MediaAsset } from '../../types/media';
 import { AssetFieldLoading } from './AssetFieldLoading';
@@ -25,8 +24,6 @@ export function AssetsField({ name, data = [], config = {}, required = false, re
     const [showSelector, setShowSelector] = useState(false);
     const [draggingFile, setDraggingFile] = useState(false);
     const displayMode: DisplayMode = config.mode || 'grid';
-
-    const mediaService = new MediaService();
 
     // Configuration computed values
     const container = config.container;
@@ -67,7 +64,7 @@ export function AssetsField({ name, data = [], config = {}, required = false, re
                 setLoading(false);
             }
         },
-        [mediaService, onError],
+        [onError],
     );
 
     // Initialize assets

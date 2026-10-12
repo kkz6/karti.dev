@@ -18,10 +18,14 @@ test('both table renderers use the normal filters menu without view tabs, includ
     for (const file of ['Table.tsx', 'TableComponent.tsx']) {
         const source = readFileSync(new URL('../../table/resources/js/' + file, import.meta.url), 'utf8');
         assert.match(source, /!resource.hasFilters && resource.emptyState/);
-        assert.match(source, /filters=\{resource.filters\} onAdd=\{addFilter\}/);
+        assert.match(source, /<TableToolbar/);
         assert.doesNotMatch(source, /FilterLinks|filterLinks|trashFilter|Show active or trashed items/);
         assert.match(source, /resource.filters.filter\(\(filter\) => state.filters\[filter.attribute\]\?\.enabled\)/);
     }
+    const toolbar = readFileSync(new URL('../../table/resources/js/TableToolbar.tsx', import.meta.url), 'utf8');
+    assert.match(toolbar, /<AddFilterDropdown state=\{table.state.filters\} filters=\{availableFilters\} onAdd=\{table.addFilter\}/);
+    assert.match(toolbar, /const managed = new Set\(tabs.flatMap/);
+    assert.match(toolbar, /resource.filters.filter\(\(filter\) => !managed.has\(filter.attribute\)\)/);
     const wrapper = readFileSync(new URL('../../table/resources/js/components/Table/inertia-table-wrapper.tsx', import.meta.url), 'utf8');
     assert.match(wrapper, /!resource.hasFilters/);
 });

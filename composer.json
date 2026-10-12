@@ -5,6 +5,7 @@
     "keywords": [],
     "license": "MIT",
     "require": {
+        "php": "^8.2",
         "dodopayments/client": "^6.1",
         "inertiajs/inertia-laravel": "^2.0",
         "internachi/modular": "^2.3",
@@ -12,6 +13,7 @@
         "laravel/horizon": "^5.41",
         "laravel/tinker": "^2.10.1",
         "league/flysystem-aws-s3-v3": "^3.0",
+        "maatwebsite/excel": "^3.1",
         "matomo/device-detector": "^6.5",
         "modules/analytics": "*",
         "modules/auth": "*",
@@ -29,7 +31,6 @@
         "modules/speaking": "*",
         "modules/table": "*",
         "modules/tools": "*",
-        "php": "^8.2",
         "propaganistas/laravel-disposable-email": "^2.5",
         "resend/resend-php": "^1.15",
         "spatie/laravel-analytics": "^5.6",

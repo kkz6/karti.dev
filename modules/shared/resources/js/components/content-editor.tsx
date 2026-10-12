@@ -34,6 +34,7 @@ export function ContentEditorHeader({
 
     return (
         <PageHeader
+            enteredTitle
             title={title}
             className="mb-8"
             stickyActions={

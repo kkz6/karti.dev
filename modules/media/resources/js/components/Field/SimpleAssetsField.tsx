@@ -68,6 +68,56 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
         setAssetIds(ids);
     }, [data]);
 
+    const updateParentWithIds = useCallback(
+        (newIds: string[]) => {
+            const uniqueIds = uniqueAssetIds(newIds);
+            setAssetIds(uniqueIds);
+            onChange?.(uniqueIds);
+        },
+        [onChange],
+    );
+
+    const loadAssetsFromIds = useCallback(
+        async (ids: string[]) => {
+            if (ids.length === 0) {
+                setLoadedAssets([]);
+                loadedAssetIdsRef.current = [];
+                return;
+            }
+
+            try {
+                setLoading(true);
+                const assets = await mediaService.current.getAssetsByIds(ids);
+                const orderedAssets = ids.map((id) => assets.find((asset) => asset.id.toString() === id.toString())).filter(Boolean) as MediaAsset[];
+
+                if (orderedAssets.length < ids.length) {
+                    const missingIds = ids.filter((id) => !orderedAssets.find((asset) => asset.id.toString() === id.toString()));
+                    const isDebugMode = import.meta.env.DEV || window.location.hostname === 'localhost';
+
+                    if (isDebugMode) {
+                        console.warn('Some media assets were not found:', missingIds);
+                    }
+
+                    toast.warning(`Some media assets (IDs: ${missingIds.join(', ')}) no longer exist and have been removed`);
+
+                    const validIds = orderedAssets.map((asset) => asset.id);
+                    updateParentWithIds(validIds);
+                }
+
+                setLoadedAssets(orderedAssets);
+                loadedAssetIdsRef.current = orderedAssets.map((asset) => asset.id);
+            } catch (error) {
+                console.error('Error loading assets:', error);
+                onError?.('Failed to load assets');
+                setLoadedAssets([]);
+                loadedAssetIdsRef.current = [];
+            } finally {
+                setLoading(false);
+            }
+        },
+        [onError, updateParentWithIds],
+    );
+
     useEffect(() => {
         if (assetIds.length === 0) {
             setLoadedAssets([]);
@@ -85,51 +135,7 @@ export function SimpleAssetsField({ name, data = [], config = {}, required = fal
                 return assetIds.map((id) => prevAssets.find((asset) => asset.id === id)).filter(Boolean) as MediaAsset[];
             });
         }
-    }, [assetIds]);
-
-    const loadAssetsFromIds = async (ids: string[]) => {
-        if (ids.length === 0) {
-            setLoadedAssets([]);
-            loadedAssetIdsRef.current = [];
-            return;
-        }
-
-        try {
-            setLoading(true);
-            const assets = await mediaService.current.getAssetsByIds(ids);
-            const orderedAssets = ids.map(id => assets.find(asset => asset.id.toString() === id.toString())).filter(Boolean) as MediaAsset[];
-
-            if (orderedAssets.length < ids.length) {
-                const missingIds = ids.filter(id => !orderedAssets.find(asset => asset.id.toString() === id.toString()));
-                const isDebugMode = import.meta.env.DEV || window.location.hostname === 'localhost';
-
-                if (isDebugMode) {
-                    console.warn('Some media assets were not found:', missingIds);
-                }
-
-                toast.warning(`Some media assets (IDs: ${missingIds.join(', ')}) no longer exist and have been removed`);
-
-                const validIds = orderedAssets.map(asset => asset.id);
-                updateParentWithIds(validIds);
-            }
-
-            setLoadedAssets(orderedAssets);
-            loadedAssetIdsRef.current = orderedAssets.map(asset => asset.id);
-        } catch (error) {
-            console.error('Error loading assets:', error);
-            onError?.('Failed to load assets');
-            setLoadedAssets([]);
-            loadedAssetIdsRef.current = [];
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const updateParentWithIds = (newIds: string[]) => {
-        const uniqueIds = uniqueAssetIds(newIds);
-        setAssetIds(uniqueIds);
-        onChange?.(uniqueIds);
-    };
+    }, [assetIds, loadAssetsFromIds]);
 
     const [showAssetEditor, setShowAssetEditor] = useState(false);
     const [editedAssetId, setEditedAssetId] = useState<string | null>(null);

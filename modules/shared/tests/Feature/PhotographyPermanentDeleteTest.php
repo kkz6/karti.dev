@@ -74,7 +74,8 @@ test('the signed permanent delete endpoint requires authentication', function ()
     $table = permanentPhotoTable();
     $index = collect($table->actions())->search(fn ($action) => $action->label === 'Delete permanently');
     $url   = $table->getActionById($index)->getActionUrl();
-    $this->post($url, ['keys' => [$gallery->id]])->assertForbidden();
+    $this->post($url, ['keys' => [$gallery->id]])->assertRedirect(route('login'));
+    $this->postJson($url, ['keys' => [$gallery->id]])->assertUnauthorized();
     expect($gallery->fresh()->trashed())->toBeTrue();
     $this->actingAs(User::factory()->create())->post($url, ['keys' => [$gallery->id]])->assertRedirect();
     expect(Photo::withTrashed()->find($gallery->id))->toBeNull();

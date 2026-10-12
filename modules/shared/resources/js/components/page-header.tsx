@@ -9,6 +9,7 @@ export const PageHeaderSlot = createContext<HTMLDivElement | null>(null);
 
 export interface PageHeaderProps {
     title: string;
+    enteredTitle?: boolean;
     eyebrow?: string;
     icon?: LucideIcon;
     badges?: ReactNode;
@@ -24,6 +25,7 @@ export interface PageHeaderProps {
 /** One header contract for lists, records, editors and settings. */
 export function PageHeader({
     title,
+    enteredTitle = false,
     eyebrow,
     icon: Icon,
     badges,
@@ -93,7 +95,9 @@ export function PageHeader({
                     {eyebrow && <p className="text-muted-foreground text-xs font-medium">{eyebrow}</p>}
                     <div className="flex min-w-0 flex-wrap items-center gap-3">
                         {Icon && <Icon className="text-muted-foreground size-5 shrink-0" aria-hidden="true" />}
-                        <h1 className="min-w-0 text-2xl font-semibold tracking-tight break-words">{title}</h1>
+                        <h1 data-editor-title={enteredTitle || undefined} className="min-w-0 text-2xl font-semibold tracking-tight break-words">
+                            {title}
+                        </h1>
                         {badges}
                     </div>
                     {description && <div className="text-muted-foreground max-w-3xl text-sm leading-6">{description}</div>}
@@ -126,7 +130,9 @@ export function PageHeader({
                             </div>
                             {stickyMeta && <div className="hidden shrink-0 text-sm tabular-nums md:block">{stickyMeta}</div>}
                             {stickyActions && (
-                                <div className="flex max-w-[70%] shrink-0 flex-wrap items-center justify-end gap-2 sm:max-w-full">{stickyActions}</div>
+                                <div className="flex max-w-[70%] shrink-0 flex-wrap items-center justify-end gap-2 sm:max-w-full">
+                                    {stickyActions}
+                                </div>
                             )}
                         </PageContainer>
                     </div>,

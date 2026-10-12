@@ -3,15 +3,21 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 const css = readFileSync(new URL('../resources/css/app.css', import.meta.url), 'utf8');
-const darkAdmin = css.match(/\.dark body:has\(\.admin-workspace\),\s*\.dark \.admin-workspace\s*\{([^}]+)\}/)?.[1];
+const darkAdmin = css.match(
+    /\.dark body:has\(\.admin-workspace, \.admin-auth\),\s*\.dark \.admin-workspace,\s*\.dark \.admin-auth\s*\{([^}]+)\}/,
+)?.[1];
 assert.ok(darkAdmin, 'Dark tokens must cover the admin shell and body-level portals.');
 const tokens = Object.fromEntries([...darkAdmin.matchAll(/--([\w-]+):\s*(#[\da-f]{6});/g)].map((match) => [match[1], match[2]]));
 
 function luminance(hex) {
-    return hex.slice(1).match(/../g).map((part) => {
-        const value = parseInt(part, 16) / 255;
-        return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
-    }).reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+    return hex
+        .slice(1)
+        .match(/../g)
+        .map((part) => {
+            const value = parseInt(part, 16) / 255;
+            return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+        })
+        .reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
 }
 
 function contrast(first, second) {
@@ -37,7 +43,7 @@ test('input boundaries and keyboard focus remain visible', () => {
 });
 
 test('decorative public scanlines exclude the admin', () => {
-    assert.ok(css.includes('.dark body:not(:has(.admin-workspace))::after'));
+    assert.ok(css.includes('.dark body:not(:has(.admin-workspace, .admin-auth, .public-reading))::after'));
     assert.ok(!css.includes('.dark body::after'));
 });
 

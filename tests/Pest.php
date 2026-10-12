@@ -15,6 +15,10 @@ pest()->extend(Tests\TestCase::class)
     ->in('Feature', 'Unit')
     ->in('../modules/*/tests/Feature', '../modules/*/tests/Unit');
 
+// The reusable table export suite exercises the host's user model and database.
+pest()->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+    ->in('../modules/table/tests/Feature/Exports');
+
 /*
 |--------------------------------------------------------------------------
 | Expectations

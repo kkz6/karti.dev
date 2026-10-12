@@ -7,7 +7,7 @@ import { Label } from '@shared/components/ui/label';
 import { Textarea } from '@shared/components/ui/textarea';
 import axios from 'axios';
 import { Download, ExternalLink, Save, Trash2, X } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AssetDeleter } from '../Browser/AssetDeleter';
 import { FileIcon } from '../Icons';
 import { ActionButton, LoadingGraphic } from '../UI';
@@ -86,13 +86,7 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
         };
     }, [isOpen, asset?.id, asset?.photo_metadata?.status]);
 
-    useEffect(() => {
-        if (isOpen && assetId) {
-            loadAsset();
-        }
-    }, [isOpen, assetId]);
-
-    const loadAsset = async () => {
+    const loadAsset = useCallback(async () => {
         if (!assetId) return;
 
         setLoading(true);
@@ -114,7 +108,13 @@ export const AssetEditor: React.FC<AssetEditorProps> = ({ assetId, isOpen, onClo
         } finally {
             setLoading(false);
         }
-    };
+    }, [assetId]);
+
+    useEffect(() => {
+        if (isOpen && assetId) {
+            void loadAsset();
+        }
+    }, [isOpen, assetId, loadAsset]);
 
     const handleSave = async () => {
         if (!asset || !assetId) return;

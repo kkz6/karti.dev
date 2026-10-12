@@ -38,7 +38,7 @@ const ModalModal = ({ active, onClickOutside, children, sticky, initialFocusRef 
                 }
             }
         }
-    }, [active, initialFocusRef?.current]);
+    }, [active, initialFocusRef]);
 
     useEffect(() => {
         if (!active) {

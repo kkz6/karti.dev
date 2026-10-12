@@ -182,7 +182,12 @@ test('file-drop feedback overlays existing field bounds without adding layout he
         const field = read(`../resources/js/components/Field/${name}.tsx`);
         const expectedBranches = name === 'SimpleAssetsField' ? 2 : 1;
         assert.equal((field.match(/<AssetDropOverlay \/>/g) || []).length, expectedBranches);
-        assert.equal((field.match(/assets-fieldtype relative isolate/g) || []).length, expectedBranches);
+        const containers = [...field.matchAll(/'([^']*\bassets-fieldtype\b[^']*)'/g)];
+        assert.equal(containers.length, expectedBranches);
+        for (const [, classes] of containers) {
+            assert.ok(classes.split(/\s+/).includes('relative'));
+            assert.ok(classes.split(/\s+/).includes('isolate'));
+        }
         assert.doesNotMatch(field, /drag-notification/);
         assert.match(field, /dataTransfer.types.includes\('Files'\)/);
         assert.match(field, /e.currentTarget.contains\(e.relatedTarget\)/);

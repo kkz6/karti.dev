@@ -1,6 +1,7 @@
-import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { Buffer } from 'node:buffer';
 import { readFileSync } from 'node:fs';
+import { test } from 'node:test';
 import ts from 'typescript';
 const source = readFileSync(new URL('../../resources/js/lib/line-amounts.ts', import.meta.url), 'utf8');
 const { outputText } = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.ES2020 } });
@@ -19,7 +20,9 @@ test('matches server half-up precision and discounts plus multiple taxes', () =>
     assert.deepEqual(lineAmounts(data([line('a', '1', '0.1005')]), 3), { a: '0.101' });
 });
 test('fixed discount remainder follows item key and stays stable on reorder', () => {
-    const a = line('a', '1', '1'), b = line('b', '1', '1'), c = line('c', '1', '1');
+    const a = line('a', '1', '1'),
+        b = line('b', '1', '1'),
+        c = line('c', '1', '1');
     assert.deepEqual(lineAmounts(data([a, b, c], 'fixed', '0.01'), 2), { a: '0.99', b: '1.00', c: '1.00' });
     assert.deepEqual(lineAmounts(data([c, a, b], 'fixed', '0.01'), 2), { c: '1.00', a: '0.99', b: '1.00' });
 });

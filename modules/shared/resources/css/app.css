@@ -352,7 +352,7 @@ body:has(.admin-workspace, .admin-auth),
     --accent: #27272a;
     --accent-foreground: #fafafa;
     --border: #3f3f46;
-    --input: #52525b;
+    --input: #71717a;
     --ring: #71717a;
     --sidebar: #18181b;
     --sidebar-foreground: #d4d4d8;
@@ -822,7 +822,7 @@ body:has(.admin-workspace, .admin-auth),
 }
 
 /* Subtle scanline effect for dark mode */
-.dark body:not(:has(.admin-workspace, .public-reading))::after {
+.dark body:not(:has(.admin-workspace, .admin-auth, .public-reading))::after {
     content: '';
     position: fixed;
     inset: 0;

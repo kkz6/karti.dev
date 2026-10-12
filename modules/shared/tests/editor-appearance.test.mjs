@@ -8,7 +8,7 @@ const component = read('../resources/js/components/tiptap/form-simple-editor.tsx
 const canvasStyles = read('../resources/css/content-editor.css');
 
 test('editor chrome follows neutral theme tokens without green tints or floating toolbar effects', () => {
-    assert.match(styles, /--editor-chrome: var\(--background\)/);
+    assert.match(styles, /--editor-chrome: color-mix\(in srgb, var\(--muted\) 65%, var\(--card\)\)/);
     assert.match(styles, /background: var\(--card\)/);
     assert.match(styles, /border-bottom: 1px solid var\(--border\)/);
     assert.doesNotMatch(styles, /var\(--primary\)|var\(--accent\)|translateY/);
@@ -34,10 +34,12 @@ test('editing uses a light one-pixel border while toolbar keyboard focus stays d
     assert.match(styles, /outline: 2px solid var\(--muted-foreground\)/);
 });
 
-test('editor pages retain the shell gutter unless their toolbar is currently stuck', () => {
-    assert.match(canvasStyles, /\.admin-workspace #main-content:has\(\.content-editor \.tiptap-toolbar\[data-stuck='true'\]\)\s*\{[^}]*margin-top: 0;/);
-    assert.doesNotMatch(canvasStyles, /#main-content:has\(\.content-editor\)\s*\{/);
-    assert.match(styles, /position: sticky;\s*top: 0;/);
+test('editor toolbars sit below the shared sticky header without changing the page gutter', () => {
+    assert.doesNotMatch(canvasStyles, /#main-content:has\(\.content-editor/);
+    assert.match(styles, /position: sticky;\s*top: var\(--page-sticky-header-height, 0px\);/);
+    const header = read('../resources/js/components/page-header.tsx');
+    assert.match(header, /setProperty\('--page-sticky-header-height', stuck \?/);
+    assert.match(header, /observer.observe\(bar\)/);
 });
 
 test('toolbar corners are squared only while displaced from their normal position', () => {

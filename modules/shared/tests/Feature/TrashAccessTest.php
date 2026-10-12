@@ -120,7 +120,8 @@ test('signed restore endpoint requires an authenticated user', function () {
     $index  = collect($table->actions())->search(fn ($action) => $action->label === 'Restore');
     $action = $table->getActionById($index);
     $url    = $action->getActionUrl();
-    $this->post($url, ['keys' => [$deleted->id]])->assertForbidden();
+    $this->post($url, ['keys' => [$deleted->id]])->assertRedirect(route('login'));
+    $this->postJson($url, ['keys' => [$deleted->id]])->assertUnauthorized();
     $this->actingAs(User::factory()->create())
         ->post($url, ['keys' => [$deleted->id]])->assertRedirect();
     expect($deleted->fresh()->trashed())->toBeFalse();

@@ -71,11 +71,14 @@ test('both table renderers expose one shared selection bar and retain exports wi
     for (const file of ['Table.tsx', 'TableComponent.tsx']) {
         const source = readFileSync(new URL('../../table/resources/js/' + file, import.meta.url), 'utf8');
         assert.match(source, /<SelectionActionBar/);
-        assert.match(source, /resource.hasExports && selectedItems.length === 0/);
+        assert.match(source, /<TableToolbar/);
         assert.match(source, /onClear=\{actions.removeSelection\}/);
         assert.match(source, /className="it-wrapper relative"/);
         assert.doesNotMatch(source, /pb-24/);
     }
+    const toolbar = readFileSync(new URL('../../table/resources/js/TableToolbar.tsx', import.meta.url), 'utf8');
+    assert.match(toolbar, /resource.hasExports && actions.selectedItems.length === 0/);
+    assert.match(toolbar, /exports=\{resource.exports \?\? \[\]\}/);
 });
 
 test('selection bar slides in from below only when motion is allowed', () => {

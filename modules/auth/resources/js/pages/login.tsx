@@ -75,9 +75,10 @@ export default function Login({ canResetPassword }: { status?: string; canResetP
                         onChange={(event) => setData('password', event.target.value)}
                         required
                         disabled={processing || passkeyLoading}
-                        aria-invalid={!!errors.password}
+                        aria-invalid={Boolean(errors.password || errors.email)}
+                        aria-describedby={errors.password || errors.email ? 'password-error' : undefined}
                     />
-                    <InputError message={errors.password} />
+                    <InputError id="password-error" message={errors.password || errors.email} />
                 </div>
                 <div className="flex items-center gap-2">
                     <Checkbox

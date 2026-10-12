@@ -37,6 +37,10 @@ test('admin index, editor, detail and settings surfaces use the shared container
     ];
 
     for (const page of pages) {
-        assert.match(read(page), /PageContainer/, `${page} should use PageContainer`);
+        const source = read(page);
+        assert.match(source, /PageContainer|AdminPageContent/, `${page} should use the shared container`);
+        if (source.includes('AdminPageContent')) {
+            assert.match(read('../resources/js/components/admin-page-content.tsx'), /<PageContainer/);
+        }
     }
 });
