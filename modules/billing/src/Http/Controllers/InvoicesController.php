@@ -184,7 +184,7 @@ class InvoicesController extends BaseController
         $issued = $action->handle($invoice, $request->validated(), $request->user());
 
         if ($request->expectsJson()) {
-            return response()->json(['invoice'=>app(InvoicePresentation::class)->data($issued), 'url'=>route('admin.invoices.show', $issued)]);
+            return response()->json(['invoice'=>app(InvoicePresentation::class)->brandedData($issued), 'url'=>route('admin.invoices.show', $issued)]);
         }
 
         return to_route('admin.invoices.show', $issued)->with('billing_message', 'Invoice '.$issued->formatted_number.' issued.');
@@ -200,7 +200,7 @@ class InvoicesController extends BaseController
     private function detailData(Request $request, Invoice $invoice): array
     {
         if ($invoice->status === 'draft') {
-            return ['draft'=>true, 'invoice'=>app(InvoicePresentation::class)->data($invoice), 'canUpdate'=>$request->user()->can('update', $invoice), 'canIssue'=>$request->user()->can('issue', $invoice), 'canDownloadPdf'=>$request->user()->can('download', $invoice), 'activities'=>$this->activities($invoice), 'message'=>$request->session()->get('billing_message')];
+            return ['draft'=>true, 'invoice'=>app(InvoicePresentation::class)->brandedData($invoice), 'canUpdate'=>$request->user()->can('update', $invoice), 'canIssue'=>$request->user()->can('issue', $invoice), 'canDownloadPdf'=>$request->user()->can('download', $invoice), 'activities'=>$this->activities($invoice), 'message'=>$request->session()->get('billing_message')];
         }
         $balance    = app(\Modules\Billing\Services\InvoiceBalance::class);
         $settlement = $balance->data($invoice);
@@ -232,7 +232,7 @@ class InvoicesController extends BaseController
             'canRecordPayment'      => $settlement['can_receive'] && $request->user()->can('record', [\Modules\Billing\Models\Payment::class, $invoice]),
             'paymentMethods'        => \Modules\Billing\Support\PaymentMethods::options(),
             'today'                 => CarbonImmutable::now(app(BillingSettings::class)->timezone)->format('Y-m-d'),
-            'invoice'               => app(InvoicePresentation::class)->data($invoice),
+            'invoice'               => app(InvoicePresentation::class)->brandedData($invoice),
             'canCancel'             => $invoice->status === 'issued' && ! $invoice->payments->contains(fn ($payment) => $payment->reversed_at === null) && ! $invoice->creditAllocations()->whereNull('reversed_at')->exists() && ! \Modules\Billing\Models\CreditNote::where('invoice_id', $invoice->id)->where('status', 'issued')->exists() && $request->user()->can('cancel', $invoice),
             'activities'            => $this->activities($invoice), 'message' => $request->session()->get('billing_message'),
         ];
@@ -275,6 +275,6 @@ class InvoicesController extends BaseController
 
     private function draftData(Invoice $invoice): array
     {
-        return app(InvoicePresentation::class)->data($invoice);
+        return app(InvoicePresentation::class)->brandedData($invoice);
     }
 }

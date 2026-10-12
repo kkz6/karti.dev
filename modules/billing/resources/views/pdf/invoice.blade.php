@@ -51,6 +51,8 @@
         .total td { background: #e5e7eb; color: #030712; }
         .text-line { line-height: 1.0; color: #030712; }
         .words { text-align: center; font-weight: bold; color: #030712; margin: 12pt 0 0; }
+        .signature { margin-top: 28pt; page-break-inside: avoid; }
+        .signature img { display: block; max-width: 155pt; max-height: 58pt; margin-top: 10pt; }
         .transactions { margin-top: 0; }
         .transactions th { width: 25%; text-align: left; border-bottom: 0.75pt solid #000000; font-weight: normal; color: #000000; padding: 4pt; }
         .transactions td { padding: 4pt; color: #030712; }
@@ -172,5 +174,11 @@
             @foreach(\Modules\Billing\Services\InvoicePdfLayout::lines($invoice[$field]) as $line)<div class="text-line">{{ $line }}@if($line === '')&nbsp;@endif</div>@endforeach
         @endif
     @endforeach
+    @if($documentType === 'invoice' && ($signature['enabled'] ?? false))
+        <div class="signature">
+            <strong>Authorized signature</strong>
+            @if($signature['image'])<img src="{{ $signature['image'] }}" alt="Authorized signature">@else<div style="margin-top:24pt">_________________________</div>@endif
+        </div>
+    @endif
 </body>
 </html>

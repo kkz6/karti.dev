@@ -39,7 +39,7 @@ class QueueInvoiceDelivery
         abort_unless($invoice->status === 'issued', 409, 'Only issued invoices can be sent.');
         $settings = app(BillingDeliverySettings::class);
         if ($channel === 'sms' && ! $settings->sms_enabled) {
-            throw ValidationException::withMessages(['channel' => 'Enable an SMS driver in Billing settings → Delivery first.']);
+            throw ValidationException::withMessages(['channel' => 'Enable an SMS driver in Billing settings → Email & SMS first.']);
         }
         $event    = $input['event'] ?? 'invoice';
         $template = $settings->msg91_templates[$event] ?? [];

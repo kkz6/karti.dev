@@ -16,7 +16,7 @@ class InvoiceIssueReview
     public function prepare(Invoice $invoice, bool $refreshSeller, bool $refreshCustomer): array
     {
         $invoice->load('customer', 'items.taxes');
-        $data     = app(InvoicePresentation::class)->data($invoice);
+        $data     = app(InvoicePresentation::class)->brandedData($invoice);
         $seller   = $refreshSeller ? BillingSnapshots::seller() : $invoice->seller_snapshot;
         $customer = $refreshCustomer ? BillingSnapshots::customer($invoice->customer) : $invoice->customer_snapshot;
         $errors   = Validator::make(['seller' => $seller, 'customer' => $customer], [

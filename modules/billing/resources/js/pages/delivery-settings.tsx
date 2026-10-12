@@ -1,7 +1,7 @@
 import { BillingFeedback } from '@billing/components/billing-feedback';
 import { BillingSelect, BillingSelectItem } from '@billing/components/billing-select';
 import { BillingSettingsWorkspace } from '@billing/components/billing-settings-workspace';
-import { useForm } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { Checkbox } from '@shared/components/ui/checkbox';
@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/
 import { Textarea } from '@shared/components/ui/textarea';
 import { UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
 import axios, { AxiosError } from 'axios';
-import { Mail, MessageSquare, Save, Send } from 'lucide-react';
+import { MessageSquare, Save, Send } from 'lucide-react';
 import { useState } from 'react';
 
 const events = { invoice: 'Invoice', due: 'Due reminder', overdue: 'Overdue reminder', payment: 'Payment received' };
@@ -144,7 +144,7 @@ export default function DeliverySettings({
             <UnsavedChangesGuard dirty={form.isDirty} />
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <h2 className="text-xl font-semibold">Delivery</h2>
+                    <h2 className="text-xl font-semibold">Email & SMS</h2>
                     <p className="text-muted-foreground mt-1 text-sm">Email and SMS drivers for invoices, reminders and payment notices.</p>
                 </div>
                 {canUpdate && (
@@ -161,22 +161,13 @@ export default function DeliverySettings({
                     ))}
                 </BillingFeedback>
             )}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Mail className="size-4" />
-                        Email driver
-                    </CardTitle>
-                    <CardDescription>
-                        Current transport: {emailProvider}. Invoice emails include the saved PDF and a private invoice link.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Button variant="outline" asChild>
-                        <a href={route('admin.settings.email.edit')}>Manage SMTP / Resend</a>
-                    </Button>
-                </CardContent>
-            </Card>
+            <p className="text-muted-foreground text-sm">
+                Email transport: {emailProvider}. Configure its credentials in{' '}
+                <Link href={route('admin.settings.email.edit')} className="text-foreground underline underline-offset-4">
+                    Email settings
+                </Link>
+                . Invoice emails include the PDF and a private invoice link.
+            </p>
             <form
                 id="billing-delivery-settings"
                 className="space-y-6"

@@ -35,10 +35,11 @@ class OnlinePaymentsController extends BaseController
         }
 
         return Inertia::render('billing::online-settings', [
-            'settings'     => \Illuminate\Support\Arr::except($settings->toArray(), ['provider_settings']), 'providers' => $providers,
-            'apiConfigured'=> filled(config('services.dodo_payments.api_key')), 'webhookConfigured'=>filled(config('services.dodo_payments.webhook_key')),
-            'testMode'     => (bool) config('services.dodo_payments.test_mode'), 'webhookUrl'=>route('billing.webhooks.dodo'),
-            'canUpdate'    => $request->user()->can('update', BillingSettings::class), 'message'=>$request->session()->get('billing_message')]);
+            'checkoutAvailable' => $registry->checkoutAvailable(),
+            'settings'          => \Illuminate\Support\Arr::except($settings->toArray(), ['provider_settings']), 'providers' => $providers,
+            'apiConfigured'     => filled(config('services.dodo_payments.api_key')), 'webhookConfigured'=>filled(config('services.dodo_payments.webhook_key')),
+            'testMode'          => (bool) config('services.dodo_payments.test_mode'), 'webhookUrl'=>route('billing.webhooks.dodo'),
+            'canUpdate'         => $request->user()->can('update', BillingSettings::class), 'message'=>$request->session()->get('billing_message')]);
     }
 
     public function updateSettings(Request $request)

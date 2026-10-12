@@ -36,6 +36,7 @@ export type InvoiceTotals = {
 };
 export type CustomerChoice = { id: number; display_name: string; default_currency: string | null; archived_at: string | null };
 export type InvoiceData = Omit<InvoiceFormData, 'customer_id' | 'refresh_customer'> & {
+    logo?: string | null;
     id: number;
     customer_id: number;
     version: number;

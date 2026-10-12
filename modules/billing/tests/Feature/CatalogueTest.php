@@ -187,3 +187,48 @@ test('manual payment methods are configurable without changing existing invoices
     $this->put(route('admin.settings.billing.update'), billingSettingsPayload(['payment_methods' => []]))->assertSessionHasNoErrors();
     expect(app(BillingSettings::class)->payment_methods)->toBe([]);
 });
+
+test('signature settings support selection removal permissions and media deletion protection', function () {
+    $signature = billingTestLogo();
+    Storage::disk('public')->put('billing/logo.png', (function () {
+        $image = imagecreatetruecolor(240, 60);
+        imagefill($image, 0, 0, imagecolorallocate($image, 255, 255, 255));
+        imagestring($image, 5, 15, 20, 'Signature', imagecolorallocate($image, 25, 25, 25));
+        ob_start();
+        imagepng($image);
+        $bytes = ob_get_clean();
+        imagedestroy($image);
+
+        return $bytes;
+    })());
+    $this->put(route('admin.settings.billing.update'), billingSettingsPayload(['signature_media_id' => $signature->id, 'show_signature_on_invoices' => true]))->assertSessionHasNoErrors();
+    expect(app(BillingSettings::class)->signature_media_id)->toBe($signature->id)->and(app(BillingSettings::class)->show_signature_on_invoices)->toBeTrue();
+    expect(collect(app(MediaUsage::class)->forMedia($signature)['usages'])->firstWhere('field', 'Signature'))->not->toBeNull();
+    $this->deleteJson(route('media.destroy', $signature))->assertConflict();
+    $this->put(route('admin.settings.billing.update'), billingSettingsPayload(['signature_media_id' => null]))->assertSessionHasNoErrors();
+    expect(app(BillingSettings::class)->signature_media_id)->toBeNull();
+    $reader = User::factory()->create()->givePermissionTo('view billing settings');
+    $this->actingAs($reader)->put(route('admin.settings.billing.update'), billingSettingsPayload(['signature_media_id' => $signature->id]))->assertForbidden();
+});
+
+test('signature settings reject missing unsupported and unreadable images', function () {
+    foreach ([999999, 'invalid', [1, 2]] as $invalid) {
+        $this->putJson(route('admin.settings.billing.update'), billingSettingsPayload(['signature_media_id' => $invalid]))->assertUnprocessable()->assertJsonValidationErrors('signature_media_id');
+    }
+    $signature = billingTestLogo('image/svg+xml');
+    $this->putJson(route('admin.settings.billing.update'), billingSettingsPayload(['signature_media_id' => $signature->id]))->assertUnprocessable()->assertJsonValidationErrors('signature_media_id');
+    $signature->forceFill(['mime_type' => 'image/png'])->saveQuietly();
+    $this->putJson(route('admin.settings.billing.update'), billingSettingsPayload(['signature_media_id' => $signature->id]))->assertUnprocessable()->assertJsonValidationErrors('signature_media_id');
+});
+
+test('company and invoice sections save independently and stay on their selected section', function () {
+    $this->get(route('admin.settings.billing.edit', ['section' => 'invoices']))->assertInertia(fn (Assert $page) => $page->component('billing::settings')->where('section', 'invoices'));
+    $this->get(route('admin.settings.billing.edit'))->assertInertia(fn (Assert $page) => $page->where('section', 'company'));
+    $this->put(route('admin.settings.billing.update'), ['section' => 'company', 'legal_name' => 'New company', 'timezone' => 'Europe/Dublin', 'due_days' => 99])
+        ->assertSessionHasNoErrors()->assertRedirect(route('admin.settings.billing.edit', ['section' => 'company']));
+    expect(app(BillingSettings::class)->legal_name)->toBe('New company')->and(app(BillingSettings::class)->due_days)->toBe(30);
+    $this->put(route('admin.settings.billing.update'), ['section' => 'invoices', 'due_days' => 14, 'number_prefix' => 'KD-', 'number_padding' => 5, 'legal_name' => 'Hidden overwrite'])
+        ->assertSessionHasNoErrors()->assertRedirect(route('admin.settings.billing.edit', ['section' => 'invoices']));
+    expect(app(BillingSettings::class)->due_days)->toBe(14)->and(app(BillingSettings::class)->number_prefix)->toBe('KD-')->and(app(BillingSettings::class)->legal_name)->toBe('New company')->and(app(BillingSettings::class)->timezone)->toBe('Europe/Dublin');
+    $this->putJson(route('admin.settings.billing.update'), ['section' => 'other'])->assertUnprocessable()->assertJsonValidationErrors('section');
+});

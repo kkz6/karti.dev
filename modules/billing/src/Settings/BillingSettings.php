@@ -30,6 +30,10 @@ class BillingSettings extends Settings
 
     public ?int $logo_media_id = null;
 
+    public ?int $signature_media_id = null;
+
+    public bool $show_signature_on_invoices = false;
+
     public string $timezone = 'Asia/Kolkata';
 
     public string $default_currency = '';
@@ -56,7 +60,7 @@ class BillingSettings extends Settings
         return [
             'display_name'     => '', 'legal_name' => '', 'address' => '', 'address_line_2' => '',
             'city'             => '', 'state' => '', 'postal_code' => '', 'country' => '', 'tax_identifier' => '',
-            'email'            => '', 'phone' => '', 'logo_media_id' => null, 'timezone' => 'Asia/Kolkata',
+            'email'            => '', 'phone' => '', 'logo_media_id' => null, 'signature_media_id' => null, 'show_signature_on_invoices' => false, 'timezone' => 'Asia/Kolkata',
             'default_currency' => '', 'due_days' => 30, 'number_prefix' => 'INV-', 'number_padding' => 6,
             'default_terms'    => '', 'payment_instructions' => '', 'payment_methods' => ['bank_transfer', 'upi', 'cash', 'other'],
         ];

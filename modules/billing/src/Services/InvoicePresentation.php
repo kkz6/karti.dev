@@ -8,6 +8,19 @@ use Modules\Billing\Models\Invoice;
 
 class InvoicePresentation
 {
+    public function brandedData(Invoice $invoice): array
+    {
+        $data = $this->data($invoice);
+        try {
+            $data['logo'] = app(InvoicePdf::class)->logo($invoice);
+        } catch (\Throwable $exception) {
+            report($exception);
+            $data['logo'] = null;
+        }
+
+        return $data;
+    }
+
     public function data(Invoice $invoice): array
     {
         $invoice->load('items.taxes');

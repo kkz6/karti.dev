@@ -28,7 +28,7 @@ class PublicInvoiceController
 
             return response($document['bytes'], 200, [...$headers, 'Content-Type'=>'application/pdf', 'Content-Disposition'=>HeaderUtils::makeDisposition('attachment', $document['name'])]);
         }
-        $data                     =Arr::except(app(InvoicePresentation::class)->data($invoice), ['id', 'customer_id', 'version', 'internal_note', 'cancellation_reason']);
+        $data                     =Arr::except(app(InvoicePresentation::class)->brandedData($invoice), ['id', 'customer_id', 'version', 'internal_note', 'cancellation_reason']);
         $data['seller_snapshot']  =Arr::except($data['seller_snapshot'], ['logo_media_id']);
         $data['customer_snapshot']=Arr::except($data['customer_snapshot'], ['contacts']);
         $data['items']            =array_map(fn ($item) =>[...Arr::except($item, ['service_id']), 'taxes'=>array_map(fn ($tax) =>Arr::except($tax, ['tax_rate_id']), $item['taxes'])], $data['items']);

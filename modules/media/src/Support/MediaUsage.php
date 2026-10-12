@@ -129,6 +129,10 @@ class MediaUsage
         if ($logoId !== null && in_array($logoId, [$media->id, $media->original_media_id], true)) {
             $add('Billing settings', 'Invoice branding', 'Logo', route('admin.settings.billing.edit'));
         }
+        $signatureId = app(\Modules\Billing\Settings\BillingSettings::class)->signature_media_id;
+        if ($signatureId !== null && in_array($signatureId, [$media->id, $media->original_media_id], true)) {
+            $add('Billing settings', 'Invoice branding', 'Signature', route('admin.settings.billing.edit', ['section' => 'invoices']));
+        }
         if (\Illuminate\Support\Facades\Schema::hasTable('billing_invoices')) {
             \Modules\Billing\Models\Invoice::whereIn('seller_snapshot->logo_media_id', array_filter([$media->id, $media->original_media_id]))
                 ->select(['id', 'status'])->each(function ($invoice) use ($add) {

@@ -17,7 +17,7 @@ class BillingSettingsController extends BaseController
     public function edit(Request $request, BillingSettings $settings): Response
     {
         $section = $request->query('section', 'company');
-        abort_unless(in_array($section, ['company', 'automation', 'online', 'imports', 'taxes', 'delivery', 'payments'], true), 404);
+        abort_unless(in_array($section, ['company', 'invoices', 'automation', 'online', 'imports', 'taxes', 'delivery', 'payments'], true), 404);
         if ($section === 'company' && ! $request->user()->can('view', BillingSettings::class) && ($request->user()->hasRole('super-admin') || $request->user()->can('import billing data'))) {
             $section = 'imports';
         }
@@ -46,7 +46,7 @@ class BillingSettingsController extends BaseController
         $this->authorize('view', BillingSettings::class);
 
         return Inertia::render('billing::settings', [
-            'paymentMethods' => \Modules\Billing\Support\PaymentMethods::options(false),
+            'section'        => $section,
             'settings'       => $settings->toArray(), 'currencies' => Currencies::options(), 'timezones' => DateTimeZone::listIdentifiers(),
             'canUpdate'      => $request->user()->can('update', BillingSettings::class), 'saved' => $request->session()->get('billing_settings_saved', false),
         ]);
@@ -54,14 +54,16 @@ class BillingSettingsController extends BaseController
 
     public function update(UpdateBillingSettingsRequest $request, BillingSettings $settings): RedirectResponse
     {
-        $data = $request->validated();
+        $data    = $request->validated();
+        $section = $data['section'] ?? null;
+        unset($data['section']);
         foreach ($data as $key => $value) {
-            if ($value === null && $key !== 'logo_media_id') {
+            if ($value === null && ! in_array($key, ['logo_media_id', 'signature_media_id'], true)) {
                 $data[$key] = '';
             }
         }
         $settings->fill($data)->save();
 
-        return to_route('admin.settings.billing.edit')->with('billing_settings_saved', true);
+        return to_route('admin.settings.billing.edit', $section ? ['section' => $section] : [])->with('billing_settings_saved', true);
     }
 }

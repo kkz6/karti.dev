@@ -46,6 +46,8 @@ export type BillingSettings = {
     email: string;
     phone: string;
     logo_media_id: number | null;
+    signature_media_id: number | null;
+    show_signature_on_invoices: boolean;
     timezone: string;
     default_currency: string;
     due_days: number;

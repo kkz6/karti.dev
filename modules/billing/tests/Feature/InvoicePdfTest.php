@@ -210,3 +210,63 @@ test('ordinary paragraph breaks and unicode descriptions remain readable', funct
     expect(\Modules\Billing\Services\InvoiceText::description("Résumé\r\n\r\nDelivery\r\nNext line"))->toBe("Résumé\n\nDelivery\nNext line")
         ->and(\Modules\Billing\Services\InvoiceText::description(null))->toBeNull();
 });
+
+test('invoice signatures follow current settings and invalidate cached documents', function () {
+    Storage::fake('public');
+    $bytes = (function () {
+        $image = imagecreatetruecolor(240, 60);
+        imagefill($image, 0, 0, imagecolorallocate($image, 255, 255, 255));
+        imagestring($image, 5, 15, 20, 'Signature', imagecolorallocate($image, 25, 25, 25));
+        ob_start();
+        imagepng($image);
+        $bytes = ob_get_clean();
+        imagedestroy($image);
+
+        return $bytes;
+    })();
+    Storage::disk('public')->put('billing/signature.png', $bytes);
+    $media = \Modules\Media\Models\Media::withoutEvents(fn () => \Modules\Media\Models\Media::forceCreate(['disk' => 'public', 'directory' => 'billing', 'filename' => 'signature', 'extension' => 'png', 'mime_type' => 'image/png', 'aggregate_type' => 'image', 'size' => strlen($bytes)]));
+    pdfIssueInvoice();
+    fakeInvoiceRenderer();
+    $pdf    = app(InvoicePdf::class);
+    $before = $pdf->document($this->invoice);
+    app(BillingSettings::class)->fill(['signature_media_id' => $media->id, 'show_signature_on_invoices' => true])->save();
+    $signed = $pdf->document($this->invoice);
+    expect($signed['fingerprint'])->not->toBe($before['fingerprint']);
+    $data = $pdf->data($this->invoice);
+    expect($data['signature']['image'])->toBe('data:image/png;base64,'.base64_encode($bytes));
+    $rendered = app(\Modules\Billing\Services\DompdfInvoiceRenderer::class)->render($data);
+    expect($rendered)->toStartWith('%PDF-')->toContain('%%EOF');
+    $html = view('billing::pdf.invoice', $data)->render();
+    expect($html)->toContain('Authorized signature', $data['signature']['image']);
+    $this->get(route('admin.invoices.pdf', $this->invoice))->assertOk();
+    app(BillingSettings::class)->fill(['signature_media_id' => null])->save();
+    expect(view('billing::pdf.invoice', $pdf->data($this->invoice))->render())->toContain('Authorized signature', '_________________________');
+    app(BillingSettings::class)->fill(['show_signature_on_invoices' => false])->save();
+    expect(view('billing::pdf.invoice', $pdf->data($this->invoice))->render())->not->toContain('Authorized signature');
+});
+
+test('current logo appears in draft previews and imported invoices without changing historical addresses', function () {
+    Storage::fake('public');
+    $image = imagecreatetruecolor(240, 60);
+    imagefill($image, 0, 0, imagecolorallocate($image, 255, 255, 255));
+    imagestring($image, 5, 15, 20, 'karti.dev', imagecolorallocate($image, 25, 25, 25));
+    ob_start();
+    imagepng($image);
+    $bytes = ob_get_clean();
+    imagedestroy($image);
+    Storage::disk('public')->put('billing/company.png', $bytes);
+    $logo = \Modules\Media\Models\Media::withoutEvents(fn () => \Modules\Media\Models\Media::forceCreate(['disk' => 'public', 'directory' => 'billing', 'filename' => 'company', 'extension' => 'png', 'mime_type' => 'image/png', 'aggregate_type' => 'image', 'size' => strlen($bytes)]));
+    // Issued/imported records without frozen branding retain their historical identity.
+    pdfIssueInvoice();
+    $historical = $this->invoice->seller_snapshot;
+    app(BillingSettings::class)->fill(['logo_media_id' => $logo->id, 'address' => 'Current company address'])->save();
+    expect(app(InvoicePdf::class)->data($this->invoice)['logo'])->toBe('data:image/png;base64,'.base64_encode($bytes));
+    expect(app(InvoicePdf::class)->data($this->invoice)['invoice']['seller_snapshot']['address'])->toBe($historical['address']);
+    $data  = app(\Modules\Billing\Services\InvoicePresentation::class)->data($this->invoice);
+    $draft = app(SaveInvoiceDraft::class)->handle($data);
+    expect($draft->seller_snapshot['address'])->toBe('Current company address');
+    expect(app(InvoicePdf::class)->data($draft)['logo'])->toBe('data:image/png;base64,'.base64_encode($bytes));
+    $this->getJson(route('admin.invoices.show', $this->invoice))->assertOk()->assertJsonPath('invoice.logo', 'data:image/png;base64,'.base64_encode($bytes));
+    expect($this->invoice->fresh()->seller_snapshot)->toBe($historical);
+});

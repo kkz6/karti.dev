@@ -23,7 +23,7 @@ class InvoicePdf
         $settlement = app(InvoiceBalance::class)->data($invoice);
         $payments   = $includeTransactions ? $invoice->payments->whereNull('reversed_at')->map(fn ($payment) => ['id' => $payment->id, 'method' => $payment->method_label, 'date' => $payment->payment_date->format('Y-m-d'), 'amount' => InvoiceCalculator::money((string) $payment->amount_minor, $payment->currency_precision)])->values()->all() : [];
 
-        return ['settlement' => $settlement, 'payments' => $payments, 'invoice'   => $document, 'logo' => $logo, 'label' => $label,
+        return ['settlement' => $settlement, 'payments' => $payments, 'invoice'   => $document, 'logo' => $logo, 'signature' => app(InvoiceSignature::class)->data(), 'label' => $label,
             'sellerLines'    => InvoicePdfLayout::party($document['seller_snapshot']),
             'customerLines'  => InvoicePdfLayout::party($document['customer_snapshot'], true),
             'rows'           => InvoicePdfLayout::rows($document['items'])];
@@ -68,15 +68,14 @@ class InvoicePdf
         return $bytes;
     }
 
-    private function logo(Invoice $invoice): ?string
+    public function logo(Invoice $invoice): ?string
     {
-        // A draft has no frozen image yet. Omit optional branding until issuance.
-        if ($invoice->status === 'draft') {
-            return null;
-        }
-        $file = $invoice->seller_snapshot['logo_file'] ?? null;
+        $file = $invoice->status === 'draft' ? null : ($invoice->seller_snapshot['logo_file'] ?? null);
         if (! $file) {
-            return null;
+            $id    = app(\Modules\Billing\Settings\BillingSettings::class)->logo_media_id;
+            $media = $id ? \Modules\Media\Models\Media::find($id) : null;
+
+            return $media ? app(BillingBrandingImage::class)->image($media) : null;
         }
         if (($file['disk'] ?? '') !== 'local' || ! str_starts_with($file['path'] ?? '', 'billing/invoices/') || str_contains($file['path'], '..')) {
             throw new \RuntimeException('Invalid frozen invoice logo descriptor.');

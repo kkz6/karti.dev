@@ -26,7 +26,7 @@ export default function Automation({
         <BillingSettingsWorkspace section="automation">
             <Card className="gap-5 border-0 bg-transparent shadow-none">
                 <CardHeader className="px-0 pt-0">
-                    <CardTitle>Invoice reminders</CardTitle>
+                    <CardTitle>Reminders & receipts</CardTitle>
                 </CardHeader>
                 <CardContent className="px-0">
                     <form
@@ -107,7 +107,7 @@ export default function Automation({
                         )}
                         {canUpdate && (
                             <Button type="submit" disabled={form.processing}>
-                                Save reminder settings
+                                Save automation settings
                             </Button>
                         )}
                     </form>

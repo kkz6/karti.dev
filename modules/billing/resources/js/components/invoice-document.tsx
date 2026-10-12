@@ -48,6 +48,9 @@ export function InvoiceDocument({ invoice }: { invoice: InvoiceData }) {
                             <CardTitle>{title}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm">
+                            {title === 'Issued by' && invoice.logo && (
+                                <img src={invoice.logo} alt="Company logo" className="mb-3 max-h-20 max-w-52 rounded bg-white object-contain p-2" />
+                            )}
                             <p className="font-medium break-words">{String(data.legal_name || data.display_name || 'Name not configured')}</p>
                             <address className="text-muted-foreground not-italic">
                                 {['address', 'address_line_2', 'city', 'state', 'postal_code', 'country']
@@ -61,7 +64,6 @@ export function InvoiceDocument({ invoice }: { invoice: InvoiceData }) {
                             </address>
                             {data.tax_identifier ? <p>Tax identifier: {String(data.tax_identifier)}</p> : null}
                             {data.email ? <p className="break-all">{String(data.email)}</p> : null}
-                            {data.logo_media_id ? <p className="text-muted-foreground text-xs">Company logo included</p> : null}
                         </CardContent>
                     </Card>
                 ))}
