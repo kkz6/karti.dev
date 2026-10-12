@@ -9,6 +9,11 @@
 @plugin 'tailwindcss-animate';
 @plugin '@tailwindcss/typography';
 
+/* Inertia injects its progress styles later; keep navigation visible above dark headers. */
+#nprogress .bar {
+    height: 4px !important;
+}
+
 /* Tiptap Editor Styles */
 :root {
     /* Tiptap Variables */
