@@ -1,6 +1,7 @@
 import { Head, usePage } from '@inertiajs/react';
 import { SettingsWorkspace } from '@shared/components/settings-workspace';
 import AppLayout from '@shared/layouts/app-layout';
+import { accessibleBillingSettingsSections } from '@shared/lib/billing-settings-sections';
 import { SlidersHorizontal } from 'lucide-react';
 import type { ReactNode } from 'react';
 export function BillingSettingsWorkspace({
@@ -11,16 +12,7 @@ export function BillingSettingsWorkspace({
     children: ReactNode;
 }) {
     const { billingAccess } = usePage<{ billingAccess: { viewSettings: boolean; viewImports: boolean; viewTaxRates: boolean } }>().props;
-    const sections = [
-        { id: 'company', title: 'Company', visible: billingAccess?.viewSettings },
-        { id: 'invoices', title: 'Invoice settings', visible: billingAccess?.viewSettings },
-        { id: 'taxes', title: 'Tax presets', visible: billingAccess?.viewTaxRates },
-        { id: 'payments', title: 'Payment methods', visible: billingAccess?.viewSettings },
-        { id: 'online', title: 'Online payments', visible: billingAccess?.viewSettings },
-        { id: 'delivery', title: 'Email & SMS', visible: billingAccess?.viewSettings },
-        { id: 'automation', title: 'Reminders & receipts', visible: billingAccess?.viewSettings },
-        { id: 'imports', title: 'Data imports', visible: billingAccess?.viewImports },
-    ].filter((s) => s.visible);
+    const sections = accessibleBillingSettingsSections(billingAccess);
     return (
         <AppLayout
             breadcrumbs={[

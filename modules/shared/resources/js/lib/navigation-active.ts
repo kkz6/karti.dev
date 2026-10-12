@@ -1,8 +1,9 @@
 /** Match index links to their section, but keep individual SEO reports distinct. */
-export function isRouteActive(currentRouteName: string | null | undefined, itemHref: string): boolean {
+export function isRouteActive(currentRouteName: string | null | undefined, itemHref: string, currentUrl?: string): boolean {
     if (!currentRouteName) return false;
 
-    const path = new URL(itemHref, 'https://navigation.invalid').pathname.replace(/\/+$/, '');
+    const link = new URL(itemHref, 'https://navigation.invalid');
+    const path = link.pathname.replace(/\/+$/, '');
 
     if (path === '/admin/seo') return ['admin.seo.index', 'admin.seo.page', 'admin.seo.content'].includes(currentRouteName);
     if (path === '/admin/seo/google') return currentRouteName === 'admin.seo.google';
@@ -13,14 +14,23 @@ export function isRouteActive(currentRouteName: string | null | undefined, itemH
     if (path === '/admin/settings/protection') return currentRouteName.startsWith('admin.settings.protection.');
     if (path === '/admin/settings/email') return currentRouteName.startsWith('admin.settings.email.');
 
-    if (path === '/admin/settings/billing')
-        return (
-            currentRouteName.startsWith('admin.settings.billing.') ||
-            currentRouteName.startsWith('admin.billing.automation.') ||
-            currentRouteName.startsWith('admin.billing.online.') ||
-            currentRouteName.startsWith('admin.billing.imports.') ||
-            currentRouteName.startsWith('admin.tax-rates.')
-        );
+    if (path === '/admin/settings/billing') {
+        const family = [
+            ['admin.billing.automation.', 'automation'],
+            ['admin.billing.online.', 'online'],
+            ['admin.billing.providers.', 'online'],
+            ['admin.billing.imports.', 'imports'],
+            ['admin.tax-rates.', 'taxes'],
+            ['admin.billing.delivery.', 'delivery'],
+            ['admin.billing.payment-methods.', 'payments'],
+        ].find(([prefix]) => currentRouteName.startsWith(prefix));
+        const inBilling =
+            currentRouteName.startsWith('admin.settings.billing.') || !!family || currentRouteName.startsWith('admin.billing.providers.');
+        const section = link.searchParams.get('section');
+        if (!section) return inBilling;
+        const selected = currentUrl ? new URL(currentUrl, 'https://navigation.invalid').searchParams.get('section') : null;
+        return inBilling && section === (selected ?? family?.[1] ?? 'company');
+    }
 
     const sections: Record<string, string> = {
         '/admin/customers': 'admin.customers',

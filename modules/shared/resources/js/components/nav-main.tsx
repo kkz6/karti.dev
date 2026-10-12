@@ -18,6 +18,17 @@ import { ChevronRight } from 'lucide-react';
 function NavigationItems({ items }: { items: NavItem[] }) {
     const page = usePage<SharedData>();
     const currentRouteName = page.props.route?.name;
+    const navigationUrl = new URL(page.url, 'https://navigation.invalid');
+    const billingAccess = page.props.billingAccess as { viewSettings?: boolean; viewImports?: boolean; viewTaxRates?: boolean } | undefined;
+    if (
+        currentRouteName === 'admin.settings.billing.edit' &&
+        !navigationUrl.searchParams.has('section') &&
+        billingAccess &&
+        !billingAccess.viewSettings
+    ) {
+        navigationUrl.searchParams.set('section', billingAccess.viewImports ? 'imports' : 'taxes');
+    }
+    const activeUrl = navigationUrl.toString();
     const { isMobile, state, setOpen } = useSidebar();
     const rowClassName = 'gap-2 rounded-md px-2 before:hidden';
 
@@ -25,8 +36,8 @@ function NavigationItems({ items }: { items: NavItem[] }) {
         <SidebarMenu className="gap-1">
             {items.map((item) => {
                 const isActive =
-                    isRouteActive(currentRouteName, item.href) ||
-                    (item.items?.some((subItem) => isRouteActive(currentRouteName, subItem.href)) ?? false);
+                    isRouteActive(currentRouteName, item.href, activeUrl) ||
+                    (item.items?.some((subItem) => isRouteActive(currentRouteName, subItem.href, activeUrl)) ?? false);
                 const hasSubItems = item.items && item.items.length > 0;
 
                 if (hasSubItems) {
@@ -54,7 +65,7 @@ function NavigationItems({ items }: { items: NavItem[] }) {
                                 <CollapsibleContent>
                                     <SidebarMenuSub className="my-1 mr-0 ml-4 gap-0.5 pr-0 pl-3">
                                         {item.items?.map((subItem) => {
-                                            const subItemActive = isRouteActive(currentRouteName, subItem.href);
+                                            const subItemActive = isRouteActive(currentRouteName, subItem.href, activeUrl);
                                             return (
                                                 <SidebarMenuSubItem key={subItem.title}>
                                                     <SidebarMenuSubButton asChild isActive={subItemActive}>

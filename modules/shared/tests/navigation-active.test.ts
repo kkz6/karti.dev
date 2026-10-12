@@ -59,3 +59,21 @@ test('site, media and email settings highlight only their own sidebar link', () 
     );
     assert.equal(isRouteActive('admin.settings.media.edit', '/admin/settings/media/?tab=defaults'), true);
 });
+
+test('billing submenu highlights one query section and stays selected on form actions', () => {
+    const ids = ['company', 'invoices', 'taxes', 'payments', 'online', 'delivery', 'automation', 'imports'];
+    const links = ids.map((section) => `/admin/settings/billing?section=${section}`);
+    for (const selected of ids) {
+        const current = `/admin/settings/billing?section=${selected}&search=demo`;
+        assert.deepEqual(
+            links.filter((href) => isRouteActive('admin.settings.billing.edit', href, current)),
+            [`/admin/settings/billing?section=${selected}`],
+        );
+    }
+    assert.equal(isRouteActive('admin.settings.billing.edit', links[0], '/admin/settings/billing'), true);
+    assert.equal(isRouteActive('admin.settings.billing.edit', links[1], '/admin/settings/billing'), false);
+    assert.equal(isRouteActive('admin.billing.providers.update', links[4]), true);
+    assert.equal(isRouteActive('admin.billing.payment-methods.store', links[3]), true);
+    assert.equal(isRouteActive('admin.tax-rates.edit', links[2]), true);
+    assert.equal(isRouteActive('admin.settings.media.edit', links[0]), false);
+});

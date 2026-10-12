@@ -2,6 +2,7 @@ import { usePage } from '@inertiajs/react';
 import { NavMain } from '@shared/components/nav-main';
 import { Sidebar, SidebarContent } from '@shared/components/ui/sidebar';
 import { mainNavGroups } from '@shared/config/navigation';
+import { accessibleBillingSettingsSections } from '@shared/lib/billing-settings-sections';
 
 export function AppSidebar() {
     const { billingAccess } = usePage<{
@@ -30,8 +31,21 @@ export function AppSidebar() {
         'Billing automation': billingAccess?.viewSettings ?? false,
         'Billing settings': (billingAccess?.viewSettings || billingAccess?.viewImports || billingAccess?.viewTaxRates) ?? false,
     };
+    const allowedBillingSections = new Set<string>(accessibleBillingSettingsSections(billingAccess).map((section) => section.title));
     const groups = mainNavGroups
-        .map((group) => ({ ...group, items: group.items.filter((item) => access[item.title] ?? true) }))
+        .map((group) => ({
+            ...group,
+            items: group.items
+                .filter((item) => access[item.title] ?? true)
+                .map((item) =>
+                    item.title === 'Billing settings'
+                        ? {
+                              ...item,
+                              items: item.items?.filter((child) => allowedBillingSections.has(child.title)),
+                          }
+                        : item,
+                ),
+        }))
         .filter((group) => group.items.length > 0);
     return (
         <Sidebar collapsible="icon" position="relative">

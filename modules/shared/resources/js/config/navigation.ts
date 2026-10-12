@@ -1,3 +1,4 @@
+import { billingSettingsSections } from '@shared/lib/billing-settings-sections';
 import { type NavGroup, type NavItem } from '@shared/types';
 import {
     Banknote,
@@ -33,7 +34,16 @@ export const mainNavItems: NavItem[] = [
     { title: 'Credit notes', href: route('admin.credit-notes.index'), icon: FileMinus2 },
     { title: 'Recurring invoices', href: route('admin.recurring-invoices.index'), icon: Repeat2 },
     { title: 'Payment reconciliation', href: route('admin.billing.reconciliation'), icon: ListChecks },
-    { title: 'Billing settings', href: route('admin.settings.billing.edit'), icon: SlidersHorizontal },
+    {
+        title: 'Billing settings',
+        href: route('admin.settings.billing.edit'),
+        icon: SlidersHorizontal,
+        items: billingSettingsSections.map((section) => ({
+            title: section.title,
+            href: route('admin.settings.billing.edit', { section: section.id }),
+            icon: null,
+        })),
+    },
     {
         title: 'Dashboard',
         href: route('dashboard'),
