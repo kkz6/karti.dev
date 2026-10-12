@@ -4,7 +4,7 @@ import { TurnstileWidget } from '@frontend/components/TurnstileWidget';
 import PublicLayout from '@frontend/layouts/public-layout';
 import { useForm } from '@inertiajs/react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/components/ui/select';
-import { CheckCircle2, Clock3, Mail, Send, ShieldCheck } from 'lucide-react';
+import { Clock3, Mail, Send, ShieldCheck } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 type Topic = { value: string; label: string };
@@ -42,7 +42,7 @@ function FieldError({ message }: { message?: string }) {
     ) : null;
 }
 
-export default function Contact({ topics, defaultTopic, contactForm, captcha, status, seo }: ContactPageProps) {
+export default function Contact({ topics, defaultTopic, contactForm, captcha, seo }: ContactPageProps) {
     const [captchaVersion, setCaptchaVersion] = useState(0);
     const [captchaMessage, setCaptchaMessage] = useState<string | null>(null);
     const form = useForm<ContactFormData>({
@@ -130,19 +130,6 @@ export default function Contact({ topics, defaultTopic, contactForm, captcha, st
                         </div>
 
                         <div className="p-6 sm:p-8">
-                            {status ? (
-                                <div className="border-primary/25 bg-primary/8 mb-7 rounded-2xl border p-5" role="status">
-                                    <div className="flex gap-3">
-                                        <CheckCircle2 className="text-primary mt-0.5 size-5 shrink-0" aria-hidden="true" />
-                                        <div>
-                                            <p className="text-foreground font-medium">Message received</p>
-                                            <p className="text-muted-foreground mt-1 text-sm leading-relaxed">{status.message}</p>
-                                            <p className="text-muted-foreground mt-2 font-mono text-xs">Reference {status.reference}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : null}
-
                             <form onSubmit={submit} noValidate>
                                 <div className="grid gap-6 sm:grid-cols-2">
                                     <label className="text-foreground block text-sm font-medium">

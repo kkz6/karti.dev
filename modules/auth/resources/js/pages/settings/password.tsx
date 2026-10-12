@@ -1,4 +1,3 @@
-import { Transition } from '@headlessui/react';
 import { Head, useForm } from '@inertiajs/react';
 import InputError from '@shared/components/input-error';
 import { UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
@@ -23,7 +22,7 @@ export default function Password() {
     const passwordInput = useRef<HTMLInputElement>(null);
     const currentPasswordInput = useRef<HTMLInputElement>(null);
 
-    const { data, setData, errors, put, reset, processing, recentlySuccessful, isDirty } = useForm({
+    const { data, setData, errors, put, reset, processing, isDirty } = useForm({
         current_password: '',
         password: '',
         password_confirmation: '',
@@ -113,16 +112,6 @@ export default function Password() {
                             <Button type="submit" disabled={processing}>
                                 Save password
                             </Button>
-
-                            <Transition
-                                show={recentlySuccessful}
-                                enter="transition ease-in-out"
-                                enterFrom="opacity-0"
-                                leave="transition ease-in-out"
-                                leaveTo="opacity-0"
-                            >
-                                <p className="text-sm text-neutral-600">Saved</p>
-                            </Transition>
                         </div>
                     </form>
                 </div>

@@ -34,6 +34,6 @@ class PasswordController extends BaseController
             'password' => Hash::make($validated['password']),
         ]);
 
-        return back();
+        return back()->with('success', 'Password updated.');
     }
 }

@@ -45,6 +45,7 @@ class HandleInertiaRequests extends Middleware
             'mediaLibrary' => [
                 'defaultDisk' => config('mediable.default_disk'),
             ],
+            'notifications'  => fn () => \Modules\Shared\Support\FlashNotifications::from($request),
             'settingsSaved'  => fn () => $request->session()->get('settings_saved', false),
             'newsletterForm' => fn () => [
                 'started_at' => \Illuminate\Support\Facades\Crypt::encryptString((string) now()->timestamp),

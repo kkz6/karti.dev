@@ -1,5 +1,4 @@
 import { ProfilePhotoForm } from '@auth/components/profile-photo-form';
-import { Transition } from '@headlessui/react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { type BreadcrumbItem, type SharedData } from '@shared/types';
 import { type FormEventHandler, useState } from 'react';
@@ -27,19 +26,11 @@ type ProfileForm = {
     email: string;
 };
 
-export default function Profile({
-    mustVerifyEmail,
-    status,
-    hasProfilePhoto,
-}: {
-    mustVerifyEmail: boolean;
-    status?: string;
-    hasProfilePhoto: boolean;
-}) {
+export default function Profile({ mustVerifyEmail, hasProfilePhoto }: { mustVerifyEmail: boolean; status?: string; hasProfilePhoto: boolean }) {
     const [photoDirty, setPhotoDirty] = useState(false);
     const { auth } = usePage<SharedData>().props;
 
-    const { data, setData, setDefaults, patch, errors, processing, recentlySuccessful, isDirty } = useForm<Required<ProfileForm>>({
+    const { data, setData, setDefaults, patch, errors, processing, isDirty } = useForm<Required<ProfileForm>>({
         name: auth.user.name,
         email: auth.user.email,
     });
@@ -110,12 +101,6 @@ export default function Profile({
                                         Click here to resend the verification email.
                                     </Link>
                                 </p>
-
-                                {status === 'verification-link-sent' && (
-                                    <div className="text-foreground mt-2 text-sm font-medium">
-                                        A new verification link has been sent to your email address.
-                                    </div>
-                                )}
                             </div>
                         )}
 
@@ -123,16 +108,6 @@ export default function Profile({
                             <Button type="submit" disabled={processing}>
                                 Save
                             </Button>
-
-                            <Transition
-                                show={recentlySuccessful}
-                                enter="transition ease-in-out"
-                                enterFrom="opacity-0"
-                                leave="transition ease-in-out"
-                                leaveTo="opacity-0"
-                            >
-                                <p className="text-sm text-neutral-600">Saved</p>
-                            </Transition>
                         </div>
                     </form>
                 </div>

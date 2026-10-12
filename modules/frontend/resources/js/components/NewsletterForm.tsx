@@ -3,9 +3,8 @@ import { Button } from '@shared/components/ui/button';
 import { type FormEvent } from 'react';
 
 export function NewsletterForm() {
-    const { newsletterForm, newsletterStatus } = usePage<{
+    const { newsletterForm } = usePage<{
         newsletterForm: { started_at: string } | null;
-        newsletterStatus?: string;
     }>().props;
     const form = useForm({ email: '', website: '', started_at: '' });
     const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -40,7 +39,7 @@ export function NewsletterForm() {
                     maxLength={254}
                     aria-invalid={!!error}
                     aria-describedby="newsletter-description newsletter-feedback"
-                    className="border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 h-11 w-full min-w-0 flex-auto rounded-lg border px-3 py-2.5 font-mono text-sm transition-colors duration-200 focus:outline-none"
+                    className="border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus-visible:ring-primary/30 h-11 w-full min-w-0 flex-auto rounded-lg border px-3 py-2.5 font-mono text-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2"
                 />
                 <Button type="submit" disabled={form.processing} className="h-11 shrink-0 rounded-lg px-4 font-mono text-sm">
                     {form.processing ? 'Subscribing…' : 'Subscribe'}
@@ -62,8 +61,6 @@ export function NewsletterForm() {
                     <p role="alert" className="text-destructive">
                         {error}
                     </p>
-                ) : newsletterStatus ? (
-                    <p role="status">{newsletterStatus}</p>
                 ) : null}
             </div>
         </form>

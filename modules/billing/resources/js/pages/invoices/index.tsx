@@ -7,7 +7,6 @@ import { InertiaTableWrapper, type TableConfig } from '@table/components';
 import { Receipt } from 'lucide-react';
 import { useState } from 'react';
 import { InvoiceComposer } from '../../components/invoice-composer';
-import { InvoiceNotification } from '../../components/invoice-notification';
 import { InvoicePreviewDialog, type InvoiceViewData } from '../../components/invoice-preview-dialog';
 import { InvoiceStats, type InvoiceSummaryData } from '../../components/invoice-stats';
 
@@ -38,7 +37,6 @@ export default function InvoiceIndex({
     return (
         <AppLayout breadcrumbs={[{ title: 'Invoices', href: route('admin.invoices.index') }]}>
             <Head title="Invoices" />
-            <InvoiceNotification message={selectedInvoice?.message} response={selectedInvoice} />
             <AdminPageContent>
                 <IndexHeader
                     title="Invoices"

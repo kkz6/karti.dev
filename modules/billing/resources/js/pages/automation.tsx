@@ -9,7 +9,6 @@ import { BillingFeedback } from '../components/billing-feedback';
 export default function Automation({
     settings,
     canUpdate,
-    message,
 }: {
     settings: {
         reminders_enabled: boolean;
@@ -25,7 +24,6 @@ export default function Automation({
     const form = useForm({ ...settings, reminder_offsets: settings.reminder_offsets.join(', ') });
     return (
         <BillingSettingsWorkspace section="automation">
-            {message && <BillingFeedback kind="success">{message}</BillingFeedback>}
             <Card className="gap-5 border-0 bg-transparent shadow-none">
                 <CardHeader className="px-0 pt-0">
                     <CardTitle>Invoice reminders</CardTitle>

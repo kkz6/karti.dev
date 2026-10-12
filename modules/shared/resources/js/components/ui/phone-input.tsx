@@ -1,7 +1,8 @@
+import { isLegacyPhoneValue, normalizePhonePaste, phoneInputValue } from '@shared/lib/phone-number';
 import { cn } from '@shared/lib/utils';
 import { Check, ChevronsUpDown, Globe } from 'lucide-react';
-import { forwardRef, useState, type ComponentProps } from 'react';
-import PhoneNumberInput, { getCountryCallingCode, isSupportedCountry, parsePhoneNumber, type Country } from 'react-phone-number-input';
+import { forwardRef, useState, type ClipboardEvent, type ComponentProps } from 'react';
+import PhoneNumberInput, { getCountryCallingCode, isSupportedCountry, parsePhoneNumber, type Country } from 'react-phone-number-input/max';
 import { Button } from './button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from './command';
 import { Input } from './input';
@@ -14,15 +15,40 @@ type PhoneInputProps = Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'typ
 };
 
 /** Keeps the stored value untouched until the user edits the number. */
-export function PhoneInput({ value, onChange, defaultCountry, className, ...props }: PhoneInputProps) {
+export function PhoneInput({ value, onChange, defaultCountry, className, onPasteCapture, ...props }: PhoneInputProps) {
     const code = defaultCountry?.toUpperCase();
     const country = code && isSupportedCountry(code) ? (code as Country) : undefined;
     const parsed = value ? parsePhoneNumber(value, country) : undefined;
+    const [selectedCountry, setSelectedCountry] = useState<Country | undefined>(parsed?.country ?? country);
+    function paste(event: ClipboardEvent<HTMLInputElement>) {
+        onPasteCapture?.(event);
+        if (event.defaultPrevented || props.disabled || props.readOnly) return;
+        const normalized = normalizePhonePaste(event.clipboardData.getData('text'), selectedCountry);
+        if (!normalized) return; // Partial edits and legacy extensions use the normal input behavior.
+        event.preventDefault();
+        const target = event.currentTarget;
+        const parent = target.parentElement;
+        onChange(normalized);
+        requestAnimationFrame(() => {
+            const field = target.isConnected ? target : parent?.querySelector<HTMLInputElement>('input[type="tel"]');
+            field?.focus();
+            const length = field?.value.length ?? 0;
+            field?.setSelectionRange(length, length);
+        });
+    }
 
     // Legacy free-text numbers and extensions must remain editable without losing information.
-    if (value && ((!parsed && !value.startsWith('+')) || parsed?.ext)) {
+    if (isLegacyPhoneValue(value)) {
         return (
-            <Input {...props} type="tel" autoComplete="tel" className={className} value={value} onChange={(event) => onChange(event.target.value)} />
+            <Input
+                {...props}
+                type="tel"
+                autoComplete="tel"
+                className={className}
+                value={value}
+                onPasteCapture={paste}
+                onChange={(event) => onChange(event.target.value)}
+            />
         );
     }
 
@@ -31,8 +57,10 @@ export function PhoneInput({ value, onChange, defaultCountry, className, ...prop
             {...props}
             className={cn('flex min-w-0 items-stretch', className)}
             defaultCountry={country}
+            onPasteCapture={paste}
+            onCountryChange={setSelectedCountry}
             initialValueFormat="national"
-            value={parsed?.number ?? (value || undefined)}
+            value={phoneInputValue(value, selectedCountry)}
             onChange={(number) => onChange(number ?? '')}
             inputComponent={NumberInput}
             countrySelectComponent={CountrySelect}

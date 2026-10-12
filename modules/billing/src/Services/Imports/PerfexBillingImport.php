@@ -95,6 +95,9 @@ class PerfexBillingImport
                         if ($record['archive_on_import'] ?? false) {
                             $attributes['archived_at'] = now();
                         }
+                        if ($kind === 'payment') {
+                            $attributes['payment_method_id'] = \Modules\Billing\Support\PaymentMethods::resolve($attributes['method'], $attributes['method_label'], true)->id;
+                        }
                         $model = new (self::MODELS[$kind]);
                         $model->forceFill($attributes)->save();
                         if ($kind === 'service') {

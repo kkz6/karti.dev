@@ -5,7 +5,6 @@
     "keywords": [],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
         "dodopayments/client": "^6.1",
         "inertiajs/inertia-laravel": "^2.0",
         "internachi/modular": "^2.3",
@@ -17,6 +16,7 @@
         "modules/analytics": "*",
         "modules/auth": "*",
         "modules/billing": "*",
+        "modules/billing-dodo": "*",
         "modules/blog": "*",
         "modules/frontend": "*",
         "modules/media": "*",
@@ -29,6 +29,7 @@
         "modules/speaking": "*",
         "modules/table": "*",
         "modules/tools": "*",
+        "php": "^8.2",
         "propaganistas/laravel-disposable-email": "^2.5",
         "resend/resend-php": "^1.15",
         "spatie/laravel-analytics": "^5.6",

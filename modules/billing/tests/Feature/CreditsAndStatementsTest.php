@@ -34,6 +34,21 @@ function creditTestIssue(string $amount='50'): CreditNote
 
     return $action->issue($note, ['version'=>$note->version, 'review_token'=>$review['token']], test()->admin);
 }
+
+test('custom refund methods retain foreign keys and cannot be deleted after use', function () {
+    $note   = creditTestIssue();
+    $method = \Modules\Billing\Models\PaymentMethod::create(['name'=>'Office transfer', 'code'=>'office_transfer', 'manual'=>true, 'enabled'=>true]);
+    $data   = ['amount'=>'20', 'refund_date'=>'2026-10-10', 'method'=>$method->code, 'reason'=>'Already refunded', 'request_key'=>(string) Str::uuid()];
+    $this->post(route('admin.credit-notes.refund', $note), $data)->assertSessionHasNoErrors();
+    $refund = \Modules\Billing\Models\CreditRefund::firstOrFail();
+    expect($refund->payment_method_id)->toBe($method->id)->and($refund->method_label)->toBe('Office transfer');
+    $this->deleteJson(route('admin.billing.payment-methods.destroy', $method))->assertJsonValidationErrors('payment_method');
+    expect(fn () => \Illuminate\Support\Facades\DB::table('billing_payment_methods')->where('id', $method->id)->delete())->toThrow(\Illuminate\Database\QueryException::class);
+    $this->put(route('admin.billing.payment-methods.update', $method), ['name'=>'Renamed transfer', 'enabled'=>false])->assertSessionHasNoErrors();
+    $this->post(route('admin.credit-notes.refund', $note), $data)->assertSessionHasNoErrors();
+    $this->postJson(route('admin.credit-notes.refund', $note), [...$data, 'request_key'=>(string) Str::uuid()])->assertJsonValidationErrors('method');
+    expect($refund->fresh()->method_label)->toBe('Office transfer');
+});
 test('credit issuance uses its own immutable sequence and proportional tax budgets', function () {
     $note  =creditTestIssue('50');
     $before=$note->only(['formatted_number', 'subtotal_minor', 'taxes', 'seller_snapshot', 'customer_snapshot']);

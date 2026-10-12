@@ -123,8 +123,8 @@ class CreditNotesController extends BaseController
     public function refund(Request $request, CreditNote $creditNote, ManageCreditNotes $action)
     {
         $this->authorize('refund', $creditNote);
-        $data                =$request->validate(['amount'=>['required', 'string', 'max:24', 'regex:/^\d+(?:\.\d{1,4})?$/'], 'refund_date'=>['required', 'date_format:Y-m-d'], 'method'=>['required', Rule::in(array_column(PaymentMethods::options(), 'value'))], 'reference'=>['nullable', 'string', 'max:255'], 'reason'=>['required', 'string', 'min:3', 'max:2000'], 'request_key'=>['required', 'uuid']]);
-        $data['method_label']=PaymentMethods::LABELS[$data['method']];
+        $data                =$request->validate(['amount'=>['required', 'string', 'max:24', 'regex:/^\d+(?:\.\d{1,4})?$/'], 'refund_date'=>['required', 'date_format:Y-m-d'], 'method'=>['required', Rule::in(array_column(PaymentMethods::options(false), 'value'))], 'reference'=>['nullable', 'string', 'max:255'], 'reason'=>['required', 'string', 'min:3', 'max:2000'], 'request_key'=>['required', 'uuid']]);
+        $data['method_label']=\Modules\Billing\Models\PaymentMethod::where('code', $data['method'])->firstOrFail()->name;
         $action->refund($creditNote, $data, $request->user());
 
         return back()->with('billing_message', 'Refund already made was recorded. No external provider refund was initiated.');

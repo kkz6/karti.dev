@@ -25,7 +25,7 @@ class PaymentsController extends BaseController
     {
         $action->record($invoice, $request->validated(), $request->user());
 
-        return to_route('admin.invoices.show', $invoice)->with('billing_message', 'Payment recorded. The balance is up to date.');
+        return ($request->header('X-Customer-Context') === (string) $invoice->customer_id ? to_route('admin.customers.show', $invoice->customer_id) : to_route('admin.invoices.show', $invoice))->with('billing_message', 'Payment recorded. The balance is up to date.');
     }
 
     public function reverse(ReversePaymentRequest $request, Payment $payment, ManagePayments $action): RedirectResponse

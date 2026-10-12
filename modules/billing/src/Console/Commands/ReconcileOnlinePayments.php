@@ -3,7 +3,6 @@
 namespace Modules\Billing\Console\Commands;
 
 use Illuminate\Console\Command;
-use Modules\Billing\Contracts\PaymentProvider;
 use Modules\Billing\Jobs\ProcessProviderEvent;
 use Modules\Billing\Models\OnlineCheckout;
 use Modules\Billing\Models\ProviderEvent;
@@ -21,9 +20,9 @@ class ReconcileOnlinePayments extends Command
         $count=0;
         foreach (OnlineCheckout::where('state', 'pending')->whereNotNull('session_id')->limit(100)->get() as $checkout) {
             try {
-                $id=app(PaymentProvider::class)->checkoutPaymentId($checkout->session_id);
+                $id=app(\Modules\Billing\Services\PaymentGatewayRegistry::class)->adapter($checkout->provider)->checkoutPaymentId($checkout->session_id);
                 if ($id) {
-                    app(ReconcileProviderPayment::class)->handle($id);
+                    app(ReconcileProviderPayment::class)->handle($id, $checkout->provider);
                     $count++;
                 }
             } catch (\Throwable $e) {

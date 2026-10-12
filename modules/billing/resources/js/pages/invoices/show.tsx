@@ -28,7 +28,6 @@ import { InvoiceCreditNotes, type CreditData } from '../../components/invoice-cr
 import type { Delivery, DeliveryConfiguration } from '../../components/invoice-delivery';
 import { InvoiceHistory, type InvoiceActivity } from '../../components/invoice-document';
 import type { PrivateInvoiceLink } from '../../components/invoice-links';
-import { InvoiceNotification } from '../../components/invoice-notification';
 import { InvoicePayments } from '../../components/invoice-payments';
 import { InvoicePreview } from '../../components/invoice-preview';
 import { InvoiceSharingDialog } from '../../components/invoice-sharing-dialog';
@@ -61,7 +60,6 @@ export default function InvoiceDetail({
     today = '',
     canCancel = false,
     activities,
-    message,
 }: {
     /** Drafts render this page with a smaller payload; editing happens in the invoice composer modal. */
     draft?: boolean;
@@ -247,7 +245,6 @@ export default function InvoiceDetail({
             <Head title={title} />
 
             <PageContainer className="content-editor">
-                <InvoiceNotification message={message} response={invoice} />
                 <DetailHeader
                     stickyMeta={
                         !cancelled && (

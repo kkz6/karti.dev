@@ -58,7 +58,7 @@ class ManagePayments
             if ($input['currency'] !== $locked->currency) {
                 throw ValidationException::withMessages(['currency' => 'Payment currency must match the invoice currency.']);
             }
-            if (! $verifiedOnline && ! in_array($input['method'], app(BillingSettings::class)->payment_methods, true)) {
+            if (! $verifiedOnline && ! in_array($input['method'], array_column(PaymentMethods::options(), 'value'), true)) {
                 throw ValidationException::withMessages(['method' => 'This payment method is disabled. Choose an enabled method.']);
             }
             $today = CarbonImmutable::now(app(BillingSettings::class)->timezone)->format('Y-m-d');
@@ -69,13 +69,20 @@ class ManagePayments
             if ($minor->isGreaterThan($balance)) {
                 throw ValidationException::withMessages(['amount' => 'Payment exceeds the remaining invoice balance of '.InvoiceCalculator::money((string) $balance, $precision).' '.$locked->currency.'.']);
             }
+            $method = $verifiedOnline
+                ? PaymentMethods::resolve($input['provider'] ?? 'dodo', app(\Modules\Billing\Services\PaymentGatewayRegistry::class)->get($input['provider'] ?? 'dodo')->name(), true)
+                : \Modules\Billing\Models\PaymentMethod::where('code', $input['method'])->where('manual', true)->lockForUpdate()->first();
+            if (! $method || (! $verifiedOnline && ! $method->enabled)) {
+                throw ValidationException::withMessages(['method' => 'This payment method was removed or disabled. Reload and choose another method.']);
+            }
             $payment = Payment::create([
-                'invoice_id'   => $locked->id, 'request_key' => $input['request_key'], 'request_hash' => $hash,
-                'amount_minor' => (string) $minor, 'currency' => $locked->currency, 'currency_precision' => $precision,
-                'payment_date' => $input['payment_date'], 'method' => $input['method'], 'method_label' => $verifiedOnline ? 'Dodo Payments' : PaymentMethods::LABELS[$input['method']],
-                'provider'     => $verifiedOnline ? 'dodo' : null, 'provider_payment_id' => $verifiedOnline ? $input['provider_payment_id'] : null,
-                'reference'    => $input['reference'] ?? null, 'notes' => $input['notes'] ?? null,
-                'actor_id'     => $actor?->id, 'actor_name' => $actor?->name ?? 'Payment provider', 'created_at' => now(),
+                'payment_method_id' => $method->id,
+                'invoice_id'        => $locked->id, 'request_key' => $input['request_key'], 'request_hash' => $hash,
+                'amount_minor'      => (string) $minor, 'currency' => $locked->currency, 'currency_precision' => $precision,
+                'payment_date'      => $input['payment_date'], 'method' => $input['method'], 'method_label' => $method->name,
+                'provider'          => $verifiedOnline ? ($input['provider'] ?? 'dodo') : null, 'provider_payment_id' => $verifiedOnline ? $input['provider_payment_id'] : null,
+                'reference'         => $input['reference'] ?? null, 'notes' => $input['notes'] ?? null,
+                'actor_id'          => $actor?->id, 'actor_name' => $actor?->name ?? 'Payment provider', 'created_at' => now(),
             ]);
             $locked->version++;
             $locked->save();

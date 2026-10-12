@@ -17,12 +17,15 @@ class BillingSettingsController extends BaseController
     public function edit(Request $request, BillingSettings $settings): Response
     {
         $section = $request->query('section', 'company');
-        abort_unless(in_array($section, ['company', 'automation', 'online', 'imports', 'taxes', 'delivery'], true), 404);
+        abort_unless(in_array($section, ['company', 'automation', 'online', 'imports', 'taxes', 'delivery', 'payments'], true), 404);
         if ($section === 'company' && ! $request->user()->can('view', BillingSettings::class) && ($request->user()->hasRole('super-admin') || $request->user()->can('import billing data'))) {
             $section = 'imports';
         }
         if ($section === 'company' && ! $request->user()->can('view', BillingSettings::class) && $request->user()->can('viewAny', \Modules\Billing\Models\TaxRate::class)) {
             $section='taxes';
+        }
+        if ($section === 'payments') {
+            return app(PaymentMethodsController::class)->index($request);
         }
         if ($section === 'delivery') {
             return app(BillingDeliverySettingsController::class)->edit($request);

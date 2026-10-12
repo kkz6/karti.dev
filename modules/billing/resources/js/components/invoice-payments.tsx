@@ -108,6 +108,8 @@ export function InvoicePayments({
     methods,
     today,
     embedded = false,
+    customerContext,
+    onRecorded,
 }: {
     invoice: InvoiceData;
     settlement: Settlement;
@@ -116,6 +118,8 @@ export function InvoicePayments({
     methods: PaymentMethod[];
     today: string;
     embedded?: boolean;
+    customerContext?: number;
+    onRecorded?: () => void;
 }) {
     const [recording, setRecording] = useState(false);
     const [reversing, setReversing] = useState<PaymentData | null>(null);
@@ -250,8 +254,12 @@ export function InvoicePayments({
                         onSubmit={(event) => {
                             event.preventDefault();
                             form.post(route('admin.invoices.payments.store', invoice.id), {
+                                headers: customerContext ? { 'X-Customer-Context': String(customerContext) } : {},
                                 preserveScroll: true,
-                                onSuccess: () => setRecording(false),
+                                onSuccess: () => {
+                                    setRecording(false);
+                                    onRecorded?.();
+                                },
                             });
                         }}
                     >

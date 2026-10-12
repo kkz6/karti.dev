@@ -10,7 +10,7 @@ import { UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
 import AppLayout from '@shared/layouts/app-layout';
 import type { SharedData } from '@shared/types';
 import type { SiteSettings } from '@shared/types/site-settings';
-import { Check, Save, Settings } from 'lucide-react';
+import { Save, Settings } from 'lucide-react';
 import type { FormEvent } from 'react';
 
 export default function SiteSettingsPage({ settings }: { settings: SiteSettings }) {
@@ -69,16 +69,7 @@ export default function SiteSettingsPage({ settings }: { settings: SiteSettings 
                     actions={
                         <div className="flex items-center gap-3">
                             <span role="status" className="text-muted-foreground text-sm">
-                                {form.recentlySuccessful ? (
-                                    <span className="flex items-center gap-1.5">
-                                        <Check className="size-4" />
-                                        Saved
-                                    </span>
-                                ) : form.isDirty ? (
-                                    'Unsaved changes'
-                                ) : (
-                                    ''
-                                )}
+                                {form.isDirty ? 'Unsaved changes' : ''}
                             </span>
                             <Button type="submit" form="site-settings-form" disabled={processing || !form.isDirty}>
                                 <Save className="size-4" />

@@ -6,13 +6,17 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@shared/components/ui/tooltip';
 import AppLayout from '@shared/layouts/app-layout';
+import { formatPhoneDisplay } from '@shared/lib/phone-number';
 import { cn } from '@shared/lib/utils';
 import { Archive, Building2, Ellipsis, FileText, Mail, Pencil, Phone, Plus, RotateCcw, StickyNote, Users, Wallet } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { BillingFeedback } from '../../components/billing-feedback';
 import { ContactForm } from '../../components/contact-form';
+import { CustomerFinancialActions } from '../../components/customer-financial-actions';
 import { CustomerInvoiceTable } from '../../components/customer-financials';
+import { CustomerStats } from '../../components/customer-stats';
 import { AsideCard, Detail, DetailHeader, DetailTabs, initialTab } from '../../components/detail-page';
+import { InvoiceComposer } from '../../components/invoice-composer';
 import { PaymentHistory } from '../../components/invoice-payments';
 import { useBillingConfirm } from '../../components/use-billing-confirm';
 import type { CustomerFinancials as Financials } from '../../payment-types';
@@ -23,18 +27,19 @@ export default function CustomerDetail({
     customer,
     financials,
     can,
-    message,
 }: {
     canStatement: boolean;
     customer: Customer;
     financials: Financials | null;
-    can: { update: boolean; archive: boolean; restore: boolean };
+    can: { update: boolean; archive: boolean; restore: boolean; createInvoice?: boolean; createCredit?: boolean; recordPayment?: boolean };
     message?: string;
 }) {
     const { url } = usePage();
     const { confirm, dialog } = useBillingConfirm();
     const [tab, setTab] = useState(initialTab(url, ['contacts', 'invoices', 'payments']));
 
+    const [composing, setComposing] = useState(false);
+    const [financialAction, setFinancialAction] = useState<'payment' | 'credit' | null>(null);
     const [editing, setEditing] = useState<Contact | 'new' | null>(null);
     const [contactDirty, setContactDirty] = useState(false),
         [contactBusy, setContactBusy] = useState(false);
@@ -85,9 +90,9 @@ export default function CustomerDetail({
             {archived && <Badge variant="outline">Archived</Badge>}
         </>
     );
-    const primaryAction = (size: 'sm' | 'default') =>
+    const editAction = (size: 'sm' | 'default') =>
         can.update && !archived ? (
-            <Button asChild size={size}>
+            <Button asChild size={size} variant="outline">
                 <Link href={route('admin.customers.edit', customer.id)}>
                     <Pencil className="size-4" />
                     Edit customer
@@ -99,7 +104,18 @@ export default function CustomerDetail({
                 Restore
             </Button>
         ) : null;
-    const showMenu = canStatement || (!archived && can.archive);
+    const primaryAction = (size: 'sm' | 'default') => (
+        <>
+            {can.createInvoice && (
+                <Button size={size} onClick={() => setComposing(true)}>
+                    <Plus className="size-4" />
+                    Create invoice
+                </Button>
+            )}
+            {editAction(size)}
+        </>
+    );
+    const showMenu = canStatement || can.recordPayment || can.createCredit || (!archived && can.archive);
     const moreActions = showMenu && (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -108,6 +124,18 @@ export default function CustomerDetail({
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+                {can.recordPayment && (
+                    <DropdownMenuItem onSelect={() => setFinancialAction('payment')}>
+                        <Wallet />
+                        Record payment
+                    </DropdownMenuItem>
+                )}
+                {can.createCredit && (
+                    <DropdownMenuItem onSelect={() => setFinancialAction('credit')}>
+                        <FileText />
+                        Create credit note
+                    </DropdownMenuItem>
+                )}
                 {canStatement && (
                     <DropdownMenuItem asChild>
                         <Link href={route('admin.customers.statement', customer.id)}>
@@ -182,7 +210,7 @@ export default function CustomerDetail({
                                     {contact.phone && (
                                         <a href={`tel:${contact.phone}`} className="hover:text-foreground inline-flex items-center gap-1.5">
                                             <Phone className="size-3.5 shrink-0" />
-                                            {contact.phone}
+                                            {formatPhoneDisplay(contact.phone, customer.billing_country)}
                                         </a>
                                     )}
                                 </div>
@@ -251,6 +279,15 @@ export default function CustomerDetail({
                 { title: customer.display_name, href: route('admin.customers.show', customer.id) },
             ]}
         >
+            <InvoiceComposer open={composing} onClose={() => setComposing(false)} customerId={customer.id} reloadOnly={null} />
+            {financialAction && (
+                <CustomerFinancialActions
+                    customerId={customer.id}
+                    action={financialAction}
+                    invoices={financials?.invoices ?? []}
+                    onClose={() => setFinancialAction(null)}
+                />
+            )}
             {dialog}
             <Head title={customer.display_name} />
 
@@ -281,9 +318,9 @@ export default function CustomerDetail({
                     }
                 />
                 <div className="space-y-4 empty:hidden">
-                    {message && <BillingFeedback kind="success">{message}</BillingFeedback>}
                     {archived && <BillingFeedback>This customer is archived. Restore them to edit their details or manage contacts.</BillingFeedback>}
                 </div>
+                {financials && <CustomerStats financials={financials} defaultCurrency={customer.default_currency} />}
                 <DetailTabs
                     label="Customer"
                     value={tab}
@@ -380,7 +417,7 @@ export default function CustomerDetail({
                                 <dl className="space-y-3 border-t pt-3 text-sm">
                                     <Detail label="Tax ID">{customer.tax_identifier || '—'}</Detail>
                                     <Detail label="Currency">{customer.default_currency || '—'}</Detail>
-                                    <Detail label="Phone">{customer.phone || '—'}</Detail>
+                                    <Detail label="Phone">{formatPhoneDisplay(customer.phone, customer.billing_country)}</Detail>
                                     {customer.website && (
                                         <Detail label="Website">
                                             <a

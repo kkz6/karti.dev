@@ -28,7 +28,6 @@ export default function CreditShow({
     methods,
     can,
     today,
-    message,
 }: {
     credit: CreditData;
     reviewToken: string | null;
@@ -217,7 +216,6 @@ export default function CreditShow({
                     }
                 />
                 <div className="space-y-4 empty:hidden">
-                    {message && <BillingFeedback kind="success">{message}</BillingFeedback>}
                     {reviewError && <BillingFeedback kind="error">{reviewError}</BillingFeedback>}
                     {errors(issue.errors)}
                     {credit.status === 'cancelled' && (

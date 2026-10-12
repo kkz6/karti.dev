@@ -15,7 +15,6 @@ export default function TaxRateForm({
     taxRate,
     readOnly = false,
     can,
-    message,
 }: {
     taxRate?: TaxRate;
     readOnly?: boolean;
@@ -56,7 +55,6 @@ export default function TaxRateForm({
                         )}
                     </div>
                 )}
-                {message && <BillingFeedback kind="success">{message}</BillingFeedback>}
                 <form onSubmit={submit} className={modal ? 'space-y-5' : 'bg-card max-w-4xl space-y-6 rounded-xl border p-5 sm:p-6'}>
                     {Object.values(form.errors).length > 0 && (
                         <BillingFeedback kind="error">

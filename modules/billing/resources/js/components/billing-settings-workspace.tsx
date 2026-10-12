@@ -11,13 +11,14 @@ export function BillingSettingsWorkspace({
     section,
     children,
 }: {
-    section: 'company' | 'automation' | 'online' | 'imports' | 'taxes' | 'delivery';
+    section: 'company' | 'automation' | 'online' | 'imports' | 'taxes' | 'delivery' | 'payments';
     children: ReactNode;
 }) {
     const { billingAccess } = usePage<{ billingAccess: { viewSettings: boolean; viewImports: boolean; viewTaxRates: boolean } }>().props;
     const sections = [
         { id: 'company', title: 'Company & invoices', visible: billingAccess?.viewSettings },
         { id: 'taxes', title: 'Tax presets', visible: billingAccess?.viewTaxRates },
+        { id: 'payments', title: 'Payment methods', visible: billingAccess?.viewSettings },
         { id: 'delivery', title: 'Delivery', visible: billingAccess?.viewSettings },
         { id: 'automation', title: 'Reminders', visible: billingAccess?.viewSettings },
         { id: 'online', title: 'Online payments', visible: billingAccess?.viewSettings },

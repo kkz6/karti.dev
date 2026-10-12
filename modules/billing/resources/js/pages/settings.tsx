@@ -2,7 +2,6 @@ import { BillingSettingsWorkspace } from '@billing/components/billing-settings-w
 import { useForm } from '@inertiajs/react';
 import { SimpleAssetsField } from '@media/components/Field/SimpleAssetsField';
 import { Button } from '@shared/components/ui/button';
-import { Checkbox } from '@shared/components/ui/checkbox';
 import { Input } from '@shared/components/ui/input';
 import { Label } from '@shared/components/ui/label';
 import { PhoneInput } from '@shared/components/ui/phone-input';
@@ -30,11 +29,9 @@ const identity = [
 
 export default function Settings({
     settings,
-    paymentMethods,
     currencies,
     timezones,
     canUpdate,
-    saved,
 }: {
     settings: BillingSettings;
     paymentMethods: PaymentMethod[];
@@ -63,7 +60,6 @@ export default function Settings({
                     Company details and defaults for your invoices. Your website identity is managed separately.
                 </p>
             </div>
-            {saved && <BillingFeedback kind="success">Billing settings saved.</BillingFeedback>}
             <form onSubmit={submit} className="space-y-7">
                 {Object.values(form.errors).length > 0 && (
                     <BillingFeedback kind="error">
@@ -126,31 +122,14 @@ export default function Settings({
                             {logoError && <BillingFeedback kind="error">{logoError}</BillingFeedback>}
                         </div>
                     </section>
-                    <section className="space-y-5 border-t pt-6">
+                    <section className="space-y-3 border-t pt-6">
                         <h2 className="text-lg font-semibold">Manual payment methods</h2>
                         <p className="text-muted-foreground text-sm">
-                            Enable methods for recording money already received. Existing payment history keeps its original method.
+                            Add, edit or disable methods in Payment methods. Used methods retain their payment history.
                         </p>
-                        <div className="flex flex-wrap gap-5">
-                            {paymentMethods.map((method) => (
-                                <div key={method.value} className="flex items-center gap-2">
-                                    <Checkbox
-                                        id={`method-${method.value}`}
-                                        checked={form.data.payment_methods.includes(method.value)}
-                                        disabled={!canUpdate || form.processing}
-                                        onCheckedChange={(checked) =>
-                                            form.setData(
-                                                'payment_methods',
-                                                checked === true
-                                                    ? [...form.data.payment_methods, method.value]
-                                                    : form.data.payment_methods.filter((value) => value !== method.value),
-                                            )
-                                        }
-                                    />
-                                    <Label htmlFor={`method-${method.value}`}>{method.label}</Label>
-                                </div>
-                            ))}
-                        </div>
+                        <Button variant="outline" asChild>
+                            <a href={route('admin.settings.billing.edit', { section: 'payments' })}>Manage payment methods</a>
+                        </Button>
                     </section>
                     <section className="space-y-5 border-t pt-6">
                         <h2 className="text-lg font-semibold">Invoice defaults</h2>

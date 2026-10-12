@@ -55,9 +55,12 @@ class CustomersController extends BaseController
             'financials'   => $request->user()->can('viewAny', \Modules\Billing\Models\Invoice::class) && $request->user()->can('view', new \Modules\Billing\Models\Invoice) ? app(\Modules\Billing\Services\InvoiceBalance::class)->customerData($customer->id, $request->user()->can('view', new \Modules\Billing\Models\Payment)) : null,
             'customer'     => $customer->load('contacts'),
             'can'          => [
-                'update'  => $request->user()->can('update', $customer),
-                'archive' => $request->user()->can('archive', $customer),
-                'restore' => $request->user()->can('restore', $customer),
+                'createInvoice' => $customer->archived_at === null && $request->user()->can('create', \Modules\Billing\Models\Invoice::class),
+                'createCredit'  => $request->user()->can('create', \Modules\Billing\Models\CreditNote::class),
+                'recordPayment' => $request->user()->hasRole('super-admin') || $request->user()->can('record payment'),
+                'update'        => $request->user()->can('update', $customer),
+                'archive'       => $request->user()->can('archive', $customer),
+                'restore'       => $request->user()->can('restore', $customer),
             ],
             'message' => $request->session()->get('billing_message'),
         ]);

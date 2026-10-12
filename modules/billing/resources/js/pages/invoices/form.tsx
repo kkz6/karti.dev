@@ -46,13 +46,13 @@ export default function InvoiceForm({
     canDownloadPdf,
     pdfError,
     invoice,
+    lockedCustomer = null,
     customers,
     currencies,
     taxRates,
     defaults,
     readOnly,
     canUpdate,
-    message,
     canIssue,
     activities,
     footerTarget,
@@ -63,6 +63,7 @@ export default function InvoiceForm({
     onItemDragChange,
 }: {
     invoice: InvoiceData | null;
+    lockedCustomer?: CustomerChoice | null;
     canDownloadPdf: boolean;
     pdfError?: string;
     customers: CustomerChoice[];
@@ -88,7 +89,7 @@ export default function InvoiceForm({
             ? editableInvoice(invoice)
             : {
                   ...defaults,
-                  customer_id: '',
+                  customer_id: lockedCustomer ? String(lockedCustomer.id) : '',
                   version: null,
                   discount_mode: 'none',
                   discount_value: '0',
@@ -119,7 +120,7 @@ export default function InvoiceForm({
     const invoiceId = invoice?.id;
 
     useEffect(() => {
-        if (readOnly) return;
+        if (readOnly || lockedCustomer) return;
         const abort = new AbortController();
         const timer = setTimeout(
             () =>
@@ -143,7 +144,7 @@ export default function InvoiceForm({
             clearTimeout(timer);
             abort.abort();
         };
-    }, [customerSearch, readOnly, form.data.customer_id]);
+    }, [customerSearch, lockedCustomer, readOnly, form.data.customer_id]);
 
     useEffect(() => {
         if (readOnly) return;
@@ -217,8 +218,16 @@ export default function InvoiceForm({
         form.clearErrors();
         try {
             const response = invoice
-                ? await axios.patch(route('admin.invoices.update', invoice.id), form.data)
-                : await axios.post(route('admin.invoices.store'), form.data);
+                ? await axios.patch(
+                      lockedCustomer
+                          ? route('admin.customers.invoices.update', [lockedCustomer.id, invoice.id])
+                          : route('admin.invoices.update', invoice.id),
+                      form.data,
+                  )
+                : await axios.post(
+                      lockedCustomer ? route('admin.customers.invoices.store', lockedCustomer.id) : route('admin.invoices.store'),
+                      form.data,
+                  );
             const saved = response.data as InvoiceFormSeed;
             const next = editableInvoice(saved.invoice!);
             form.setData(next);
@@ -317,7 +326,6 @@ export default function InvoiceForm({
                     </>
                 )}
                 {pdfError && <BillingFeedback kind="error">{pdfError}</BillingFeedback>}
-                {message && <BillingFeedback kind="success">{message}</BillingFeedback>}
                 {!embedded && invoice && canIssue && !form.isDirty && (
                     <Button variant="outline" asChild>
                         <Link href={route('admin.invoices.issue-review', invoice.id)}>Review and issue</Link>
@@ -353,41 +361,50 @@ export default function InvoiceForm({
                                 <div className="space-y-2">
                                     <Label htmlFor="customer_id">Customer *</Label>
 
-                                    <CustomerPicker
-                                        choices={choices}
-                                        search={customerSearch}
-                                        onSearch={setCustomerSearch}
-                                        id="customer_id"
-                                        required
-                                        value={form.data.customer_id}
-                                        onValueChange={async (value) => {
-                                            const selected = choices.find((customer) => String(customer.id) === value);
-                                            let currency = form.data.currency;
-                                            const preferred = selected?.default_currency || defaults.currency;
-                                            if (!invoice && currencies.some((entry) => entry.code === preferred) && preferred !== currency) {
-                                                const hasPrices = form.data.items.some((item) => item.rate !== '');
-                                                if (
-                                                    !hasPrices ||
-                                                    (await confirm(
-                                                        `Use this customer's ${preferred} default currency? Existing prices will be cleared for you to re-enter.`,
-                                                    ))
-                                                )
-                                                    currency = preferred;
-                                            }
-                                            form.setData({
-                                                ...form.data,
-                                                customer_id: value,
-                                                currency,
-                                                refresh_customer: false,
-                                                items:
-                                                    currency === form.data.currency
-                                                        ? form.data.items
-                                                        : form.data.items.map((item) => ({ ...item, rate: '', service_id: null })),
-                                            });
-                                        }}
-                                        disabled={readOnly || busy}
-                                        placeholder="Choose customer"
-                                    />
+                                    {lockedCustomer ? (
+                                        <Input
+                                            id="customer_id"
+                                            value={lockedCustomer.display_name}
+                                            readOnly
+                                            aria-label="Customer (fixed to this profile)"
+                                        />
+                                    ) : (
+                                        <CustomerPicker
+                                            choices={choices}
+                                            search={customerSearch}
+                                            onSearch={setCustomerSearch}
+                                            id="customer_id"
+                                            required
+                                            value={form.data.customer_id}
+                                            onValueChange={async (value) => {
+                                                const selected = choices.find((customer) => String(customer.id) === value);
+                                                let currency = form.data.currency;
+                                                const preferred = selected?.default_currency || defaults.currency;
+                                                if (!invoice && currencies.some((entry) => entry.code === preferred) && preferred !== currency) {
+                                                    const hasPrices = form.data.items.some((item) => item.rate !== '');
+                                                    if (
+                                                        !hasPrices ||
+                                                        (await confirm(
+                                                            `Use this customer's ${preferred} default currency? Existing prices will be cleared for you to re-enter.`,
+                                                        ))
+                                                    )
+                                                        currency = preferred;
+                                                }
+                                                form.setData({
+                                                    ...form.data,
+                                                    customer_id: value,
+                                                    currency,
+                                                    refresh_customer: false,
+                                                    items:
+                                                        currency === form.data.currency
+                                                            ? form.data.items
+                                                            : form.data.items.map((item) => ({ ...item, rate: '', service_id: null })),
+                                                });
+                                            }}
+                                            disabled={readOnly || busy}
+                                            placeholder="Choose customer"
+                                        />
+                                    )}
                                     {customerError && <BillingFeedback kind="error">{customerError}</BillingFeedback>}
                                     {selectedCustomer?.archived_at && (
                                         <p className="text-muted-foreground text-xs">
@@ -691,6 +708,7 @@ export default function InvoiceForm({
 
 export type InvoiceFormSeed = {
     invoice: InvoiceData | null;
+    lockedCustomer?: CustomerChoice | null;
     canDownloadPdf: boolean;
     pdfError?: string;
     customers: CustomerChoice[];

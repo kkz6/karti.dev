@@ -22,19 +22,87 @@ class OnlinePaymentsController extends BaseController
     {
         $this->authorize('view', BillingSettings::class);
 
-        return Inertia::render('billing::online-settings', ['settings'=>app(BillingProviderSettings::class)->toArray(), 'apiConfigured'=>config('services.dodo_payments.api_key') !== '', 'webhookConfigured'=>config('services.dodo_payments.webhook_key') !== '', 'testMode'=>(bool) config('services.dodo_payments.test_mode'), 'webhookUrl'=>route('billing.webhooks.dodo'), 'canUpdate'=>$request->user()->can('update', BillingSettings::class), 'message'=>$request->session()->get('billing_message')]);
+        $settings  = app(BillingProviderSettings::class);
+        $registry  = app(\Modules\Billing\Services\PaymentGatewayRegistry::class);
+        $providers = [];
+        foreach ($registry->all() as $id => $gateway) {
+            $configuration = $registry->configuration($id);
+            $fields        = [];
+            foreach ($gateway->fields() as $key => $field) {
+                $fields[$key] = [...\Illuminate\Support\Arr::except($field, ['default']), 'value' => $field['type'] === 'password' ? '' : ($configuration[$key] ?? ''), 'configured' => filled($configuration[$key] ?? null)];
+            }
+            $providers[] = ['id' => $id, 'name' => $gateway->name(), 'enabled' => $registry->enabled($id), 'fields' => $fields, 'webhookUrl' => route('billing.webhooks.provider', $id)];
+        }
+
+        return Inertia::render('billing::online-settings', [
+            'settings'     => \Illuminate\Support\Arr::except($settings->toArray(), ['provider_settings']), 'providers' => $providers,
+            'apiConfigured'=> filled(config('services.dodo_payments.api_key')), 'webhookConfigured'=>filled(config('services.dodo_payments.webhook_key')),
+            'testMode'     => (bool) config('services.dodo_payments.test_mode'), 'webhookUrl'=>route('billing.webhooks.dodo'),
+            'canUpdate'    => $request->user()->can('update', BillingSettings::class), 'message'=>$request->session()->get('billing_message')]);
     }
 
     public function updateSettings(Request $request)
     {
         $this->authorize('update', BillingSettings::class);
-        $data=$request->validate(['invoice_checkout_enabled'=>['required', 'boolean'], 'invoice_product_id'=>['nullable', 'string', 'max:255'], 'document_policy_confirmed'=>['required', 'boolean']]);
-        if ($data['invoice_checkout_enabled'] && (! $data['document_policy_confirmed'] || empty($data['invoice_product_id']))) {
-            throw \Illuminate\Validation\ValidationException::withMessages(['invoice_checkout_enabled'=>'Confirm the document policy and configure the exact-price product before enabling invoice checkout.']);
-        }$data['invoice_product_id'] ??= '';
+        $registry = app(\Modules\Billing\Services\PaymentGatewayRegistry::class);
+        $data     = $request->validate(['invoice_checkout_enabled'=>['required', 'boolean'], 'invoice_product_id'=>['nullable', 'string', 'max:255'], 'document_policy_confirmed'=>['required', 'boolean'], 'default_provider'=>['sometimes', \Illuminate\Validation\Rule::in(array_keys($registry->all()))]]);
+        $selected = $data['default_provider'] ?? $registry->defaultId();
+        if ($data['invoice_checkout_enabled'] && (! $data['document_policy_confirmed'] || ! $registry->enabled($selected))) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['invoice_checkout_enabled'=>'Confirm the document policy and enable the selected provider before enabling invoice checkout.']);
+        }
+        if ($data['invoice_checkout_enabled'] && $selected === 'dodo' && empty($data['invoice_product_id']) && empty($registry->configuration('dodo')['invoice_product_id'])) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['invoice_checkout_enabled'=>'Configure the exact-price product before enabling invoice checkout.']);
+        }
+        if (array_key_exists('invoice_product_id', $data)) {
+            $data['invoice_product_id'] ??= '';
+        }
         app(BillingProviderSettings::class)->fill($data)->save();
 
         return back()->with('billing_message', 'Online payment settings saved.');
+    }
+
+    public function updateProvider(Request $request, string $provider)
+    {
+        $this->authorize('update', BillingSettings::class);
+        $registry = app(\Modules\Billing\Services\PaymentGatewayRegistry::class);
+        abort_unless(isset($registry->all()[$provider]), 404);
+        $gateway = $registry->get($provider);
+        $rules   = ['enabled' => ['required', 'boolean'], 'fields' => ['required', 'array:'.implode(',', array_keys($gateway->fields()))]];
+        foreach ($gateway->fields() as $key => $field) {
+            $rules['fields.'.$key] = $field['type'] === 'checkbox' ? ['required', 'boolean'] : ['nullable', 'string', 'max:2048'];
+        }
+        $data   = $request->validate($rules);
+        $values = $registry->configuration($provider);
+        foreach ($gateway->fields() as $key => $field) {
+            $incoming = $data['fields'][$key] ?? '';
+            if ($field['type'] !== 'password' || $incoming !== '') {
+                $values[$key] = $incoming;
+            }
+            if ($data['enabled'] && ($field['required'] ?? false) && ! filled($values[$key])) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['fields.'.$key => 'Configure '.$field['label'].' before enabling this provider.']);
+            }
+        }
+        $settings              = app(BillingProviderSettings::class);
+        $configured            = $settings->provider_settings;
+        $configured[$provider] = $values;
+        $enabled               = array_values(array_diff($settings->enabled_providers, [$provider]));
+        if ($data['enabled']) {
+            $enabled[] = $provider;
+        }
+        $update = ['provider_settings'=>$configured, 'enabled_providers'=>$enabled];
+        if (! $data['enabled'] && $settings->default_provider === $provider) {
+            if ($enabled) {
+                $update['default_provider'] = $enabled[0];
+            } else {
+                $update['invoice_checkout_enabled'] = false;
+            }
+        }
+        if ($provider === 'dodo') {
+            $update['invoice_product_id'] = (string) ($values['invoice_product_id'] ?? '');
+        }
+        $settings->fill($update)->save();
+
+        return back()->with('success', $gateway->name().' settings saved.');
     }
 
     public function create(Request $request, Invoice $invoice, CreateInvoiceCheckout $action)

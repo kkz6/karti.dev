@@ -1,7 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { PageContainer } from '@shared/components/page-container';
 import AppLayout from '@shared/layouts/app-layout';
-import { Toaster } from 'sonner';
 import { AssetManager } from '../components/Browser/AssetManager';
 
 export default function MediaIndex() {
@@ -18,7 +17,6 @@ export default function MediaIndex() {
                     <AssetManager />
                 </div>
             </PageContainer>
-            <Toaster />
         </AppLayout>
     );
 }

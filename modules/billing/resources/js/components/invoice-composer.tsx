@@ -7,6 +7,7 @@ import { Label } from '@shared/components/ui/label';
 import axios from 'axios';
 import { ArrowLeft, Check, LoaderCircle, ShieldCheck } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import type { InvoiceData } from '../invoice-types';
 import InvoiceForm, { type InvoiceFormSeed } from '../pages/invoices/form';
 import { BillingFeedback } from './billing-feedback';
@@ -25,11 +26,13 @@ export function InvoiceComposer({
     open,
     onClose,
     invoiceId,
+    customerId,
     reloadOnly = ['table', 'selectedInvoice', 'summary'],
 }: {
     open: boolean;
     onClose: () => void;
     invoiceId?: number;
+    customerId?: number;
     /** Props refreshed after a save; null reloads the whole page (detail pages). */
     reloadOnly?: string[] | null;
 }) {
@@ -66,10 +69,19 @@ export function InvoiceComposer({
         setRefreshCustomer(false);
         setBusy(true);
         axios
-            .get(invoiceId ? route('admin.invoices.edit', invoiceId) : route('admin.invoices.create'), {
-                signal: abort.signal,
-                headers: { Accept: 'application/json' },
-            })
+            .get(
+                customerId
+                    ? invoiceId
+                        ? route('admin.customers.invoices.edit', [customerId, invoiceId])
+                        : route('admin.customers.invoices.create', customerId)
+                    : invoiceId
+                      ? route('admin.invoices.edit', invoiceId)
+                      : route('admin.invoices.create'),
+                {
+                    signal: abort.signal,
+                    headers: { Accept: 'application/json' },
+                },
+            )
             .then(({ data }) => setSeed(data))
             .catch((e) => {
                 if (!axios.isCancel(e)) setError('The invoice editor could not be loaded. Close and try again.');
@@ -78,7 +90,7 @@ export function InvoiceComposer({
                 if (!abort.signal.aborted) setBusy(false);
             });
         return () => abort.abort();
-    }, [open, invoiceId]);
+    }, [open, invoiceId, customerId]);
     const close = async () => {
         if (busy || formBusy) return;
         if (dirty && !(await confirm('Discard your unsaved invoice changes? Saved draft details will be kept.'))) return;
@@ -207,6 +219,7 @@ export function InvoiceComposer({
                                 onSaved={(data) => {
                                     setSeed(data);
                                     setSaved(true);
+                                    toast.success('Invoice draft saved.');
                                     setDirty(false);
                                 }}
                                 onReview={(invoice) => void loadReview(invoice)}
@@ -248,7 +261,7 @@ export function InvoiceComposer({
                                                 </ul>
                                             </BillingFeedback>
                                         ) : (
-                                            <BillingFeedback kind="success">
+                                            <BillingFeedback kind="info">
                                                 Verification passed. The identities and exact totals are ready for issuance.
                                             </BillingFeedback>
                                         )}

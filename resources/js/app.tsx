@@ -1,6 +1,7 @@
 import '@shared/../css/app.css';
 
 import { createInertiaApp, router } from '@inertiajs/react';
+import { AppNotifications } from '@shared/components/app-notifications';
 import { initializeTheme } from '@shared/hooks/use-appearance';
 import { formatDocumentTitle } from '@shared/lib/site-metadata';
 import type { SiteSettings } from '@shared/types/site-settings';
@@ -35,7 +36,12 @@ createInertiaApp({
         hasSeo = Boolean(shared.seo);
         const root = createRoot(el);
 
-        root.render(<App {...props} />);
+        root.render(
+            <>
+                <App {...props} />
+                <AppNotifications initial={shared.notifications} />
+            </>,
+        );
     },
     progress: {
         color: '#4B5563',

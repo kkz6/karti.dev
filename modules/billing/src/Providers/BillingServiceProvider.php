@@ -17,7 +17,8 @@ class BillingServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->bind(\Modules\Billing\Contracts\PaymentProvider::class, \Modules\Billing\Services\DodoPaymentProvider::class);
+        $this->app->singleton(\Modules\Billing\Services\PaymentGatewayRegistry::class);
+        $this->app->bind(\Modules\Billing\Contracts\PaymentProvider::class, fn ($app) => $app->make(\Modules\Billing\Services\PaymentGatewayRegistry::class)->make($app->make(\Modules\Billing\Services\PaymentGatewayRegistry::class)->defaultId()));
         $this->app->bind(\Modules\Billing\Contracts\InvoicePdfRenderer::class, \Modules\Billing\Services\DompdfInvoiceRenderer::class);
     }
 

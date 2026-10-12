@@ -57,6 +57,39 @@ class InvoicesController extends BaseController
         return $this->form($request);
     }
 
+    public function createForCustomer(Request $request, Customer $customer): Response|JsonResponse
+    {
+        $this->authorize('view', $customer);
+        $this->authorize('create', Invoice::class);
+        abort_if($customer->archived_at !== null, 409, 'Restore this customer before creating an invoice.');
+
+        return $this->form($request, lockedCustomer: $customer);
+    }
+
+    public function editForCustomer(Request $request, Customer $customer, Invoice $invoice): Response|JsonResponse
+    {
+        $this->authorize('view', $customer);
+        $this->authorize('update', $invoice);
+        abort_unless((int) $invoice->customer_id === (int) $customer->id && $invoice->status === 'draft', 404);
+
+        return $this->form($request, $invoice, lockedCustomer: $customer);
+    }
+
+    public function storeForCustomer(SaveInvoiceRequest $request, Customer $customer, SaveInvoiceDraft $action): Response|JsonResponse
+    {
+        $invoice = $action->handle($request->validated());
+
+        return $this->form($request, $invoice, lockedCustomer: $customer);
+    }
+
+    public function updateForCustomer(SaveInvoiceRequest $request, Customer $customer, Invoice $invoice, SaveInvoiceDraft $action): Response|JsonResponse
+    {
+        abort_unless((int) $invoice->customer_id === (int) $customer->id, 404);
+        $invoice = $action->handle($request->validated(), $invoice);
+
+        return $this->form($request, $invoice, lockedCustomer: $customer);
+    }
+
     public function show(Request $request, Invoice $invoice): Response|JsonResponse
     {
         $this->authorize('view', $invoice);
@@ -210,7 +243,7 @@ class InvoicesController extends BaseController
         return $invoice->activities()->when(! auth()->user()->can('send', $invoice), fn ($query) => $query->whereNotIn('event', ['email_queued', 'email_accepted']))->when(! auth()->user()->can('view', new \Modules\Billing\Models\Payment), fn ($query) => $query->whereNotIn('event', ['payment_recorded', 'payment_reversed']))->get()->map(fn ($activity) => ['id' => $activity->id, 'event' => $activity->event, 'description' => $activity->description, 'actor' => $activity->actor_name, 'at' => $activity->created_at->toIso8601String()])->all();
     }
 
-    private function form(Request $request, ?Invoice $invoice = null, bool $readOnly = false): Response|JsonResponse
+    private function form(Request $request, ?Invoice $invoice = null, bool $readOnly = false, ?Customer $lockedCustomer = null): Response|JsonResponse
     {
         $settings  = app(BillingSettings::class);
         $today     = CarbonImmutable::now($settings->timezone)->startOfDay();
@@ -220,12 +253,16 @@ class InvoicesController extends BaseController
         if ($invoice && ! $customers->contains('id', $invoice->customer_id)) {
             $customers->push($invoice->customer()->first(['id', 'display_name', 'default_currency', 'archived_at']));
         }
+        if ($lockedCustomer) {
+            $customers = collect([$lockedCustomer->only(['id', 'display_name', 'default_currency', 'archived_at'])]);
+        }
         $draft = $invoice ? $this->draftData($invoice) : null;
 
         $data = [
+            'lockedCustomer'  => $lockedCustomer?->only(['id', 'display_name', 'default_currency', 'archived_at']),
             'invoice'         => $draft, 'customers' => $customers, 'currencies' => Currencies::options(),
             'taxRates'        => $readOnly ? [] : TaxRate::whereNull('archived_at')->orderBy('name')->get(['id', 'name', 'percentage', 'archived_at']),
-            'defaults'        => $draft ? ['currency' => $draft['currency'], 'invoice_date' => $draft['invoice_date'], 'due_date' => $draft['due_date'] ?? '', 'terms' => $draft['terms'] ?? '', 'payment_instructions' => $draft['payment_instructions'] ?? ''] : ['currency' => $settings->default_currency, 'invoice_date' => $today->format('Y-m-d'), 'due_date' => $today->addDays($settings->due_days)->format('Y-m-d'), 'terms' => $settings->default_terms, 'payment_instructions' => $settings->payment_instructions],
+            'defaults'        => $draft ? ['currency' => $draft['currency'], 'invoice_date' => $draft['invoice_date'], 'due_date' => $draft['due_date'] ?? '', 'terms' => $draft['terms'] ?? '', 'payment_instructions' => $draft['payment_instructions'] ?? ''] : ['currency' => $lockedCustomer?->default_currency ?: $settings->default_currency, 'invoice_date' => $today->format('Y-m-d'), 'due_date' => $today->addDays($settings->due_days)->format('Y-m-d'), 'terms' => $settings->default_terms, 'payment_instructions' => $settings->payment_instructions],
             'canDownloadPdf'  => $invoice && $request->user()->can('download', $invoice), 'pdfError' => $request->session()->get('billing_pdf_error'),
             'readOnly'        => $readOnly, 'canUpdate' => $invoice && $request->user()->can('update', $invoice) && $invoice->status === 'draft',
             'canIssue'        => $request->user()->can('issue', $invoice ?? new Invoice) && (! $invoice || $invoice->status === 'draft'),

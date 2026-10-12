@@ -9,7 +9,6 @@ export default function ImportReview({
     batch,
     report,
     reviewToken,
-    message,
     hasSourceArchive,
 }: {
     batch: { id: number; source: string; state: string };
@@ -32,7 +31,6 @@ export default function ImportReview({
                     <a href={route('admin.billing.imports.archive', batch.id)}>Download imported source records</a>
                 </Button>
             )}
-            {message && <BillingFeedback kind="success">{message}</BillingFeedback>}
             <Card>
                 <CardHeader>
                     <CardTitle>Inventory</CardTitle>
@@ -101,7 +99,7 @@ export default function ImportReview({
                 </form>
             )}
             {batch.state === 'imported' && (
-                <BillingFeedback kind="success">This batch was imported. Replaying it does not create duplicate financial records.</BillingFeedback>
+                <BillingFeedback kind="info">This batch was imported. Replaying it does not create duplicate financial records.</BillingFeedback>
             )}
         </BillingSettingsWorkspace>
     );

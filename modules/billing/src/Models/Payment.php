@@ -15,6 +15,20 @@ class Payment extends Model
 
     protected $hidden = ['request_key', 'request_hash'];
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $payment) {
+            if (! $payment->payment_method_id) {
+                $payment->payment_method_id = \Modules\Billing\Support\PaymentMethods::resolve($payment->method, $payment->method_label, $payment->provider !== null || $payment->method === 'imported')->id;
+            }
+        });
+    }
+
+    public function paymentMethod(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(PaymentMethod::class);
+    }
+
     protected function casts(): array
     {
         return ['amount_minor' => 'integer', 'currency_precision' => 'integer', 'payment_date' => 'date:Y-m-d', 'created_at' => 'datetime', 'reversed_at' => 'datetime', 'reversal_date' => 'date:Y-m-d'];

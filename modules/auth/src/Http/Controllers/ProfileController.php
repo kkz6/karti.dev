@@ -43,7 +43,7 @@ class ProfileController
 
         $request->user()->save();
 
-        return Redirect::route('profile.edit');
+        return Redirect::route('profile.edit')->with('success', 'Profile updated.');
     }
 
     public function updatePhoto(Request $request): RedirectResponse
@@ -53,13 +53,13 @@ class ProfileController
         ]);
         $request->user()->updateProfilePhoto($request->file('photo'));
 
-        return Redirect::route('profile.edit');
+        return Redirect::route('profile.edit')->with('success', 'Profile image updated.');
     }
 
     public function destroyPhoto(Request $request): RedirectResponse
     {
         $request->user()->deleteProfilePhoto();
 
-        return Redirect::route('profile.edit');
+        return Redirect::route('profile.edit')->with('success', 'Profile image removed.');
     }
 }

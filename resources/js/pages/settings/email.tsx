@@ -12,8 +12,9 @@ import { Switch } from '@shared/components/ui/switch';
 import { UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
 import AppLayout from '@shared/layouts/app-layout';
 import axios, { AxiosError } from 'axios';
-import { Check, CircleCheck, Eye, EyeOff, KeyRound, LoaderCircle, LockKeyhole, Mail, Save, Send, Server, TriangleAlert } from 'lucide-react';
-import { type FormEvent, useState } from 'react';
+import { Eye, EyeOff, KeyRound, LoaderCircle, LockKeyhole, Mail, Save, Send, Server } from 'lucide-react';
+import { type FormEvent, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 type EmailSettings = {
     enabled: boolean;
@@ -55,6 +56,9 @@ export default function EmailSettingsPage({
     const [testRecipient, setTestRecipient] = useState(initialTestRecipient);
     const [testing, setTesting] = useState(false);
     const [testStatus, setTestStatus] = useState<TestStatus>(null);
+    useEffect(() => {
+        if (testStatus) toast[testStatus.type](testStatus.message);
+    }, [testStatus]);
     const form = useForm<EmailSettingsForm>({
         ...emailSettings,
         password: '',
@@ -115,16 +119,7 @@ export default function EmailSettingsPage({
                     actions={
                         <div className="flex items-center gap-3">
                             <span role="status" className="text-muted-foreground text-sm">
-                                {form.recentlySuccessful ? (
-                                    <span className="flex items-center gap-1.5">
-                                        <Check className="size-4" aria-hidden="true" />
-                                        Saved
-                                    </span>
-                                ) : form.isDirty ? (
-                                    'Unsaved changes'
-                                ) : (
-                                    ''
-                                )}
+                                {form.isDirty ? 'Unsaved changes' : ''}
                             </span>
                             <Button type="submit" form="email-settings-form" disabled={processing || !form.isDirty}>
                                 <Save className="size-4" aria-hidden="true" />
@@ -490,24 +485,6 @@ export default function EmailSettingsPage({
                                 </p>
                             ) : !data.enabled ? (
                                 <p className="text-muted-foreground text-xs">Enable custom email delivery before sending a test.</p>
-                            ) : null}
-
-                            {testStatus ? (
-                                <div
-                                    role="status"
-                                    className={
-                                        testStatus.type === 'success'
-                                            ? 'flex items-start gap-2 text-sm text-emerald-700 dark:text-emerald-400'
-                                            : 'text-destructive flex items-start gap-2 text-sm'
-                                    }
-                                >
-                                    {testStatus.type === 'success' ? (
-                                        <CircleCheck className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                                    ) : (
-                                        <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                                    )}
-                                    <span>{testStatus.message}</span>
-                                </div>
                             ) : null}
                         </CardContent>
                     </Card>

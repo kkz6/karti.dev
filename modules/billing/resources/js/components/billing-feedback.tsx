@@ -1,6 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from '@shared/components/ui/alert';
-import { CircleAlert, CircleCheck, Info } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { CircleAlert, Info } from 'lucide-react';
+import { useEffect, type ReactNode } from 'react';
+import { toast } from 'sonner';
 
 export function BillingFeedback({
     children,
@@ -11,10 +12,18 @@ export function BillingFeedback({
     kind?: 'error' | 'success' | 'info' | 'warning';
     title?: string;
 }) {
-    const Icon = kind === 'success' ? CircleCheck : kind === 'error' || kind === 'warning' ? CircleAlert : Info;
+    useEffect(() => {
+        if (kind === 'success')
+            toast.success(title ?? children, {
+                description: title ? children : undefined,
+                id: typeof children === 'string' ? `feedback:${children}` : undefined,
+            });
+    }, [children, kind, title]);
+    if (kind === 'success') return null;
+    const Icon = kind === 'error' || kind === 'warning' ? CircleAlert : Info;
     return (
         <Alert
-            role={kind === 'success' ? 'status' : 'alert'}
+            role="alert"
             variant={kind === 'error' ? 'destructive' : kind}
             className={kind === 'error' ? 'text-destructive border-destructive/25' : undefined}
         >

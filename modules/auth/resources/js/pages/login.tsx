@@ -13,7 +13,7 @@ import { Fingerprint, LoaderCircle } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 type LoginForm = { email: string; password: string; remember: boolean };
-export default function Login({ status, canResetPassword }: { status?: string; canResetPassword: boolean }) {
+export default function Login({ canResetPassword }: { status?: string; canResetPassword: boolean }) {
     const { data, setData, post, processing, errors, reset } = useForm<LoginForm>({ email: '', password: '', remember: false });
     const [passkeyAvailable, setPasskeyAvailable] = useState(false);
     const supported = canUsePasskeys();
@@ -42,11 +42,6 @@ export default function Login({ status, canResetPassword }: { status?: string; c
     return (
         <AuthLayout title="Welcome back" description="Sign in to your Karti.dev account">
             <Head title="Log in" />
-            {status && (
-                <p role="status" className="text-muted-foreground mb-4 text-sm">
-                    {status}
-                </p>
-            )}
             <form onSubmit={submit} className="space-y-5">
                 <div className="space-y-2">
                     <Label htmlFor="email">Email address</Label>

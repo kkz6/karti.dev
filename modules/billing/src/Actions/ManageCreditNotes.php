@@ -163,7 +163,7 @@ class ManageCreditNotes
             $minor=$this->minor($data['amount'], $note->currency_precision);
             $old  =CreditRefund::where('request_key', $data['request_key'])->first();
             if ($old) {
-                if ($old->credit_note_id !== $note->id || $old->amount_minor !== $minor || $old->refund_date->format('Y-m-d') !== $data['refund_date'] || $old->reason !== $data['reason'] || $old->method_label !== $data['method_label'] || $old->reference !== ($data['reference'] ?? null)) {
+                if ($old->credit_note_id !== $note->id || $old->amount_minor !== $minor || $old->refund_date->format('Y-m-d') !== $data['refund_date'] || $old->reason !== $data['reason'] || (isset($data['method']) ? $old->paymentMethod->code !== $data['method'] : $old->method_label !== $data['method_label']) || $old->reference !== ($data['reference'] ?? null)) {
                     throw ValidationException::withMessages(['amount'=>'Refund key already used with different details.']);
                 }
 
@@ -172,7 +172,13 @@ class ManageCreditNotes
             if ($note->status !== 'issued' || BigInteger::of($minor)->isGreaterThan(app(CreditBalance::class)->available($note))) {
                 throw ValidationException::withMessages(['amount'=>'Refund exceeds available credit.']);
             }$this->date($data['refund_date'], $note->credit_date->format('Y-m-d'));
-            $refund=CreditRefund::create(['credit_note_id'=>$note->id, 'amount_minor'=>$minor, 'currency'=>$note->currency, 'refund_date'=>$data['refund_date'], 'method_label'=>$data['method_label'], 'reference'=>$data['reference'] ?? null, 'reason'=>$data['reason'], 'request_key'=>$data['request_key'], 'actor_id'=>$actor->id, 'actor_name'=>$actor->name]);
+            $method = isset($data['method'])
+                ? \Modules\Billing\Models\PaymentMethod::where('manual', true)->where('code', $data['method'])->lockForUpdate()->first()
+                : (\Modules\Billing\Models\PaymentMethod::where('name', $data['method_label'])->first() ?? \Modules\Billing\Support\PaymentMethods::resolve('imported', $data['method_label'], true));
+            if (! $method || (isset($data['method']) && ! in_array($data['method'], array_column(\Modules\Billing\Support\PaymentMethods::options(), 'value'), true))) {
+                throw ValidationException::withMessages(['method' => 'Choose an enabled refund payment method.']);
+            }
+            $refund=CreditRefund::create(['payment_method_id'=>$method->id, 'credit_note_id'=>$note->id, 'amount_minor'=>$minor, 'currency'=>$note->currency, 'refund_date'=>$data['refund_date'], 'method_label'=>$data['method_label'], 'reference'=>$data['reference'] ?? null, 'reason'=>$data['reason'], 'request_key'=>$data['request_key'], 'actor_id'=>$actor->id, 'actor_name'=>$actor->name]);
             $note->increment('version');
             Invoice::findOrFail($note->invoice_id)->recordActivity('credit_refunded', $note->formatted_number.' refund recorded: '.InvoiceCalculator::money((string) $minor, $note->currency_precision).' '.$note->currency.'.', $actor);
 

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Billing\Http\Controllers\BillingSettingsController;
 use Modules\Billing\Http\Controllers\ContactsController;
 use Modules\Billing\Http\Controllers\CustomersController;
+use Modules\Billing\Http\Controllers\InvoicesController;
 use Modules\Billing\Http\Controllers\TaxRatesController;
 
 Route::middleware(['web', 'auth', 'verified', \Modules\Billing\Http\Middleware\PreserveInvoicePanel::class])->prefix('admin')->name('admin.')->group(function () {
@@ -28,6 +29,7 @@ Route::middleware(['web', 'auth', 'verified', \Modules\Billing\Http\Middleware\P
     Route::post('credit-notes/{creditNote}/allocations/{allocation}/reverse', [\Modules\Billing\Http\Controllers\CreditNotesController::class, 'reverseAllocation'])->name('credit-notes.allocations.reverse');
     Route::post('credit-notes/{creditNote}/refunds/{refund}/reverse', [\Modules\Billing\Http\Controllers\CreditNotesController::class, 'reverseRefund'])->name('credit-notes.refunds.reverse');
     Route::get('billing/online-payments', [\Modules\Billing\Http\Controllers\OnlinePaymentsController::class, 'settings'])->name('billing.online.edit');
+    Route::put('billing/providers/{provider}', [\Modules\Billing\Http\Controllers\OnlinePaymentsController::class, 'updateProvider'])->name('billing.providers.update');
     Route::put('billing/online-payments', [\Modules\Billing\Http\Controllers\OnlinePaymentsController::class, 'updateSettings'])->name('billing.online.update');
     Route::get('billing/reconciliation', [\Modules\Billing\Http\Controllers\OnlinePaymentsController::class, 'reconciliation'])->name('billing.reconciliation');
     Route::post('billing/reconciliation/{event}/retry', [\Modules\Billing\Http\Controllers\OnlinePaymentsController::class, 'retry'])->name('billing.reconciliation.retry');
@@ -50,11 +52,18 @@ Route::middleware(['web', 'auth', 'verified', \Modules\Billing\Http\Middleware\P
     Route::post('invoices/{invoice}/payments', [\Modules\Billing\Http\Controllers\PaymentsController::class, 'store'])->name('invoices.payments.store');
     Route::get('payments', [\Modules\Billing\Http\Controllers\PaymentsController::class, 'index'])->name('payments.index');
     Route::post('payments/{payment}/reverse', [\Modules\Billing\Http\Controllers\PaymentsController::class, 'reverse'])->name('payments.reverse');
+    Route::post('billing/payment-methods', [\Modules\Billing\Http\Controllers\PaymentMethodsController::class, 'store'])->name('billing.payment-methods.store');
+    Route::put('billing/payment-methods/{paymentMethod}', [\Modules\Billing\Http\Controllers\PaymentMethodsController::class, 'update'])->name('billing.payment-methods.update');
+    Route::delete('billing/payment-methods/{paymentMethod}', [\Modules\Billing\Http\Controllers\PaymentMethodsController::class, 'destroy'])->name('billing.payment-methods.destroy');
     Route::get('settings/billing', [BillingSettingsController::class, 'edit'])->name('settings.billing.edit');
     Route::put('settings/billing', [BillingSettingsController::class, 'update'])->name('settings.billing.update');
     Route::resource('tax-rates', TaxRatesController::class)->parameters(['tax-rates' => 'taxRate'])->except('destroy');
     Route::post('tax-rates/{taxRate}/archive', [TaxRatesController::class, 'archive'])->name('tax-rates.archive');
     Route::post('tax-rates/{taxRate}/restore', [TaxRatesController::class, 'restore'])->name('tax-rates.restore');
+    Route::get('customers/{customer}/invoices/create', [InvoicesController::class, 'createForCustomer'])->name('customers.invoices.create');
+    Route::post('customers/{customer}/invoices', [InvoicesController::class, 'storeForCustomer'])->name('customers.invoices.store');
+    Route::get('customers/{customer}/invoices/{invoice}/edit', [InvoicesController::class, 'editForCustomer'])->name('customers.invoices.edit');
+    Route::patch('customers/{customer}/invoices/{invoice}', [InvoicesController::class, 'updateForCustomer'])->name('customers.invoices.update');
     Route::resource('customers', CustomersController::class)->except('destroy');
     Route::post('customers/{customer}/archive', [CustomersController::class, 'archive'])->name('customers.archive');
     Route::post('customers/{customer}/restore', [CustomersController::class, 'restore'])->name('customers.restore');
@@ -67,6 +76,8 @@ Route::middleware(['web', 'auth', 'verified', \Modules\Billing\Http\Middleware\P
 });
 
 Route::get('billing/invoices/{token}', \Modules\Billing\Http\Controllers\PublicInvoiceController::class)->middleware(['web', 'throttle:60,1'])->where('token', '[a-f0-9]{64}')->name('billing.public-invoice');
+
+Route::post('billing/webhooks/{provider}', \Modules\Billing\Http\Controllers\ProviderWebhookController::class)->where('provider', '[a-z][a-z0-9_-]+')->middleware('throttle:120,1')->name('billing.webhooks.provider');
 
 Route::post('billing/webhooks/dodo', \Modules\Billing\Http\Controllers\ProviderWebhookController::class)->middleware('throttle:120,1')->name('billing.webhooks.dodo');
 

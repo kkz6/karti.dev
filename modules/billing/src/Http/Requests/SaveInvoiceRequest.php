@@ -11,6 +11,12 @@ class SaveInvoiceRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        if ($customer = $this->route('customer')) {
+            if (! $this->user()->can('view', $customer)) {
+                return false;
+            }
+        }
+
         return $this->route('invoice') ? $this->user()->can('update', $this->route('invoice')) : $this->user()->can('create', Invoice::class);
     }
 
@@ -19,7 +25,7 @@ class SaveInvoiceRequest extends FormRequest
         $decimal = ['required', 'string', 'regex:/^(?:0|[1-9][0-9]{0,8})(?:\.[0-9]{1,4})?$/'];
 
         return [
-            'customer_id'                 => ['required', 'integer', Rule::exists('billing_customers', 'id')],
+            'customer_id'                 => ['required', 'integer', Rule::exists('billing_customers', 'id'), Rule::when($this->route('customer') !== null, fn () => Rule::in([$this->route('customer')->id]))],
             'version'                     => [$this->route('invoice') ? 'required' : 'nullable', 'integer', 'min:1'],
             'invoice_date'                => ['required', 'date_format:Y-m-d'], 'due_date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:invoice_date'],
             'currency'                    => ['required', Rule::in(Currencies::codes())],

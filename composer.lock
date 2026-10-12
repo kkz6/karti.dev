@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "df189c7972445ec55b626bad684e318d",
+    "content-hash": "33e7dad13ba28b573ce7cdf05653b0b6",
     "packages": [
         {
             "name": "amphp/amp",
@@ -5401,6 +5401,41 @@
                 "MIT"
             ],
             "description": "Single-business customer and billing management",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "modules/billing-dodo",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "modules/billing-dodo",
+                "reference": "ac0c021715aeab6c4e75e27deb597212757c1e7a"
+            },
+            "require": {
+                "dodopayments/client": "^6.1",
+                "modules/billing": "*",
+                "php": "^8.2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Modules\\BillingDodo\\DodoServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Modules\\BillingDodo\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Auto-discovered Dodo Payments gateway for the billing module",
             "transport-options": {
                 "symlink": true,
                 "relative": true

@@ -37,7 +37,6 @@ export default function RecurringForm({
     defaultTimezone,
     canUpdate,
     occurrences,
-    message,
 }: {
     schedule: RecurringSchedule | null;
     sources: { id: number; formatted_number: string | null; customer_name: string }[];
@@ -259,7 +258,6 @@ export default function RecurringForm({
                     actions={saveButton('default')}
                 />
                 <div className="space-y-4 empty:hidden">
-                    {message && <BillingFeedback kind="success">{message}</BillingFeedback>}
                     {schedule?.last_error && (
                         <BillingFeedback kind="error" title="Last run failed">
                             {schedule.last_error}

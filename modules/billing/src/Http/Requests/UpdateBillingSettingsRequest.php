@@ -43,8 +43,8 @@ class UpdateBillingSettingsRequest extends FormRequest
             'due_days'          => ['required', 'integer', 'between:0,365'],
             'number_prefix'     => ['required', 'string', 'max:20', 'regex:~^[A-Za-z0-9][A-Za-z0-9._/-]*$~'],
             'number_padding'    => ['required', 'integer', 'between:1,10'],
-            'payment_methods'   => ['sometimes', 'array', 'max:5'],
-            'payment_methods.*' => ['required', 'distinct', Rule::in(array_keys(\Modules\Billing\Support\PaymentMethods::LABELS))],
+            'payment_methods'   => ['sometimes', 'array', 'max:100'],
+            'payment_methods.*' => ['required', 'distinct', Rule::in(array_column(\Modules\Billing\Support\PaymentMethods::options(false), 'value'))],
             'default_terms'     => ['nullable', 'string', 'max:10000'], 'payment_instructions' => ['nullable', 'string', 'max:10000'],
         ];
     }

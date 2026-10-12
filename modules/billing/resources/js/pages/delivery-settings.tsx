@@ -40,12 +40,14 @@ function formData(settings: Settings): Form {
         templates: Object.fromEntries(
             Object.keys(events).map((event) => [
                 event,
-                {
-                    email_subject: 'Invoice {invoice_number}',
-                    email_message: 'Invoice {invoice_number}: {currency} {amount_due}.',
-                    sms_message: 'Invoice {invoice_number}: {currency} {amount_due}. {invoice_link}',
-                    ...(settings.templates?.[event as Event] ?? {}),
-                },
+                Object.assign(
+                    {
+                        email_subject: 'Invoice {invoice_number}',
+                        email_message: 'Invoice {invoice_number}: {currency} {amount_due}.',
+                        sms_message: 'Invoice {invoice_number}: {currency} {amount_due}. {invoice_link}',
+                    },
+                    settings.templates?.[event as Event] ?? {},
+                ),
             ]),
         ) as Settings['templates'],
         twilio_auth_token: '',
@@ -76,7 +78,6 @@ export default function DeliverySettings({
     emailProvider,
     fields,
     canUpdate,
-    message,
 }: {
     settings: Settings;
     credentials: { twilio: boolean; msg91: boolean };
@@ -153,7 +154,6 @@ export default function DeliverySettings({
                     </Button>
                 )}
             </div>
-            {message && <BillingFeedback kind="success">{message}</BillingFeedback>}
             {Object.values(form.errors).length > 0 && (
                 <BillingFeedback kind="error">
                     {Object.values(form.errors).map((error, index) => (

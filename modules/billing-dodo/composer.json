@@ -1,0 +1,24 @@
+{
+    "name": "modules/billing-dodo",
+    "description": "Auto-discovered Dodo Payments gateway for the billing module",
+    "type": "library",
+    "version": "1.0.0",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "modules/billing": "*",
+        "dodopayments/client": "^6.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\BillingDodo\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\BillingDodo\\DodoServiceProvider"
+            ]
+        }
+    }
+}

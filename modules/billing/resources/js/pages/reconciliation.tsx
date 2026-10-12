@@ -7,13 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/
 import AppLayout from '@shared/layouts/app-layout';
 import { InertiaTableWrapper, type TableConfig } from '@table/components';
 import { CreditCard, ListChecks, Radio, SlidersHorizontal } from 'lucide-react';
-import { BillingFeedback } from '../components/billing-feedback';
 export default function Reconciliation({
     checkoutsTable,
     eventsTable,
     onlineEnabled,
     canViewSettings,
-    message,
 }: {
     checkoutsTable: TableConfig;
     eventsTable: TableConfig;
@@ -48,7 +46,6 @@ export default function Reconciliation({
                     }
                     description={<> Match online charges to invoice balances and resolve payments that need attention. </>}
                 />
-                {message && <BillingFeedback kind="success">{message}</BillingFeedback>}
                 {!hasActivity ? (
                     <section className="rounded-lg border p-5 sm:p-6">
                         <div className="flex items-start gap-4">

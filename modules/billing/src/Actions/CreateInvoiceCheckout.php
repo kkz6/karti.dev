@@ -5,7 +5,6 @@ namespace Modules\Billing\Actions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Modules\Billing\Contracts\PaymentProvider;
 use Modules\Billing\Models\Invoice;
 use Modules\Billing\Models\OnlineCheckout;
 use Modules\Billing\Services\InvoiceBalance;
@@ -15,9 +14,12 @@ class CreateInvoiceCheckout
 {
     public function handle(Invoice $invoice, string $requestKey, string $invoiceUrl): OnlineCheckout
     {
-        $settings=app(BillingProviderSettings::class);
-        abort_unless($settings->invoice_checkout_enabled && $settings->document_policy_confirmed && $settings->invoice_product_id !== '', 409, 'Invoice online checkout is not configured.');
-        $checkout=DB::transaction(function () use ($invoice, $requestKey, $invoiceUrl) {
+        $settings =app(BillingProviderSettings::class);
+        $registry = app(\Modules\Billing\Services\PaymentGatewayRegistry::class);
+        $provider = $registry->defaultId();
+        abort_unless($registry->enabled($provider), 409, 'The selected payment provider is disabled or not installed.');
+        abort_unless($settings->invoice_checkout_enabled && $settings->document_policy_confirmed, 409, 'Invoice online checkout is not configured.');
+        $checkout=DB::transaction(function () use ($invoice, $requestKey, $invoiceUrl, $provider) {
             if (DB::connection()->getDriverName() === 'sqlite') {
                 DB::table('billing_invoices')->where('id', $invoice->id)->update(['version'=>DB::raw('version')]);
             }
@@ -36,13 +38,14 @@ class CreateInvoiceCheckout
                 throw ValidationException::withMessages(['checkout'=>'Reopen the invoice before starting another checkout.']);
             }
 
-            return OnlineCheckout::create(['invoice_id'=>$locked->id, 'public_id'=>(string) Str::uuid(), 'request_key'=>$requestKey, 'expected_minor'=>$minor, 'currency'=>$locked->currency, 'invoice_url'=>$invoiceUrl]);
+            return OnlineCheckout::create(['provider'=>$provider, 'invoice_id'=>$locked->id, 'public_id'=>(string) Str::uuid(), 'request_key'=>$requestKey, 'expected_minor'=>$minor, 'currency'=>$locked->currency, 'invoice_url'=>$invoiceUrl]);
         }, 5);
         if ($checkout->state === 'pending') {
             return $checkout;
         }
         try {
-            $result=app(PaymentProvider::class)->invoiceCheckout($checkout);
+            $result=$registry->adapter($checkout->provider)->invoiceCheckout($checkout);
+            $registry->validateCheckoutUrl($checkout->provider, $result['url']);
             $checkout->update(['session_id'=>$result['session_id'], 'checkout_url'=>$result['url'], 'state'=>'pending', 'error'=>null]);
         } catch (\Throwable $e) {
             report($e);
