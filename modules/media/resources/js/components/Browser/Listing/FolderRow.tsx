@@ -1,7 +1,6 @@
 import { MediaFolder } from '@media/types/media';
-import { Button } from '@shared/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
-import { Edit, Folder, MoreHorizontal, Trash2 } from 'lucide-react';
+import { RowActionButton } from '@shared/components/row-action-button';
+import { Edit, Folder, Trash2 } from 'lucide-react';
 import { useMediaMove } from '../MediaMoveContext';
 
 interface FolderRowProps {
@@ -37,27 +36,18 @@ export function FolderRow({ folder, canEdit, onSelected, onEditing, onDeleting }
                 </button>
                 <span className="text-muted-foreground text-xs">Folder</span>
             </td>
-            <td className="text-muted-foreground hidden p-3 text-sm md:table-cell">—</td>
+            <td className="text-muted-foreground hidden p-3 text-right text-sm md:table-cell">—</td>
             <td className="text-muted-foreground hidden p-3 text-sm md:table-cell">{new Date(folder.updated_at).toLocaleDateString()}</td>
             <td className="p-3">
                 {canEdit && (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" aria-label={`Actions for ${folder.title}`}>
-                                <MoreHorizontal />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onSelect={() => onEditing(folder)}>
-                                <Edit />
-                                Rename
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive" onSelect={() => onDeleting(folder)}>
-                                <Trash2 />
-                                Delete
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex items-center justify-end gap-2">
+                        <RowActionButton label={`Rename ${folder.title}`} tooltip="Rename folder" onClick={() => onEditing(folder)}>
+                            <Edit className="size-4" />
+                        </RowActionButton>
+                        <RowActionButton label={`Delete ${folder.title}`} tooltip="Delete folder" destructive onClick={() => onDeleting(folder)}>
+                            <Trash2 className="size-4" />
+                        </RowActionButton>
+                    </div>
                 )}
             </td>
         </tr>

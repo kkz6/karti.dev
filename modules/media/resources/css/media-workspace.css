@@ -80,7 +80,7 @@ body:has(.admin-workspace) .media-view-toggle > .ui-button:last-child {
     padding-left: 0;
 }
 .media-workspace .asset-table-listing :is(th, td):last-child {
-    width: 3.75rem;
+    width: 8.5rem;
 }
 .media-workspace .asset-table-listing th:nth-child(4) {
     width: 12%;

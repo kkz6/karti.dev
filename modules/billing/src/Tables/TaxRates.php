@@ -30,7 +30,7 @@ class TaxRates extends CatalogueTable
     {
         return [
             Columns\TextColumn::make('name', 'Tax preset', toggleable: false)->searchable()->sortable(),
-            Columns\TextColumn::make('percentage', 'Rate')->mapAs(fn ($rate) => rtrim(rtrim($rate, '0'), '.').'%')->sortable(),
+            Columns\TextColumn::make('percentage', 'Rate')->rightAligned()->cellClass('tabular-nums')->mapAs(fn ($rate) => rtrim(rtrim($rate, '0'), '.').'%')->sortable(),
             Columns\BadgeColumn::make('archived_at', 'Status')->mapAs(fn ($date) => $date ? 'Archived' : 'Active')->variant(fn ($date) => $date ? 'muted' : 'success'),
             Columns\ActionColumn::new(),
         ];

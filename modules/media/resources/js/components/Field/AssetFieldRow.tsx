@@ -1,4 +1,4 @@
-import { TooltipButton } from '@shared/components/ui/tooltip-button';
+import { RowActionButton } from '@shared/components/row-action-button';
 import { Pencil, Trash2 } from 'lucide-react';
 import { MediaAsset } from '../../types/media';
 import { FileIcon } from '../Icons/FileIcon';
@@ -74,30 +74,18 @@ export function AssetFieldRow({
                 )}
             </td>
 
-            <td className="w-8 p-0 text-right align-middle">
+            <td className="w-20 p-0 text-right align-middle">
                 {!readOnly && (
                     <div className="flex items-center justify-end gap-1">
                         {canEdit && (
-                            <TooltipButton
-                                tooltip="Edit Asset"
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 text-gray-600 hover:text-gray-900"
-                                onClick={handleEdit}
-                            >
+                            <RowActionButton label={`Edit ${asset.title || asset.filename}`} tooltip="Edit asset" onClick={handleEdit}>
                                 <Pencil className="h-4 w-4" />
-                            </TooltipButton>
+                            </RowActionButton>
                         )}
 
-                        <TooltipButton
-                            tooltip="Remove Asset"
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 text-gray-600 hover:text-red-600"
-                            onClick={handleRemove}
-                        >
+                        <RowActionButton label={`Remove ${asset.title || asset.filename}`} tooltip="Remove asset" destructive onClick={handleRemove}>
                             <Trash2 className="h-4 w-4" />
-                        </TooltipButton>
+                        </RowActionButton>
                     </div>
                 )}
             </td>

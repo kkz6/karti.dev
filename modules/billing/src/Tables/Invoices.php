@@ -32,8 +32,8 @@ class Invoices extends Table
             Columns\DateColumn::make('invoice_date', 'Invoice date')->sortable(), Columns\DateColumn::make('due_date', 'Due date')->sortable(),
             Columns\DateColumn::make('created_at', 'Created')->hidden()->sortable()->sortUsing(fn (Builder $query, \Modules\Table\Enums\SortDirection $direction) => $query->orderBy('created_at', $direction->value)->orderBy('id', $direction->value)),
             Columns\TextColumn::make('currency', 'Currency'),
-            Columns\TextColumn::make('total_minor', 'Total')->mapAs(fn ($minor, Invoice $invoice) => InvoiceCalculator::money((string) $minor, $invoice->currency_precision))->sortable(),
-            Columns\TextColumn::make('balance', 'Balance')->mapAs(fn ($value, Invoice $invoice) => $invoice->status === 'issued' ? app(\Modules\Billing\Services\InvoiceBalance::class)->data($invoice)['balance'] : '—'),
+            Columns\TextColumn::make('total_minor', 'Total')->rightAligned()->cellClass('tabular-nums')->mapAs(fn ($minor, Invoice $invoice) => InvoiceCalculator::money((string) $minor, $invoice->currency_precision))->sortable(),
+            Columns\TextColumn::make('balance', 'Balance')->rightAligned()->cellClass('tabular-nums')->mapAs(fn ($value, Invoice $invoice) => $invoice->status === 'issued' ? app(\Modules\Billing\Services\InvoiceBalance::class)->data($invoice)['balance'] : '—'),
             Columns\BadgeColumn::make('settlement', 'Settlement')->mapAs(fn ($value, Invoice $invoice) => ucfirst(app(\Modules\Billing\Services\InvoiceBalance::class)->data($invoice)['state']))->variant(function ($value, Invoice $invoice) {
                 $state=app(\Modules\Billing\Services\InvoiceBalance::class)->data($invoice);
 

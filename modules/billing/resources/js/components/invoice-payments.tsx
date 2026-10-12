@@ -1,5 +1,6 @@
 import { router, useForm } from '@inertiajs/react';
 import { DateField } from '@shared/components/date-field';
+import { RowActionButton } from '@shared/components/row-action-button';
 import { Badge } from '@shared/components/ui/badge';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@shared/components/ui/card';
@@ -9,7 +10,7 @@ import { Label } from '@shared/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/components/ui/table';
 import { Textarea } from '@shared/components/ui/textarea';
 import { statusTone } from '@shared/lib/status-colors';
-import { CreditCard } from 'lucide-react';
+import { CreditCard, Undo2 } from 'lucide-react';
 import { useState } from 'react';
 import type { InvoiceData } from '../invoice-types';
 import type { PaymentData, PaymentMethod, Settlement } from '../payment-types';
@@ -27,6 +28,7 @@ export function PaymentHistory({
     embedded?: boolean;
     emptyDescription?: string;
 }) {
+    const hasActions = !!onReverse && payments.some((payment) => payment.canReverse);
     return (
         <Card className={embedded ? 'rounded-none border-0 bg-transparent' : undefined}>
             <CardHeader className={embedded ? 'px-0 pt-0 pb-3' : undefined}>
@@ -46,21 +48,25 @@ export function PaymentHistory({
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Payment</TableHead>
-                                <TableHead>Amount</TableHead>
+                                <TableHead className="text-right">Amount</TableHead>
                                 <TableHead>Details</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead>Action</TableHead>
+                                {hasActions && (
+                                    <TableHead className="w-12 text-center">
+                                        <span className="sr-only">Actions</span>
+                                    </TableHead>
+                                )}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {payments.map((payment) => (
                                 <TableRow key={payment.id}>
-                                    <TableCell>
-                                        #{payment.id}
-                                        <p className="text-muted-foreground text-xs">{payment.payment_date}</p>
-                                        {payment.invoice_number && <p>{payment.invoice_number}</p>}
-                                    </TableCell>
                                     <TableCell className="whitespace-nowrap">
+                                        #{payment.id}
+                                        <p className="text-muted-foreground text-xs whitespace-nowrap">{payment.payment_date}</p>
+                                        {payment.invoice_number && <p className="whitespace-nowrap">{payment.invoice_number}</p>}
+                                    </TableCell>
+                                    <TableCell className="text-right whitespace-nowrap tabular-nums">
                                         {payment.amount} {payment.currency}
                                     </TableCell>
                                     <TableCell className="max-w-sm break-words whitespace-normal">
@@ -83,13 +89,20 @@ export function PaymentHistory({
                                             </p>
                                         )}
                                     </TableCell>
-                                    <TableCell>
-                                        {onReverse && payment.canReverse && (
-                                            <Button variant="destructiveGhost" size="sm" onClick={() => onReverse(payment)}>
-                                                Reverse payment
-                                            </Button>
-                                        )}
-                                    </TableCell>
+                                    {hasActions && (
+                                        <TableCell className="text-center">
+                                            {onReverse && payment.canReverse && (
+                                                <RowActionButton
+                                                    label={`Reverse payment #${payment.id}`}
+                                                    tooltip="Reverse payment"
+                                                    destructive
+                                                    onClick={() => onReverse(payment)}
+                                                >
+                                                    <Undo2 className="size-4" />
+                                                </RowActionButton>
+                                            )}
+                                        </TableCell>
+                                    )}
                                 </TableRow>
                             ))}
                         </TableBody>

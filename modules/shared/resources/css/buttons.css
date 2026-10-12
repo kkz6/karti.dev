@@ -72,6 +72,7 @@ body:has(.admin-workspace) .editor-save-group > .ui-button:last-child {
     width: 2rem;
     height: 2rem;
     min-height: 2rem;
+    flex-shrink: 0;
     padding: 0;
     gap: 0;
     border: 0;
@@ -89,7 +90,11 @@ body:has(.admin-workspace) .editor-save-group > .ui-button:last-child {
     background: var(--accent);
     color: var(--foreground);
 }
-.admin-workspace .it-row-actions > .ui-button-destructive-outline {
+.admin-workspace .it-row-action-icon-button[data-variant='destructiveGhost'] {
     background: transparent;
+    color: var(--destructive);
+}
+.admin-workspace .it-row-action-icon-button[data-variant='destructiveGhost']:not(:disabled, [aria-disabled='true']):hover {
+    background: color-mix(in oklab, var(--destructive) 8%, var(--card));
     color: var(--destructive);
 }

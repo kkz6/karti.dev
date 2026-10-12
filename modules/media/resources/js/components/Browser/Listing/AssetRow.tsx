@@ -1,4 +1,4 @@
-import { Button } from '@shared/components/ui/button';
+import { RowActionButton } from '@shared/components/row-action-button';
 import { Checkbox } from '@shared/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
 import { Download, Edit, FolderInput, MoreHorizontal, Trash2 } from 'lucide-react';
@@ -127,44 +127,62 @@ export const AssetRow: React.FC<AssetRowProps> = ({
             </td>
 
             {/* File Size */}
-            <td className="text-muted-foreground hidden p-3 text-sm md:table-cell">{formatFileSize(asset.size)}</td>
+            <td className="text-muted-foreground hidden p-3 text-right text-sm tabular-nums md:table-cell">{formatFileSize(asset.size)}</td>
 
             {/* Date Modified */}
             <td className="text-muted-foreground hidden p-3 text-sm md:table-cell">{formatDate(asset.updated_at)}</td>
 
             {/* More Actions */}
-            <td className="p-3">
-                <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" aria-label={`Actions for ${asset.filename}`}>
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+            <td className="p-3 text-right">
+                {canEdit && move ? (
+                    <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+                        <DropdownMenuTrigger asChild>
+                            <RowActionButton label={`Actions for ${asset.filename}`} tooltip="More actions">
+                                <MoreHorizontal className="size-4" />
+                            </RowActionButton>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            {canEdit && (
+                                <>
+                                    <DropdownMenuItem onClick={handleEdit}>
+                                        <Edit />
+                                        Edit details
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="text-destructive" onClick={handleDelete}>
+                                        <Trash2 />
+                                        Delete
+                                    </DropdownMenuItem>
+                                    {move && (
+                                        <DropdownMenuItem disabled={move.moving} onSelect={() => move.open([asset.id])}>
+                                            <FolderInput />
+                                            Move to folder
+                                        </DropdownMenuItem>
+                                    )}
+                                </>
+                            )}
+                            <DropdownMenuItem onClick={handleDownload}>
+                                <Download className="size-4" aria-hidden="true" />
+                                Download
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                ) : (
+                    <div className="flex items-center justify-end gap-2">
                         {canEdit && (
                             <>
-                                <DropdownMenuItem onClick={handleEdit}>
-                                    <Edit />
-                                    Edit details
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive" onClick={handleDelete}>
-                                    <Trash2 />
-                                    Delete
-                                </DropdownMenuItem>
-                                {move && (
-                                    <DropdownMenuItem disabled={move.moving} onSelect={() => move.open([asset.id])}>
-                                        <FolderInput />
-                                        Move to folder
-                                    </DropdownMenuItem>
-                                )}
+                                <RowActionButton label={`Edit ${asset.filename}`} tooltip="Edit details" onClick={handleEdit}>
+                                    <Edit className="size-4" />
+                                </RowActionButton>
+                                <RowActionButton label={`Delete ${asset.filename}`} tooltip="Delete file" destructive onClick={handleDelete}>
+                                    <Trash2 className="size-4" />
+                                </RowActionButton>
                             </>
                         )}
-                        <DropdownMenuItem onClick={handleDownload}>
-                            <Download className="size-4" aria-hidden="true" />
-                            Download
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                        <RowActionButton label={`Download ${asset.filename}`} tooltip="Download" onClick={handleDownload}>
+                            <Download className="size-4" />
+                        </RowActionButton>
+                    </div>
+                )}
             </td>
         </tr>
     );

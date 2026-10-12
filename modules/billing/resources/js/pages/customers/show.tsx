@@ -1,10 +1,10 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { PageContainer } from '@shared/components/page-container';
+import { RowActionButton } from '@shared/components/row-action-button';
 import { Badge } from '@shared/components/ui/badge';
 import { Button } from '@shared/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@shared/components/ui/tooltip';
 import AppLayout from '@shared/layouts/app-layout';
 import { formatPhoneDisplay } from '@shared/lib/phone-number';
 import { cn } from '@shared/lib/utils';
@@ -232,37 +232,23 @@ export default function CustomerDetail({
                             {canEditContacts && (
                                 <div className="flex shrink-0 gap-1">
                                     {!contact.archived_at && (
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="size-7"
-                                                    aria-label={`Edit ${contact.name}`}
-                                                    onClick={() => setEditing(contact)}
-                                                    disabled={editing !== null}
-                                                >
-                                                    <Pencil className="size-3.5" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>Edit contact</TooltipContent>
-                                        </Tooltip>
+                                        <RowActionButton
+                                            label={`Edit ${contact.name}`}
+                                            tooltip="Edit contact"
+                                            onClick={() => setEditing(contact)}
+                                            disabled={editing !== null}
+                                        >
+                                            <Pencil className="size-4" />
+                                        </RowActionButton>
                                     )}
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="text-muted-foreground size-7"
-                                                aria-label={`${contact.archived_at ? 'Restore' : 'Archive'} ${contact.name}`}
-                                                onClick={() => toggleContact(contact)}
-                                                disabled={editing !== null}
-                                            >
-                                                {contact.archived_at ? <RotateCcw className="size-3.5" /> : <Archive className="size-3.5" />}
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>{contact.archived_at ? 'Restore contact' : 'Archive contact'}</TooltipContent>
-                                    </Tooltip>
+                                    <RowActionButton
+                                        label={`${contact.archived_at ? 'Restore' : 'Archive'} ${contact.name}`}
+                                        tooltip={contact.archived_at ? 'Restore contact' : 'Archive contact'}
+                                        onClick={() => toggleContact(contact)}
+                                        disabled={editing !== null}
+                                    >
+                                        {contact.archived_at ? <RotateCcw className="size-4" /> : <Archive className="size-4" />}
+                                    </RowActionButton>
                                 </div>
                             )}
                         </li>

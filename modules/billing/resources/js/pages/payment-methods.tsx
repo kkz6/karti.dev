@@ -2,6 +2,7 @@ import { BillingSettingsWorkspace } from '@billing/components/billing-settings-w
 import { useBillingConfirm } from '@billing/components/use-billing-confirm';
 import { router, useForm } from '@inertiajs/react';
 import InputError from '@shared/components/input-error';
+import { RowActionButton } from '@shared/components/row-action-button';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent } from '@shared/components/ui/card';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
@@ -73,12 +74,17 @@ export default function PaymentMethods({ methods, canUpdate }: { methods: Method
                                     />
                                     {canUpdate && (
                                         <>
-                                            <Button variant="ghost" size="icon" aria-label={`Edit ${method.name}`} onClick={() => edit(method)}>
+                                            <RowActionButton label={`Edit ${method.name}`} tooltip="Edit payment method" onClick={() => edit(method)}>
                                                 <Pencil className="size-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" aria-label={`Delete ${method.name}`} onClick={() => remove(method)}>
+                                            </RowActionButton>
+                                            <RowActionButton
+                                                label={`Delete ${method.name}`}
+                                                tooltip="Delete payment method"
+                                                destructive
+                                                onClick={() => remove(method)}
+                                            >
                                                 <Trash2 className="size-4" />
-                                            </Button>
+                                            </RowActionButton>
                                         </>
                                     )}
                                 </div>

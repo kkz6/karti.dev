@@ -1,5 +1,6 @@
 import { MediaService } from '@media/services/MediaService';
 import { MediaAsset, MediaFolder } from '@media/types/media';
+import { RowActionButton } from '@shared/components/row-action-button';
 import { Button } from '@shared/components/ui/button';
 import { Checkbox } from '@shared/components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
@@ -181,13 +182,13 @@ export const TableListing: React.FC<TableListingProps> = ({
                                         key={index}
                                         scope="col"
                                         aria-sort={isColumnActive(column) ? (sortOrder === 'asc' ? 'ascending' : 'descending') : undefined}
-                                        className={`text-muted-foreground p-3 text-left text-sm font-medium ${column.extra ? 'hidden md:table-cell' : ''}`}
+                                        className={`text-muted-foreground p-3 ${column.field === 'size' ? 'text-right' : 'text-left'} text-sm font-medium ${column.extra ? 'hidden md:table-cell' : ''}`}
                                     >
                                         <button
                                             type="button"
                                             disabled={isSearching}
                                             onClick={() => handleSort(column.field)}
-                                            className="focus-visible:outline-ring flex items-center gap-2 rounded focus-visible:outline-2"
+                                            className={`focus-visible:outline-ring flex items-center gap-2 rounded focus-visible:outline-2 ${column.field === 'size' ? 'ml-auto' : ''}`}
                                         >
                                             {column.label}
                                             {isColumnActive(column) &&
@@ -195,7 +196,7 @@ export const TableListing: React.FC<TableListingProps> = ({
                                         </button>
                                     </th>
                                 ))}
-                                <th scope="col" className="w-14">
+                                <th scope="col" className="w-28 text-right">
                                     <span className="sr-only">Actions</span>
                                 </th>
                             </tr>
@@ -207,15 +208,9 @@ export const TableListing: React.FC<TableListingProps> = ({
                                     className="media-folder-target border-border hover:bg-accent cursor-pointer border-b"
                                 >
                                     <td className="p-3">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={handleParentSelect}
-                                            aria-label="Open parent folder"
-                                            className="media-selection-control"
-                                        >
+                                        <RowActionButton label="Open parent folder" onClick={handleParentSelect}>
                                             <CornerLeftUp className="text-muted-foreground h-4 w-4" />
-                                        </Button>
+                                        </RowActionButton>
                                     </td>
                                     <td className="p-3" onDoubleClick={handleParentSelect}>
                                         <div className="flex h-8 w-8 items-center justify-center">
