@@ -8,33 +8,14 @@ import { Checkbox } from '@shared/components/ui/checkbox';
 import { Input } from '@shared/components/ui/input';
 import { Label } from '@shared/components/ui/label';
 import AuthLayout from '@shared/layouts/auth-layout';
-import axios from 'axios';
 import { Fingerprint, LoaderCircle } from 'lucide-react';
 import type { FormEvent } from 'react';
-import { useEffect, useState } from 'react';
+
 type LoginForm = { email: string; password: string; remember: boolean };
 export default function Login({ canResetPassword }: { status?: string; canResetPassword: boolean }) {
     const { data, setData, post, processing, errors, reset } = useForm<LoginForm>({ email: '', password: '', remember: false });
-    const [passkeyAvailable, setPasskeyAvailable] = useState(false);
     const supported = canUsePasskeys();
     const { isLoading: passkeyLoading, error: passkeyError, authenticateUser } = usePasskeyAuth();
-    useEffect(() => {
-        setPasskeyAvailable(false);
-        if (!supported || !/^\S+@\S+\.\S+$/.test(data.email)) return;
-        const abort = new AbortController();
-        const timer = setTimeout(() => {
-            axios
-                .post(route('login.check-status'), { email: data.email }, { signal: abort.signal })
-                .then(({ data: account }) => setPasskeyAvailable(!!account.hasPasskeys))
-                .catch(() => {
-                    if (!abort.signal.aborted) setPasskeyAvailable(false);
-                });
-        }, 400);
-        return () => {
-            clearTimeout(timer);
-            abort.abort();
-        };
-    }, [data.email, supported]);
     const submit = (event: FormEvent) => {
         event.preventDefault();
         post(route('login'), { onFinish: () => reset('password') });
@@ -101,7 +82,7 @@ export default function Login({ canResetPassword }: { status?: string; canResetP
                         'Log in'
                     )}
                 </Button>
-                {passkeyAvailable && (
+                {supported && (
                     <div className="space-y-3">
                         <div className="text-muted-foreground flex items-center gap-3 text-xs">
                             <span className="bg-border h-px flex-1" />
@@ -113,7 +94,7 @@ export default function Login({ canResetPassword }: { status?: string; canResetP
                             variant="outline"
                             className="h-9 w-full"
                             disabled={processing || passkeyLoading}
-                            onClick={() => void authenticateUser(data.email)}
+                            onClick={() => void authenticateUser()}
                         >
                             {passkeyLoading ? <LoaderCircle className="size-4 animate-spin" /> : <Fingerprint className="size-4" />}Sign in with
                             passkey

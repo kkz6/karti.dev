@@ -18,6 +18,18 @@ test('can get authentication options', function () {
     ]);
 });
 
+test('discoverable sign in does not require an email or expose registered credentials', function () {
+    Passkey::factory()->create();
+    Passkey::factory()->create();
+
+    $this->postJson(route('passkey.auth.options'))
+        ->assertOk()
+        ->assertJsonPath('allowCredentials', [])
+        ->assertJsonStructure(['challenge', 'userVerification']);
+
+    $this->assertGuest();
+});
+
 test('can authenticate with passkey', function () {
     $user    = User::factory()->create();
     $passkey = Passkey::factory()->create([
