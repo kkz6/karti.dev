@@ -26,7 +26,7 @@ const config = {
 type ModalContext = {
     onStateChange: (dirty: boolean, busy: boolean) => void;
     requestClose: () => Promise<void>;
-    visitOptions: { headers: Record<string, string>; onSuccess: () => void };
+    visitOptions: { headers: Record<string, string>; preserveScroll: boolean; onSuccess: () => void };
 };
 const Context = createContext<ModalContext | null>(null);
 export function useBillingModalForm(form: { isDirty: boolean; processing: boolean }) {
@@ -98,7 +98,7 @@ export function BillingCreateModal({
         continueWithoutUnsavedChangesPrompt(onClose);
     }, [onClose]);
     const modal = useMemo(
-        () => ({ onStateChange, requestClose, visitOptions: { headers: { 'X-Billing-Modal': '1' }, onSuccess: created } }),
+        () => ({ onStateChange, requestClose, visitOptions: { headers: { 'X-Billing-Modal': '1' }, preserveScroll: true, onSuccess: created } }),
         [onStateChange, requestClose, created],
     );
     return (

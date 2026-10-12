@@ -61,7 +61,7 @@ class TaxRatesController extends BaseController
     {
         $taxRate = TaxRate::create($request->validated());
 
-        return $request->header('X-Billing-Modal') === '1' ? to_route('admin.settings.billing.edit', ['section'=>'taxes'])->with('billing_message', 'Tax preset created.') : to_route('admin.tax-rates.show', $taxRate)->with('billing_message', 'Tax preset created.');
+        return $request->header('X-Billing-Modal') === '1' ? redirect()->back(fallback: route('admin.settings.billing.edit', ['section'=>'taxes']))->with('billing_message', 'Tax preset created.') : to_route('admin.tax-rates.show', $taxRate)->with('billing_message', 'Tax preset created.');
     }
 
     public function update(SaveTaxRateRequest $request, TaxRate $taxRate): RedirectResponse
@@ -72,7 +72,7 @@ class TaxRatesController extends BaseController
             $locked->update($request->validated());
         });
 
-        return $request->header('X-Billing-Modal') === '1' ? to_route('admin.settings.billing.edit', ['section'=>'taxes'])->with('billing_message', 'Tax preset updated.') : to_route('admin.tax-rates.show', $taxRate)->with('billing_message', 'Tax preset updated.');
+        return $request->header('X-Billing-Modal') === '1' ? redirect()->back(fallback: route('admin.settings.billing.edit', ['section'=>'taxes']))->with('billing_message', 'Tax preset updated.') : to_route('admin.tax-rates.show', $taxRate)->with('billing_message', 'Tax preset updated.');
     }
 
     public function destroy(TaxRate $taxRate): RedirectResponse

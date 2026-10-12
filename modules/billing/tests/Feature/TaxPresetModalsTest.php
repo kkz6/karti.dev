@@ -16,7 +16,8 @@ test('tax presets provide JSON for modals and modal saves return to the listing'
     $tax = TaxRate::factory()->create(['percentage'=>'7.1250']);
     $this->getJson(route('admin.tax-rates.edit', $tax))->assertOk()->assertJsonPath('taxRate.percentage', '7.1250')->assertJsonPath('readOnly', false);
     $this->getJson(route('admin.tax-rates.show', $tax))->assertOk()->assertJsonPath('readOnly', true);
-    $this->withHeaders(['X-Billing-Modal'=>'1'])->patch(route('admin.tax-rates.update', $tax), ['name'=>'New label', 'percentage'=>'8.5'])->assertRedirect(route('admin.settings.billing.edit', ['section'=>'taxes']));
+    $listing = route('admin.settings.billing.edit', ['section'=>'taxes', 'search'=>'tax']);
+    $this->from($listing)->withHeaders(['X-Billing-Modal'=>'1'])->patch(route('admin.tax-rates.update', $tax), ['name'=>'New label', 'percentage'=>'8.5'])->assertRedirect($listing);
     expect($tax->fresh()->percentage)->toBe('8.5000');
     expect(collect(TaxRates::make()->actions())->pluck('label')->all())->toBe(['View', 'Edit', 'Archive', 'Restore', 'Delete']);
 });
