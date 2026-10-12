@@ -24,7 +24,7 @@ class BillingDeliverySettingsController extends BaseController
         $email    = app(EmailSettings::class);
 
         return Inertia::render('billing::delivery-settings', [
-            'settings'      => Arr::except($settings->toArray(), ['twilio_auth_token', 'msg91_auth_key']),
+            'settings'      => [...Arr::except($settings->toArray(), ['twilio_auth_token', 'msg91_auth_key']), 'templates' => $settings->resolvedTemplates(), 'msg91_templates' => $settings->resolvedProviderTemplates()],
             'credentials'   => ['twilio' => $settings->twilio_auth_token !== '', 'msg91' => $settings->msg91_auth_key !== ''],
             'emailProvider' => $email->enabled ? strtoupper($email->provider) : strtoupper((string) config('mail.default')),
             'fields'        => DeliveryTemplates::FIELDS, 'canUpdate' => $request->user()->can('update', BillingSettings::class),
@@ -112,10 +112,10 @@ class BillingDeliverySettingsController extends BaseController
         $settings  = $driver->settings();
         $variables = array_fill_keys(DeliveryTemplates::FIELDS, 'Test');
         $variables = [...$variables, 'invoice_number' => 'TEST-001', 'invoice_total' => '100.00', 'amount_due' => '100.00', 'currency' => 'INR', 'invoice_link' => config('app.url'), 'days_overdue' => '0'];
-        $template  = $settings->msg91_templates['invoice'];
+        $template  = $settings->resolvedProviderTemplates()['invoice'];
         $payload   = ['template_id' => $template['id'], 'variables' => array_map(fn ($field) => $variables[$field], $template['variables'])];
         try {
-            $reference = $driver->send($settings->sms_provider, $phone, DeliveryTemplates::render($settings->templates['invoice']['sms_message'], $variables), $payload);
+            $reference = $driver->send($settings->sms_provider, $phone, DeliveryTemplates::render($settings->resolvedTemplates()['invoice']['sms_message'], $variables), $payload);
 
             return response()->json(['message' => 'Test SMS accepted by the provider.', 'reference' => $reference]);
         } catch (SmsDeliveryException $error) {

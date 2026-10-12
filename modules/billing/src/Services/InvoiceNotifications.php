@@ -15,7 +15,7 @@ class InvoiceNotifications
     {
         $automation = app(BillingAutomationSettings::class);
         $settings   = app(BillingDeliverySettings::class);
-        $template   = $settings->templates[$event];
+        $template   = $settings->resolvedTemplates()[$event];
         $receipt    = $event === 'payment';
         $attempts   = [];
         if ($receipt ? $automation->receipt_email : $automation->reminder_email) {

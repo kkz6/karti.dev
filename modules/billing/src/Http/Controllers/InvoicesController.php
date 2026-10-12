@@ -188,9 +188,9 @@ class InvoicesController extends BaseController
                 $variables['invoice_link'] = '{invoice_link}';
 
                 return ['smsEnabled' => $settings->sms_enabled, 'smsProvider' => $settings->sms_provider,
-                    'smsMessage'     => \Modules\Billing\Support\DeliveryTemplates::render($settings->templates['invoice']['sms_message'], $variables),
-                    'emailSubject'   => \Modules\Billing\Support\DeliveryTemplates::render($settings->templates['invoice']['email_subject'], $variables),
-                    'emailMessage'   => \Modules\Billing\Support\DeliveryTemplates::render($settings->templates['invoice']['email_message'], $variables)];
+                    'smsMessage'     => \Modules\Billing\Support\DeliveryTemplates::render($settings->resolvedTemplates()['invoice']['sms_message'], $variables),
+                    'emailSubject'   => \Modules\Billing\Support\DeliveryTemplates::render($settings->resolvedTemplates()['invoice']['email_subject'], $variables),
+                    'emailMessage'   => \Modules\Billing\Support\DeliveryTemplates::render($settings->resolvedTemplates()['invoice']['email_message'], $variables)];
             })() : null,
             'deliveries'            => $request->user()->can('send', $invoice) ? \Modules\Billing\Models\InvoiceDelivery::where('invoice_id', $invoice->id)->latest('id')->get()->map(fn ($delivery) => $delivery->only(['id', 'recipients', 'subject', 'kind', 'channel', 'provider', 'state', 'error', 'created_at', 'sent_at', 'provider_reference', 'actor_name']))->all() : null,
             'canDownloadPdf'        => $request->user()->can('download', $invoice), 'pdfError' => $request->session()->get('billing_pdf_error'),

@@ -37,20 +37,36 @@ type Form = Omit<Settings, 'msg91_templates'> & {
 function formData(settings: Settings): Form {
     return {
         ...settings,
+        templates: Object.fromEntries(
+            Object.keys(events).map((event) => [
+                event,
+                {
+                    email_subject: 'Invoice {invoice_number}',
+                    email_message: 'Invoice {invoice_number}: {currency} {amount_due}.',
+                    sms_message: 'Invoice {invoice_number}: {currency} {amount_due}. {invoice_link}',
+                    ...(settings.templates?.[event as Event] ?? {}),
+                },
+            ]),
+        ) as Settings['templates'],
         twilio_auth_token: '',
         clear_twilio_auth_token: false,
         msg91_auth_key: '',
         clear_msg91_auth_key: false,
         msg91_templates: Object.fromEntries(
-            Object.entries(settings.msg91_templates).map(([event, template]) => [
-                event,
-                {
-                    ...template,
-                    variables: Object.entries(template.variables)
-                        .map(([key, field]) => `${key}=${field}`)
-                        .join('\n'),
-                },
-            ]),
+            Object.keys(events)
+                .map((event) => {
+                    const template = settings.msg91_templates?.[event as Event] ?? { id: '', variables: {} };
+                    return [event, template] as const;
+                })
+                .map(([event, template]) => [
+                    event,
+                    {
+                        ...template,
+                        variables: Object.entries(template.variables ?? {})
+                            .map(([key, field]) => `${key}=${field}`)
+                            .join('\n'),
+                    },
+                ]),
         ) as Form['msg91_templates'],
     };
 }

@@ -201,3 +201,14 @@ test('worker interruption during SMS sending records an uncertain outcome instea
     expect($delivery->fresh()->state)->toBe('uncertain');
     Http::assertNothingSent();
 });
+
+test('missing or partial delivery templates receive safe defaults without overwriting custom text', function () {
+    $settings = app(BillingDeliverySettings::class);
+    $settings->fill(['templates' => ['invoice' => ['email_subject' => 'Custom {invoice_number}']], 'msg91_templates' => []])->save();
+    $this->get(route('admin.settings.billing.edit', ['section' => 'delivery']))->assertOk()->assertInertia(fn (Assert $page) => $page
+        ->where('settings.templates.invoice.email_subject', 'Custom {invoice_number}')
+        ->where('settings.templates.payment.email_subject', 'Payment received: {invoice_number}')
+        ->has('settings.templates.due.sms_message')->where('settings.msg91_templates.payment.id', ''));
+    expect($settings->resolvedTemplates()['invoice']['email_subject'])->toBe('Custom {invoice_number}')
+        ->and($settings->resolvedTemplates()['invoice']['sms_message'])->not->toBeEmpty();
+});
