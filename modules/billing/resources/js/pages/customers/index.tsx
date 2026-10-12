@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { AdminPageContent } from '@shared/components/admin-page-content';
 import { IndexHeader } from '@shared/components/index-header';
+import { PhoneCell } from '@shared/components/phone-cell';
 import { Button } from '@shared/components/ui/button';
 import AppLayout from '@shared/layouts/app-layout';
 import { InertiaTableWrapper, type TableConfig } from '@table/components';
@@ -30,6 +31,7 @@ export default function Customers({ table, canCreate }: { table: TableConfig; ca
 
                 <InertiaTableWrapper
                     resource={table}
+                    cell={{ phone: ({ value, item }) => <PhoneCell value={value} country={item.billing_country} /> }}
                     emptyState={{
                         title: 'No customers yet',
                         description: 'Add your first customer to start managing invoices and payments.',
