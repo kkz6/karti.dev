@@ -8,12 +8,11 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Frontend\Http\Requests\UpdateContactSubmissionRequest;
 use Modules\Frontend\Models\ContactSubmission;
-use Modules\Frontend\Services\Turnstile;
 use Modules\Frontend\Tables\ContactSubmissions;
 
 class ContactSubmissionsController
 {
-    public function index(Request $request, Turnstile $turnstile): Response
+    public function index(Request $request): Response
     {
         $request->validate(['search' => ['nullable', 'string', 'max:254']]);
 
@@ -23,10 +22,6 @@ class ContactSubmissionsController
                 'new'      => ContactSubmission::query()->where('status', ContactSubmission::STATUS_NEW)->count(),
                 'open'     => ContactSubmission::query()->open()->count(),
                 'resolved' => ContactSubmission::query()->where('status', ContactSubmission::STATUS_RESOLVED)->count(),
-            ],
-            'protection' => [
-                'turnstileEnabled'    => $turnstile->enabled(),
-                'turnstileConfigured' => $turnstile->configured(),
             ],
         ]);
     }

@@ -24,11 +24,11 @@ export default function Automation({
     const form = useForm({ ...settings, reminder_offsets: settings.reminder_offsets.join(', ') });
     return (
         <BillingSettingsWorkspace section="automation">
-            <Card className="gap-5 border-0 bg-transparent shadow-none">
-                <CardHeader className="px-0 pt-0">
+            <Card>
+                <CardHeader>
                     <CardTitle>Reminders & receipts</CardTitle>
                 </CardHeader>
-                <CardContent className="px-0">
+                <CardContent>
                     <form
                         className="space-y-5"
                         onSubmit={(event) => {

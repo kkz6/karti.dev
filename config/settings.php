@@ -5,6 +5,7 @@ return [
         Modules\Settings\Settings\SiteSettings::class,
         Modules\Settings\Settings\MediaSettings::class,
         Modules\Settings\Settings\EmailSettings::class,
+        Modules\Settings\Settings\SpamProtectionSettings::class,
         Modules\Billing\Settings\BillingProviderSettings::class, Modules\Billing\Settings\BillingSettings::class, Modules\Billing\Settings\BillingAutomationSettings::class,
         Modules\Billing\Settings\BillingDeliverySettings::class,
     ],

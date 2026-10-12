@@ -105,6 +105,7 @@ export const mainNavItems: NavItem[] = [
             { title: 'General', href: route('admin.settings.edit'), icon: Settings },
             { title: 'Media', href: route('admin.settings.media.edit'), icon: Camera },
             { title: 'Email', href: route('admin.settings.email.edit'), icon: Mail },
+            { title: 'Spam protection', href: route('admin.settings.protection.edit'), icon: Settings },
         ],
     },
 ];

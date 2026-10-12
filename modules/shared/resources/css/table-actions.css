@@ -23,12 +23,15 @@
     align-items: center;
     justify-content: center;
     margin-inline: 0;
-    border-color: var(--input);
-    background: var(--card);
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
     color: var(--foreground);
     white-space: nowrap;
     text-decoration: none;
-    box-shadow: var(--shadow-xs);
+    box-shadow: none;
     transition:
         background-color 150ms,
         border-color 150ms,

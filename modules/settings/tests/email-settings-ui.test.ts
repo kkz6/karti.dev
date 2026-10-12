@@ -7,7 +7,7 @@ const controller = readFileSync(new URL('../src/Http/Controllers/EmailSettingsCo
 const settings = readFileSync(new URL('../src/Settings/EmailSettings.php', import.meta.url), 'utf8');
 
 test('email settings present responsive SMTP and Resend provider forms', () => {
-    assert.match(page, /PageContainer/);
+    assert.match(page, /SettingsWorkspace/);
     assert.match(page, /Use a custom email provider/);
     assert.match(page, /Delivery provider/);
     assert.match(page, /SMTP server/);

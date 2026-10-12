@@ -12,6 +12,7 @@ use Modules\Frontend\Listeners\SendContactSubmissionNotification;
 use Modules\Frontend\Mail\NewContactSubmission;
 use Modules\Frontend\Models\ContactSubmission;
 use Modules\Frontend\Services\Turnstile;
+use Modules\Settings\Settings\SpamProtectionSettings;
 
 uses(RefreshDatabase::class);
 
@@ -23,6 +24,8 @@ beforeEach(function () {
         'contact.turnstile.site_key'     => '',
         'contact.turnstile.secret_key'   => '',
     ]);
+
+    app(SpamProtectionSettings::class)->fill(['enabled' => false, 'site_key' => '', 'secret_key' => ''])->save();
 
     $this->payload = [
         'name'            => '  Ada Lovelace  ',
@@ -81,11 +84,7 @@ test('contact form rejects spam traps invalid timing and short messages', functi
 ]);
 
 test('turnstile tokens are verified on the server with the expected action', function () {
-    config([
-        'contact.turnstile.enabled'    => true,
-        'contact.turnstile.site_key'   => 'site-key',
-        'contact.turnstile.secret_key' => 'secret-key',
-    ]);
+    app(SpamProtectionSettings::class)->fill(['enabled' => true, 'site_key' => 'site-key', 'secret_key' => 'secret-key'])->save();
     Http::fake([
         'challenges.cloudflare.com/*' => Http::response(['success' => true, 'action' => 'contact', 'hostname' => 'localhost']),
     ]);
@@ -98,11 +97,7 @@ test('turnstile tokens are verified on the server with the expected action', fun
 });
 
 test('invalid turnstile verification fails closed', function () {
-    config([
-        'contact.turnstile.enabled'    => true,
-        'contact.turnstile.site_key'   => 'site-key',
-        'contact.turnstile.secret_key' => 'secret-key',
-    ]);
+    app(SpamProtectionSettings::class)->fill(['enabled' => true, 'site_key' => 'site-key', 'secret_key' => 'secret-key'])->save();
     Http::fake([
         'challenges.cloudflare.com/*' => Http::response(['success' => false, 'error-codes' => ['invalid-input-response']]),
     ]);
@@ -175,11 +170,7 @@ test('the queued event listener emails the configured recipient and records deli
 });
 
 test('turnstile stays disabled when either credential is missing', function () {
-    config([
-        'contact.turnstile.enabled'    => true,
-        'contact.turnstile.site_key'   => 'site-key',
-        'contact.turnstile.secret_key' => '',
-    ]);
+    app(SpamProtectionSettings::class)->fill(['enabled' => true, 'site_key' => 'site-key', 'secret_key' => ''])->save();
 
     expect(app(Turnstile::class)->configured())->toBeFalse()
         ->and(app(Turnstile::class)->enabled())->toBeFalse();

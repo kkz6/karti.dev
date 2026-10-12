@@ -1,9 +1,8 @@
 import { Head } from '@inertiajs/react';
-import { IndexHeader } from '@shared/components/index-header';
-import { PageContainer } from '@shared/components/page-container';
-import { SiteSettingsTabs } from '@shared/components/site-settings-tabs';
+import { SettingsWorkspace } from '@shared/components/settings-workspace';
+import { siteSettingsSections } from '@shared/components/site-settings-tabs';
 import AppLayout from '@shared/layouts/app-layout';
-import { Image } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { MediaSettingsForm, type CompressionDefaults, type ImagePreset } from './media-settings';
 
 interface MediaSettingsPageProps {
@@ -25,16 +24,14 @@ export default function MediaSettingsPage({ mediaSettings, mediaMessage }: Media
             ]}
         >
             <Head title="Media settings" />
-            <PageContainer className="content-index space-y-8">
-                <IndexHeader title="Media settings" icon={Image} />
-                <SiteSettingsTabs section="media" />
+            <SettingsWorkspace title="Site settings" icon={Settings} sections={siteSettingsSections()} selected="media">
                 <div className="space-y-6">
                     <p className="text-muted-foreground mb-6 text-sm">
                         Manage generated image sizes and apply changes to existing uploads. Your originals stay unchanged.
                     </p>
                     <MediaSettingsForm {...mediaSettings} message={mediaMessage} />
                 </div>
-            </PageContainer>
+            </SettingsWorkspace>
         </AppLayout>
     );
 }

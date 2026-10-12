@@ -1,8 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
-import { IndexHeader } from '@shared/components/index-header';
 import InputError from '@shared/components/input-error';
-import { PageContainer } from '@shared/components/page-container';
-import { SiteSettingsTabs } from '@shared/components/site-settings-tabs';
+import { SettingsWorkspace } from '@shared/components/settings-workspace';
+import { siteSettingsSections } from '@shared/components/site-settings-tabs';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { Checkbox } from '@shared/components/ui/checkbox';
@@ -13,7 +12,7 @@ import { Switch } from '@shared/components/ui/switch';
 import { UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
 import AppLayout from '@shared/layouts/app-layout';
 import axios, { AxiosError } from 'axios';
-import { Eye, EyeOff, KeyRound, LoaderCircle, LockKeyhole, Mail, Save, Send, Server } from 'lucide-react';
+import { Eye, EyeOff, KeyRound, LoaderCircle, LockKeyhole, Save, Send, Server, Settings } from 'lucide-react';
 import { type FormEvent, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -118,30 +117,31 @@ export default function EmailSettingsPage({
         >
             <Head title="Email settings" />
             <UnsavedChangesGuard dirty={form.isDirty} />
-            <PageContainer as="form" id="email-settings-form" onSubmit={submit} className="content-index space-y-6">
-                <IndexHeader
-                    title="Email settings"
-                    icon={Mail}
-                    actions={
-                        <div className="flex items-center gap-3">
-                            <span role="status" className="text-muted-foreground text-sm">
-                                {form.isDirty ? 'Unsaved changes' : ''}
-                            </span>
-                            <Button type="submit" form="email-settings-form" disabled={processing || !form.isDirty}>
-                                <Save className="size-4" aria-hidden="true" />
-                                {processing ? 'Saving…' : 'Save changes'}
-                            </Button>
-                        </div>
-                    }
-                />
-
-                <SiteSettingsTabs section="email" />
+            <SettingsWorkspace
+                title="Site settings"
+                icon={Settings}
+                sections={siteSettingsSections()}
+                selected="email"
+                formId="email-settings-form"
+                onSubmit={submit}
+                actions={
+                    <div className="flex items-center gap-3">
+                        <span role="status" className="text-muted-foreground text-sm">
+                            {form.isDirty ? 'Unsaved changes' : ''}
+                        </span>
+                        <Button type="submit" form="email-settings-form" disabled={processing || !form.isDirty}>
+                            <Save className="size-4" aria-hidden="true" />
+                            {processing ? 'Saving…' : 'Save changes'}
+                        </Button>
+                    </div>
+                }
+            >
                 <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
                     Choose SMTP or Resend for newsletter confirmations, password resets, and other application email. Saved credentials override the
                     server environment only when custom delivery is enabled.
                 </p>
 
-                <div className="max-w-4xl space-y-6">
+                <div className="space-y-6">
                     <Card>
                         <CardContent className="flex flex-col gap-4 pt-4 sm:flex-row sm:items-center sm:justify-between">
                             <div className="min-w-0">
@@ -179,7 +179,7 @@ export default function EmailSettingsPage({
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="max-w-sm space-y-2">
+                            <div className="space-y-2">
                                 <Label htmlFor="email-provider">Provider</Label>
                                 <Select value={data.provider} onValueChange={(value: 'smtp' | 'resend') => setData('provider', value)}>
                                     <SelectTrigger id="email-provider" aria-invalid={Boolean(errors.provider)}>
@@ -342,7 +342,7 @@ export default function EmailSettingsPage({
                                 </div>
                             </CardHeader>
                             <CardContent>
-                                <div className="max-w-xl space-y-2">
+                                <div className="space-y-2">
                                     <Label htmlFor="email-resend-api-key">API key</Label>
                                     <div className="relative">
                                         <Input
@@ -496,7 +496,7 @@ export default function EmailSettingsPage({
                         </CardContent>
                     </Card>
                 </div>
-            </PageContainer>
+            </SettingsWorkspace>
         </AppLayout>
     );
 }

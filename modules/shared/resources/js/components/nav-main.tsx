@@ -11,9 +11,9 @@ import {
     SidebarMenuSubItem,
     useSidebar,
 } from '@shared/components/ui/sidebar';
+import { isRouteActive } from '@shared/lib/navigation-active';
 import { type NavGroup, type NavItem, type SharedData } from '@shared/types';
 import { ChevronRight } from 'lucide-react';
-import { isRouteActive } from '@shared/lib/navigation-active';
 
 function NavigationItems({ items }: { items: NavItem[] }) {
     const page = usePage<SharedData>();
@@ -35,7 +35,7 @@ function NavigationItems({ items }: { items: NavItem[] }) {
                             <SidebarMenuItem className="group/collapsible">
                                 <CollapsibleTrigger asChild>
                                     <SidebarMenuButton
-                                        isActive={isActive}
+                                        isActive={false}
                                         tooltip={{ children: item.title }}
                                         className={rowClassName}
                                         onClick={(event) => {

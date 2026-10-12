@@ -1,7 +1,6 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { IndexHeader } from '@shared/components/index-header';
-import { PageContainer } from '@shared/components/page-container';
-import { SiteSettingsTabs } from '@shared/components/site-settings-tabs';
+import { SettingsWorkspace } from '@shared/components/settings-workspace';
+import { siteSettingsSections } from '@shared/components/site-settings-tabs';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { Input } from '@shared/components/ui/input';
@@ -63,23 +62,25 @@ export default function SiteSettingsPage({ settings }: { settings: SiteSettings 
         <AppLayout breadcrumbs={[{ title: 'Site settings', href: route('admin.settings.edit') }]}>
             <Head title="Site settings" />
             <UnsavedChangesGuard dirty={form.isDirty} />
-            <PageContainer as="form" id="site-settings-form" onSubmit={submit} className="content-index space-y-6">
-                <IndexHeader
-                    title="Site settings"
-                    icon={Settings}
-                    actions={
-                        <div className="flex items-center gap-3">
-                            <span role="status" className="text-muted-foreground text-sm">
-                                {form.isDirty ? 'Unsaved changes' : ''}
-                            </span>
-                            <Button type="submit" form="site-settings-form" disabled={processing || !form.isDirty}>
-                                <Save className="size-4" />
-                                {processing ? 'Saving…' : 'Save changes'}
-                            </Button>
-                        </div>
-                    }
-                />
-                <SiteSettingsTabs section="general" />
+            <SettingsWorkspace
+                title="Site settings"
+                icon={Settings}
+                sections={siteSettingsSections()}
+                selected="general"
+                formId="site-settings-form"
+                onSubmit={submit}
+                actions={
+                    <div className="flex items-center gap-3">
+                        <span role="status" className="text-muted-foreground text-sm">
+                            {form.isDirty ? 'Unsaved changes' : ''}
+                        </span>
+                        <Button type="submit" form="site-settings-form" disabled={processing || !form.isDirty}>
+                            <Save className="size-4" />
+                            {processing ? 'Saving…' : 'Save changes'}
+                        </Button>
+                    </div>
+                }
+            >
                 <p className="text-muted-foreground max-w-2xl text-sm">
                     Manage your site identity and search defaults in one place. Individual pages can override the default title, description, and
                     social image.
@@ -177,7 +178,7 @@ export default function SiteSettingsPage({ settings }: { settings: SiteSettings 
                         </p>
                     </aside>
                 </div>
-            </PageContainer>
+            </SettingsWorkspace>
         </AppLayout>
     );
 }

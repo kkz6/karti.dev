@@ -4,6 +4,7 @@ namespace Modules\Frontend\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Modules\Settings\Settings\SpamProtectionSettings;
 use Throwable;
 
 class Turnstile
@@ -15,12 +16,12 @@ class Turnstile
 
     public function enabled(): bool
     {
-        return (bool) config('contact.turnstile.enabled') && $this->configured();
+        return app(SpamProtectionSettings::class)->enabled && $this->configured();
     }
 
     public function siteKey(): string
     {
-        return (string) config('contact.turnstile.site_key', '');
+        return app(SpamProtectionSettings::class)->site_key;
     }
 
     public function verify(string $token, ?string $ipAddress = null, string $action = 'contact'): bool
@@ -61,6 +62,6 @@ class Turnstile
 
     private function secretKey(): string
     {
-        return (string) config('contact.turnstile.secret_key', '');
+        return app(SpamProtectionSettings::class)->secret_key;
     }
 }
