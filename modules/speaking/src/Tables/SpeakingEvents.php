@@ -2,6 +2,7 @@
 
 namespace Modules\Speaking\Tables;
 
+use Modules\Shared\Tables\HasTrashColumns;
 use Modules\Shared\Tables\RestoreAction;
 use Modules\Speaking\Models\SpeakingEvent;
 use Modules\Table\Action;
@@ -12,6 +13,8 @@ use Modules\Table\Table;
 
 class SpeakingEvents extends Table
 {
+    use HasTrashColumns;
+
     protected ?string $resource = SpeakingEvent::class;
 
     public function columns(): array
@@ -31,7 +34,7 @@ class SpeakingEvents extends Table
             Columns\BooleanColumn::make('featured', 'Featured')
                 ->sortable(),
             Columns\DateColumn::make('created_at', 'Created At', toggleable: false),
-            Columns\DateColumn::make('deleted_at', 'Deleted at')->sortable(),
+            ...$this->deletionDateColumns(),
             Columns\ActionColumn::new(),
         ];
     }

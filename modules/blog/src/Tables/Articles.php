@@ -3,6 +3,7 @@
 namespace Modules\Blog\Tables;
 
 use Modules\Blog\Models\Article;
+use Modules\Shared\Tables\HasTrashColumns;
 use Modules\Shared\Tables\RestoreAction;
 use Modules\Table\Action;
 use Modules\Table\Columns;
@@ -12,6 +13,8 @@ use Modules\Table\Table;
 
 class Articles extends Table
 {
+    use HasTrashColumns;
+
     protected ?string $defaultSort = '-created_at';
 
     public function resource(): \Illuminate\Contracts\Database\Eloquent\Builder|string
@@ -23,16 +26,13 @@ class Articles extends Table
 
     public function columns(): array
     {
-        $trash         = $this->getTableRequest()->filters()['deleted_at'];
-        $showDeletedAt = $trash->enabled && in_array($trash->clause, [Filters\Clause::OnlyTrashed, Filters\Clause::WithTrashed], true);
-
         return [
             Columns\TextColumn::make('title', 'Title', toggleable: false)->searchable()->sortable()->wrap()
                 ->url(fn (Article $article) => $article->trashed() ? null : route('admin.blog.edit', ['blog' => $article->id])),
             Columns\BadgeColumn::make('author_name', 'Author')->variant(fn () => Variant::Outline)
                 ->mapAs(fn ($name, Article $article) => $name ?: ($article->user?->name ?? '—')),
             Columns\DateColumn::make('created_at', 'Date', toggleable: false)->sortable(),
-            ...($showDeletedAt ? [Columns\DateColumn::make('deleted_at', 'Deleted at', toggleable: false)->sortable()] : []),
+            ...$this->deletionDateColumns(),
             Columns\TextColumn::make('id', 'ID')->hidden()->sortable(),
             Columns\TextColumn::make('slug', 'Slug')->hidden()->searchable()->sortable(),
             Columns\BadgeColumn::make('status', 'Status')->hidden()->variant([

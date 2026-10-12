@@ -4,6 +4,7 @@ namespace Modules\Blog\Tables;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Modules\Blog\Models\Category;
+use Modules\Shared\Tables\HasTrashColumns;
 use Modules\Shared\Tables\RestoreAction;
 use Modules\Table\Action;
 use Modules\Table\Columns;
@@ -13,6 +14,8 @@ use Modules\Table\Table;
 
 class Categories extends Table
 {
+    use HasTrashColumns;
+
     protected ?string $resource = Category::class;
 
     public function resource(): Builder|string
@@ -36,7 +39,7 @@ class Categories extends Table
                 ->sortable(),
             Columns\DateColumn::make('created_at', 'Created At', toggleable: false),
             Columns\DateColumn::make('updated_at', 'Updated At', toggleable: false),
-            Columns\DateColumn::make('deleted_at', 'Deleted at')->sortable(),
+            ...$this->deletionDateColumns(),
             Columns\ActionColumn::new(),
         ];
     }

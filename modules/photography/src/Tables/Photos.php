@@ -3,6 +3,7 @@
 namespace Modules\Photography\Tables;
 
 use Modules\Photography\Models\Photo;
+use Modules\Shared\Tables\HasTrashColumns;
 use Modules\Shared\Tables\RestoreAction;
 use Modules\Table\Action;
 use Modules\Table\Columns;
@@ -12,6 +13,8 @@ use Modules\Table\Table;
 
 class Photos extends Table
 {
+    use HasTrashColumns;
+
     public function resource(): \Illuminate\Contracts\Database\Eloquent\Builder|string
     {
         return app(\Modules\Analytics\Services\ContentTraffic::class)->withViewCount(Photo::query(), 'gallery');
@@ -34,7 +37,7 @@ class Photos extends Table
             Columns\DateColumn::make('created_at', 'Created'),
             Columns\NumericColumn::make('local_views', 'Views (30d)')->sortable()
                 ->url(fn (Photo $photo) => $photo->trashed() ? null : route('admin.seo.content', ['type' => 'gallery', 'id' => $photo->id])),
-            Columns\DateColumn::make('deleted_at', 'Deleted at')->sortable(),
+            ...$this->deletionDateColumns(),
             Columns\ActionColumn::new(),
         ];
     }

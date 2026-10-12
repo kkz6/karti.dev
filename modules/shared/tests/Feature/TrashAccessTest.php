@@ -155,3 +155,19 @@ test('deleting a gallery from its editor preserves its categories for restoratio
     collect($table->actions())->firstWhere('label', 'Restore')->setTable($table)->handle([$gallery->id]);
     expect($gallery->fresh()->trashed())->toBeFalse()->and($gallery->categories()->count())->toBe(1);
 });
+
+test('deletion dates appear only when the list includes trashed content', function (string $class) {
+    foreach (['without_trashed' => false, 'only_trashed' => true, 'with_trashed' => true] as $clause => $expected) {
+        $table = $class::make()->setRequest(Request::create('/', 'GET', ['filters' => ['deleted_at' => ['enabled' => true, 'clause' => $clause]]]));
+        expect(collect($table->columns())->contains(fn ($column) => $column->getAttribute() === 'deleted_at'))->toBe($expected);
+    }
+    $normal = $class::make()->setRequest(Request::create('/', 'GET'));
+    expect(collect($normal->columns())->contains(fn ($column) => $column->getAttribute() === 'deleted_at'))->toBeFalse();
+})->with([
+    Modules\Blog\Tables\Articles::class,
+    Modules\Blog\Tables\Categories::class,
+    Modules\Photography\Tables\Photos::class,
+    Projects::class,
+    Modules\Speaking\Tables\SpeakingEvents::class,
+    Modules\Tools\Tables\Tools::class,
+]);

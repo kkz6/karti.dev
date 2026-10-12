@@ -3,6 +3,7 @@
 namespace Modules\Projects\Tables;
 
 use Modules\Projects\Models\Project;
+use Modules\Shared\Tables\HasTrashColumns;
 use Modules\Shared\Tables\RestoreAction;
 use Modules\Table\Action;
 use Modules\Table\Columns;
@@ -12,6 +13,8 @@ use Modules\Table\Table;
 
 class Projects extends Table
 {
+    use HasTrashColumns;
+
     protected ?string $resource = Project::class;
 
     public function columns(): array
@@ -27,7 +30,7 @@ class Projects extends Table
             Columns\TextColumn::make('technologies', 'Technologies')
                 ->mapAs(fn ($value) => is_array($value) ? implode(', ', array_slice($value, 0, 3)).(count($value) > 3 ? '...' : '') : ''),
             Columns\DateColumn::make('created_at', 'Created At', toggleable: false),
-            Columns\DateColumn::make('deleted_at', 'Deleted at')->sortable(),
+            ...$this->deletionDateColumns(),
             Columns\ActionColumn::new(),
         ];
     }

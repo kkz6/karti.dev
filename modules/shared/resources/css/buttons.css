@@ -24,7 +24,7 @@ body:has(.admin-workspace) .ui-button:not(.ui-control, .ui-button-link, .it-row-
     line-height: 1.25rem;
 }
 
-body:has(.admin-workspace) .ui-button-icon:not([data-slot='calendar'] *, [data-slot='editor-toolbar'] *, [role='toolbar'] *) {
+body:has(.admin-workspace) .ui-button-icon:not(.it-row-action-icon-button, [data-slot='calendar'] *, [data-slot='editor-toolbar'] *, [role='toolbar'] *) {
     width: var(--action-height);
     padding-inline: 0;
 }
