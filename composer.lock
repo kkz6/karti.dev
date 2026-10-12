@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d3dd4e317378d497c5a20cfcfff7cdef",
+    "content-hash": "833e83816d133f2dec3578cdaa62518b",
     "packages": [
         {
             "name": "amphp/amp",
@@ -5763,6 +5763,74 @@
                 "MIT"
             ],
             "description": "Auto-discovered Dodo Payments gateway for the billing module",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "modules/billing-razorpay",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "modules/billing-razorpay",
+                "reference": "a42c89d33cf7b78878f5af6e563d11858064a30b"
+            },
+            "require": {
+                "modules/billing": "*",
+                "php": "^8.2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Modules\\BillingRazorpay\\RazorpayServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Modules\\BillingRazorpay\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Razorpay invoice payment gateway",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "modules/billing-stripe",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "modules/billing-stripe",
+                "reference": "f49bccadcf91032d10e554a602362eed4620fa9d"
+            },
+            "require": {
+                "modules/billing": "*",
+                "php": "^8.2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Modules\\BillingStripe\\StripeServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Modules\\BillingStripe\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Stripe invoice payment gateway",
             "transport-options": {
                 "symlink": true,
                 "relative": true

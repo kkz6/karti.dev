@@ -57,7 +57,7 @@ Route::middleware(['web', 'auth', 'verified', \Modules\Billing\Http\Middleware\P
     Route::delete('billing/payment-methods/{paymentMethod}', [\Modules\Billing\Http\Controllers\PaymentMethodsController::class, 'destroy'])->name('billing.payment-methods.destroy');
     Route::get('settings/billing', [BillingSettingsController::class, 'edit'])->name('settings.billing.edit');
     Route::put('settings/billing', [BillingSettingsController::class, 'update'])->name('settings.billing.update');
-    Route::resource('tax-rates', TaxRatesController::class)->parameters(['tax-rates' => 'taxRate'])->except('destroy');
+    Route::resource('tax-rates', TaxRatesController::class)->parameters(['tax-rates' => 'taxRate']);
     Route::post('tax-rates/{taxRate}/archive', [TaxRatesController::class, 'archive'])->name('tax-rates.archive');
     Route::post('tax-rates/{taxRate}/restore', [TaxRatesController::class, 'restore'])->name('tax-rates.restore');
     Route::get('customers/{customer}/invoices/create', [InvoicesController::class, 'createForCustomer'])->name('customers.invoices.create');

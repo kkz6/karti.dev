@@ -15,8 +15,12 @@ class InvoiceLinkController extends BaseController
     {
         $this->authorize('view', $invoice);
         $this->authorize('share', $invoice);
-        $data  =$request->validate(['days'=>['required', 'integer', 'between:1,365'], 'label'=>['nullable', 'string', 'max:100']]);
+        $data  =$request->validate(['days'=>['required', 'integer', 'between:1,365'], 'label'=>['nullable', 'string', 'max:100'], 'open'=>['sometimes', 'boolean']]);
         $result=$action->create($invoice, $data['days'], $data['label'] ?? '', $request->user());
+
+        if ($request->boolean('open')) {
+            return redirect($result['url']);
+        }
 
         return to_route('admin.invoices.show', $invoice)->with('billing_share_url', $result['url'])->with('billing_message', 'Private invoice link created. Copy it now; its secret is not stored in the link record.');
     }

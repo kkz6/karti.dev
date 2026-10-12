@@ -19,7 +19,7 @@ import { Textarea } from '@shared/components/ui/textarea';
 import AppLayout from '@shared/layouts/app-layout';
 import { statusTone } from '@shared/lib/status-colors';
 import { cn } from '@shared/lib/utils';
-import { BadgeCheck, Ban, CreditCard, Download, Ellipsis, FileText, Mail, Pencil, Receipt, StickyNote, Wallet } from 'lucide-react';
+import { BadgeCheck, Ban, CreditCard, Download, Ellipsis, ExternalLink, FileText, Mail, Pencil, Receipt, StickyNote, Wallet } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { BillingFeedback } from '../../components/billing-feedback';
 import { AsideCard, Detail, DetailHeader, DetailTabs, initialTab } from '../../components/detail-page';
@@ -181,6 +181,15 @@ export default function InvoiceDetail({
                     <DropdownMenuItem onSelect={openNoteEditor}>
                         <StickyNote />
                         Edit internal note
+                    </DropdownMenuItem>
+                )}
+                {canShare && (
+                    <DropdownMenuItem
+                        onSelect={() =>
+                            router.post(route('admin.invoices.links.store', invoice.id), { days: 90, label: 'Customer payment link', open: true })
+                        }
+                    >
+                        <ExternalLink /> Open payment link
                     </DropdownMenuItem>
                 )}
                 {canCheckout && (

@@ -12,10 +12,14 @@ use Modules\Frontend\Services\CalComService;
 
 class ReconcileProviderPayment
 {
-    public function handle(string $paymentId, string $provider = 'dodo'): string
+    public function handle(string $paymentId, string $provider = 'dodo', ?string $checkoutId = null): string
     {
         $registry = app(PaymentGatewayRegistry::class);
-        $payment  =$registry->adapter($provider)->payment($paymentId);
+        $adapter  = $registry->adapter($provider);
+        $context  = $checkoutId ? OnlineCheckout::where('provider', $provider)->where('public_id', $checkoutId)->first() : null;
+        $payment  = $adapter instanceof \Modules\Billing\Contracts\CheckoutPaymentProvider && $context
+            ? $adapter->paymentForCheckout($paymentId, $context)
+            : $adapter->payment($paymentId);
         if (($payment['id'] ?? '') !== $paymentId || ($payment['status'] ?? '') !== 'succeeded') {
             return 'pending';
         }

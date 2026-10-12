@@ -39,7 +39,7 @@ class ProcessProviderEvent implements ShouldQueue
 
             return;
         }
-        $state=app(ReconcileProviderPayment::class)->handle($id, $event->provider);
+        $state=app(ReconcileProviderPayment::class)->handle($id, $event->provider, is_string($event->payload['data']['checkout_id'] ?? null) ? $event->payload['data']['checkout_id'] : null);
         $event->update(['state'=>$state === 'unmatched' ? 'ignored' : $state, 'processed_at'=>now()]);
     }
 

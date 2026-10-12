@@ -22,7 +22,7 @@ class ReconcileOnlinePayments extends Command
             try {
                 $id=app(\Modules\Billing\Services\PaymentGatewayRegistry::class)->adapter($checkout->provider)->checkoutPaymentId($checkout->session_id);
                 if ($id) {
-                    app(ReconcileProviderPayment::class)->handle($id, $checkout->provider);
+                    app(ReconcileProviderPayment::class)->handle($id, $checkout->provider, $checkout->public_id);
                     $count++;
                 }
             } catch (\Throwable $e) {

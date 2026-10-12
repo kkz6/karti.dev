@@ -1,0 +1,23 @@
+{
+    "name": "modules/billing-stripe",
+    "description": "Stripe invoice payment gateway",
+    "type": "library",
+    "version": "1.0.0",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "modules/billing": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\BillingStripe\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\BillingStripe\\StripeServiceProvider"
+            ]
+        }
+    }
+}

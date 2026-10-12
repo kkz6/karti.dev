@@ -71,7 +71,7 @@ payment(string $id): array
 //  'metadata' => ['billing_checkout_id' => $checkout->public_id]]
 ```
 
-`expected_minor` is an exact integer string, and `currency` is the ISO code. Send
+`expected_minor` is an exact integer in minor units, and `currency` is the ISO code. Send
 that exact amount, with an idempotency key derived from the checkout's stable
 `request_key`; never recalculate from floating-point form amounts. Include
 `billing_checkout_id` in provider metadata. Query the provider API in `payment()`;
@@ -112,3 +112,41 @@ has payment history, so provider identities cannot be discarded accidentally.
 Regression examples live in `modules/billing/tests/Feature/PaymentGatewayPackagesTest.php`.
 They cover discovery, redacted encrypted settings, provider changes, disabled-driver
 reconciliation, signature rejection, destination validation, and duplicate events.
+
+## Included Stripe and Razorpay drivers
+
+Stripe and Razorpay are separate auto-discovered packages and start disabled.
+Configure their credentials under Billing settings → Online payments, enable the
+chosen driver, select it as default, and enable invoice checkout. Test and live
+accounts use separate keys and webhook signing secrets.
+
+- **Stripe:** supply the secret API key and webhook signing secret. Subscribe the
+  displayed webhook URL to `payment_intent.succeeded` and `charge.refunded`.
+  The adapter uses hosted Checkout with a stable idempotency key and attaches the
+  checkout identity to both the session and PaymentIntent. It retrieves the
+  PaymentIntent and charge before applying payment, including partial-refund checks.
+- **Razorpay:** supply the key ID, key secret, and separate webhook signing secret.
+  Subscribe to `payment_link.paid` and refund events. Hosted Standard Payment Links
+  use an exact amount and a stable unique reference; retries recover an already
+  created link using that reference. The adapter retrieves both the payment and
+  its original payment link to verify that the payment belongs to this invoice.
+  Provider notifications and automatic reminders are disabled; sending an invoice
+  remains an explicit action in the application's delivery flow.
+
+The optional `CheckoutPaymentProvider` interface lets adapters verify payments
+against the stored checkout session. Signed callback context and reconciliation
+jobs pass that checkout identity as a hint; the adapter must independently confirm
+ownership through the provider API before returning invoice metadata.
+
+Invoice actions → **Open payment link** creates a private customer invoice URL.
+The sharing panel also provides **Copy link** and **Open payment link** after link
+creation. Customers can see the invoice and PDF, with **Pay online** shown only
+when the default provider is enabled, required credentials and document policy
+are configured, and the invoice is issued, due for payment, and has a balance.
+Revoked, expired, or cancelled-invoice links cannot be used.
+
+Official references:
+[Stripe Checkout](https://docs.stripe.com/api/checkout/sessions/create),
+[Stripe webhook verification](https://docs.stripe.com/events/manage-webhook-endpoints),
+[Razorpay Standard Payment Links](https://razorpay.com/docs/api/payments/payment-links/create-standard/),
+[Razorpay webhook verification](https://razorpay.com/docs/webhooks/validate-test/).

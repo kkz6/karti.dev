@@ -40,6 +40,23 @@ class PaymentGatewayRegistry
         return isset($this->gateways[$id]) && in_array($id, app(BillingProviderSettings::class)->enabled_providers, true);
     }
 
+    public function checkoutAvailable(): bool
+    {
+        $settings = app(BillingProviderSettings::class);
+        $id       = $settings->default_provider;
+        if (! $settings->invoice_checkout_enabled || ! $settings->document_policy_confirmed || ! $this->enabled($id)) {
+            return false;
+        }
+        $configuration = $this->configuration($id);
+        foreach ($this->get($id)->fields() as $key => $field) {
+            if (($field['required'] ?? false) && ! filled($configuration[$key] ?? null)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public function make(string $id): PaymentProvider
     {
         return app($this->get($id)->providerClass());

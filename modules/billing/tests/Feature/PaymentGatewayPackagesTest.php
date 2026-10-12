@@ -86,7 +86,7 @@ beforeEach(function () {
 test('Composer auto-discovers the installed Dodo gateway and additional packages appear in settings', function () {
     expect($this->registry->get('dodo')->name())->toBe('Dodo Payments');
     $this->get(route('admin.settings.billing.edit', ['section'=>'online']))->assertOk()->assertInertia(fn (Assert $page) => $page
-        ->has('providers', 2)->where('providers.0.id', 'dodo')->where('providers.1.id', 'example')->missing('settings.provider_settings')->where('providers.1.fields.secret.value', ''));
+        ->has('providers', 4)->where('providers.0.id', 'dodo')->where('providers.3.id', 'example')->missing('settings.provider_settings')->where('providers.3.fields.secret.value', ''));
     expect(fn () =>$this->registry->register(new PackageExampleGateway))->toThrow(RuntimeException::class);
 });
 
@@ -96,7 +96,7 @@ test('provider settings encrypt credentials retain blank secrets and are permiss
     $this->put($url, ['enabled'=>true, 'fields'=>['secret'=>'']])->assertSessionHasNoErrors();
     expect($this->registry->configuration('example')['secret'])->toBe('package-secret');
     expect(\Illuminate\Support\Facades\DB::table('settings')->where('group', 'billing_provider')->where('name', 'provider_settings')->value('payload'))->not->toContain('package-secret');
-    $this->get(route('admin.settings.billing.edit', ['section'=>'online']))->assertInertia(fn (Assert $page) =>$page->missing('settings.provider_settings')->where('providers.1.fields.secret.value', '')->where('providers.1.fields.secret.configured', true));
+    $this->get(route('admin.settings.billing.edit', ['section'=>'online']))->assertInertia(fn (Assert $page) =>$page->missing('settings.provider_settings')->where('providers.3.fields.secret.value', '')->where('providers.3.fields.secret.configured', true));
     $this->actingAs(User::factory()->create())->putJson($url, ['enabled'=>false, 'fields'=>['secret'=>'']])->assertForbidden();
 });
 

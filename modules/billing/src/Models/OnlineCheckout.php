@@ -12,6 +12,11 @@ class OnlineCheckout extends Model
 
     protected $hidden=['request_key', 'invoice_url'];
 
+    public function invoice(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Invoice::class);
+    }
+
     protected function casts(): array
     {
         return ['expected_minor'=>'integer', 'invoice_url'=>'encrypted'];

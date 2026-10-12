@@ -209,7 +209,7 @@ class InvoicesController extends BaseController
             'canUpdateInternalNote' => $request->user()->can('update', $invoice),
             'canCreateCredit'       => $invoice->status === 'issued' && $request->user()->can('create', \Modules\Billing\Models\CreditNote::class),
             'credits'               => $request->user()->can('view', new \Modules\Billing\Models\CreditNote) ? \Modules\Billing\Models\CreditNote::where('invoice_id', $invoice->id)->latest('id')->get()->map(fn ($c) => app(\Modules\Billing\Services\CreditNotePresentation::class)->data($c))->all() : null,
-            'canCheckout'           => $invoice->status === 'issued' && $request->user()->can('checkout', $invoice) && app(\Modules\Billing\Settings\BillingProviderSettings::class)->invoice_checkout_enabled,
+            'canCheckout'           => $invoice->status === 'issued' && $request->user()->can('checkout', $invoice) && app(\Modules\Billing\Services\PaymentGatewayRegistry::class)->checkoutAvailable(),
             'remindersDisabled'     => $invoice->reminders_disabled, 'canRemind' => $request->user()->can('remind', $invoice),
             'canShare'              => $invoice->status === 'issued' && $request->user()->can('share', $invoice),
             'shareUrl'              => $request->user()->can('share', $invoice) ? $request->session()->get('billing_share_url') : null,

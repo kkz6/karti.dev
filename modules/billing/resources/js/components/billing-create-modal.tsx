@@ -43,7 +43,19 @@ export function BillingFormCanvas({ children, className }: { children: ReactNode
     const modal = useContext(Context);
     return modal ? <div className="space-y-5">{children}</div> : <BillingPageContainer className={className}>{children}</BillingPageContainer>;
 }
-export function BillingCreateModal({ kind, open, onClose }: { kind: Kind; open: boolean; onClose: () => void }) {
+export function BillingCreateModal({
+    kind,
+    open,
+    onClose,
+    recordId,
+    readOnly = false,
+}: {
+    kind: Kind;
+    open: boolean;
+    onClose: () => void;
+    recordId?: number;
+    readOnly?: boolean;
+}) {
     const [seed, setSeed] = useState<Record<string, unknown> | null>(null),
         [loading, setLoading] = useState(false),
         [error, setError] = useState(''),
@@ -59,7 +71,10 @@ export function BillingCreateModal({ kind, open, onClose }: { kind: Kind; open: 
         setBusy(false);
         setLoading(true);
         axios
-            .get(route(config[kind].route), { headers: { Accept: 'application/json' }, signal: abort.signal })
+            .get(recordId && kind === 'tax' ? route(`admin.tax-rates.${readOnly ? 'show' : 'edit'}`, recordId) : route(config[kind].route), {
+                headers: { Accept: 'application/json' },
+                signal: abort.signal,
+            })
             .then(({ data }) => setSeed(data))
             .catch((e) => {
                 if (!axios.isCancel(e)) setError('The form could not be loaded. Close and try again.');
@@ -68,7 +83,7 @@ export function BillingCreateModal({ kind, open, onClose }: { kind: Kind; open: 
                 if (!abort.signal.aborted) setLoading(false);
             });
         return () => abort.abort();
-    }, [open, kind]);
+    }, [open, kind, recordId, readOnly]);
     const onStateChange = useCallback((isDirty: boolean, isBusy: boolean) => {
         setDirty(isDirty);
         setBusy(isBusy);
@@ -107,7 +122,7 @@ export function BillingCreateModal({ kind, open, onClose }: { kind: Kind; open: 
                     }}
                 >
                     <DialogHeader className="shrink-0 border-b px-5 py-4 pr-12 text-left">
-                        <DialogTitle>{config[kind].title}</DialogTitle>
+                        <DialogTitle>{recordId && kind === 'tax' ? (readOnly ? 'Tax preset' : 'Edit tax preset') : config[kind].title}</DialogTitle>
                         <DialogDescription>{config[kind].description}</DialogDescription>
                     </DialogHeader>
                     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5">

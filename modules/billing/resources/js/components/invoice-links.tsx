@@ -3,6 +3,7 @@ import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { Input } from '@shared/components/ui/input';
 import { Label } from '@shared/components/ui/label';
+import { toast } from 'sonner';
 import { BillingFeedback } from './billing-feedback';
 import { useBillingConfirm } from './use-billing-confirm';
 export type PrivateInvoiceLink = { id: number; label: string | null; expires_at: string; revoked_at: string | null };
@@ -30,14 +31,29 @@ export function InvoiceLinks({
             <CardContent className={embedded ? 'space-y-4 p-0' : 'space-y-4'}>
                 {dialog}
                 <p className="text-muted-foreground text-sm">
-                    Anyone with a valid link can view this invoice and download its PDF. Revoke a link to remove access.
+                    Anyone with a valid link can view this invoice, download its PDF, and pay online when configured. Revoke a link to remove access.
                 </p>
                 {shareUrl && (
                     <div className="space-y-2">
                         <Label htmlFor="invoice-share-url">New private link</Label>
                         <Input id="invoice-share-url" readOnly value={shareUrl} onFocus={(e) => e.target.select()} />
-                        <Button variant="outline" onClick={() => navigator.clipboard.writeText(shareUrl)}>
+                        <Button
+                            variant="outline"
+                            onClick={async () => {
+                                try {
+                                    await navigator.clipboard.writeText(shareUrl);
+                                    toast.success('Invoice link copied.');
+                                } catch {
+                                    toast.error('Copy the invoice link from the field above.');
+                                }
+                            }}
+                        >
                             Copy link
+                        </Button>
+                        <Button variant="outline" asChild>
+                            <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+                                Open payment link
+                            </a>
                         </Button>
                     </div>
                 )}

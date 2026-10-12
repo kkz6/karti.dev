@@ -1,6 +1,8 @@
 import { Head, router } from '@inertiajs/react';
 import { Badge } from '@shared/components/ui/badge';
 import { Button } from '@shared/components/ui/button';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { BillingSummary } from '../components/billing-summary';
 import { InvoiceDocument } from '../components/invoice-document';
 import type { InvoiceData } from '../invoice-types';
@@ -16,6 +18,8 @@ export default function PublicInvoice({
     pdfUrl: string;
     checkoutUrl: string | null;
 }) {
+    const [paying, setPaying] = useState(false);
+    const [requestKey] = useState(() => crypto.randomUUID());
     return (
         <main className="bg-muted/30 min-h-screen px-4 py-8 sm:py-12">
             <Head title={invoice.formatted_number ?? 'Invoice'}>
@@ -39,7 +43,21 @@ export default function PublicInvoice({
                         <a href={pdfUrl}>Download PDF</a>
                     </Button>
                 </div>
-                {checkoutUrl && <Button onClick={() => router.post(checkoutUrl, { request_key: crypto.randomUUID() })}>Pay online</Button>}
+                {checkoutUrl && (
+                    <Button
+                        disabled={paying}
+                        onClick={() => {
+                            setPaying(true);
+                            router.post(
+                                checkoutUrl,
+                                { request_key: requestKey },
+                                { onFinish: () => setPaying(false), onError: (errors) => toast.error(Object.values(errors).join(' ')) },
+                            );
+                        }}
+                    >
+                        {paying ? 'Opening payment…' : 'Pay online'}
+                    </Button>
+                )}
                 <BillingSummary
                     items={[
                         { label: 'Invoice total', value: invoice.totals.total, currency: invoice.currency },

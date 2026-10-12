@@ -112,7 +112,7 @@ test('unauthorized users cannot use settings tax or table endpoints', function (
 
 test('read-only catalogue and settings permissions do not allow mutations', function () {
     $reader  = User::factory()->create()->givePermissionTo(['view any tax rate', 'view tax rate', 'view billing settings']);
-    $tax = TaxRate::factory()->create();
+    $tax     = TaxRate::factory()->create();
     $this->actingAs($reader);
     $this->get(route('admin.tax-rates.show', $tax))->assertOk()->assertInertia(fn (Assert $page) => $page->where('can.update', false));
     $this->get(route('admin.settings.billing.edit'))->assertOk()->assertInertia(fn (Assert $page) => $page->where('canUpdate', false));
@@ -138,7 +138,8 @@ test('tax presets accept zero and exact fractional percentages and reject invali
         $this->postJson(route('admin.tax-rates.store'), ['name' => 'Bad rate', 'percentage' => $invalid])->assertUnprocessable()->assertJsonValidationErrors('percentage');
     }
     expect(TaxRate::count())->toBe(1);
-    $this->delete('/admin/tax-rates/'.$tax->id)->assertStatus(405);
+    $this->delete('/admin/tax-rates/'.$tax->id)->assertRedirect();
+    expect($tax->fresh())->toBeNull();
 });
 
 test('tax archives preserve historical service links block edits and can be restored', function () {

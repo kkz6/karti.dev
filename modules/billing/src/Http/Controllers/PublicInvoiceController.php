@@ -34,6 +34,6 @@ class PublicInvoiceController
         $data['items']            =array_map(fn ($item) =>[...Arr::except($item, ['service_id']), 'taxes'=>array_map(fn ($tax) =>Arr::except($tax, ['tax_rate_id']), $item['taxes'])], $data['items']);
         $balance                  =app(InvoiceBalance::class)->data($invoice);
 
-        return Inertia::render('billing::public-invoice', ['invoice'=>$data, 'settlement'=>Arr::only($balance, ['state', 'paid', 'credited', 'balance', 'overdue']), 'checkoutUrl' => app(\Modules\Billing\Settings\BillingProviderSettings::class)->invoice_checkout_enabled && $balance['can_receive'] ? route('billing.public-invoice.checkout', $token) : null, 'pdfUrl'=>route('billing.public-invoice', ['token'=>$token, 'pdf'=>1])])->toResponse($request)->withHeaders($headers);
+        return Inertia::render('billing::public-invoice', ['invoice'=>$data, 'settlement'=>Arr::only($balance, ['state', 'paid', 'credited', 'balance', 'overdue']), 'checkoutUrl' => app(\Modules\Billing\Services\PaymentGatewayRegistry::class)->checkoutAvailable() && $balance['can_receive'] && $invoice->invoice_date->format('Y-m-d') <= now(app(\Modules\Billing\Settings\BillingSettings::class)->timezone)->format('Y-m-d') ? route('billing.public-invoice.checkout', $token) : null, 'pdfUrl'=>route('billing.public-invoice', ['token'=>$token, 'pdf'=>1])])->toResponse($request)->withHeaders($headers);
     }
 }

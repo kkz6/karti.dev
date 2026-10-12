@@ -27,7 +27,9 @@ export default function TaxRateForm({
     const submit = (event: FormEvent) => {
         event.preventDefault();
         continueWithoutUnsavedChangesPrompt(() =>
-            taxRate ? form.patch(route('admin.tax-rates.update', taxRate.id)) : form.post(route('admin.tax-rates.store'), modal?.visitOptions),
+            taxRate
+                ? form.patch(route('admin.tax-rates.update', taxRate.id), modal?.visitOptions)
+                : form.post(route('admin.tax-rates.store'), modal?.visitOptions),
         );
     };
     return (

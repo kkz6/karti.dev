@@ -19,6 +19,8 @@
         "modules/auth": "*",
         "modules/billing": "*",
         "modules/billing-dodo": "*",
+        "modules/billing-razorpay": "^1.0",
+        "modules/billing-stripe": "^1.0",
         "modules/blog": "*",
         "modules/frontend": "*",
         "modules/media": "*",
