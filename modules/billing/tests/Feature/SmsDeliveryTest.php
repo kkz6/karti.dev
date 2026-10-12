@@ -212,3 +212,20 @@ test('missing or partial delivery templates receive safe defaults without overwr
     expect($settings->resolvedTemplates()['invoice']['email_subject'])->toBe('Custom {invoice_number}')
         ->and($settings->resolvedTemplates()['invoice']['sms_message'])->not->toBeEmpty();
 });
+
+test('email template edits persist independently of SMS content and credentials', function () {
+    $settings                              = app(BillingDeliverySettings::class);
+    $templates                             = $settings->resolvedTemplates();
+    $sms                                   = $templates['invoice']['sms_message'];
+    $templates['invoice']['email_subject'] = 'Your invoice {invoice_number}';
+    $templates['invoice']['email_message'] = 'Hello {customer_name}, please pay {currency} {amount_due}. {invoice_link}';
+    $this->put(route('admin.billing.delivery.update'), billingDeliveryPayload(['templates' => $templates]))->assertSessionHasNoErrors();
+    $saved = app(BillingDeliverySettings::class)->resolvedTemplates();
+    expect($saved['invoice']['email_subject'])->toBe('Your invoice {invoice_number}')
+        ->and($saved['invoice']['email_message'])->toContain('please pay')
+        ->and($saved['invoice']['sms_message'])->toBe($sms)
+        ->and(app(BillingDeliverySettings::class)->twilio_auth_token)->toBe('private-token');
+    $this->get(route('admin.settings.billing.edit', ['section' => 'delivery']))->assertInertia(fn (Assert $page) => $page->where('settings.templates.invoice.email_subject', 'Your invoice {invoice_number}'));
+    Mail::assertNothingSent();
+    Http::assertNothingSent();
+});

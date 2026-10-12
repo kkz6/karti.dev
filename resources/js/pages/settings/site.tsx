@@ -1,6 +1,7 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { IndexHeader } from '@shared/components/index-header';
 import { PageContainer } from '@shared/components/page-container';
+import { SiteSettingsTabs } from '@shared/components/site-settings-tabs';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { Input } from '@shared/components/ui/input';
@@ -78,6 +79,7 @@ export default function SiteSettingsPage({ settings }: { settings: SiteSettings 
                         </div>
                     }
                 />
+                <SiteSettingsTabs section="general" />
                 <p className="text-muted-foreground max-w-2xl text-sm">
                     Manage your site identity and search defaults in one place. Individual pages can override the default title, description, and
                     social image.

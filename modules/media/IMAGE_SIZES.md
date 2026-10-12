@@ -1,6 +1,6 @@
 # Image sizes
 
-View **Media settings → Default image sizes** for read-only built-in sizes, format and quality. Add and edit extra presets under **Custom sizes** on the same page. Site identity and SEO defaults remain on the separate **Site settings** page. Built-in sizes cannot be edited or removed through the settings UI or API; existing saved built-in values are preserved. The built-in names are used by the UI:
+View **Site settings → Media → Default image sizes** for read-only built-in sizes, format and quality. Add and edit extra presets under **Custom sizes** on the same page. Site identity, Media and Email share the **Site settings** navigation, with General, Media and Email tabs. Built-in sizes cannot be edited or removed through the settings UI or API; existing saved built-in values are preserved. The built-in names are used by the UI:
 
 | Name | Default width | Use |
 | --- | --- | --- |

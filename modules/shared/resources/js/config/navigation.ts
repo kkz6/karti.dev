@@ -7,7 +7,6 @@ import {
     FileText,
     Folder,
     FolderOpen,
-    Image,
     Inbox,
     LayoutGrid,
     ListChecks,
@@ -98,9 +97,16 @@ export const mainNavItems: NavItem[] = [
     },
     { title: 'Newsletter', href: route('admin.newsletter.index'), icon: Mail },
     { title: 'Contact inbox', href: route('admin.contact.index'), icon: Inbox },
-    { title: 'Site settings', href: route('admin.settings.edit'), icon: Settings },
-    { title: 'Media settings', href: route('admin.settings.media.edit'), icon: Image },
-    { title: 'Email settings', href: route('admin.settings.email.edit'), icon: Mail },
+    {
+        title: 'Site settings',
+        href: route('admin.settings.edit'),
+        icon: Settings,
+        items: [
+            { title: 'General', href: route('admin.settings.edit'), icon: Settings },
+            { title: 'Media', href: route('admin.settings.media.edit'), icon: Camera },
+            { title: 'Email', href: route('admin.settings.email.edit'), icon: Mail },
+        ],
+    },
 ];
 
 export const mainNavGroups: NavGroup[] = [
@@ -124,6 +130,6 @@ export const mainNavGroups: NavGroup[] = [
     },
     {
         title: 'Settings',
-        items: mainNavItems.filter((item) => ['Site settings', 'Media settings', 'Email settings', 'Billing settings'].includes(item.title)),
+        items: ['Site settings', 'Billing settings'].flatMap((title) => mainNavItems.filter((item) => item.title === title)),
     },
 ];

@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@shared/components/ui/
 import { Textarea } from '@shared/components/ui/textarea';
 import { UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
 import axios, { AxiosError } from 'axios';
-import { MessageSquare, Save, Send } from 'lucide-react';
+import { Mail, MessageSquare, Save, Send } from 'lucide-react';
 import { useState } from 'react';
 
 const events = { invoice: 'Invoice', due: 'Due reminder', overdue: 'Overdue reminder', payment: 'Payment received' };
@@ -87,6 +87,8 @@ export default function DeliverySettings({
     message?: string;
 }) {
     const form = useForm<Form>(formData(settings));
+    const [deliveryTab, setDeliveryTab] = useState('email');
+    const [templateEvent, setTemplateEvent] = useState<Event>('invoice');
     const [recipient, setRecipient] = useState('');
     const [testing, setTesting] = useState(false);
     const [feedback, setFeedback] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
@@ -103,6 +105,8 @@ export default function DeliverySettings({
             for (const line of form.data.msg91_templates[event].variables.split('\n').filter((line) => line.trim())) {
                 const [key, value, extra] = line.split('=').map((part) => part.trim());
                 if (!key || !fields.includes(value) || extra !== undefined || Object.hasOwn(mappings[event], key)) {
+                    setDeliveryTab('sms');
+                    setTemplateEvent(event);
                     form.setError('msg91_templates', `For ${events[event]}, use one unique VARIABLE=field per line.`);
                     return;
                 }
@@ -118,6 +122,16 @@ export default function DeliverySettings({
         }));
         form.put(route('admin.billing.delivery.update'), {
             preserveScroll: true,
+            onError: (errors) => {
+                const key = Object.keys(errors)[0] ?? '';
+                if (key.startsWith('templates.') || key.startsWith('msg91_templates')) {
+                    setDeliveryTab(key.includes('.email_') ? 'email' : 'sms');
+                    const notice = key.split('.')[1];
+                    if (notice && notice in events) setTemplateEvent(notice as Event);
+                } else {
+                    setDeliveryTab('driver');
+                }
+            },
             onSuccess: (page) => {
                 const saved = formData(page.props.settings as Settings);
                 form.setData(saved);
@@ -176,243 +190,298 @@ export default function DeliverySettings({
                     save();
                 }}
             >
-                <Card>
-                    <CardHeader className="flex flex-row items-start justify-between gap-3">
-                        <div className="space-y-1">
-                            <CardTitle className="flex items-center gap-2">
-                                <MessageSquare className="size-4" />
-                                SMS driver
-                            </CardTitle>
-                            <CardDescription>Choose a provider and save its credentials.</CardDescription>
-                        </div>
-                        <Switch
-                            aria-label="Enable SMS delivery"
-                            checked={form.data.sms_enabled}
-                            disabled={disabled}
-                            onCheckedChange={(value) => form.setData('sms_enabled', value)}
-                        />
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="sms-provider">Provider</Label>
-                            <BillingSelect
-                                id="sms-provider"
-                                value={form.data.sms_provider}
-                                disabled={disabled}
-                                onValueChange={(value) => form.setData('sms_provider', value as Settings['sms_provider'])}
+                <Tabs value={deliveryTab} onValueChange={setDeliveryTab} className="space-y-5">
+                    <div className="overflow-x-auto">
+                        <TabsList
+                            aria-label="Email and SMS settings"
+                            className="h-auto w-full min-w-max justify-start rounded-none border-b bg-transparent p-0"
+                        >
+                            <TabsTrigger
+                                value="email"
+                                className="data-[state=active]:border-foreground gap-2 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
                             >
-                                <BillingSelectItem value="twilio">Twilio</BillingSelectItem>
-                                <BillingSelectItem value="msg91">MSG91</BillingSelectItem>
-                            </BillingSelect>
-                        </div>
-                        {form.data.sms_provider === 'twilio' ? (
-                            <>
-                                <div className="grid gap-4 sm:grid-cols-2">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="twilio-account">Account SID</Label>
-                                        <Input
-                                            id="twilio-account"
-                                            value={form.data.twilio_account_sid}
-                                            disabled={disabled}
-                                            onChange={(e) => form.setData('twilio_account_sid', e.target.value)}
-                                            placeholder="AC…"
-                                        />
+                                <Mail className="size-4" />
+                                Email templates
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="sms"
+                                className="data-[state=active]:border-foreground gap-2 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                            >
+                                <MessageSquare className="size-4" />
+                                SMS templates
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="driver"
+                                className="data-[state=active]:border-foreground gap-2 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                            >
+                                SMS driver<span className="text-muted-foreground text-xs">{settings.sms_enabled ? 'On' : 'Off'}</span>
+                            </TabsTrigger>
+                        </TabsList>
+                    </div>
+                    {(['email', 'sms'] as const).map((channel) => (
+                        <TabsContent key={channel} value={channel}>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>{channel === 'email' ? 'Email templates' : 'SMS templates'}</CardTitle>
+                                    <CardDescription>
+                                        {channel === 'email'
+                                            ? 'Edit the email subject and message for each notice. Emails include the invoice PDF and private invoice link.'
+                                            : 'Edit SMS messages for Twilio or configure approved MSG91 templates and their variables.'}{' '}
+                                        Automatic notices are controlled under Reminders & receipts.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <Tabs value={templateEvent} onValueChange={(value) => setTemplateEvent(value as Event)}>
+                                        <TabsList
+                                            aria-label={`${channel === 'email' ? 'Email' : 'SMS'} notice type`}
+                                            className="h-auto w-full flex-wrap justify-start"
+                                        >
+                                            {Object.entries(events).map(([event, label]) => (
+                                                <TabsTrigger key={event} value={event}>
+                                                    {label}
+                                                </TabsTrigger>
+                                            ))}
+                                        </TabsList>
+                                        {(Object.keys(events) as Event[]).map((event) => (
+                                            <TabsContent key={event} value={event} className="space-y-4 pt-3">
+                                                {channel === 'email' ? (
+                                                    <>
+                                                        <div className="space-y-2">
+                                                            <Label htmlFor={`${event}-subject`}>Email subject</Label>
+                                                            <Input
+                                                                id={`${event}-subject`}
+                                                                value={form.data.templates[event].email_subject}
+                                                                disabled={disabled}
+                                                                onChange={(e) => template(event, 'email_subject', e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <Label htmlFor={`${event}-email`}>Email message</Label>
+                                                            <Textarea
+                                                                id={`${event}-email`}
+                                                                value={form.data.templates[event].email_message}
+                                                                disabled={disabled}
+                                                                onChange={(e) => template(event, 'email_message', e.target.value)}
+                                                                rows={3}
+                                                            />
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div className="space-y-2">
+                                                            <Label htmlFor={`${event}-sms`}>
+                                                                {form.data.sms_provider === 'msg91' ? 'SMS message preview' : 'SMS message'}
+                                                            </Label>
+                                                            <Textarea
+                                                                id={`${event}-sms`}
+                                                                value={form.data.templates[event].sms_message}
+                                                                disabled={disabled}
+                                                                onChange={(e) => template(event, 'sms_message', e.target.value)}
+                                                                rows={3}
+                                                            />
+                                                        </div>
+                                                        {form.data.sms_provider === 'msg91' && (
+                                                            <div className="grid gap-4 sm:grid-cols-2">
+                                                                <div className="space-y-2">
+                                                                    <Label htmlFor={`${event}-template`}>MSG91 template ID</Label>
+                                                                    <Input
+                                                                        id={`${event}-template`}
+                                                                        value={form.data.msg91_templates[event].id}
+                                                                        disabled={disabled}
+                                                                        onChange={(e) =>
+                                                                            form.setData('msg91_templates', {
+                                                                                ...form.data.msg91_templates,
+                                                                                [event]: { ...form.data.msg91_templates[event], id: e.target.value },
+                                                                            })
+                                                                        }
+                                                                    />
+                                                                </div>
+                                                                <div className="space-y-2">
+                                                                    <Label htmlFor={`${event}-variables`}>MSG91 variable mapping</Label>
+                                                                    <Textarea
+                                                                        id={`${event}-variables`}
+                                                                        value={form.data.msg91_templates[event].variables}
+                                                                        disabled={disabled}
+                                                                        onChange={(e) =>
+                                                                            form.setData('msg91_templates', {
+                                                                                ...form.data.msg91_templates,
+                                                                                [event]: {
+                                                                                    ...form.data.msg91_templates[event],
+                                                                                    variables: e.target.value,
+                                                                                },
+                                                                            })
+                                                                        }
+                                                                        placeholder={'VAR1=invoice_number\nVAR2=amount_due\nVAR3=invoice_link'}
+                                                                    />
+                                                                    <p className="text-muted-foreground text-xs">
+                                                                        One exact provider variable name and field per line.
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </TabsContent>
+                                        ))}
+                                    </Tabs>
+                                    <div className="bg-muted/40 rounded-lg border p-3">
+                                        <p className="mb-2 text-xs font-medium">Available fields</p>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {fields.map((field) => (
+                                                <code key={field} className="bg-background rounded border px-1.5 py-0.5 text-xs">{`{${field}}`}</code>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="twilio-from">Sender number or ID</Label>
-                                        <Input
-                                            id="twilio-from"
-                                            value={form.data.twilio_from}
-                                            disabled={disabled}
-                                            onChange={(e) => form.setData('twilio_from', e.target.value)}
-                                            placeholder="+1… or approved sender ID"
-                                        />
-                                    </div>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                    ))}
+                    <TabsContent value="driver" className="space-y-6">
+                        <Card>
+                            <CardHeader className="flex flex-row items-start justify-between gap-3">
+                                <div className="space-y-1">
+                                    <CardTitle className="flex items-center gap-2">
+                                        <MessageSquare className="size-4" />
+                                        SMS driver
+                                    </CardTitle>
+                                    <CardDescription>Choose a provider and save its credentials.</CardDescription>
                                 </div>
+                                <Switch
+                                    aria-label="Enable SMS delivery"
+                                    checked={form.data.sms_enabled}
+                                    disabled={disabled}
+                                    onCheckedChange={(value) => form.setData('sms_enabled', value)}
+                                />
+                            </CardHeader>
+                            <CardContent className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="twilio-token">Auth token</Label>
-                                    <Input
-                                        id="twilio-token"
-                                        type="password"
-                                        autoComplete="new-password"
-                                        value={form.data.twilio_auth_token}
+                                    <Label htmlFor="sms-provider">Provider</Label>
+                                    <BillingSelect
+                                        id="sms-provider"
+                                        value={form.data.sms_provider}
                                         disabled={disabled}
-                                        onChange={(e) => form.setData('twilio_auth_token', e.target.value)}
-                                        placeholder={credentials.twilio ? 'Saved token · leave blank to keep' : 'Enter auth token'}
-                                    />
+                                        onValueChange={(value) => form.setData('sms_provider', value as Settings['sms_provider'])}
+                                    >
+                                        <BillingSelectItem value="twilio">Twilio</BillingSelectItem>
+                                        <BillingSelectItem value="msg91">MSG91</BillingSelectItem>
+                                    </BillingSelect>
                                 </div>
-                                {credentials.twilio && (
-                                    <div className="flex items-center gap-2">
-                                        <Checkbox
-                                            id="clear-twilio"
-                                            checked={form.data.clear_twilio_auth_token}
-                                            disabled={disabled}
-                                            onCheckedChange={(v) => form.setData('clear_twilio_auth_token', v === true)}
-                                        />
-                                        <Label htmlFor="clear-twilio">Remove saved token</Label>
-                                    </div>
-                                )}
-                            </>
-                        ) : (
-                            <>
-                                <div className="space-y-2">
-                                    <Label htmlFor="msg91-key">Auth key</Label>
-                                    <Input
-                                        id="msg91-key"
-                                        type="password"
-                                        autoComplete="new-password"
-                                        value={form.data.msg91_auth_key}
-                                        disabled={disabled}
-                                        onChange={(e) => form.setData('msg91_auth_key', e.target.value)}
-                                        placeholder={credentials.msg91 ? 'Saved key · leave blank to keep' : 'Enter auth key'}
-                                    />
-                                </div>
-                                {credentials.msg91 && (
-                                    <div className="flex items-center gap-2">
-                                        <Checkbox
-                                            id="clear-msg91"
-                                            checked={form.data.clear_msg91_auth_key}
-                                            disabled={disabled}
-                                            onCheckedChange={(v) => form.setData('clear_msg91_auth_key', v === true)}
-                                        />
-                                        <Label htmlFor="clear-msg91">Remove saved key</Label>
-                                    </div>
-                                )}
-                                <p className="text-muted-foreground text-sm">
-                                    MSG91 sends the approved template configured below, using its named variables. The sender and approved content are
-                                    managed in MSG91.
-                                </p>
-                            </>
-                        )}
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Notification templates</CardTitle>
-                        <CardDescription>Choose the notice to edit. Enable automatic reminders and payment receipts under Reminders.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <Tabs defaultValue="invoice">
-                            <TabsList className="h-auto w-full flex-wrap justify-start">
-                                {Object.entries(events).map(([event, label]) => (
-                                    <TabsTrigger key={event} value={event}>
-                                        {label}
-                                    </TabsTrigger>
-                                ))}
-                            </TabsList>
-                            {(Object.keys(events) as Event[]).map((event) => (
-                                <TabsContent key={event} value={event} className="space-y-4 pt-3">
-                                    <div className="space-y-2">
-                                        <Label htmlFor={`${event}-subject`}>Email subject</Label>
-                                        <Input
-                                            id={`${event}-subject`}
-                                            value={form.data.templates[event].email_subject}
-                                            disabled={disabled}
-                                            onChange={(e) => template(event, 'email_subject', e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor={`${event}-email`}>Email message</Label>
-                                        <Textarea
-                                            id={`${event}-email`}
-                                            value={form.data.templates[event].email_message}
-                                            disabled={disabled}
-                                            onChange={(e) => template(event, 'email_message', e.target.value)}
-                                            rows={3}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor={`${event}-sms`}>
-                                            {form.data.sms_provider === 'msg91' ? 'SMS message preview' : 'SMS message'}
-                                        </Label>
-                                        <Textarea
-                                            id={`${event}-sms`}
-                                            value={form.data.templates[event].sms_message}
-                                            disabled={disabled}
-                                            onChange={(e) => template(event, 'sms_message', e.target.value)}
-                                            rows={3}
-                                        />
-                                    </div>
-                                    {form.data.sms_provider === 'msg91' && (
+                                {form.data.sms_provider === 'twilio' ? (
+                                    <>
                                         <div className="grid gap-4 sm:grid-cols-2">
                                             <div className="space-y-2">
-                                                <Label htmlFor={`${event}-template`}>MSG91 template ID</Label>
+                                                <Label htmlFor="twilio-account">Account SID</Label>
                                                 <Input
-                                                    id={`${event}-template`}
-                                                    value={form.data.msg91_templates[event].id}
+                                                    id="twilio-account"
+                                                    value={form.data.twilio_account_sid}
                                                     disabled={disabled}
-                                                    onChange={(e) =>
-                                                        form.setData('msg91_templates', {
-                                                            ...form.data.msg91_templates,
-                                                            [event]: { ...form.data.msg91_templates[event], id: e.target.value },
-                                                        })
-                                                    }
+                                                    onChange={(e) => form.setData('twilio_account_sid', e.target.value)}
+                                                    placeholder="AC…"
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor={`${event}-variables`}>MSG91 variable mapping</Label>
-                                                <Textarea
-                                                    id={`${event}-variables`}
-                                                    value={form.data.msg91_templates[event].variables}
+                                                <Label htmlFor="twilio-from">Sender number or ID</Label>
+                                                <Input
+                                                    id="twilio-from"
+                                                    value={form.data.twilio_from}
                                                     disabled={disabled}
-                                                    onChange={(e) =>
-                                                        form.setData('msg91_templates', {
-                                                            ...form.data.msg91_templates,
-                                                            [event]: { ...form.data.msg91_templates[event], variables: e.target.value },
-                                                        })
-                                                    }
-                                                    placeholder={'VAR1=invoice_number\nVAR2=amount_due\nVAR3=invoice_link'}
+                                                    onChange={(e) => form.setData('twilio_from', e.target.value)}
+                                                    placeholder="+1… or approved sender ID"
                                                 />
-                                                <p className="text-muted-foreground text-xs">One exact provider variable name and field per line.</p>
                                             </div>
                                         </div>
-                                    )}
-                                </TabsContent>
-                            ))}
-                        </Tabs>
-                        <div className="bg-muted/40 rounded-lg border p-3">
-                            <p className="mb-2 text-xs font-medium">Available fields</p>
-                            <div className="flex flex-wrap gap-1.5">
-                                {fields.map((field) => (
-                                    <code key={field} className="bg-background rounded border px-1.5 py-0.5 text-xs">{`{${field}}`}</code>
-                                ))}
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="twilio-token">Auth token</Label>
+                                            <Input
+                                                id="twilio-token"
+                                                type="password"
+                                                autoComplete="new-password"
+                                                value={form.data.twilio_auth_token}
+                                                disabled={disabled}
+                                                onChange={(e) => form.setData('twilio_auth_token', e.target.value)}
+                                                placeholder={credentials.twilio ? 'Saved token · leave blank to keep' : 'Enter auth token'}
+                                            />
+                                        </div>
+                                        {credentials.twilio && (
+                                            <div className="flex items-center gap-2">
+                                                <Checkbox
+                                                    id="clear-twilio"
+                                                    checked={form.data.clear_twilio_auth_token}
+                                                    disabled={disabled}
+                                                    onCheckedChange={(v) => form.setData('clear_twilio_auth_token', v === true)}
+                                                />
+                                                <Label htmlFor="clear-twilio">Remove saved token</Label>
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="msg91-key">Auth key</Label>
+                                            <Input
+                                                id="msg91-key"
+                                                type="password"
+                                                autoComplete="new-password"
+                                                value={form.data.msg91_auth_key}
+                                                disabled={disabled}
+                                                onChange={(e) => form.setData('msg91_auth_key', e.target.value)}
+                                                placeholder={credentials.msg91 ? 'Saved key · leave blank to keep' : 'Enter auth key'}
+                                            />
+                                        </div>
+                                        {credentials.msg91 && (
+                                            <div className="flex items-center gap-2">
+                                                <Checkbox
+                                                    id="clear-msg91"
+                                                    checked={form.data.clear_msg91_auth_key}
+                                                    disabled={disabled}
+                                                    onCheckedChange={(v) => form.setData('clear_msg91_auth_key', v === true)}
+                                                />
+                                                <Label htmlFor="clear-msg91">Remove saved key</Label>
+                                            </div>
+                                        )}
+                                        <p className="text-muted-foreground text-sm">
+                                            MSG91 sends the approved template in the SMS templates tab, using its named variables. The sender and
+                                            approved content are managed in MSG91.
+                                        </p>
+                                    </>
+                                )}
+                            </CardContent>
+                        </Card>
+                        {canUpdate && (
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Test SMS delivery</CardTitle>
+                                    <CardDescription>Sends one test using the saved invoice template. Save changes before testing.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-3">
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                                        <div className="min-w-0 flex-1 space-y-2">
+                                            <Label htmlFor="test-sms-recipient">Recipient</Label>
+                                            <PhoneInput
+                                                id="test-sms-recipient"
+                                                value={recipient}
+                                                onChange={setRecipient}
+                                                defaultCountry="IN"
+                                                disabled={testing}
+                                            />
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={test}
+                                            disabled={testing || form.processing || form.isDirty || !settings.sms_enabled || !recipient}
+                                        >
+                                            <Send className="size-4" />
+                                            {testing ? 'Sending…' : 'Send test SMS'}
+                                        </Button>
+                                    </div>
+                                    {feedback && <BillingFeedback kind={feedback.kind}>{feedback.message}</BillingFeedback>}
+                                </CardContent>
+                            </Card>
+                        )}
+                    </TabsContent>
+                </Tabs>
             </form>
-            {canUpdate && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Test SMS delivery</CardTitle>
-                        <CardDescription>Sends one test using the saved invoice template. Save changes before testing.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-                            <div className="min-w-0 flex-1 space-y-2">
-                                <Label htmlFor="test-sms-recipient">Recipient</Label>
-                                <PhoneInput
-                                    id="test-sms-recipient"
-                                    value={recipient}
-                                    onChange={setRecipient}
-                                    defaultCountry="IN"
-                                    disabled={testing}
-                                />
-                            </div>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={test}
-                                disabled={testing || form.processing || form.isDirty || !settings.sms_enabled || !recipient}
-                            >
-                                <Send className="size-4" />
-                                {testing ? 'Sending…' : 'Send test SMS'}
-                            </Button>
-                        </div>
-                        {feedback && <BillingFeedback kind={feedback.kind}>{feedback.message}</BillingFeedback>}
-                    </CardContent>
-                </Card>
-            )}
         </BillingSettingsWorkspace>
     );
 }

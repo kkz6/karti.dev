@@ -1,5 +1,4 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/components/ui/table';
-import { ChevronRight, LockKeyhole } from 'lucide-react';
+import { ChevronRight, Image, LockKeyhole } from 'lucide-react';
 import { compressionSummary } from './image-processing-summary';
 import type { CompressionDefaults, ImagePreset } from './media-settings';
 
@@ -29,41 +28,33 @@ export function ImageProcessingDefaults({ presets }: { presets: ImagePreset[] })
                     Read-only
                 </span>
             </div>
-            <Table
-                aria-label="Read-only default image sizes and quality"
-                className="table-fixed sm:table-auto [&_td]:px-2 sm:[&_td]:px-3 [&_th]:px-2 sm:[&_th]:px-3"
-            >
-                <TableHeader>
-                    <TableRow className="hover:bg-transparent">
-                        <TableHead className="w-[34%] sm:w-auto">Use</TableHead>
-                        <TableHead className="w-[30%] sm:w-auto">Size</TableHead>
-                        <TableHead className="w-[18%] sm:w-auto">Format</TableHead>
-                        <TableHead className="w-[18%] text-right sm:w-auto">Quality</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {presets.map((preset) => (
-                        <TableRow key={preset.name} className="hover:bg-transparent">
-                            <TableCell className="py-4 font-medium whitespace-normal">{presetNames[preset.name] ?? preset.name}</TableCell>
-                            <TableCell className="whitespace-normal tabular-nums">
-                                {preset.height ? `${preset.width} × ${preset.height} px` : `${preset.width}px wide`}
-                                {preset.fit === 'cover' && <span className="text-muted-foreground ml-1 text-xs">· crop</span>}
-                            </TableCell>
-                            <TableCell>
-                                {preset.format === 'webp' ? 'WebP' : preset.format === 'jpg' ? 'JPEG' : preset.format.toUpperCase()}
-                            </TableCell>
-                            <TableCell className="text-right tabular-nums">{preset.format === 'png' ? 'Lossless' : `${preset.quality}%`}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+            <p className="text-muted-foreground mb-4 text-sm">These standard sizes are generated automatically for every image upload.</p>
+            <div className="grid gap-3 sm:grid-cols-3">
+                {presets.map((preset) => (
+                    <div key={preset.name} className="bg-card space-y-3 rounded-xl border p-4">
+                        <div className="flex items-center gap-2">
+                            <Image className="text-muted-foreground size-4" />
+                            <h3 className="text-sm font-medium">{presetNames[preset.name] ?? preset.name}</h3>
+                        </div>
+                        <p className="text-lg font-semibold tabular-nums">
+                            {preset.height ? `${preset.width} × ${preset.height}` : preset.width}
+                            <span className="text-muted-foreground ml-1 text-xs font-normal">{preset.height ? 'px' : 'px wide'}</span>
+                        </p>
+                        <div className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                            <span>{preset.format === 'webp' ? 'WebP' : preset.format === 'jpg' ? 'JPEG' : preset.format.toUpperCase()}</span>
+                            <span>{preset.format === 'png' ? 'Lossless' : `${preset.quality}% quality`}</span>
+                            <span>{preset.fit === 'cover' ? 'Crop to fit' : 'Keep proportions'}</span>
+                        </div>
+                    </div>
+                ))}
+            </div>
         </section>
     );
 }
 
 export function ServerCompressionDefaults({ compression }: { compression: CompressionDefaults }) {
     return (
-        <details className="group border-border/60 border-t pt-3">
+        <details className="group bg-card rounded-xl border p-4">
             <summary className="text-muted-foreground hover:text-foreground flex w-fit cursor-pointer list-none items-center gap-1.5 py-2 text-xs focus-visible:outline-2">
                 <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" aria-hidden="true" />
                 Advanced compression defaults

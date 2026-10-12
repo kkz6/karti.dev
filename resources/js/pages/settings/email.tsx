@@ -2,6 +2,7 @@ import { Head, useForm } from '@inertiajs/react';
 import { IndexHeader } from '@shared/components/index-header';
 import InputError from '@shared/components/input-error';
 import { PageContainer } from '@shared/components/page-container';
+import { SiteSettingsTabs } from '@shared/components/site-settings-tabs';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui/card';
 import { Checkbox } from '@shared/components/ui/checkbox';
@@ -109,7 +110,12 @@ export default function EmailSettingsPage({
     }
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Email settings', href: route('admin.settings.email.edit') }]}>
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Site settings', href: route('admin.settings.edit') },
+                { title: 'Email', href: route('admin.settings.email.edit') },
+            ]}
+        >
             <Head title="Email settings" />
             <UnsavedChangesGuard dirty={form.isDirty} />
             <PageContainer as="form" id="email-settings-form" onSubmit={submit} className="content-index space-y-6">
@@ -129,6 +135,7 @@ export default function EmailSettingsPage({
                     }
                 />
 
+                <SiteSettingsTabs section="email" />
                 <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
                     Choose SMTP or Resend for newsletter confirmations, password resets, and other application email. Saved credentials override the
                     server environment only when custom delivery is enabled.

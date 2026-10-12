@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { IndexHeader } from '@shared/components/index-header';
 import { PageContainer } from '@shared/components/page-container';
+import { SiteSettingsTabs } from '@shared/components/site-settings-tabs';
 import AppLayout from '@shared/layouts/app-layout';
 import { Image } from 'lucide-react';
 import { MediaSettingsForm, type CompressionDefaults, type ImagePreset } from './media-settings';
@@ -17,12 +18,20 @@ interface MediaSettingsPageProps {
 
 export default function MediaSettingsPage({ mediaSettings, mediaMessage }: MediaSettingsPageProps) {
     return (
-        <AppLayout breadcrumbs={[{ title: 'Media settings', href: route('admin.settings.media.edit') }]}>
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Site settings', href: route('admin.settings.edit') },
+                { title: 'Media', href: route('admin.settings.media.edit') },
+            ]}
+        >
             <Head title="Media settings" />
             <PageContainer className="content-index space-y-8">
                 <IndexHeader title="Media settings" icon={Image} />
-                <div className="max-w-4xl">
-                    <p className="text-muted-foreground mb-6 text-sm">Images are resized automatically. Your originals stay unchanged.</p>
+                <SiteSettingsTabs section="media" />
+                <div className="space-y-6">
+                    <p className="text-muted-foreground mb-6 text-sm">
+                        Manage generated image sizes and apply changes to existing uploads. Your originals stay unchanged.
+                    </p>
                     <MediaSettingsForm {...mediaSettings} message={mediaMessage} />
                 </div>
             </PageContainer>

@@ -74,15 +74,16 @@ export function MediaSettingsForm({
     };
 
     return (
-        <section aria-labelledby="image-defaults-heading">
+        <section aria-labelledby="image-defaults-heading" className="space-y-6">
             <UnsavedChangesGuard dirty={form.isDirty || editorDirty} />
             <ImageProcessingDefaults presets={form.data.presets.filter((preset) => builtInNames.includes(preset.name))} />
-            <div className="border-border/70 mt-7 border-t pt-7">
+            <div className="bg-card rounded-xl border p-5 sm:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-4 pb-3">
                     <div className="space-y-1.5">
                         <h2 id="image-sizes-heading" className="text-sm font-semibold">
                             Custom sizes
                         </h2>
+                        <p className="text-muted-foreground text-xs">Add extra dimensions for images that need a specific size.</p>
                     </div>
                     <Button type="button" variant="outline" onClick={() => edit(form.data.presets.length)} disabled={form.data.presets.length >= 12}>
                         <Plus />
@@ -129,43 +130,52 @@ export function MediaSettingsForm({
                         </li>
                     ))}
                 </ul>
-                {customPresets.length === 0 && <p className="text-muted-foreground py-3 text-sm">No custom sizes added.</p>}
-                <div className="border-border/70 mt-3 flex flex-wrap items-center justify-between gap-4 border-t pt-5">
-                    <div className="max-w-xl space-y-1">
-                        <p className="text-sm font-medium">Update existing images</p>
-                        <p className="text-muted-foreground text-xs leading-relaxed">Rebuild to apply size changes to older uploads.</p>
+                {customPresets.length === 0 && (
+                    <div className="bg-muted/20 flex items-center gap-3 rounded-lg border border-dashed p-5">
+                        <Maximize className="text-muted-foreground size-5" />
+                        <div>
+                            <p className="text-sm font-medium">No custom sizes added.</p>
+                            <p className="text-muted-foreground mt-1 text-xs">
+                                The standard sizes cover most uploads. Add one when you need different dimensions.
+                            </p>
+                        </div>
                     </div>
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        disabled={rebuilding || form.processing}
-                        onClick={() => {
-                            setRebuilding(true);
-                            setRequestError('');
-                            router.post(
-                                route('admin.settings.media.rebuild'),
-                                {},
-                                {
-                                    preserveScroll: true,
-                                    onError: () => setRequestError('Could not request a rebuild. Please try again.'),
-                                    onFinish: () => setRebuilding(false),
-                                },
-                            );
-                        }}
-                    >
-                        <RefreshCw className={rebuilding ? 'motion-safe:animate-spin' : ''} />
-                        {rebuilding ? 'Requesting…' : 'Rebuild images'}
-                    </Button>
-                </div>
-                {(message || requestError) && (
-                    <p role={requestError ? 'alert' : 'status'} className="text-muted-foreground mt-4 text-sm">
-                        {requestError || message}
-                    </p>
                 )}
             </div>
+            <div className="bg-card flex flex-wrap items-center justify-between gap-4 rounded-xl border p-5 sm:p-6">
+                <div className="max-w-xl space-y-1">
+                    <p className="text-sm font-medium">Update existing images</p>
+                    <p className="text-muted-foreground text-xs leading-relaxed">Rebuild to apply size changes to older uploads.</p>
+                </div>
+                <Button
+                    type="button"
+                    variant="outline"
+                    disabled={rebuilding || form.processing}
+                    onClick={() => {
+                        setRebuilding(true);
+                        setRequestError('');
+                        router.post(
+                            route('admin.settings.media.rebuild'),
+                            {},
+                            {
+                                preserveScroll: true,
+                                onError: () => setRequestError('Could not request a rebuild. Please try again.'),
+                                onFinish: () => setRebuilding(false),
+                            },
+                        );
+                    }}
+                >
+                    <RefreshCw className={rebuilding ? 'motion-safe:animate-spin' : ''} />
+                    {rebuilding ? 'Requesting…' : 'Rebuild images'}
+                </Button>
+            </div>
+            {(message || requestError) && (
+                <p role={requestError ? 'alert' : 'status'} className="text-muted-foreground mt-4 text-sm">
+                    {requestError || message}
+                </p>
+            )}
 
-            <div className="mt-6">
+            <div>
                 <ServerCompressionDefaults compression={compression} />
             </div>
 
