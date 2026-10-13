@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
 use Inertia\Middleware;
+use Modules\Analytics\Services\PublicPageTracking;
 use Tighten\Ziggy\Ziggy;
 
 class HandleInertiaRequests extends Middleware
@@ -26,7 +27,11 @@ class HandleInertiaRequests extends Middleware
      */
     public function version(Request $request): ?string
     {
-        return parent::version($request);
+        // Crossing this boundary must unload analytics, rather than retain the public
+        // document's Google script while Inertia swaps in a private page.
+        $trackingScope = app(PublicPageTracking::class)->allows($request) ? 'public' : 'private';
+
+        return $trackingScope.':'.parent::version($request);
     }
 
     /**

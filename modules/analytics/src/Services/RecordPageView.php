@@ -13,8 +13,7 @@ class RecordPageView
     public function record(Request $request, Response $response): void
     {
         if (! config('traffic.enabled') || ! $request->isMethod('GET') || $response->getStatusCode() !== 200
-            || ! in_array($request->route()?->getName(), config('traffic.routes', []), true)
-            || $request->user() || $request->header('DNT') === '1' || $request->header('Sec-GPC') === '1'
+            || ! app(PublicPageTracking::class)->allows($request)
             || $request->hasHeader('X-Inertia-Partial-Data')
             || str_contains(strtolower($request->header('Purpose', '').' '.$request->header('Sec-Purpose', '')), 'prefetch')
             || (! str_contains($response->headers->get('Content-Type', ''), 'text/html') && ! $response->headers->has('X-Inertia'))) {

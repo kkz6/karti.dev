@@ -63,8 +63,7 @@
             @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
         @endif
         @inertiaHead
-        @unless (request()->routeIs('newsletter.*'))
-        <!-- Keep signed newsletter links out of third-party analytics. -->
+        @if (app(\Modules\Analytics\Services\PublicPageTracking::class)->allows(request()))
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZB97KEKN54"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
@@ -73,7 +72,7 @@
 
             gtag('config', 'G-ZB97KEKN54');
         </script>
-        @endunless
+        @endif
     </head>
     <body class="font-sans antialiased">
         @inertia
