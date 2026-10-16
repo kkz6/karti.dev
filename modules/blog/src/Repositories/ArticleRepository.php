@@ -70,4 +70,10 @@ class ArticleRepository extends QueryableRepository implements ArticleRepository
 
         return $article->fresh(['category', 'tags']);
     }
+
+    public function update(string|int $id, array $payload): bool
+    {
+        // Save through the model so date casts and mutators also run on updates.
+        return $this->findOrFail($id)->update($payload);
+    }
 }

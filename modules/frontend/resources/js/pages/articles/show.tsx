@@ -1,5 +1,6 @@
 import { ArticleContent } from '../../components/ArticleContent';
 import { ArticleLayout } from '../../components/ArticleLayout';
+import { type ArticlePreview } from '../../components/ScheduledArticleNotice';
 import { SeoHead, type SeoData } from '../../components/SeoHead';
 import PublicLayout from '../../layouts/public-layout';
 
@@ -9,6 +10,7 @@ interface ArticleProps {
         description: string;
         date: string;
         content: string;
+        preview?: ArticlePreview | null;
         author?: string;
         image?: {
             src: string;

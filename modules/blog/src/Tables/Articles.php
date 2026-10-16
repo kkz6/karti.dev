@@ -35,9 +35,13 @@ class Articles extends Table
             ...$this->deletionDateColumns(),
             Columns\TextColumn::make('id', 'ID')->hidden()->sortable(),
             Columns\TextColumn::make('slug', 'Slug')->hidden()->searchable()->sortable(),
-            Columns\BadgeColumn::make('status', 'Status')->hidden()->variant([
-                'published' => Variant::Success, 'draft' => Variant::Warning, 'archived' => Variant::Secondary,
-            ]),
+            Columns\BadgeColumn::make('status', 'Status')->hidden()
+                ->mapAs(fn ($status, Article $article) => $article->isScheduled() ? 'scheduled' : $status)
+                ->variant(fn ($status, Article $article) => $article->isScheduled() ? Variant::Warning : match ($status) {
+                    'published' => Variant::Success,
+                    'draft'     => Variant::Warning,
+                    default     => Variant::Secondary,
+                }),
             Columns\NumericColumn::make('local_views', 'Views (30d)')->hidden()->sortable()
                 ->url(fn (Article $article) => $article->trashed() ? null : route('admin.seo.content', ['type' => 'article', 'id' => $article->id])),
             Columns\ActionColumn::new(asDropdown: true),
@@ -47,7 +51,7 @@ class Articles extends Table
     public function filters(): array
     {
         return [
-            Filters\SetFilter::make('status', 'Status')->options(['published' => 'Published', 'draft' => 'Draft', 'archived' => 'Archived']),
+            Filters\SetFilter::make('status', 'Status')->options(['published' => 'Published or scheduled', 'draft' => 'Draft', 'archived' => 'Archived']),
             Filters\TextFilter::make('id', 'ID'),
             Filters\DateFilter::make('created_at'),
             Filters\TrashedFilter::make('deleted_at', 'Trashed'),

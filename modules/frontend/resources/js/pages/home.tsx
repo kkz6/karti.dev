@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import React from 'react';
 import { Container } from '../components/Container';
 import { Reveal } from '../components/Reveal';
+import { ScheduledArticleNotice, type ArticlePreview } from '../components/ScheduledArticleNotice';
 import { SeoHead, type SeoData } from '../components/SeoHead';
 import { CodeGlyph, HomeGlyph, VisaGlyph } from '../components/illustrations';
 import { useSpotlight } from '../components/useSpotlight';
@@ -13,6 +14,7 @@ interface ArticleData {
     title: string;
     description: string;
     date: string;
+    preview?: ArticlePreview | null;
 }
 
 interface FeaturedPhoto {
@@ -281,6 +283,7 @@ function ArticleRow({ article }: { article: ArticleData }) {
             </time>
 
             <div>
+                <ScheduledArticleNotice preview={article.preview} compact />
                 <h3 className="font-display text-foreground group-hover:text-primary text-xl font-semibold tracking-[-0.02em] transition-colors duration-200">
                     {article.title}
                 </h3>

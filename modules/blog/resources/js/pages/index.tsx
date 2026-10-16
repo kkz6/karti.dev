@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { AdminPageContent } from '@shared/components/admin-page-content';
 import { IndexHeader } from '@shared/components/index-header';
 import { LocalTrafficCard } from '@shared/components/local-traffic-card';
+import { Badge } from '@shared/components/ui/badge';
 import { Button } from '@shared/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@shared/components/ui/tooltip';
 import AppLayout from '@shared/layouts/app-layout';
@@ -16,7 +17,7 @@ interface Article {
     slug: string;
     content: string;
     excerpt?: string;
-    status: { value: 'draft' | 'published' | 'archived' };
+    status: { value: 'draft' | 'published' | 'scheduled' | 'archived' };
     deleted_at?: string | null;
     featured_image?: string;
     published_at?: string;
@@ -94,7 +95,7 @@ export default function Index({ articles, categories }: { articles: TableConfig<
                                                             ? 'bg-destructive'
                                                             : item.status.value === 'published'
                                                               ? 'bg-emerald-500'
-                                                              : item.status.value === 'draft'
+                                                              : item.status.value === 'draft' || item.status.value === 'scheduled'
                                                                 ? 'bg-amber-500'
                                                                 : 'bg-muted-foreground',
                                                     )}
@@ -113,6 +114,7 @@ export default function Index({ articles, categories }: { articles: TableConfig<
                                             {item.title}
                                         </Link>
                                     )}
+                                    {!item.deleted_at && item.status.value === 'scheduled' && <Badge variant="warning">Scheduled</Badge>}
                                 </div>
                             );
                         },

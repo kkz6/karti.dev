@@ -4,12 +4,15 @@ import { Badge } from '@shared/components/ui/badge';
 import { Button } from '@shared/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@shared/components/ui/dropdown-menu';
 import { Switch } from '@shared/components/ui/switch';
+import { getPublicationStatus } from '@shared/lib/publication';
+import { format } from 'date-fns';
 import { Archive, ArrowLeft, ChevronDown, ExternalLink, MoreHorizontal, Trash2 } from 'lucide-react';
-import { useId, useRef } from 'react';
+import { type ReactNode, useId, useRef } from 'react';
 
 export function ContentEditorHeader({
     title,
     status,
+    publishedAt,
     formId,
     processing,
     backHref,
@@ -18,6 +21,7 @@ export function ContentEditorHeader({
 }: {
     title: string;
     status?: string;
+    publishedAt?: Date | null;
     formId: string;
     processing?: boolean;
     backHref: string;
@@ -25,6 +29,16 @@ export function ContentEditorHeader({
     onArchive?: () => void;
 }) {
     const published = status === 'published' || status === 'active';
+    const scheduled = getPublicationStatus(status, publishedAt) === 'scheduled';
+    const saveLabel = scheduled
+        ? 'Save & schedule'
+        : published
+          ? 'Save & publish'
+          : status === 'archived'
+            ? 'Save archived entry'
+            : status === 'draft'
+              ? 'Save draft'
+              : 'Save changes';
     const closeSubmitter = useRef<HTMLButtonElement>(null);
     const saveSubmitter = useRef<HTMLButtonElement>(null);
     const submit = (close: boolean) => {
@@ -39,7 +53,7 @@ export function ContentEditorHeader({
             className="mb-8"
             stickyActions={
                 <Button type="button" disabled={processing} onClick={() => submit(false)}>
-                    {processing ? 'Saving…' : published ? 'Save & publish' : status === 'draft' ? 'Save draft' : 'Save changes'}
+                    {processing ? 'Saving…' : saveLabel}
                 </Button>
             }
             actions={
@@ -76,15 +90,7 @@ export function ContentEditorHeader({
                     </DropdownMenu>
                     <div className="editor-save-group flex items-stretch" role="group" aria-label="Save entry">
                         <Button ref={saveSubmitter} type="submit" form={formId} value="save" disabled={processing} className="rounded-r-none">
-                            {processing
-                                ? 'Saving…'
-                                : published
-                                  ? 'Save & publish'
-                                  : status === 'archived'
-                                    ? 'Save archived entry'
-                                    : status === 'draft'
-                                      ? 'Save draft'
-                                      : 'Save changes'}
+                            {processing ? 'Saving…' : saveLabel}
                         </Button>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -144,6 +150,9 @@ export function EditorPublishedControl<T extends string>({
     disabled,
     error,
     viewHref,
+    viewLabel = 'View page',
+    publishedAt,
+    children,
 }: {
     value: T;
     onChange: (value: T) => void;
@@ -152,17 +161,22 @@ export function EditorPublishedControl<T extends string>({
     disabled?: boolean;
     error?: string;
     viewHref?: string;
+    viewLabel?: string;
+    publishedAt?: Date | null;
+    children?: ReactNode;
 }) {
     const id = useId();
     const published = value === publishedValue;
+    const scheduled = published && getPublicationStatus('published', publishedAt) === 'scheduled';
+    const publishTime = publishedAt ? format(publishedAt, "d MMM yyyy 'at' h:mm a '(GMT'xxx')'") : null;
     return (
         <section className="bg-card rounded-lg border p-4" aria-labelledby={`${id}-heading`}>
             <div className="flex items-center justify-between gap-3">
                 <h2 id={`${id}-heading`} className="text-sm font-semibold">
                     Publication
                 </h2>
-                <Badge variant={published ? 'success' : value === 'archived' ? 'warning' : 'muted'}>
-                    {published ? 'Published' : value === 'archived' ? 'Archived' : 'Draft'}
+                <Badge variant={scheduled ? 'warning' : published ? 'success' : value === 'archived' ? 'warning' : 'muted'}>
+                    {scheduled ? 'Scheduled' : published ? 'Published' : value === 'archived' ? 'Archived' : 'Draft'}
                 </Badge>
             </div>
             <div className="mt-4 flex items-center justify-between gap-4">
@@ -178,9 +192,21 @@ export function EditorPublishedControl<T extends string>({
                     aria-invalid={!!error}
                 />
             </div>
-            <p id={`${id}-help`} className="text-muted-foreground mt-2 text-xs leading-relaxed">
-                {value === 'archived' ? 'Turn on publishing and save to restore this entry.' : 'Changes apply when you save.'}
-            </p>
+            <div id={`${id}-help`} className="text-muted-foreground mt-2 space-y-1 text-xs leading-relaxed" aria-live="polite">
+                <p>
+                    {scheduled
+                        ? `Saving will schedule this entry for ${publishTime}. It will appear on the site automatically at that time.`
+                        : published
+                          ? publishTime
+                              ? `Saving will publish this entry immediately with a publish date of ${publishTime}.`
+                              : 'Saving will publish this entry immediately.'
+                          : value === 'archived'
+                            ? 'This entry will stay archived and hidden from the site. Turn on publishing and save to restore it.'
+                            : 'This entry will stay a draft and hidden from the site. Turn on publishing when you are ready.'}
+                </p>
+                <p>Changes apply when you save.</p>
+            </div>
+            {children && <div className="mt-4 border-t pt-4">{children}</div>}
             {error && (
                 <p className="text-destructive mt-2 text-xs" role="alert">
                     {error}
@@ -191,7 +217,7 @@ export function EditorPublishedControl<T extends string>({
                     <Button variant="outline" size="sm" asChild className="w-full">
                         <a href={viewHref} target="_blank" rel="noopener noreferrer">
                             <ExternalLink className="size-3.5" />
-                            View page
+                            {viewLabel}
                         </a>
                     </Button>
                 </div>

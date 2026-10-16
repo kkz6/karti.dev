@@ -10,6 +10,7 @@ import { EditorRelationsField } from '@shared/components/editor-relations-field'
 import { LocalTrafficCard } from '@shared/components/local-traffic-card';
 import { PageContainer } from '@shared/components/page-container';
 import { FormSimpleEditor } from '@shared/components/tiptap';
+import { Button } from '@shared/components/ui/button';
 import { Card, CardContent } from '@shared/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@shared/components/ui/form';
 import { Input } from '@shared/components/ui/input';
@@ -81,6 +82,7 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
                         <ContentEditorHeader
                             title={form.watch('title') || 'New article'}
                             status={form.watch('status')}
+                            publishedAt={form.watch('published_at')}
                             formId="article-form"
                             processing={saving}
                             backHref={route('admin.blog.index')}
@@ -231,14 +233,56 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
                                     <div className="content-editor-aside space-y-6">
                                         <LocalTrafficCard />
                                         <EditorPublishedControl
-                                            viewHref={article?.id ? route('articles.show', article.slug) : undefined}
+                                            viewHref={
+                                                article?.status === 'published' && article.published_at
+                                                    ? route('articles.show', article.slug)
+                                                    : undefined
+                                            }
+                                            viewLabel={
+                                                article?.published_at && new Date(article.published_at) > new Date() ? 'Preview page' : 'View page'
+                                            }
                                             value={form.watch('status')}
+                                            publishedAt={form.watch('published_at')}
                                             publishedValue="published"
                                             draftValue="draft"
                                             onChange={(value) => form.setValue('status', value, { shouldDirty: true })}
                                             disabled={saving}
                                             error={form.formState.errors.status?.message}
-                                        />
+                                        >
+                                            <FormField
+                                                control={form.control}
+                                                name="published_at"
+                                                render={({ field }) => (
+                                                    <FormItem className="flex flex-col">
+                                                        <FormLabel htmlFor="article-publish-date">Publish date & time</FormLabel>
+                                                        <EditorDateField
+                                                            triggerId="article-publish-date"
+                                                            label="Publish date and time"
+                                                            value={field.value}
+                                                            onChange={(date) => field.onChange(date ?? null)}
+                                                            disabled={saving}
+                                                            invalid={!!form.formState.errors.published_at}
+                                                        />
+                                                        <FormDescription>
+                                                            A future time schedules publication. An empty or past time publishes immediately when
+                                                            publishing is on and you save.
+                                                        </FormDescription>
+                                                        {field.value && field.value > new Date() && (
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                size="sm"
+                                                                disabled={saving}
+                                                                onClick={() => field.onChange(null)}
+                                                            >
+                                                                Use current time instead
+                                                            </Button>
+                                                        )}
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </EditorPublishedControl>
 
                                         <Card>
                                             <CardContent className="space-y-6">
@@ -274,24 +318,6 @@ export default function ArticleForm({ article, categories, tags = [] }: ArticleF
                                                     )}
                                                 />
 
-                                                <FormField
-                                                    control={form.control}
-                                                    name="published_at"
-                                                    render={({ field }) => (
-                                                        <FormItem className="flex flex-col">
-                                                            <FormLabel htmlFor="article-publish-date">Publish Date</FormLabel>
-                                                            <EditorDateField
-                                                                triggerId="article-publish-date"
-                                                                value={field.value}
-                                                                onChange={(date) => field.onChange(date ?? null)}
-                                                                disabled={saving}
-                                                                invalid={!!form.formState.errors.published_at}
-                                                            />
-                                                            <FormDescription>Leave empty to publish immediately</FormDescription>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
                                                 <FormField
                                                     control={form.control}
                                                     name="tags"

@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { Container } from './Container';
+import { ScheduledArticleNotice, type ArticlePreview } from './ScheduledArticleNotice';
 
 function ArrowLeftIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
     return (
@@ -17,6 +18,7 @@ export function ArticleLayout({
         title: string;
         date: string;
         description?: string;
+        preview?: ArticlePreview | null;
         image?: {
             src: string;
             fullSrc: string;
@@ -36,6 +38,7 @@ export function ArticleLayout({
                     All articles
                 </Link>
                 <article>
+                    <ScheduledArticleNotice preview={article.preview} />
                     <header>
                         <h1 className="article-title text-foreground font-semibold">{article.title}</h1>
                         <time dateTime={article.date} className="text-muted-foreground mt-4 block text-xs">

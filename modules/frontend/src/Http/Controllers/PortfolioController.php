@@ -2,6 +2,7 @@
 
 namespace Modules\Frontend\Http\Controllers;
 
+use Illuminate\Database\Eloquent\Builder;
 use Inertia\Inertia;
 use Modules\Blog\Models\Article;
 use Modules\Photography\Interfaces\PhotoServiceInterface;
@@ -11,12 +12,47 @@ use Modules\Seo\Support\SEOData;
 use Modules\Settings\Models\SiteSetting;
 use Modules\Settings\Models\SocialLink;
 use Modules\Shared\Http\Controllers\BaseController;
+use Symfony\Component\HttpFoundation\Response;
 
 class PortfolioController extends BaseController
 {
     public function __construct(
         private readonly PhotoServiceInterface $photoService
     ) {}
+
+    private function visibleArticles(): Builder
+    {
+        // The blog editor uses the same signed-in access. Drafts and archives stay hidden.
+        return Article::query()->when(
+            auth()->check(),
+            fn (Builder $query) => $query->where('status', 'published')->whereNotNull('published_at'),
+            fn (Builder $query) => $query->published(),
+        );
+    }
+
+    private function articlePreview(Article $article): ?array
+    {
+        return $article->isScheduled() ? [
+            'publishedAt' => $article->published_at->toISOString(),
+            'editHref'    => route('admin.blog.edit', $article->id),
+        ] : null;
+    }
+
+    private function renderArticlePage(string $component, array $props): Response
+    {
+        $response = Inertia::render($component, $props)->toResponse(request());
+
+        if (auth()->check()) {
+            // Responses containing private previews must never be served from a shared cache.
+            $response->headers->set('Cache-Control', 'private, no-store');
+        }
+
+        if (! empty($props['article']['preview'])) {
+            $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
+        }
+
+        return $response;
+    }
 
     private function getSeoArray(SEOData $seoData): array
     {
@@ -38,7 +74,7 @@ class PortfolioController extends BaseController
 
     public function home()
     {
-        $articles = Article::published()
+        $articles = $this->visibleArticles()
             ->with(['categories', 'tags'])
             ->latest('published_at')
             ->take(4)
@@ -48,7 +84,8 @@ class PortfolioController extends BaseController
                     'slug'        => $article->slug,
                     'title'       => $article->title,
                     'description' => $article->excerpt,
-                    'date'        => $article->published_at->format('Y-m-d'),
+                    'date'        => $article->published_at->toISOString(),
+                    'preview'     => $this->articlePreview($article),
                 ];
             });
 
@@ -126,7 +163,7 @@ class PortfolioController extends BaseController
             ],
         ];
 
-        return Inertia::render('frontend::home', [
+        return $this->renderArticlePage('frontend::home', [
             'articles'       => $articles,
             'roles'          => $roles,
             'socialLinks'    => $socialLinks,
@@ -188,7 +225,7 @@ class PortfolioController extends BaseController
 
     public function articles()
     {
-        $articles = Article::published()
+        $articles = $this->visibleArticles()
             ->with(['categories', 'tags'])
             ->latest('published_at')
             ->get()
@@ -197,7 +234,8 @@ class PortfolioController extends BaseController
                     'slug'        => $article->slug,
                     'title'       => $article->title,
                     'description' => $article->excerpt,
-                    'date'        => $article->published_at->format('Y-m-d'),
+                    'date'        => $article->published_at->toISOString(),
+                    'preview'     => $this->articlePreview($article),
                     'categories'  => $article->categories->pluck('name'),
                     'tags'        => $article->tags->pluck('name'),
                 ];
@@ -218,7 +256,7 @@ class PortfolioController extends BaseController
             locale: config('seo.locale', 'en_US'),
         );
 
-        return Inertia::render('frontend::articles/index', [
+        return $this->renderArticlePage('frontend::articles/index', [
             'articles' => $articles,
             'seo'      => $this->getSeoArray($seoData),
         ]);
@@ -226,7 +264,7 @@ class PortfolioController extends BaseController
 
     public function showArticle($slug)
     {
-        $article = Article::published()
+        $article = $this->visibleArticles()
             ->with(['categories', 'tags', 'seo', 'featuredImageMedia', 'comments' => function ($query) {
                 $query->approved()->latest();
             }])
@@ -244,6 +282,9 @@ class PortfolioController extends BaseController
 
         $seoData       = $article->getDynamicSEOData();
         $seoData->type = 'article';
+        if ($article->isScheduled()) {
+            $seoData->robots = 'noindex, nofollow';
+        }
 
         $canonicalUrl  = $seoData->url ?? $articleUrl;
         $featuredImage = $seoData->image ? url($seoData->image) : null;
@@ -273,13 +314,14 @@ class PortfolioController extends BaseController
             ],
         ];
 
-        return Inertia::render('frontend::articles/show', [
+        return $this->renderArticlePage('frontend::articles/show', [
             'article' => [
                 'slug'         => $article->slug,
                 'title'        => $article->title,
                 'content'      => app(\Modules\Media\Support\PublicImageSources::class)->html($article->content ?? ''),
                 'description'  => $article->excerpt,
-                'date'         => $article->published_at->format('Y-m-d'),
+                'date'         => $article->published_at->toISOString(),
+                'preview'      => $this->articlePreview($article),
                 'author'       => $authorName,
                 'image'        => $article->featuredImageMedia ? [
                     'src'     => $article->featuredImageMedia->imageUrl('content'),

@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Analytics\Models\PageView;
 use Modules\Auth\Models\User;
+use Modules\Blog\Models\Article;
 
 uses(RefreshDatabase::class);
 
@@ -50,4 +51,53 @@ test('frontend navigation within the same tracking scope remains an Inertia visi
     $version = $this->get('/')->viewData('page')['version'];
     $this->withHeaders(['X-Inertia' => 'true', 'X-Inertia-Version' => $version])
         ->get('/about')->assertOk()->assertHeader('X-Inertia', 'true');
+});
+
+test('scheduled article previews and signed in listings have no tracking', function () {
+    $article = Article::factory()->published()->create(['published_at' => now()->addDays(2)]);
+    $this->actingAs(User::factory()->create());
+
+    foreach (['/', '/articles', '/articles/'.$article->slug] as $path) {
+        $this->get($path)->assertOk()->assertDontSee('googletagmanager.com', false)->assertDontSee("gtag('config'", false);
+    }
+
+    expect(PageView::count())->toBe(0);
+});
+
+test('unpublished guest requests produce no tracking', function (string $status) {
+    $article = Article::factory()->create(['status' => $status, 'published_at' => now()->addDays(2)]);
+    $this->get('/articles/'.$article->slug)->assertNotFound()
+        ->assertDontSee('googletagmanager.com', false)->assertDontSee("gtag('config'", false);
+
+    expect(PageView::count())->toBe(0);
+})->with(['published', 'draft', 'archived']);
+
+test('scheduled articles only start guest tracking when publication time arrives', function () {
+    $article = Article::factory()->published()->create(['published_at' => now()->addDays(2)]);
+    $this->get('/articles/'.$article->slug)->assertNotFound();
+    expect(PageView::count())->toBe(0);
+
+    $this->travelTo($article->published_at);
+    $this->get('/articles/'.$article->slug)->assertOk()
+        ->assertSee('googletagmanager.com/gtag/js', false)->assertSee("gtag('config'", false);
+    expect(PageView::count())->toBe(1);
+    $this->assertDatabaseHas('page_views', ['path' => '/articles/'.$article->slug]);
+
+    $this->actingAs(User::factory()->create())->get('/articles/'.$article->slug)->assertOk()
+        ->assertDontSee('googletagmanager.com', false);
+    expect(PageView::count())->toBe(1);
+});
+
+test('entering a scheduled preview replaces any page that had tracking loaded', function () {
+    $article       = Article::factory()->published()->create(['published_at' => now()->addDays(2)]);
+    $publicVersion = $this->get('/')->viewData('page')['version'];
+    $this->actingAs(User::factory()->create());
+
+    $this->withHeaders(['X-Inertia' => 'true', 'X-Inertia-Version' => $publicVersion])
+        ->get('/articles/'.$article->slug)->assertStatus(409)
+        ->assertHeader('X-Inertia-Location', url('/articles/'.$article->slug));
+    $this->flushHeaders()->get('/articles/'.$article->slug)->assertOk()
+        ->assertDontSee('googletagmanager.com', false)->assertDontSee("gtag('config'", false);
+
+    expect(PageView::where('path', '/articles/'.$article->slug)->count())->toBe(0);
 });

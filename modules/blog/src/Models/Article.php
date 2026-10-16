@@ -96,6 +96,18 @@ class Article extends Model
             ->where('published_at', '<=', now());
     }
 
+    public function setPublishedAtAttribute($value): void
+    {
+        $this->attributes['published_at'] = $value === null
+            ? null
+            : $this->fromDateTime($this->asDateTime($value)->setTimezone(config('app.timezone')));
+    }
+
+    public function isScheduled(): bool
+    {
+        return $this->status === 'published' && $this->published_at?->isFuture();
+    }
+
     public function scopeDraft($query)
     {
         return $query->where('status', 'draft');

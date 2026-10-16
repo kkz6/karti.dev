@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { Reveal } from '../../components/Reveal';
+import { ScheduledArticleNotice, type ArticlePreview } from '../../components/ScheduledArticleNotice';
 import { SeoHead, type SeoData } from '../../components/SeoHead';
 import { SimpleLayout } from '../../components/SimpleLayout';
 import { useSpotlight } from '../../components/useSpotlight';
@@ -10,6 +11,7 @@ interface Article {
     title: string;
     description: string;
     date: string;
+    preview?: ArticlePreview | null;
 }
 
 interface ArticlesProps {
@@ -35,6 +37,7 @@ function ArticleRow({ article }: { article: Article }) {
             </time>
 
             <div>
+                <ScheduledArticleNotice preview={article.preview} compact />
                 <h2 className="font-display text-foreground group-hover:text-primary text-xl font-semibold tracking-[-0.02em] transition-colors duration-200">
                     {article.title}
                 </h2>
