@@ -63,6 +63,7 @@ class SpeakingEventService extends BaseService implements SpeakingEventServiceIn
                     'cta'         => $event->cta_text,
                     'href'        => $event->url ?? '#',
                     'date'        => $event->event_date ? $event->event_date->format('Y-m-d') : null,
+                    'location'    => $event->location,
                     'type'        => $event->event_type,
                 ];
             });

@@ -6,18 +6,19 @@ use Illuminate\Database\Eloquent\Builder;
 use Inertia\Inertia;
 use Modules\Blog\Models\Article;
 use Modules\Photography\Interfaces\PhotoServiceInterface;
-use Modules\Profile\Models\SpeakingEvent;
 use Modules\Profile\Models\WorkExperience;
 use Modules\Seo\Support\SEOData;
 use Modules\Settings\Models\SiteSetting;
 use Modules\Settings\Models\SocialLink;
 use Modules\Shared\Http\Controllers\BaseController;
+use Modules\Speaking\Interfaces\SpeakingEventServiceInterface;
 use Symfony\Component\HttpFoundation\Response;
 
 class PortfolioController extends BaseController
 {
     public function __construct(
-        private readonly PhotoServiceInterface $photoService
+        private readonly PhotoServiceInterface $photoService,
+        private readonly SpeakingEventServiceInterface $speakingEventService,
     ) {}
 
     private function visibleArticles(): Builder
@@ -340,19 +341,7 @@ class PortfolioController extends BaseController
 
     public function speaking()
     {
-        $events = SpeakingEvent::ordered()
-            ->get()
-            ->map(function ($event) {
-                return [
-                    'title'       => $event->title,
-                    'description' => $event->description,
-                    'event'       => $event->event_name,
-                    'cta'         => $event->cta_text,
-                    'href'        => $event->cta_url ?? '#',
-                    'date'        => $event->event_date->format('Y-m-d'),
-                    'type'        => $event->type,
-                ];
-            });
+        $events = $this->speakingEventService->getPublishedForFrontend();
 
         $seoData = new SEOData(
             title: 'Speaking - '.config('seo.site_name', config('app.name')),
