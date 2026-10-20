@@ -8,6 +8,8 @@ The setting defaults to disabled and applies to draft previews and existing invo
 
 Deployment: install the latest code, run `php artisan migrate --force`, build frontend assets, and restart queue workers (`php artisan horizon:terminate`). No seeder is required.
 
+An additional repair migration restores `billing.signature_media_id` and `billing.show_signature_on_invoices` on installations missing either setting, even if earlier migrations are already recorded. Run `php artisan migrate --force` during deployment to resolve the `MissingSettings` error when saving company or invoice settings. Only missing entries are added (no image and signatures disabled); existing signatures, visibility preferences and other billing settings are preserved. Rolling back this repair also preserves the settings, which belong to the original signature migration.
+
 ## Company branding and address history
 
 Company settings manages the logo, billing identity and timezone. Invoice settings manages numbering, terms and the signature. Each section saves only its own fields; payment methods, online providers, email/SMS configuration, reminders/receipts, taxes and imports have separate destinations.
