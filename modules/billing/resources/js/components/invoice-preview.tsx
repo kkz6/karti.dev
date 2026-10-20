@@ -45,9 +45,7 @@ export function InvoicePreview({
         <article className={cn('bg-card text-sm', !embedded && 'p-5 sm:p-8', className)}>
             <header className="flex flex-wrap items-start justify-between gap-6">
                 <div className="min-w-0">
-                    {invoice.logo && (
-                        <img src={invoice.logo} alt="Company logo" className="mb-4 max-h-20 max-w-52 rounded bg-white object-contain p-2" />
-                    )}
+                    {invoice.logo && <img src={invoice.logo} alt="Company logo" className="mb-4 max-h-20 max-w-52 bg-white object-contain" />}
                     <p className="text-base font-semibold break-words">
                         {String(company.legal_name || company.display_name || 'Company details not configured')}
                     </p>

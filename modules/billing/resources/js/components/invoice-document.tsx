@@ -49,7 +49,7 @@ export function InvoiceDocument({ invoice }: { invoice: InvoiceData }) {
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm">
                             {title === 'Issued by' && invoice.logo && (
-                                <img src={invoice.logo} alt="Company logo" className="mb-3 max-h-20 max-w-52 rounded bg-white object-contain p-2" />
+                                <img src={invoice.logo} alt="Company logo" className="mb-3 max-h-20 max-w-52 bg-white object-contain" />
                             )}
                             <p className="font-medium break-words">{String(data.legal_name || data.display_name || 'Name not configured')}</p>
                             <address className="text-muted-foreground not-italic">

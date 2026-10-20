@@ -16,4 +16,6 @@ Company settings manages the logo, billing identity and timezone. Invoice settin
 
 Draft previews now display the currently selected company logo. Issued invoices with a preserved logo retain that image. Imported invoices without a preserved logo use the current company logo in their PDF and invoice views. This fallback changes branding only: historical imported addresses stay intact. New drafts snapshot the current company address. For existing drafts, select **Use current company details** in the issuance review before issuing.
 
+Invoice logos are fitted to their visible artwork by trimming transparent borders from the rendered copy, including faint export noise. Previews and PDFs use the same fitted image without stretching it. Original uploads and preserved logo files remain unchanged, as do opaque images and invoice signatures.
+
 Online payment settings shows one selectable provider configuration at a time, with a persistent overview of saved Enabled/Disabled status and the Default badge. Editing another provider preserves unsaved fields. The global invoice checkout switch is separate from individual provider enablement.
