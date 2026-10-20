@@ -118,6 +118,40 @@ test('frozen logo bytes are embedded and corrupted or missing logos fail without
     $this->get(route('admin.invoices.pdf', $this->invoice))->assertSessionHas('billing_pdf_error');
 });
 
+test('draft previews and issued pdfs fit logo artwork while preserving source files and signature spacing', function (string $format) {
+    Storage::fake('public');
+    $image = imagecreatetruecolor(100, 60);
+    imagealphablending($image, false);
+    imagesavealpha($image, true);
+    imagefill($image, 0, 0, imagecolorallocatealpha($image, 0, 0, 0, 127));
+    imagefilledrectangle($image, 25, 20, 74, 39, imagecolorallocatealpha($image, 10, 20, 30, 0));
+    ob_start();
+    $format === 'webp' ? imagewebp($image, null, 100) : imagepng($image);
+    $bytes = ob_get_clean();
+    imagedestroy($image);
+    $path = 'billing/padded-logo.'.$format;
+    Storage::disk('public')->put($path, $bytes);
+    $media = \Modules\Media\Models\Media::withoutEvents(fn () => \Modules\Media\Models\Media::forceCreate([
+        'disk'      => 'public', 'directory' => 'billing', 'filename' => 'padded-logo',
+        'extension' => $format, 'mime_type' => 'image/'.$format, 'aggregate_type' => 'image', 'size' => strlen($bytes),
+    ]));
+    app(BillingSettings::class)->fill(['logo_media_id' => $media->id, 'signature_media_id' => $media->id, 'show_signature_on_invoices' => true])->save();
+
+    $preview = app(\Modules\Billing\Services\InvoicePresentation::class)->brandedData($this->invoice);
+    $draft   = app(InvoicePdf::class)->data($this->invoice);
+    expect($draft['logo'])->toBe($preview['logo']);
+    expect(array_slice(getimagesizefromstring(base64_decode(explode(',', $draft['logo'], 2)[1])), 0, 2))->toBe([50, 20]);
+    expect(array_slice(getimagesizefromstring(base64_decode(explode(',', $draft['signature']['image'], 2)[1])), 0, 2))->toBe([100, 60]);
+
+    pdfIssueInvoice();
+    $frozen = $this->invoice->seller_snapshot['logo_file'];
+    app(BillingSettings::class)->fill(['logo_media_id' => null])->save();
+    expect(app(InvoicePdf::class)->data($this->invoice)['logo'])->toBe($draft['logo']);
+    expect(Storage::disk('public')->get($path))->toBe($bytes)
+        ->and(Storage::disk('local')->get($frozen['path']))->toBe($bytes)
+        ->and($frozen['sha256'])->toBe(hash('sha256', $bytes));
+})->with(['png', 'webp']);
+
 test('corrupted private pdf cache is regenerated and incomplete renderer output is rejected', function () {
     pdfIssueInvoice();
     $renderer = fakeInvoiceRenderer();

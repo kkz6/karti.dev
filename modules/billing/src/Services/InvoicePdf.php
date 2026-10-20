@@ -75,7 +75,9 @@ class InvoicePdf
             $id    = app(\Modules\Billing\Settings\BillingSettings::class)->logo_media_id;
             $media = $id ? \Modules\Media\Models\Media::find($id) : null;
 
-            return $media ? app(BillingBrandingImage::class)->image($media) : null;
+            $image = $media ? app(BillingBrandingImage::class)->image($media) : null;
+
+            return $image ? app(InvoiceLogo::class)->trim($image) : null;
         }
         if (($file['disk'] ?? '') !== 'local' || ! str_starts_with($file['path'] ?? '', 'billing/invoices/') || str_contains($file['path'], '..')) {
             throw new \RuntimeException('Invalid frozen invoice logo descriptor.');
@@ -111,6 +113,6 @@ class InvoicePdf
             $mime = $info['mime'];
         }
 
-        return 'data:'.$mime.';base64,'.base64_encode($bytes);
+        return app(InvoiceLogo::class)->trim('data:'.$mime.';base64,'.base64_encode($bytes));
     }
 }
