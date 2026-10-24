@@ -1,5 +1,5 @@
 import { BillingPageContainer as PageContainer } from '@billing/components/billing-page-container';
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { IndexHeader } from '@shared/components/index-header';
 import { Button } from '@shared/components/ui/button';
 import { Checkbox } from '@shared/components/ui/checkbox';
@@ -9,6 +9,7 @@ import { Receipt as BillingPageIcon } from 'lucide-react';
 import { useState } from 'react';
 import { BillingFeedback } from '../../components/billing-feedback';
 import { InvoiceDocument } from '../../components/invoice-document';
+import { InvoiceSaveButton, type InvoiceSaveAction } from '../../components/invoice-save-button';
 import { useBillingConfirm } from '../../components/use-billing-confirm';
 import type { InvoiceData } from '../../invoice-types';
 
@@ -26,11 +27,15 @@ export default function IssueReview({
     review,
     refreshSeller,
     refreshCustomer,
+    canSend,
 }: {
     review: Review;
     refreshSeller: boolean;
     refreshCustomer: boolean;
+    canSend: boolean;
 }) {
+    const { url } = usePage();
+    const afterIssue = new URL(url, 'http://localhost').searchParams.get('after_issue') === 'send' && canSend ? 'send' : 'save';
     const { confirm, dialog } = useBillingConfirm();
     const [selection, setSelection] = useState({ seller: refreshSeller, customer: refreshCustomer });
     const [refreshing, setRefreshing] = useState(false);
@@ -45,7 +50,7 @@ export default function IssueReview({
         setRefreshing(true);
         router.get(
             route('admin.invoices.issue-review', review.invoice.id),
-            { refresh_seller: seller ? 1 : 0, refresh_customer: customer ? 1 : 0 },
+            { refresh_seller: seller ? 1 : 0, refresh_customer: customer ? 1 : 0, after_issue: afterIssue },
             {
                 preserveScroll: true,
                 preserveState: false,
@@ -54,9 +59,19 @@ export default function IssueReview({
             },
         );
     };
-    const issue = async () => {
-        if (await confirm('Issue this invoice? Its number and financial details will become permanent.'))
-            form.post(route('admin.invoices.issue', review.invoice.id));
+    const issue = async (action: InvoiceSaveAction) => {
+        if (
+            await confirm(
+                action === 'send'
+                    ? 'Issue this invoice? Its number and financial details will become permanent. You will review the recipients and message before sending.'
+                    : 'Issue this invoice without sending? Its number and financial details will become permanent.',
+            )
+        )
+            form.post(route('admin.invoices.issue', review.invoice.id), {
+                onSuccess: () => {
+                    if (action === 'send') router.visit(route('admin.invoices.show', { invoice: review.invoice.id, tab: 'send' }));
+                },
+            });
     };
     return (
         <AppLayout
@@ -117,9 +132,12 @@ export default function IssueReview({
                 </p>
                 <InvoiceDocument invoice={{ ...review.invoice, seller_snapshot: review.seller, customer_snapshot: review.customer }} />
                 <div className="flex gap-3">
-                    <Button disabled={form.processing || refreshing || review.errors.length > 0} onClick={issue}>
-                        {form.processing ? 'Issuing…' : 'Issue invoice'}
-                    </Button>
+                    <InvoiceSaveButton
+                        action={afterIssue}
+                        canSend={canSend}
+                        disabled={form.processing || refreshing || review.errors.length > 0}
+                        onSave={(action) => void issue(action)}
+                    />
                     <Button variant="outline" asChild>
                         <Link href={route('admin.invoices.edit', review.invoice.id)}>Back to draft</Link>
                     </Button>

@@ -5,13 +5,14 @@ import { Checkbox } from '@shared/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
 import { Label } from '@shared/components/ui/label';
 import axios from 'axios';
-import { ArrowLeft, Check, LoaderCircle, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Check, LoaderCircle } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import type { InvoiceData } from '../invoice-types';
 import InvoiceForm, { type InvoiceFormSeed } from '../pages/invoices/form';
 import { BillingFeedback } from './billing-feedback';
 import { InvoiceDocument } from './invoice-document';
+import { InvoiceSaveButton, type InvoiceSaveAction } from './invoice-save-button';
 import { useBillingConfirm } from './use-billing-confirm';
 type Review = {
     invoice: InvoiceData;
@@ -49,6 +50,7 @@ export function InvoiceComposer({
         [refreshCustomer, setRefreshCustomer] = useState(false),
         [refreshSeller, setRefreshSeller] = useState(true),
         [issued, setIssued] = useState<InvoiceData | null>(null);
+    const [saveAction, setSaveAction] = useState<InvoiceSaveAction>('save');
     const { confirm, dialog } = useBillingConfirm();
     const onFormState = useCallback((isDirty: boolean, isBusy: boolean) => {
         setDirty(isDirty);
@@ -65,6 +67,7 @@ export function InvoiceComposer({
         setDirty(false);
         setSaved(false);
         setIssued(null);
+        setSaveAction('save');
         setRefreshSeller(true);
         setRefreshCustomer(false);
         setBusy(true);
@@ -126,9 +129,16 @@ export function InvoiceComposer({
             setBusy(false);
         }
     };
-    const issue = async () => {
+    const issue = async (action: InvoiceSaveAction) => {
         if (!review || busy || review.errors.length) return;
-        if (!(await confirm('Issue this verified invoice? Its number and financial details will become permanent.'))) return;
+        if (
+            !(await confirm(
+                action === 'send'
+                    ? 'Issue this verified invoice? Its number and financial details will become permanent. You will review the recipients and message before sending.'
+                    : 'Issue this verified invoice without sending? Its number and financial details will become permanent.',
+            ))
+        )
+            return;
         setBusy(true);
         setError('');
         try {
@@ -140,6 +150,10 @@ export function InvoiceComposer({
             });
             setIssued(data.invoice);
             setStage('done');
+            if (action === 'send') {
+                onClose();
+                router.visit(route('admin.invoices.show', { invoice: data.invoice.id, tab: 'send' }));
+            }
         } catch (e) {
             const details = axios.isAxiosError(e)
                 ? Object.values(e.response?.data?.errors ?? {})
@@ -222,7 +236,10 @@ export function InvoiceComposer({
                                     toast.success('Invoice draft saved.');
                                     setDirty(false);
                                 }}
-                                onReview={(invoice) => void loadReview(invoice)}
+                                onReview={(invoice, action) => {
+                                    setSaveAction(action);
+                                    void loadReview(invoice);
+                                }}
                             />
                         )}
                         {stage === 'review' && !busy && (
@@ -300,10 +317,12 @@ export function InvoiceComposer({
                                 {stage === 'done' ? 'Back to invoices' : 'Back to details'}
                             </Button>
                             {stage === 'review' && (
-                                <Button disabled={busy || !review || review.errors.length > 0} onClick={() => void issue()}>
-                                    <ShieldCheck />
-                                    Issue invoice
-                                </Button>
+                                <InvoiceSaveButton
+                                    action={saveAction}
+                                    canSend={seed?.canSend ?? false}
+                                    disabled={busy || !review || review.errors.length > 0}
+                                    onSave={(action) => void issue(action)}
+                                />
                             )}
                         </div>
                     )}
