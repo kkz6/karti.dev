@@ -108,12 +108,12 @@ export default function InvoiceDetail({
           : (({ paid: 'Paid', partial: 'Partially paid', settled: 'Settled' } as Record<string, string>)[settlement.state] ?? 'Unpaid');
     const requestedTab = new URL(url, 'http://localhost').searchParams.get('tab') ?? 'overview';
     const [tab, setTab] = useState(initialTab(url, ['overview', 'payments', 'credits', 'history']));
-    const [sharingOpen, setSharingOpen] = useState(requestedTab === 'sharing' || !!shareUrl);
+    const [sharingOpen, setSharingOpen] = useState(requestedTab === 'sharing' || requestedTab === 'send' || !!shareUrl);
     const moreActionsRef = useRef<HTMLButtonElement>(null);
     const hasSharing = canRemind || canShare || canSend || links !== null || deliveries !== null;
     const onSharingOpenChange = (open: boolean) => {
         setSharingOpen(open);
-        if (!open && requestedTab === 'sharing') {
+        if (!open && (requestedTab === 'sharing' || requestedTab === 'send')) {
             const nextUrl = new URL(url, 'http://localhost');
             nextUrl.searchParams.delete('tab');
             router.replace({ url: nextUrl.pathname + nextUrl.search, preserveState: true, preserveScroll: true });
@@ -457,6 +457,7 @@ export default function InvoiceDetail({
                     links={links}
                     shareUrl={shareUrl}
                     canSend={canSend}
+                    sendOnOpen={requestedTab === 'send'}
                     deliveries={deliveries}
                     configuration={deliveryConfiguration}
                     canRemind={canRemind}

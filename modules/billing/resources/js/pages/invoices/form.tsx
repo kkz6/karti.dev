@@ -16,7 +16,7 @@ import { Textarea } from '@shared/components/ui/textarea';
 import { continueWithoutUnsavedChangesPrompt, UnsavedChangesGuard } from '@shared/components/unsaved-changes-guard';
 import AppLayout from '@shared/layouts/app-layout';
 import axios from 'axios';
-import { Receipt as BillingPageIcon, Plus, ShieldCheck } from 'lucide-react';
+import { Receipt as BillingPageIcon, Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useEffect, useState, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
@@ -26,6 +26,7 @@ import { CustomerPicker } from '../../components/customer-picker';
 import { InvoiceHistory, type InvoiceActivity } from '../../components/invoice-document';
 import { InvoiceItemEditor, InvoiceItemsHeader } from '../../components/invoice-item-editor';
 import { InvoicePdfButtons } from '../../components/invoice-pdf-buttons';
+import { InvoiceSaveButton, type InvoiceSaveAction } from '../../components/invoice-save-button';
 import { SortableInvoiceItem } from '../../components/sortable-invoice-item';
 import { useBillingConfirm } from '../../components/use-billing-confirm';
 import {
@@ -54,6 +55,7 @@ export default function InvoiceForm({
     readOnly,
     canUpdate,
     canIssue,
+    canSend = false,
     activities,
     footerTarget,
     embedded = false,
@@ -74,11 +76,12 @@ export default function InvoiceForm({
     canUpdate: boolean;
     message?: string;
     canIssue: boolean;
+    canSend?: boolean;
     activities: InvoiceActivity[];
     footerTarget?: HTMLElement | null;
     embedded?: boolean;
     onSaved?: (data: InvoiceFormSeed) => void;
-    onReview?: (invoice: InvoiceData) => void;
+    onReview?: (invoice: InvoiceData, action: InvoiceSaveAction) => void;
     onModalStateChange?: (dirty: boolean, busy: boolean) => void;
     onItemDragChange?: (dragging: boolean) => void;
 }) {
@@ -211,7 +214,7 @@ export default function InvoiceForm({
             discount_value: '0',
         });
     };
-    const saveEmbedded = async (review = false) => {
+    const saveEmbedded = async (action: InvoiceSaveAction | 'draft' = 'draft') => {
         if (busy) return;
         setSaving(true);
         setSaveError('');
@@ -234,7 +237,13 @@ export default function InvoiceForm({
             form.setDefaults(next);
             setTotals(saved.invoice!.totals);
             onSaved?.(saved);
-            if (review) onReview?.(saved.invoice!);
+            if (action !== 'draft') {
+                if (onReview) onReview(saved.invoice!, action);
+                else
+                    continueWithoutUnsavedChangesPrompt(() =>
+                        router.visit(route('admin.invoices.issue-review', { invoice: saved.invoice!.id, after_issue: action })),
+                    );
+            }
         } catch (error) {
             if (axios.isAxiosError(error) && error.response?.status === 422) {
                 form.setError(
@@ -281,14 +290,9 @@ export default function InvoiceForm({
                 variant={embedded ? 'outline' : 'default'}
                 disabled={busy}
             >
-                {busy ? 'Saving…' : 'Save draft'}
+                {busy ? 'Saving…' : 'Save as draft'}
             </Button>
-            {embedded && canIssue && (
-                <Button type="button" disabled={busy} onClick={() => void saveEmbedded(true)}>
-                    <ShieldCheck className="size-4" />
-                    {busy ? 'Verifying…' : 'Verify & review'}
-                </Button>
-            )}
+            {canIssue && <InvoiceSaveButton canSend={canSend} disabled={busy} onSave={(action) => void saveEmbedded(action)} />}
             {!embedded && (
                 <Button variant="outline" asChild>
                     <Link href={route('admin.invoices.index')}>Back to invoices</Link>
@@ -719,6 +723,7 @@ export type InvoiceFormSeed = {
     canUpdate: boolean;
     message?: string;
     canIssue: boolean;
+    canSend: boolean;
     activities: InvoiceActivity[];
 };
 
