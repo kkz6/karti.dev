@@ -157,7 +157,7 @@ test('parent navigation and checkboxes use the same centered control size', () =
     const listing = read('../resources/js/components/Browser/Listing/TableListing.tsx');
     const css = read('../resources/css/media-workspace.css');
     assert.match(row, /media-selection-control flex size-8 items-center justify-center/);
-    assert.match(listing, /className="media-selection-control"/);
+    assert.match(listing, /className="media-selection-control flex size-8 items-center justify-center"/);
     assert.match(css, /\.media-selection-control\s*\{\s*width: var\(--control-height/);
     assert.match(css, /border-start-end-radius: 0/);
     assert.match(css, /border-start-start-radius: 0/);
