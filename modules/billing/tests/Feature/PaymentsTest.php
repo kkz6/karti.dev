@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Auth\Models\User;
@@ -10,6 +12,7 @@ use Modules\Billing\Models\Customer;
 use Modules\Billing\Models\Payment;
 use Modules\Billing\Services\InvoiceBalance;
 use Modules\Billing\Services\InvoiceIssueReview;
+use Modules\Billing\Settings\BillingAutomationSettings;
 use Modules\Billing\Settings\BillingSettings;
 
 uses(RefreshDatabase::class);
@@ -44,6 +47,39 @@ test('partial full and reversed payments derive balances without changing issued
     $this->post(route('admin.payments.reverse', $payment), $reverse)->assertSessionHasNoErrors();
     $invoice->refresh();
     expect(app(InvoiceBalance::class)->data($invoice)['balance'])->toBe('60.00')->and($invoice->only(array_keys($original)))->toBe($original)->and($payment->fresh()->reversed_by_name)->toBe($this->admin->name)->and($invoice->activities()->where('event', 'payment_reversed')->count())->toBe(1);
+});
+
+test('opening the record payment shortcut leaves the invoice unpaid without sending notifications', function () {
+    Queue::fake();
+    Mail::fake();
+    $this->get(route('admin.invoices.show', ['invoice' => $this->invoice, 'tab' => 'record-payment']))
+        ->assertOk()->assertInertia(fn (Assert $page) => $page->where('canRecordPayment', true)->where('settlement.balance', '100.00')->where('settlement.state', 'unpaid'));
+    expect(Payment::count())->toBe(0);
+    Queue::assertNothingPushed();
+    Mail::assertNothingSent();
+});
+
+test('manual settlement records the remaining amount and transaction details while suppressing configured receipts', function () {
+    Queue::fake();
+    Mail::fake();
+    app(BillingAutomationSettings::class)->fill(['receipt_email' => true, 'receipt_sms' => true])->save();
+    $original = $this->invoice->only(['status', 'total_minor', 'seller_snapshot', 'customer_snapshot', 'formatted_number']);
+    $this->post(route('admin.invoices.payments.store', $this->invoice), [...$this->input, 'send_receipt' => false])->assertSessionHasNoErrors();
+    $invoice = $this->invoice->fresh();
+    $input   = [...$this->input, 'version' => $invoice->version, 'request_key' => (string) Str::uuid(), 'amount' => '60.00', 'method' => 'bank_transfer', 'payment_date' => now()->subDays(1)->format('Y-m-d'), 'reference' => ' WISE-TRANSFER-2 ', 'notes' => ' Balance received through Wise. ', 'send_receipt' => false];
+    $this->post(route('admin.invoices.payments.store', $invoice), $input)->assertSessionHasNoErrors();
+    $this->post(route('admin.invoices.payments.store', $invoice), $input)->assertSessionHasNoErrors();
+    $payment = Payment::latest('id')->first();
+    expect(Payment::count())->toBe(2)
+        ->and($payment->reference)->toBe('WISE-TRANSFER-2')
+        ->and($payment->notes)->toBe('Balance received through Wise.')
+        ->and($payment->payment_date->format('Y-m-d'))->toBe(now()->subDays(1)->format('Y-m-d'))
+        ->and($payment->method)->toBe('bank_transfer')
+        ->and($invoice->fresh()->only(array_keys($original)))->toBe($original)
+        ->and(app(InvoiceBalance::class)->data($invoice->fresh()))->toMatchArray(['state' => 'paid', 'balance' => '0.00', 'can_receive' => false]);
+    $this->get(route('admin.invoices.show', $invoice))->assertInertia(fn (Assert $page) => $page->where('canRecordPayment', false)->where('payments.0.reference', 'WISE-TRANSFER-2'));
+    Queue::assertNothingPushed();
+    Mail::assertNothingSent();
 });
 
 test('idempotency preserves one payment across retries and rejects changed payloads', function () {

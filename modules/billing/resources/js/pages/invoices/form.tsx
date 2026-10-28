@@ -56,6 +56,7 @@ export default function InvoiceForm({
     canUpdate,
     canIssue,
     canSend = false,
+    canRecordPayment = false,
     activities,
     footerTarget,
     embedded = false,
@@ -77,6 +78,7 @@ export default function InvoiceForm({
     message?: string;
     canIssue: boolean;
     canSend?: boolean;
+    canRecordPayment?: boolean;
     activities: InvoiceActivity[];
     footerTarget?: HTMLElement | null;
     embedded?: boolean;
@@ -292,7 +294,14 @@ export default function InvoiceForm({
             >
                 {busy ? 'Saving…' : 'Save as draft'}
             </Button>
-            {canIssue && <InvoiceSaveButton canSend={canSend} disabled={busy} onSave={(action) => void saveEmbedded(action)} />}
+            {canIssue && (
+                <InvoiceSaveButton
+                    canSend={canSend}
+                    canRecordPayment={canRecordPayment}
+                    disabled={busy}
+                    onSave={(action) => void saveEmbedded(action)}
+                />
+            )}
             {!embedded && (
                 <Button variant="outline" asChild>
                     <Link href={route('admin.invoices.index')}>Back to invoices</Link>
@@ -724,6 +733,7 @@ export type InvoiceFormSeed = {
     message?: string;
     canIssue: boolean;
     canSend: boolean;
+    canRecordPayment: boolean;
     activities: InvoiceActivity[];
 };
 

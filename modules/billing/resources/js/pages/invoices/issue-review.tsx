@@ -28,14 +28,17 @@ export default function IssueReview({
     refreshSeller,
     refreshCustomer,
     canSend,
+    canRecordPayment,
 }: {
     review: Review;
     refreshSeller: boolean;
     refreshCustomer: boolean;
     canSend: boolean;
+    canRecordPayment: boolean;
 }) {
     const { url } = usePage();
-    const afterIssue = new URL(url, 'http://localhost').searchParams.get('after_issue') === 'send' && canSend ? 'send' : 'save';
+    const requestedAction = new URL(url, 'http://localhost').searchParams.get('after_issue');
+    const afterIssue = requestedAction === 'send' && canSend ? 'send' : requestedAction === 'payment' && canRecordPayment ? 'payment' : 'save';
     const { confirm, dialog } = useBillingConfirm();
     const [selection, setSelection] = useState({ seller: refreshSeller, customer: refreshCustomer });
     const [refreshing, setRefreshing] = useState(false);
@@ -64,12 +67,17 @@ export default function IssueReview({
             await confirm(
                 action === 'send'
                     ? 'Issue this invoice? Its number and financial details will become permanent. You will review the recipients and message before sending.'
-                    : 'Issue this invoice without sending? Its number and financial details will become permanent.',
+                    : action === 'payment'
+                      ? 'Issue this invoice? Its number and financial details will become permanent. You will enter the payment details next; no payment is recorded yet.'
+                      : 'Issue this invoice without sending? Its number and financial details will become permanent.',
             )
         )
             form.post(route('admin.invoices.issue', review.invoice.id), {
                 onSuccess: () => {
-                    if (action === 'send') router.visit(route('admin.invoices.show', { invoice: review.invoice.id, tab: 'send' }));
+                    if (action !== 'save')
+                        router.visit(
+                            route('admin.invoices.show', { invoice: review.invoice.id, tab: action === 'send' ? 'send' : 'record-payment' }),
+                        );
                 },
             });
     };
@@ -131,10 +139,11 @@ export default function IssueReview({
                     {'1'.padStart(review.padding, '0')}
                 </p>
                 <InvoiceDocument invoice={{ ...review.invoice, seller_snapshot: review.seller, customer_snapshot: review.customer }} />
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                     <InvoiceSaveButton
                         action={afterIssue}
                         canSend={canSend}
+                        canRecordPayment={canRecordPayment}
                         disabled={form.processing || refreshing || review.errors.length > 0}
                         onSave={(action) => void issue(action)}
                     />

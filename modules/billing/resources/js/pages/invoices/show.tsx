@@ -20,7 +20,7 @@ import AppLayout from '@shared/layouts/app-layout';
 import { statusTone } from '@shared/lib/status-colors';
 import { cn } from '@shared/lib/utils';
 import { BadgeCheck, Ban, CreditCard, Download, Ellipsis, ExternalLink, FileText, Mail, Pencil, Receipt, StickyNote, Wallet } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { BillingFeedback } from '../../components/billing-feedback';
 import { AsideCard, Detail, DetailHeader, DetailTabs, initialTab } from '../../components/detail-page';
 import { InvoiceComposer } from '../../components/invoice-composer';
@@ -107,7 +107,13 @@ export default function InvoiceDetail({
           ? 'Cancelled'
           : (({ paid: 'Paid', partial: 'Partially paid', settled: 'Settled' } as Record<string, string>)[settlement.state] ?? 'Unpaid');
     const requestedTab = new URL(url, 'http://localhost').searchParams.get('tab') ?? 'overview';
-    const [tab, setTab] = useState(initialTab(url, ['overview', 'payments', 'credits', 'history']));
+    const [tab, setTab] = useState(requestedTab === 'record-payment' ? 'payments' : initialTab(url, ['overview', 'payments', 'credits', 'history']));
+    const [recordRequested, setRecordRequested] = useState(requestedTab === 'record-payment');
+    const acknowledgeRecordRequest = useCallback(() => setRecordRequested(false), []);
+    const openPayment = () => {
+        setTab('payments');
+        setRecordRequested(true);
+    };
     const [sharingOpen, setSharingOpen] = useState(requestedTab === 'sharing' || requestedTab === 'send' || !!shareUrl);
     const moreActionsRef = useRef<HTMLButtonElement>(null);
     const hasSharing = canRemind || canShare || canSend || links !== null || deliveries !== null;
@@ -277,6 +283,12 @@ export default function InvoiceDetail({
                     actions={
                         <>
                             {moreActions}
+                            {canRecordPayment && settlement.can_receive && (
+                                <Button variant="success" onClick={openPayment}>
+                                    <BadgeCheck className="size-4" />
+                                    Mark as paid
+                                </Button>
+                            )}
                             {primaryAction('default')}
                         </>
                     }
@@ -312,6 +324,8 @@ export default function InvoiceDetail({
                                     canRecord={canRecordPayment}
                                     methods={paymentMethods}
                                     today={today}
+                                    recordRequested={recordRequested}
+                                    onRecordRequested={acknowledgeRecordRequest}
                                 />
                             ),
                         },

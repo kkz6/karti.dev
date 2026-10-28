@@ -76,3 +76,13 @@ test('opening the send shortcut does not send until the delivery form is explici
     Queue::assertPushed(DeliverInvoice::class, 1);
     Mail::assertNothingSent();
 });
+
+test('save and record payment is available independently of invoice sending permission', function (bool $canRecord) {
+    $user = User::factory()->create()->givePermissionTo(['create invoice', 'view invoice', 'issue invoice', ...($canRecord ? ['record payment'] : [])]);
+    $this->actingAs($user);
+    $this->getJson(route('admin.invoices.create'))->assertOk()->assertJsonPath('canRecordPayment', $canRecord)->assertJsonPath('canSend', false);
+    $saved = $this->postJson(route('admin.invoices.store'), $this->payload)->assertOk()->assertJsonPath('canRecordPayment', $canRecord);
+    $this->getJson(route('admin.invoices.issue-review', $saved->json('invoice.id')))->assertOk()->assertJsonPath('canRecordPayment', $canRecord);
+    expect(\Modules\Billing\Models\Payment::count())->toBe(0);
+    Queue::assertNothingPushed();
+})->with([true, false]);

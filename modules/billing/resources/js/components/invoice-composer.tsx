@@ -135,7 +135,9 @@ export function InvoiceComposer({
             !(await confirm(
                 action === 'send'
                     ? 'Issue this verified invoice? Its number and financial details will become permanent. You will review the recipients and message before sending.'
-                    : 'Issue this verified invoice without sending? Its number and financial details will become permanent.',
+                    : action === 'payment'
+                      ? 'Issue this verified invoice? Its number and financial details will become permanent. You will enter the payment details next; no payment is recorded yet.'
+                      : 'Issue this verified invoice without sending? Its number and financial details will become permanent.',
             ))
         )
             return;
@@ -150,9 +152,9 @@ export function InvoiceComposer({
             });
             setIssued(data.invoice);
             setStage('done');
-            if (action === 'send') {
+            if (action !== 'save') {
                 onClose();
-                router.visit(route('admin.invoices.show', { invoice: data.invoice.id, tab: 'send' }));
+                router.visit(route('admin.invoices.show', { invoice: data.invoice.id, tab: action === 'send' ? 'send' : 'record-payment' }));
             }
         } catch (e) {
             const details = axios.isAxiosError(e)
@@ -320,6 +322,7 @@ export function InvoiceComposer({
                                 <InvoiceSaveButton
                                     action={saveAction}
                                     canSend={seed?.canSend ?? false}
+                                    canRecordPayment={seed?.canRecordPayment ?? false}
                                     disabled={busy || !review || review.errors.length > 0}
                                     onSave={(action) => void issue(action)}
                                 />
