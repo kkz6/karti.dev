@@ -47,7 +47,7 @@ test('manual payment methods can be added and used while used methods cannot be 
     $invoice =app(SaveInvoiceDraft::class)->handle(customerContextInvoiceData($customer->id));
     $invoice->forceFill(['status'=>'issued', 'formatted_number'=>'INV-000001'])->save();
     $data=['version'=>$invoice->version, 'request_key'=>(string) Str::uuid(), 'amount'=>'20', 'currency'=>'USD', 'payment_date'=>now()->format('Y-m-d'), 'method'=>$method->code];
-    $this->post(route('admin.invoices.payments.store', $invoice), $data)->assertSessionHasNoErrors();
+    $this->post(route('admin.invoices.payments.store', $invoice), $data)->assertRedirect()->assertSessionHasNoErrors();
     expect(Payment::first()->payment_method_id)->toBe($method->id)->and(Payment::first()->method_label)->toBe('Office bank');
     $this->deleteJson(route('admin.billing.payment-methods.destroy', $method))->assertJsonValidationErrors('payment_method');
     expect(fn () =>DB::table('billing_payment_methods')->where('id', $method->id)->delete())->toThrow(\Illuminate\Database\QueryException::class);

@@ -32,7 +32,7 @@ beforeEach(function () {
 });
 
 test('partial full and reversed payments derive balances without changing issued totals', function () {
-    $original = $this->invoice->only(['status', 'total_minor', 'customer_snapshot', 'seller_snapshot', 'formatted_number']);
+    $original = $this->invoice->fresh()->only(['status', 'total_minor', 'customer_snapshot', 'seller_snapshot', 'formatted_number']);
     $this->post(route('admin.invoices.payments.store', $this->invoice), $this->input)->assertSessionHasNoErrors();
     $invoice = $this->invoice->fresh();
     expect(app(InvoiceBalance::class)->data($invoice))->toMatchArray(['state' => 'partial', 'paid' => '40.00', 'balance' => '60.00', 'overdue' => true]);
@@ -63,7 +63,7 @@ test('manual settlement records the remaining amount and transaction details whi
     Queue::fake();
     Mail::fake();
     app(BillingAutomationSettings::class)->fill(['receipt_email' => true, 'receipt_sms' => true])->save();
-    $original = $this->invoice->only(['status', 'total_minor', 'seller_snapshot', 'customer_snapshot', 'formatted_number']);
+    $original = $this->invoice->fresh()->only(['status', 'total_minor', 'seller_snapshot', 'customer_snapshot', 'formatted_number']);
     $this->post(route('admin.invoices.payments.store', $this->invoice), [...$this->input, 'send_receipt' => false])->assertSessionHasNoErrors();
     $invoice = $this->invoice->fresh();
     $input   = [...$this->input, 'version' => $invoice->version, 'request_key' => (string) Str::uuid(), 'amount' => '60.00', 'method' => 'bank_transfer', 'payment_date' => now()->subDays(1)->format('Y-m-d'), 'reference' => ' WISE-TRANSFER-2 ', 'notes' => ' Balance received through Wise. ', 'send_receipt' => false];
