@@ -15,8 +15,8 @@ class InvoiceIssueReview
 {
     public function prepare(Invoice $invoice, bool $refreshSeller, bool $refreshCustomer): array
     {
-        $invoice->load('customer', 'items.taxes');
-        $data     = app(InvoicePresentation::class)->brandedData($invoice);
+        $invoice->load('customer');
+        $data     = app(InvoicePresentation::class)->data($invoice);
         $seller   = $refreshSeller ? BillingSnapshots::seller() : $invoice->seller_snapshot;
         $customer = $refreshCustomer ? BillingSnapshots::customer($invoice->customer) : $invoice->customer_snapshot;
         $errors   = Validator::make(['seller' => $seller, 'customer' => $customer], [
@@ -71,9 +71,10 @@ class InvoiceIssueReview
                 $errors = [...$errors, ...$exception->validator->errors()->all()];
             }
         }
-        $settings    = app(BillingSettings::class);
-        $errors      = [...$errors, ...Validator::make(['prefix' => $settings->number_prefix, 'padding' => $settings->number_padding], ['prefix' => ['required', 'string', 'max:20', 'regex:~^[A-Za-z0-9][A-Za-z0-9._/-]*$~'], 'padding' => ['required', 'integer', 'between:1,10']])->errors()->all()];
-        $fingerprint = ['version' => $invoice->version, 'invoice' => $data, 'seller' => $seller, 'customer' => $customer, 'prefix' => $settings->number_prefix, 'padding' => $settings->number_padding, 'logo_hash' => $logo['hash'] ?? null];
+        $data['logo'] = $logo ? 'data:'.$logo['mime'].';base64,'.base64_encode($logo['bytes']) : null;
+        $settings     = app(BillingSettings::class);
+        $errors       = [...$errors, ...Validator::make(['prefix' => $settings->number_prefix, 'padding' => $settings->number_padding], ['prefix' => ['required', 'string', 'max:20', 'regex:~^[A-Za-z0-9][A-Za-z0-9._/-]*$~'], 'padding' => ['required', 'integer', 'between:1,10']])->errors()->all()];
+        $fingerprint  = ['version' => $invoice->version, 'invoice' => $data, 'seller' => $seller, 'customer' => $customer, 'prefix' => $settings->number_prefix, 'padding' => $settings->number_padding, 'logo_hash' => $logo['hash'] ?? null];
 
         return ['invoice' => $data, 'seller' => $seller, 'customer' => $customer, 'errors' => array_values(array_unique($errors)), 'token' => hash_hmac('sha256', json_encode($fingerprint, JSON_THROW_ON_ERROR), config('app.key')), 'prefix' => $settings->number_prefix, 'padding' => $settings->number_padding, 'logo' => $logo];
     }

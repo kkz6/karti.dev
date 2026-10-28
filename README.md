@@ -127,6 +127,8 @@ First-party analytics are available without an external provider. Google Analyti
 
 ## Development
 
+Laravel Debugbar is included as a development dependency and enabled only when `APP_ENV=local` and `APP_DEBUG=true`. Set `DEBUGBAR_ENABLED=false` to disable it. The Queries tab reports the query count and SQL time for each request; use the request selector to inspect Inertia navigation and background preview calls separately. Request profiles are stored locally in `storage/debugbar` and excluded from Git. Compare timings with Debugbar disabled before attributing a delay to application code.
+
 ```bash
 # Run the PHP test suite
 composer test
