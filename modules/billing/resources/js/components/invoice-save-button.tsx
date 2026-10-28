@@ -17,7 +17,7 @@ export function InvoiceSaveButton({
 }) {
     const selected = canSend ? action : 'save';
     return (
-        <div className="inline-flex items-center">
+        <div className={canSend ? 'editor-save-group inline-flex items-center' : 'inline-flex items-center'} role="group" aria-label="Save invoice">
             <Button type="button" className={canSend ? 'rounded-r-none' : undefined} disabled={disabled} onClick={() => onSave(selected)}>
                 {selected === 'send' ? <Send /> : <Save />}
                 {selected === 'send' ? 'Save & send' : 'Save only'}
@@ -27,7 +27,8 @@ export function InvoiceSaveButton({
                     <DropdownMenuTrigger asChild>
                         <Button
                             type="button"
-                            className="border-primary-foreground/25 rounded-l-none border-l px-2"
+                            size="icon"
+                            className="border-primary-foreground/25 rounded-l-none border-l"
                             aria-label="Invoice save options"
                             disabled={disabled}
                         >
