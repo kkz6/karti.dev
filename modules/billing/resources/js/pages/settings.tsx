@@ -129,7 +129,7 @@ export default function Settings({
                                         max_files: 1,
                                         mode: 'grid',
                                         accept: 'image/jpeg,image/png,image/webp',
-                                        canEdit: false,
+                                        canEdit: canUpdate,
                                     }}
                                     onChange={(assets) => {
                                         const asset = assets[0];
@@ -139,8 +139,9 @@ export default function Settings({
                                     onError={(error) => setLogoError(error)}
                                 />
                                 <p className="text-muted-foreground text-xs">
-                                    Choose a JPEG, PNG or WebP image from your media library. Used in previews and new invoices; imported invoices
-                                    without a preserved logo use this image too. It remains protected from deletion while selected.
+                                    Choose a JPEG, PNG or WebP image from your media library. Use Edit Asset → Edit Image to crop unwanted margins.
+                                    Used in previews and new invoices; imported invoices without a preserved logo use this image too. It remains
+                                    protected from deletion while selected.
                                 </p>
                                 {logoError && <BillingFeedback kind="error">{logoError}</BillingFeedback>}
                             </div>
