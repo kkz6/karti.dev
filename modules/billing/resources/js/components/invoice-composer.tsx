@@ -124,7 +124,7 @@ export function InvoiceComposer({
             setRefreshSeller(data.refreshSeller);
             setRefreshCustomer(data.refreshCustomer);
         } catch {
-            setError('Verification could not be loaded. Your saved draft is safe. Return to details and try again.');
+            setError('The invoice review could not be loaded. Your saved draft is safe. Return to details and try again.');
         } finally {
             setBusy(false);
         }
@@ -134,10 +134,10 @@ export function InvoiceComposer({
         if (
             !(await confirm(
                 action === 'send'
-                    ? 'Issue this verified invoice? Its number and financial details will become permanent. You will review the recipients and message before sending.'
+                    ? 'Issue this invoice? Its number and financial details will become permanent. You will review the recipients and message before sending.'
                     : action === 'payment'
-                      ? 'Issue this verified invoice? Its number and financial details will become permanent. You will enter the payment details next; no payment is recorded yet.'
-                      : 'Issue this verified invoice without sending? Its number and financial details will become permanent.',
+                      ? 'Issue this invoice? Its number and financial details will become permanent. You will enter the payment details next; no payment is recorded yet.'
+                      : 'Issue this invoice without sending? Its number and financial details will become permanent.',
             ))
         )
             return;
@@ -162,7 +162,7 @@ export function InvoiceComposer({
                       .flat()
                       .map(String)
                 : [];
-            setError(details.length ? details.join(' ') : 'The invoice could not be issued. Recheck verification before trying again.');
+            setError(details.length ? details.join(' ') : 'The invoice could not be issued. Review the invoice again before issuing.');
         } finally {
             setBusy(false);
         }
@@ -190,7 +190,7 @@ export function InvoiceComposer({
                                 {stage === 'done'
                                     ? 'Invoice ready'
                                     : stage === 'review'
-                                      ? 'Verify your invoice'
+                                      ? 'Review and issue invoice'
                                       : invoiceId
                                         ? 'Edit invoice'
                                         : 'Create invoice'}
@@ -211,7 +211,7 @@ export function InvoiceComposer({
                             {stage === 'done'
                                 ? 'Your invoice has a permanent number and is ready to share.'
                                 : stage === 'review'
-                                  ? 'Check the billing identities, line items and exact totals before issuing.'
+                                  ? 'Check the company, customer and totals before creating a numbered invoice. Drafts stay editable until issued.'
                                   : invoiceId
                                     ? 'Update your draft, arrange its items and review before issuing.'
                                     : 'Add customer details and items, then review your invoice before issuing.'}
@@ -222,7 +222,7 @@ export function InvoiceComposer({
                         {busy && (
                             <div role="status" className="text-muted-foreground flex items-center justify-center gap-3 py-12 text-sm">
                                 <LoaderCircle className="size-5 animate-spin" />
-                                {stage === 'review' ? 'Verifying invoice…' : 'Loading…'}
+                                {stage === 'review' ? 'Preparing review…' : 'Loading…'}
                             </div>
                         )}
                         {stage === 'edit' && seed && (
@@ -281,7 +281,7 @@ export function InvoiceComposer({
                                             </BillingFeedback>
                                         ) : (
                                             <BillingFeedback kind="info">
-                                                Verification passed. The identities and exact totals are ready for issuance.
+                                                Ready to issue. Check the details below before creating the numbered invoice.
                                             </BillingFeedback>
                                         )}
                                         <InvoiceDocument

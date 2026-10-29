@@ -95,7 +95,7 @@ export default function IssueReview({
                 <div>
                     <IndexHeader title={'Review and issue invoice'} icon={BillingPageIcon} />
                     <p className="text-muted-foreground mt-2 text-sm">
-                        Confirm the billing details and totals. A permanent number is assigned when the invoice is issued.
+                        Check the company, customer and totals. Issuing assigns a permanent number and locks the billing details.
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-6">
