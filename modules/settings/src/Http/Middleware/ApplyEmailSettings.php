@@ -15,6 +15,6 @@ class ApplyEmailSettings
     {
         $request->attributes->set('environment_mailer', config('mail.default'));
 
-        return $this->configuration->run(fn () => $next($request));
+        return $this->configuration->run(fn () => $next($request), $request->attributes->get('settings.table_exists'));
     }
 }

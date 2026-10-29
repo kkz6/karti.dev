@@ -9,9 +9,9 @@ use Modules\Settings\Settings\EmailSettings;
 
 class EmailConfiguration
 {
-    public function run(Closure $callback): mixed
+    public function run(Closure $callback, ?bool $settingsTableExists = null): mixed
     {
-        $settings = $this->settings();
+        $settings = $this->settings($settingsTableExists);
 
         if (! $settings?->enabled) {
             return $callback();
@@ -60,9 +60,9 @@ class EmailConfiguration
         Mail::purge('resend');
     }
 
-    private function settings(): ?EmailSettings
+    private function settings(?bool $settingsTableExists): ?EmailSettings
     {
-        if (! Schema::hasTable('settings')) {
+        if (! ($settingsTableExists ?? Schema::hasTable('settings'))) {
             return null;
         }
 

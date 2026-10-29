@@ -13,7 +13,9 @@ class ApplySiteSettings
     public function handle(Request $request, Closure $next): Response
     {
         // Do not resolve database settings during application boot or before deployment migrations.
-        $site   = Schema::hasTable('settings') ? app(SiteSettings::class)->toArray() : SiteSettings::defaults();
+        $settingsTableExists = Schema::hasTable('settings');
+        $request->attributes->set('settings.table_exists', $settingsTableExists);
+        $site   = $settingsTableExists ? app(SiteSettings::class)->toArray() : SiteSettings::defaults();
         $values = [
             'app.name'         => $site['name'],
             'seo.site_name'    => $site['name'],
