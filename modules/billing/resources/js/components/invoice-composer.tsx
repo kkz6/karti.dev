@@ -186,13 +186,13 @@ export function InvoiceComposer({
                 refresh_customer: refreshCustomer,
             });
             setIssued(data.invoice);
-            setStage('done');
             if (action === 'payment') {
                 await loadPayment(data.invoice);
             } else if (action === 'send') {
                 onClose();
                 router.visit(route('admin.invoices.show', { invoice: data.invoice.id, tab: 'send' }));
             }
+            setStage('done');
         } catch (e) {
             const details = axios.isAxiosError(e)
                 ? Object.values(e.response?.data?.errors ?? {})
@@ -214,7 +214,7 @@ export function InvoiceComposer({
             >
                 <DialogContent
                     overlayClassName="bg-black/45"
-                    className="invoice-editor-modal bg-card flex max-h-[94dvh] w-[calc(100%-1rem)] max-w-[calc(100%-1rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-6xl"
+                    className={`invoice-editor-modal bg-card flex max-h-[94dvh] w-[calc(100%-1rem)] max-w-[calc(100%-1rem)] flex-col gap-0 overflow-hidden p-0 ${stage === 'done' ? 'sm:max-w-lg' : 'sm:max-w-6xl'}`}
                     onInteractOutside={(e) => e.preventDefault()}
                     onEscapeKeyDown={(e) => {
                         e.preventDefault();
@@ -254,12 +254,18 @@ export function InvoiceComposer({
                                     : 'Add customer details and items, then review your invoice before issuing.'}
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
+                    <div className={`min-h-0 flex-1 overflow-y-auto overscroll-contain ${stage === 'done' ? 'p-6 sm:p-8' : 'px-5 py-5 sm:px-6'}`}>
                         {error && <BillingFeedback kind="error">{error}</BillingFeedback>}
                         {busy && (
                             <div role="status" className="text-muted-foreground flex items-center justify-center gap-3 py-12 text-sm">
                                 <LoaderCircle className="size-5 animate-spin" />
-                                {stage === 'review' ? 'Preparing review…' : 'Loading…'}
+                                {issued && saveAction === 'payment'
+                                    ? 'Opening payment details…'
+                                    : stage === 'review'
+                                      ? review
+                                          ? 'Issuing invoice…'
+                                          : 'Preparing review…'
+                                      : 'Loading…'}
                             </div>
                         )}
                         {stage === 'edit' && seed && (
@@ -328,8 +334,8 @@ export function InvoiceComposer({
                                 )}
                             </div>
                         )}
-                        {stage === 'done' && issued && (
-                            <div className="mx-auto max-w-md space-y-4 py-12 text-center">
+                        {stage === 'done' && issued && !busy && (
+                            <div className="mx-auto flex max-w-sm flex-col items-center gap-4 py-4 text-center">
                                 <div className="bg-primary/10 mx-auto grid size-14 place-items-center rounded-full">
                                     <Check className="text-primary size-7" />
                                 </div>
@@ -337,25 +343,14 @@ export function InvoiceComposer({
                                 <p className="text-muted-foreground">
                                     {issued.totals.total} {issued.currency} · Invoice issued
                                 </p>
-                                {saveAction === 'payment' && (
-                                    <Button disabled={busy} onClick={() => void loadPayment(issued)}>
-                                        Record payment
-                                    </Button>
-                                )}
-                                <Button
-                                    onClick={() => {
-                                        onClose();
-                                        router.visit(route('admin.invoices.show', issued.id));
-                                    }}
-                                >
-                                    Open invoice
-                                </Button>
                             </div>
                         )}
                     </div>
                     {stage === 'edit' && <div ref={setFooterTarget} className="bg-card shrink-0 border-t px-5 py-4 sm:px-6" />}
                     {stage !== 'edit' && (
-                        <div className="bg-card flex shrink-0 flex-wrap justify-between gap-3 border-t px-5 py-4 sm:px-6">
+                        <div
+                            className={`bg-card flex shrink-0 gap-3 border-t px-5 py-4 sm:px-6 ${stage === 'done' ? 'flex-col-reverse sm:flex-row sm:flex-wrap sm:justify-end' : 'flex-wrap justify-between'}`}
+                        >
                             <Button variant="outline" disabled={busy} onClick={() => (stage === 'done' ? void close() : setStage('edit'))}>
                                 <ArrowLeft />
                                 {stage === 'done' ? 'Back to invoices' : 'Back to details'}
@@ -368,6 +363,25 @@ export function InvoiceComposer({
                                     disabled={busy || !review || review.errors.length > 0}
                                     onSave={(action) => void issue(action)}
                                 />
+                            )}
+                            {stage === 'done' && issued && (
+                                <>
+                                    <Button
+                                        variant={saveAction === 'payment' ? 'outline' : 'default'}
+                                        disabled={busy}
+                                        onClick={() => {
+                                            onClose();
+                                            router.visit(route('admin.invoices.show', issued.id));
+                                        }}
+                                    >
+                                        Open invoice
+                                    </Button>
+                                    {saveAction === 'payment' && (
+                                        <Button disabled={busy} onClick={() => void loadPayment(issued)}>
+                                            Record payment
+                                        </Button>
+                                    )}
+                                </>
                             )}
                         </div>
                     )}

@@ -31,12 +31,12 @@ export function useBillingConfirm() {
                 if (!open) close(false);
             }}
         >
-            <AlertDialogContent className="gap-0 p-0 sm:max-w-md">
-                <AlertDialogHeader className="space-y-3 p-6 text-left">
+            <AlertDialogContent>
+                <AlertDialogHeader>
                     <AlertDialogTitle>Confirm change</AlertDialogTitle>
                     <AlertDialogDescription>{message}</AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogFooter className="bg-muted/30 gap-2 rounded-b-lg border-t px-6 py-4 sm:space-x-0">
+                <AlertDialogFooter>
                     <AlertDialogCancel type="button" onClick={() => close(false)}>
                         Cancel
                     </AlertDialogCancel>
