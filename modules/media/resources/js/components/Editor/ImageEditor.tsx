@@ -518,9 +518,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
             if (!imageData) throw new Error('No image to save');
             // Generate a new filename for the copy
             const timestamp = Date.now();
-            const nameWithoutExt = asset.filename.replace(/\.[^/.]+$/, '');
-            const extension = asset.filename.split('.').pop();
-            const newFilename = `${nameWithoutExt}_copy_${timestamp}.${extension}`;
+            const newFilename = `${asset.filename}_copy_${timestamp}.${asset.extension}`;
 
             const response = await axios.post(route('media.image-editor.save'), {
                 data: imageData,
@@ -528,6 +526,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                 name: newFilename,
                 mime_type: asset.mime_type,
                 overwrite: false,
+                asset_id: asset.id,
             });
 
             if (!response.data.success) throw new Error('The server could not save the image');
@@ -769,6 +768,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ asset, isOpen, onClose
                                         React.createElement('cropper-image', {
                                             key: `image-${asset.id}-${loadAttempt}`,
                                             ref: cropperImageRef,
+                                            crossorigin: 'anonymous',
                                             src: asset.url,
                                             alt: asset.filename,
                                             rotatable: 'true',

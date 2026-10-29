@@ -10,12 +10,21 @@ import { Label } from '@shared/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/components/ui/table';
 import { Textarea } from '@shared/components/ui/textarea';
 import { statusTone } from '@shared/lib/status-colors';
+import axios from 'axios';
 import { CreditCard, Undo2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import type { InvoiceData } from '../invoice-types';
 import type { PaymentData, PaymentMethod, Settlement } from '../payment-types';
 import { BillingFeedback } from './billing-feedback';
 import { BillingSelect, BillingSelectItem } from './billing-select';
+
+export type InvoicePaymentContext = {
+    invoice: InvoiceData;
+    settlement: Settlement;
+    canRecordPayment: boolean;
+    paymentMethods: PaymentMethod[];
+    today: string;
+};
 
 export function PaymentHistory({
     payments,
@@ -125,6 +134,8 @@ export function InvoicePayments({
     onRecorded,
     recordRequested = false,
     onRecordRequested,
+    dialogOnly = false,
+    onRecordClosed,
 }: {
     invoice: InvoiceData;
     settlement: Settlement;
@@ -137,8 +148,11 @@ export function InvoicePayments({
     onRecorded?: () => void;
     recordRequested?: boolean;
     onRecordRequested?: () => void;
+    dialogOnly?: boolean;
+    onRecordClosed?: () => void;
 }) {
     const [recording, setRecording] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [reversing, setReversing] = useState<PaymentData | null>(null);
     const form = useForm({
         version: invoice.version,
@@ -152,6 +166,12 @@ export function InvoicePayments({
         send_receipt: false,
     });
     const reversal = useForm({ version: invoice.version, reason: '' });
+    const processing = form.processing || saving;
+    const closeRecord = () => {
+        if (processing) return;
+        setRecording(false);
+        onRecordClosed?.();
+    };
     const openRecord = useCallback(() => {
         form.clearErrors();
         form.setData({
@@ -182,75 +202,81 @@ export function InvoicePayments({
                     className="mt-2"
                     variant="outline"
                     onClick={() => {
+                        if (dialogOnly) {
+                            closeRecord();
+                            return;
+                        }
                         setRecording(false);
                         setReversing(null);
                         router.reload();
                     }}
                 >
-                    Reload invoice
+                    {dialogOnly ? 'Close and refresh' : 'Reload invoice'}
                 </Button>
             </BillingFeedback>
         );
     return (
         <div className="space-y-6">
-            <Card className={embedded ? 'rounded-none border-0 bg-transparent' : undefined}>
-                <CardHeader className={embedded ? 'px-0 pt-0 pb-3' : undefined}>
-                    <CardTitle>Payment balance</CardTitle>
-                </CardHeader>
-                <CardContent className={embedded ? 'space-y-4 p-0' : 'space-y-4'}>
-                    <div className="flex flex-wrap items-center gap-3">
-                        <Badge variant={statusTone(settlement.state)}>
-                            {settlement.state === 'partial'
-                                ? 'Partially paid'
-                                : settlement.state === 'settled'
-                                  ? 'Settled with credit'
-                                  : settlement.state === 'paid'
-                                    ? 'Paid'
-                                    : settlement.state === 'cancelled'
-                                      ? 'Cancelled'
-                                      : 'Unpaid'}
-                        </Badge>
-                        {settlement.overdue && <Badge variant="destructive">Overdue</Badge>}
-                    </div>
-                    <dl className="grid gap-4 sm:grid-cols-3">
-                        <div>
-                            <dt className="text-muted-foreground text-xs">Total</dt>
-                            <dd className="mt-1 text-base font-semibold tabular-nums">
-                                {invoice.totals.total} {invoice.currency}
-                            </dd>
+            {!dialogOnly && (
+                <Card className={embedded ? 'rounded-none border-0 bg-transparent' : undefined}>
+                    <CardHeader className={embedded ? 'px-0 pt-0 pb-3' : undefined}>
+                        <CardTitle>Payment balance</CardTitle>
+                    </CardHeader>
+                    <CardContent className={embedded ? 'space-y-4 p-0' : 'space-y-4'}>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <Badge variant={statusTone(settlement.state)}>
+                                {settlement.state === 'partial'
+                                    ? 'Partially paid'
+                                    : settlement.state === 'settled'
+                                      ? 'Settled with credit'
+                                      : settlement.state === 'paid'
+                                        ? 'Paid'
+                                        : settlement.state === 'cancelled'
+                                          ? 'Cancelled'
+                                          : 'Unpaid'}
+                            </Badge>
+                            {settlement.overdue && <Badge variant="destructive">Overdue</Badge>}
                         </div>
-                        <div>
-                            <dt className="text-muted-foreground text-xs">Paid</dt>
-                            <dd className="mt-1 text-base font-semibold tabular-nums">
-                                {settlement.paid} {invoice.currency}
-                            </dd>
-                        </div>
-                        <div>
-                            <dt className="text-muted-foreground text-xs">
-                                {invoice.status === 'cancelled' ? 'Cancelled amount' : 'Remaining balance'}
-                            </dt>
-                            <dd className="mt-1 text-base font-semibold tabular-nums">
-                                {settlement.balance} {invoice.currency}
-                            </dd>
-                        </div>
-                    </dl>
-                    {!/^0(?:\.0+)?$/.test(settlement.credited) && (
-                        <p className="text-sm">
-                            Credit applied: {settlement.credited} {invoice.currency}
-                        </p>
-                    )}
-                    {canRecord &&
-                        settlement.can_receive &&
-                        (methods.length > 0 ? (
-                            <Button variant="success" onClick={openRecord}>
-                                Record payment
-                            </Button>
-                        ) : (
-                            <BillingFeedback>Enable a manual payment method in billing settings to record payments.</BillingFeedback>
-                        ))}
-                </CardContent>
-            </Card>
-            {payments !== null && (
+                        <dl className="grid gap-4 sm:grid-cols-3">
+                            <div>
+                                <dt className="text-muted-foreground text-xs">Total</dt>
+                                <dd className="mt-1 text-base font-semibold tabular-nums">
+                                    {invoice.totals.total} {invoice.currency}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt className="text-muted-foreground text-xs">Paid</dt>
+                                <dd className="mt-1 text-base font-semibold tabular-nums">
+                                    {settlement.paid} {invoice.currency}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt className="text-muted-foreground text-xs">
+                                    {invoice.status === 'cancelled' ? 'Cancelled amount' : 'Remaining balance'}
+                                </dt>
+                                <dd className="mt-1 text-base font-semibold tabular-nums">
+                                    {settlement.balance} {invoice.currency}
+                                </dd>
+                            </div>
+                        </dl>
+                        {!/^0(?:\.0+)?$/.test(settlement.credited) && (
+                            <p className="text-sm">
+                                Credit applied: {settlement.credited} {invoice.currency}
+                            </p>
+                        )}
+                        {canRecord &&
+                            settlement.can_receive &&
+                            (methods.length > 0 ? (
+                                <Button variant="success" onClick={openRecord}>
+                                    Record payment
+                                </Button>
+                            ) : (
+                                <BillingFeedback>Enable a manual payment method in billing settings to record payments.</BillingFeedback>
+                            ))}
+                    </CardContent>
+                </Card>
+            )}
+            {!dialogOnly && payments !== null && (
                 <PaymentHistory
                     embedded={embedded}
                     payments={payments}
@@ -264,7 +290,7 @@ export function InvoicePayments({
             <Dialog
                 open={recording}
                 onOpenChange={(open) => {
-                    if (!form.processing) setRecording(open);
+                    if (!open) closeRecord();
                 }}
             >
                 <DialogContent className="max-h-[90dvh] overflow-y-auto">
@@ -277,8 +303,39 @@ export function InvoicePayments({
                     </DialogHeader>
                     <form
                         className="space-y-4"
-                        onSubmit={(event) => {
+                        onSubmit={async (event) => {
                             event.preventDefault();
+                            if (processing) return;
+                            if (dialogOnly) {
+                                setSaving(true);
+                                form.clearErrors();
+                                try {
+                                    await axios.post(route('admin.invoices.payments.store', invoice.id), form.data, {
+                                        headers: { Accept: 'application/json' },
+                                    });
+                                    setRecording(false);
+                                    onRecorded?.();
+                                } catch (error) {
+                                    if (axios.isAxiosError(error) && error.response?.status === 422) {
+                                        form.setError(
+                                            Object.fromEntries(
+                                                Object.entries(error.response.data.errors ?? {}).map(([key, value]) => [
+                                                    key,
+                                                    Array.isArray(value) ? value.join(' ') : String(value),
+                                                ]),
+                                            ),
+                                        );
+                                    } else {
+                                        form.setError(
+                                            'request_key',
+                                            'The payment could not be recorded. Your entries are still here. Retry, or close and refresh if the invoice changed.',
+                                        );
+                                    }
+                                } finally {
+                                    setSaving(false);
+                                }
+                                return;
+                            }
                             form.post(route('admin.invoices.payments.store', invoice.id), {
                                 headers: customerContext ? { 'X-Customer-Context': String(customerContext) } : {},
                                 preserveScroll: true,
@@ -298,7 +355,7 @@ export function InvoicePayments({
                                 value={form.data.amount}
                                 onChange={(e) => form.setData('amount', e.target.value)}
                                 required
-                                disabled={form.processing}
+                                disabled={processing}
                             />
                         </div>
                         <div className="space-y-2">
@@ -308,7 +365,7 @@ export function InvoicePayments({
                                 label="Payment date"
                                 value={form.data.payment_date}
                                 onChange={(value) => form.setData('payment_date', value)}
-                                disabled={form.processing}
+                                disabled={processing}
                             />
                         </div>
                         <div className="space-y-2">
@@ -317,7 +374,7 @@ export function InvoicePayments({
                                 id="payment-method"
                                 value={form.data.method}
                                 onValueChange={(value) => form.setData('method', value)}
-                                disabled={form.processing}
+                                disabled={processing}
                             >
                                 {methods.map((method) => (
                                     <BillingSelectItem key={method.value} value={method.value}>
@@ -334,7 +391,7 @@ export function InvoicePayments({
                                 onChange={(e) => form.setData('reference', e.target.value)}
                                 maxLength={255}
                                 placeholder="Bank, Wise, or payment provider reference"
-                                disabled={form.processing}
+                                disabled={processing}
                             />
                         </div>
                         <div className="space-y-2">
@@ -344,15 +401,15 @@ export function InvoicePayments({
                                 value={form.data.notes}
                                 onChange={(e) => form.setData('notes', e.target.value)}
                                 maxLength={2000}
-                                disabled={form.processing}
+                                disabled={processing}
                             />
                         </div>
                         <DialogFooter>
-                            <Button type="button" variant="outline" disabled={form.processing} onClick={() => setRecording(false)}>
+                            <Button type="button" variant="outline" disabled={processing} onClick={closeRecord}>
                                 Close
                             </Button>
-                            <Button type="submit" disabled={form.processing}>
-                                {form.processing ? 'Recording…' : 'Save payment'}
+                            <Button type="submit" disabled={processing}>
+                                {processing ? 'Recording…' : 'Save payment'}
                             </Button>
                         </DialogFooter>
                     </form>

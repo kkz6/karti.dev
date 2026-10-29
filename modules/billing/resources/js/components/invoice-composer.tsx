@@ -12,6 +12,7 @@ import type { InvoiceData } from '../invoice-types';
 import InvoiceForm, { type InvoiceFormSeed } from '../pages/invoices/form';
 import { BillingFeedback } from './billing-feedback';
 import { InvoiceDocument } from './invoice-document';
+import { InvoicePayments, type InvoicePaymentContext as PaymentContext } from './invoice-payments';
 import { InvoiceSaveButton, type InvoiceSaveAction } from './invoice-save-button';
 import { useBillingConfirm } from './use-billing-confirm';
 type Review = {
@@ -51,6 +52,9 @@ export function InvoiceComposer({
         [refreshSeller, setRefreshSeller] = useState(true),
         [issued, setIssued] = useState<InvoiceData | null>(null);
     const [saveAction, setSaveAction] = useState<InvoiceSaveAction>('save');
+    const [paymentContext, setPaymentContext] = useState<PaymentContext | null>(null);
+    const [recordPayment, setRecordPayment] = useState(false);
+    const acknowledgePaymentRequest = useCallback(() => setRecordPayment(false), []);
     const { confirm, dialog } = useBillingConfirm();
     const onFormState = useCallback((isDirty: boolean, isBusy: boolean) => {
         setDirty(isDirty);
@@ -68,6 +72,8 @@ export function InvoiceComposer({
         setSaved(false);
         setIssued(null);
         setSaveAction('save');
+        setPaymentContext(null);
+        setRecordPayment(false);
         setRefreshSeller(true);
         setRefreshCustomer(false);
         setBusy(true);
@@ -129,6 +135,25 @@ export function InvoiceComposer({
             setBusy(false);
         }
     };
+    const loadPayment = async (invoice: InvoiceData) => {
+        setBusy(true);
+        setError('');
+        try {
+            const { data } = await axios.get<PaymentContext>(route('admin.invoices.show', invoice.id), { headers: { Accept: 'application/json' } });
+            if (!data.canRecordPayment || !data.settlement.can_receive) {
+                setError('The invoice is issued, but it cannot receive another payment. Check its balance and your payment permissions.');
+            } else if (!data.paymentMethods.length) {
+                setError('The invoice is issued. Enable a manual payment method in Billing settings, then try recording the payment again.');
+            } else {
+                setPaymentContext(data);
+                setRecordPayment(true);
+            }
+        } catch {
+            setError('The invoice is issued, but payment entry could not be loaded. Retry recording the payment below.');
+        } finally {
+            setBusy(false);
+        }
+    };
     const issue = async (action: InvoiceSaveAction) => {
         if (!review || busy || review.errors.length) return;
         if (
@@ -152,9 +177,11 @@ export function InvoiceComposer({
             });
             setIssued(data.invoice);
             setStage('done');
-            if (action !== 'save') {
+            if (action === 'payment') {
+                await loadPayment(data.invoice);
+            } else if (action === 'send') {
                 onClose();
-                router.visit(route('admin.invoices.show', { invoice: data.invoice.id, tab: action === 'send' ? 'send' : 'record-payment' }));
+                router.visit(route('admin.invoices.show', { invoice: data.invoice.id, tab: 'send' }));
             }
         } catch (e) {
             const details = axios.isAxiosError(e)
@@ -170,7 +197,7 @@ export function InvoiceComposer({
     return (
         <>
             <Dialog
-                open={open}
+                open={open && !paymentContext}
                 onOpenChange={(value) => {
                     if (!value) void close();
                 }}
@@ -300,6 +327,11 @@ export function InvoiceComposer({
                                 <p className="text-muted-foreground">
                                     {issued.totals.total} {issued.currency} · Invoice issued
                                 </p>
+                                {saveAction === 'payment' && (
+                                    <Button disabled={busy} onClick={() => void loadPayment(issued)}>
+                                        Record payment
+                                    </Button>
+                                )}
                                 <Button
                                     onClick={() => {
                                         onClose();
@@ -331,6 +363,24 @@ export function InvoiceComposer({
                     )}
                 </DialogContent>
             </Dialog>
+            {open && paymentContext && (
+                <InvoicePayments
+                    dialogOnly
+                    invoice={paymentContext.invoice}
+                    settlement={paymentContext.settlement}
+                    payments={null}
+                    canRecord={paymentContext.canRecordPayment}
+                    methods={paymentContext.paymentMethods}
+                    today={paymentContext.today}
+                    recordRequested={recordPayment}
+                    onRecordRequested={acknowledgePaymentRequest}
+                    onRecordClosed={() => void close()}
+                    onRecorded={() => {
+                        toast.success('Payment recorded.');
+                        void close();
+                    }}
+                />
+            )}
             {dialog}
         </>
     );
