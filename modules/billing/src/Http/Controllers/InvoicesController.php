@@ -174,7 +174,7 @@ class InvoicesController extends BaseController
         $review          = app(InvoiceIssueReview::class)->prepare($invoice, $refreshSeller, $refreshCustomer);
         unset($review['logo']);
 
-        $data=['review' => $review, 'refreshSeller' => $refreshSeller, 'refreshCustomer' => $refreshCustomer];
+        $data=['review' => $review, 'refreshSeller' => $refreshSeller, 'refreshCustomer' => $refreshCustomer, 'canSend' => $request->user()->can('send', $invoice), 'canRecordPayment' => $request->user()->can('record', [\Modules\Billing\Models\Payment::class, $invoice])];
 
         return $request->expectsJson() ? response()->json($data) : Inertia::render('billing::invoices/issue-review', $data);
     }
@@ -266,6 +266,8 @@ class InvoicesController extends BaseController
             'canDownloadPdf'  => $invoice && $request->user()->can('download', $invoice), 'pdfError' => $request->session()->get('billing_pdf_error'),
             'readOnly'        => $readOnly, 'canUpdate' => $invoice && $request->user()->can('update', $invoice) && $invoice->status === 'draft',
             'canIssue'        => $request->user()->can('issue', $invoice ?? new Invoice) && (! $invoice || $invoice->status === 'draft'),
+            'canSend'         => $request->user()->can('send', $invoice ?? new Invoice),
+            'canRecordPayment' => $request->user()->can('record', [\Modules\Billing\Models\Payment::class, $invoice ?? new Invoice]),
             'activities'      => $invoice ? $this->activities($invoice) : [],
             'message'         => $request->session()->get('billing_message'),
         ];

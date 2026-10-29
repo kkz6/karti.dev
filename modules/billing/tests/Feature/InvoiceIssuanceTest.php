@@ -122,6 +122,42 @@ test('frozen logo bytes survive changes to the original and remain private', fun
     $this->get(route('admin.invoices.show', $invoice))->assertOk()->assertInertia(fn (Assert $page) => $page->missing('invoice.seller_snapshot.logo_file'));
 });
 
+test('review reads a company logo once and previews only the selected seller snapshot', function () {
+    Storage::fake('public');
+    $image = imagecreatetruecolor(4, 4);
+    ob_start();
+    imagepng($image);
+    $bytes = ob_get_clean();
+    imagedestroy($image);
+    $disk = Storage::disk('public');
+    $disk->put('review-logo.png', $bytes);
+    $media = Media::withoutEvents(fn () => Media::forceCreate(['disk' => 'public', 'directory' => '', 'filename' => 'review-logo', 'extension' => 'png', 'mime_type' => 'image/png', 'aggregate_type' => 'image', 'size' => strlen($bytes)]));
+    app(BillingSettings::class)->fill(['logo_media_id' => $media->id])->save();
+    $spy = Mockery::spy($disk);
+    Storage::shouldReceive('disk')->with('public')->andReturn($spy);
+
+    $review = app(InvoiceIssueReview::class)->prepare($this->invoice, true, false);
+    expect($review['errors'])->toBeEmpty()
+        ->and($review['invoice']['logo'])->toBe('data:image/png;base64,'.base64_encode($bytes))
+        ->and($review['logo']['hash'])->toBe(hash('sha256', $bytes));
+
+    // The draft predates the new logo; keeping its seller snapshot must keep its original preview.
+    $original = app(InvoiceIssueReview::class)->prepare($this->invoice, false, false);
+    expect($original['invoice']['logo'])->toBeNull()->and($original['logo'])->toBeNull();
+    $spy->shouldHaveReceived('readStream')->with('review-logo.png')->once();
+
+    $image = imagecreatetruecolor(4, 4);
+    imagefill($image, 0, 0, imagecolorallocate($image, 255, 255, 255));
+    ob_start();
+    imagepng($image);
+    $changed = ob_get_clean();
+    imagedestroy($image);
+    $disk->put('review-logo.png', $changed);
+    $updated = app(InvoiceIssueReview::class)->prepare($this->invoice, true, false);
+    expect($updated['token'])->not->toBe($review['token'])
+        ->and($updated['invoice']['logo'])->toBe('data:image/png;base64,'.base64_encode($changed));
+});
+
 test('number collisions roll back issuance counter and activity', function () {
     $other = $this->invoice->replicate();
     $other->forceFill(['formatted_number' => 'INV-000001', 'sequence_number' => 99])->save();

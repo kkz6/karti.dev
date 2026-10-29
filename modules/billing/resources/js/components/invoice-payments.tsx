@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Textarea } from '@shared/components/ui/textarea';
 import { statusTone } from '@shared/lib/status-colors';
 import { CreditCard, Undo2 } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { InvoiceData } from '../invoice-types';
 import type { PaymentData, PaymentMethod, Settlement } from '../payment-types';
 import { BillingFeedback } from './billing-feedback';
@@ -71,7 +71,7 @@ export function PaymentHistory({
                                     </TableCell>
                                     <TableCell className="max-w-sm break-words whitespace-normal">
                                         {payment.method_label}
-                                        {payment.reference && <p>Reference: {payment.reference}</p>}
+                                        {payment.reference && <p>Transaction ID / reference: {payment.reference}</p>}
                                         {payment.notes && <p>{payment.notes}</p>}
                                         <p className="text-muted-foreground text-xs">
                                             Recorded by {payment.actor_name} · {payment.created_at}
@@ -123,6 +123,8 @@ export function InvoicePayments({
     embedded = false,
     customerContext,
     onRecorded,
+    recordRequested = false,
+    onRecordRequested,
 }: {
     invoice: InvoiceData;
     settlement: Settlement;
@@ -133,6 +135,8 @@ export function InvoicePayments({
     embedded?: boolean;
     customerContext?: number;
     onRecorded?: () => void;
+    recordRequested?: boolean;
+    onRecordRequested?: () => void;
 }) {
     const [recording, setRecording] = useState(false);
     const [reversing, setReversing] = useState<PaymentData | null>(null);
@@ -145,9 +149,10 @@ export function InvoicePayments({
         method: methods[0]?.value ?? '',
         reference: '',
         notes: '',
+        send_receipt: false,
     });
     const reversal = useForm({ version: invoice.version, reason: '' });
-    const openRecord = () => {
+    const openRecord = useCallback(() => {
         form.clearErrors();
         form.setData({
             version: invoice.version,
@@ -158,9 +163,15 @@ export function InvoicePayments({
             method: methods[0]?.value ?? '',
             reference: '',
             notes: '',
+            send_receipt: false,
         });
         setRecording(true);
-    };
+    }, [form, invoice.version, invoice.currency, settlement.balance, today, methods]);
+    useEffect(() => {
+        if (!recordRequested) return;
+        if (canRecord && settlement.can_receive && methods.length > 0) openRecord();
+        onRecordRequested?.();
+    }, [recordRequested, canRecord, settlement.can_receive, methods.length, openRecord, onRecordRequested]);
     const errors = (values: Record<string, string>) =>
         Object.values(values).length > 0 && (
             <BillingFeedback kind="error">
@@ -229,6 +240,7 @@ export function InvoicePayments({
                         </p>
                     )}
                     {canRecord &&
+                        settlement.can_receive &&
                         (methods.length > 0 ? (
                             <Button variant="success" onClick={openRecord}>
                                 Record payment
@@ -259,7 +271,8 @@ export function InvoicePayments({
                     <DialogHeader>
                         <DialogTitle>Record payment</DialogTitle>
                         <DialogDescription>
-                            Record money already received in {invoice.currency}. This updates the balance and keeps an audit record.
+                            Record money already received in {invoice.currency}. The remaining balance is filled in; a smaller amount records a
+                            partial payment. No email or SMS is sent.
                         </DialogDescription>
                     </DialogHeader>
                     <form
@@ -314,12 +327,13 @@ export function InvoicePayments({
                             </BillingSelect>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="payment-reference">Reference</Label>
+                            <Label htmlFor="payment-reference">Transaction ID / reference</Label>
                             <Input
                                 id="payment-reference"
                                 value={form.data.reference}
                                 onChange={(e) => form.setData('reference', e.target.value)}
                                 maxLength={255}
+                                placeholder="Bank, Wise, or payment provider reference"
                                 disabled={form.processing}
                             />
                         </div>

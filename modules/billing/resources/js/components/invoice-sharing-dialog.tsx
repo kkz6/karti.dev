@@ -18,6 +18,7 @@ export function InvoiceSharingDialog({
     links,
     shareUrl,
     canSend,
+    sendOnOpen = false,
     deliveries,
     configuration = null,
     canRemind,
@@ -31,6 +32,7 @@ export function InvoiceSharingDialog({
     links: PrivateInvoiceLink[] | null;
     shareUrl: string | null;
     canSend: boolean;
+    sendOnOpen?: boolean;
     deliveries: Delivery[] | null;
     configuration?: DeliveryConfiguration | null;
     canRemind: boolean;
@@ -56,7 +58,14 @@ export function InvoiceSharingDialog({
                     )}
                     {(canSend || deliveries !== null) && (
                         <section>
-                            <InvoiceDelivery embedded invoice={invoice} canSend={canSend} deliveries={deliveries} configuration={configuration} />
+                            <InvoiceDelivery
+                                embedded
+                                invoice={invoice}
+                                canSend={canSend}
+                                deliveries={deliveries}
+                                configuration={configuration}
+                                initialOpen={sendOnOpen && canSend}
+                            />
                         </section>
                     )}
                     {canRemind && (

@@ -5,13 +5,14 @@ import { Checkbox } from '@shared/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@shared/components/ui/dialog';
 import { Label } from '@shared/components/ui/label';
 import axios from 'axios';
-import { ArrowLeft, Check, LoaderCircle, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Check, LoaderCircle } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import type { InvoiceData } from '../invoice-types';
 import InvoiceForm, { type InvoiceFormSeed } from '../pages/invoices/form';
 import { BillingFeedback } from './billing-feedback';
 import { InvoiceDocument } from './invoice-document';
+import { InvoiceSaveButton, type InvoiceSaveAction } from './invoice-save-button';
 import { useBillingConfirm } from './use-billing-confirm';
 type Review = {
     invoice: InvoiceData;
@@ -49,6 +50,7 @@ export function InvoiceComposer({
         [refreshCustomer, setRefreshCustomer] = useState(false),
         [refreshSeller, setRefreshSeller] = useState(true),
         [issued, setIssued] = useState<InvoiceData | null>(null);
+    const [saveAction, setSaveAction] = useState<InvoiceSaveAction>('save');
     const { confirm, dialog } = useBillingConfirm();
     const onFormState = useCallback((isDirty: boolean, isBusy: boolean) => {
         setDirty(isDirty);
@@ -65,6 +67,7 @@ export function InvoiceComposer({
         setDirty(false);
         setSaved(false);
         setIssued(null);
+        setSaveAction('save');
         setRefreshSeller(true);
         setRefreshCustomer(false);
         setBusy(true);
@@ -121,14 +124,23 @@ export function InvoiceComposer({
             setRefreshSeller(data.refreshSeller);
             setRefreshCustomer(data.refreshCustomer);
         } catch {
-            setError('Verification could not be loaded. Your saved draft is safe. Return to details and try again.');
+            setError('The invoice review could not be loaded. Your saved draft is safe. Return to details and try again.');
         } finally {
             setBusy(false);
         }
     };
-    const issue = async () => {
+    const issue = async (action: InvoiceSaveAction) => {
         if (!review || busy || review.errors.length) return;
-        if (!(await confirm('Issue this verified invoice? Its number and financial details will become permanent.'))) return;
+        if (
+            !(await confirm(
+                action === 'send'
+                    ? 'Issue this invoice? Its number and financial details will become permanent. You will review the recipients and message before sending.'
+                    : action === 'payment'
+                      ? 'Issue this invoice? Its number and financial details will become permanent. You will enter the payment details next; no payment is recorded yet.'
+                      : 'Issue this invoice without sending? Its number and financial details will become permanent.',
+            ))
+        )
+            return;
         setBusy(true);
         setError('');
         try {
@@ -140,13 +152,17 @@ export function InvoiceComposer({
             });
             setIssued(data.invoice);
             setStage('done');
+            if (action !== 'save') {
+                onClose();
+                router.visit(route('admin.invoices.show', { invoice: data.invoice.id, tab: action === 'send' ? 'send' : 'record-payment' }));
+            }
         } catch (e) {
             const details = axios.isAxiosError(e)
                 ? Object.values(e.response?.data?.errors ?? {})
                       .flat()
                       .map(String)
                 : [];
-            setError(details.length ? details.join(' ') : 'The invoice could not be issued. Recheck verification before trying again.');
+            setError(details.length ? details.join(' ') : 'The invoice could not be issued. Review the invoice again before issuing.');
         } finally {
             setBusy(false);
         }
@@ -174,7 +190,7 @@ export function InvoiceComposer({
                                 {stage === 'done'
                                     ? 'Invoice ready'
                                     : stage === 'review'
-                                      ? 'Verify your invoice'
+                                      ? 'Review and issue invoice'
                                       : invoiceId
                                         ? 'Edit invoice'
                                         : 'Create invoice'}
@@ -195,7 +211,7 @@ export function InvoiceComposer({
                             {stage === 'done'
                                 ? 'Your invoice has a permanent number and is ready to share.'
                                 : stage === 'review'
-                                  ? 'Check the billing identities, line items and exact totals before issuing.'
+                                  ? 'Check the company, customer and totals before creating a numbered invoice. Drafts stay editable until issued.'
                                   : invoiceId
                                     ? 'Update your draft, arrange its items and review before issuing.'
                                     : 'Add customer details and items, then review your invoice before issuing.'}
@@ -206,7 +222,7 @@ export function InvoiceComposer({
                         {busy && (
                             <div role="status" className="text-muted-foreground flex items-center justify-center gap-3 py-12 text-sm">
                                 <LoaderCircle className="size-5 animate-spin" />
-                                {stage === 'review' ? 'Verifying invoice…' : 'Loading…'}
+                                {stage === 'review' ? 'Preparing review…' : 'Loading…'}
                             </div>
                         )}
                         {stage === 'edit' && seed && (
@@ -222,7 +238,10 @@ export function InvoiceComposer({
                                     toast.success('Invoice draft saved.');
                                     setDirty(false);
                                 }}
-                                onReview={(invoice) => void loadReview(invoice)}
+                                onReview={(invoice, action) => {
+                                    setSaveAction(action);
+                                    void loadReview(invoice);
+                                }}
                             />
                         )}
                         {stage === 'review' && !busy && (
@@ -262,7 +281,7 @@ export function InvoiceComposer({
                                             </BillingFeedback>
                                         ) : (
                                             <BillingFeedback kind="info">
-                                                Verification passed. The identities and exact totals are ready for issuance.
+                                                Ready to issue. Check the details below before creating the numbered invoice.
                                             </BillingFeedback>
                                         )}
                                         <InvoiceDocument
@@ -300,10 +319,13 @@ export function InvoiceComposer({
                                 {stage === 'done' ? 'Back to invoices' : 'Back to details'}
                             </Button>
                             {stage === 'review' && (
-                                <Button disabled={busy || !review || review.errors.length > 0} onClick={() => void issue()}>
-                                    <ShieldCheck />
-                                    Issue invoice
-                                </Button>
+                                <InvoiceSaveButton
+                                    action={saveAction}
+                                    canSend={seed?.canSend ?? false}
+                                    canRecordPayment={seed?.canRecordPayment ?? false}
+                                    disabled={busy || !review || review.errors.length > 0}
+                                    onSave={(action) => void issue(action)}
+                                />
                             )}
                         </div>
                     )}

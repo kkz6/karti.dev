@@ -30,7 +30,8 @@ class RecordPaymentRequest extends FormRequest
     {
         return ['version'  => ['required', 'integer', 'min:1'], 'request_key' => ['required', 'uuid'],
             'amount'       => ['required', 'string', 'max:24', 'regex:/^\d+(?:\.\d{1,4})?$/'], 'currency' => ['required', 'string', 'size:3'],
-            'payment_date' => ['required', 'date_format:Y-m-d'], 'method' => ['required', Rule::in(array_column(PaymentMethods::options(false), 'value'))],
-            'reference'    => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string', 'max:2000']];
+            'payment_date' => ['required', 'date_format:Y-m-d'], 'method' => ['required', 'string', 'max:100', Rule::in(array_column(PaymentMethods::options(false), 'value'))],
+            'reference'    => ['nullable', 'string', 'max:255'], 'notes' => ['nullable', 'string', 'max:2000'],
+            'send_receipt' => ['sometimes', 'boolean']];
     }
 }

@@ -40,6 +40,7 @@ export function InvoiceDelivery({
     configuration = null,
     reloadKey = 'deliveries',
     embedded = false,
+    initialOpen = false,
 }: {
     invoice: InvoiceData;
     canSend: boolean;
@@ -47,16 +48,20 @@ export function InvoiceDelivery({
     configuration?: DeliveryConfiguration | null;
     reloadKey?: string;
     embedded?: boolean;
+    initialOpen?: boolean;
 }) {
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(initialOpen);
+    const contacts = (invoice.customer_snapshot as { contacts?: { email?: string; phone?: string }[] }).contacts ?? [];
     const form = useForm({
         channel: 'email' as 'email' | 'sms',
-        request_key: '',
-        recipients: '',
-        subject: `Invoice ${invoice.formatted_number}`,
-        message: '',
+        request_key: crypto.randomUUID(),
+        recipients: contacts
+            .map((contact) => contact.email)
+            .filter(Boolean)
+            .join(', '),
+        subject: configuration?.emailSubject ?? `Invoice ${invoice.formatted_number}`,
+        message: configuration?.emailMessage ?? '',
     });
-    const contacts = (invoice.customer_snapshot as { contacts?: { email?: string; phone?: string }[] }).contacts ?? [];
     const sms = form.data.channel === 'sms';
     function compose(channel: 'email' | 'sms') {
         form.clearErrors();
