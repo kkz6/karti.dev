@@ -59,6 +59,19 @@ test('opening the record payment shortcut leaves the invoice unpaid without send
     Mail::assertNothingSent();
 });
 
+test('inline payment recording returns the updated balance without redirecting or duplicating payment', function () {
+    Queue::fake();
+    Mail::fake();
+    $input = [...$this->input, 'send_receipt' => false];
+    $this->postJson(route('admin.invoices.payments.store', $this->invoice), $input)->assertOk()
+        ->assertJsonPath('version', 3)->assertJsonPath('settlement.state', 'partial')->assertJsonPath('settlement.balance', '60.00');
+    $this->postJson(route('admin.invoices.payments.store', $this->invoice), $input)->assertOk()
+        ->assertJsonPath('version', 3)->assertJsonPath('settlement.balance', '60.00');
+    expect(Payment::count())->toBe(1)->and(Payment::first()->reference)->toBe($input['reference']);
+    Queue::assertNothingPushed();
+    Mail::assertNothingSent();
+});
+
 test('manual settlement records the remaining amount and transaction details while suppressing configured receipts', function () {
     Queue::fake();
     Mail::fake();

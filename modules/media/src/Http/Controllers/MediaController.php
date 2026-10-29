@@ -373,13 +373,10 @@ class MediaController extends BaseController
             $diskInstance = Storage::disk($media->disk);
             $fullPath     = $media->getDiskPath();
 
-            // Delete old file if exists
-            if ($diskInstance->exists($fullPath)) {
-                $diskInstance->delete($fullPath);
+            // Replace only after the disk accepts the write; do not delete the original first.
+            if (! $diskInstance->put($fullPath, $decodedImage)) {
+                return response(['success' => false, 'message' => 'The edited image could not be written. Please try again.'], 503);
             }
-
-            // Save the new file
-            $diskInstance->put($fullPath, $decodedImage);
 
             // Update the media record
             $media->forceFill([
@@ -394,13 +391,14 @@ class MediaController extends BaseController
             ]);
         }
 
-        // For new copies, use default disk from config
-        $disk = config('mediable.default_disk');
-        $path = trim($saveData->path ?? '', '/');
+        // Keep edited copies beside their source, including on a non-default disk.
+        $source = $saveData->assetId ? Media::findOrFail($saveData->assetId) : null;
+        $disk   = $source?->disk ?? config('mediable.default_disk');
+        $path   = trim($saveData->path ?? '', '/');
 
         // Verify directory exists if path is specified
         if ($path) {
-            $path = $this->manager->verifyDirectory($path);
+            $path = $this->manager->verifyDirectory($path, $disk);
         }
 
         $filename     = $saveData->name;
@@ -422,7 +420,9 @@ class MediaController extends BaseController
         }
 
         // Save the file
-        $diskInstance->put($fullPath, $decodedImage);
+        if (! $diskInstance->put($fullPath, $decodedImage)) {
+            return response(['success' => false, 'message' => 'The image copy could not be written. Please try again.'], 503);
+        }
 
         // Create media record
         $pathInfo  = pathinfo($filename);
