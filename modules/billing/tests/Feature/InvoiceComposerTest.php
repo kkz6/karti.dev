@@ -43,3 +43,32 @@ test('JSON validation returns field errors without creating a draft', function (
     $this->postJson(route('admin.invoices.store'), [])->assertUnprocessable()->assertJsonValidationErrors(['customer_id', 'items', 'currency']);
     expect(Invoice::count())->toBe(0);
 });
+
+test('payment after issuing a draft edit link keeps the list usable and records once', function () {
+    \Illuminate\Support\Facades\Queue::fake();
+    \Illuminate\Support\Facades\Mail::fake();
+    app(BillingSettings::class)->fill(['legal_name'=>'Example company', 'address'=>'Company street', 'country'=>'US'])->save();
+    $saved = $this->postJson(route('admin.invoices.store'), composerPayload($this->customer->id))->assertOk();
+    $id    = $saved->json('invoice.id');
+    $list  = ['edit'=>$id, 'search'=>'USD customer', 'view'=>'issued', 'page'=>2];
+    $this->get(route('admin.invoices.index', $list))->assertOk();
+    $review = $this->getJson(route('admin.invoices.issue-review', $id))->assertOk();
+    $issued = $this->postJson(route('admin.invoices.issue', $id), ['version'=>$review->json('review.invoice.version'), 'review_token'=>$review->json('review.token'), 'refresh_seller'=>true, 'refresh_customer'=>false])->assertOk();
+    $input  = ['version'=>$issued->json('invoice.version'), 'request_key'=>(string) \Illuminate\Support\Str::uuid(), 'amount'=>'50.00', 'currency'=>'USD', 'payment_date'=>now()->format('Y-m-d'), 'method'=>'cash', 'reference'=>'WISE-DEEP-LINK', 'send_receipt'=>false];
+    $this->postJson(route('admin.invoices.payments.store', $id), $input)->assertOk()->assertJsonPath('settlement.state', 'paid');
+    $this->postJson(route('admin.invoices.payments.store', $id), $input)->assertOk();
+    $this->get(route('admin.invoices.index', $list))->assertRedirect(route('admin.invoices.index', array_diff_key($list, ['edit'=>true])));
+    $this->followingRedirects()->get(route('admin.invoices.index', $list))->assertOk();
+    expect(\Modules\Billing\Models\Payment::where('invoice_id', $id)->count())->toBe(1);
+    \Illuminate\Support\Facades\Queue::assertNothingPushed();
+    \Illuminate\Support\Facades\Mail::assertNothingSent();
+});
+
+test('stale draft edit links drop editor flags and keep filters without bypassing authorization', function (string $status) {
+    $saved   = $this->postJson(route('admin.invoices.store'), composerPayload($this->customer->id))->assertOk();
+    $invoice = Invoice::findOrFail($saved->json('invoice.id'));
+    $invoice->forceFill(['status'=>$status])->save();
+    $query = ['edit'=>$invoice->id, 'compose'=>1, 'search'=>'USD customer', 'view'=>'issued'];
+    $this->get(route('admin.invoices.index', $query))->assertRedirect(route('admin.invoices.index', ['search'=>'USD customer', 'view'=>'issued']));
+    $this->actingAs(User::factory()->create()->givePermissionTo('view any invoice'))->get(route('admin.invoices.index', $query))->assertForbidden();
+})->with(['issued', 'cancelled']);
