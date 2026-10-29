@@ -204,6 +204,8 @@ export function InvoiceComposer({
             setBusy(false);
         }
     };
+    const waitingForContent = (stage === 'edit' && !seed) || (stage === 'review' && busy);
+    const compactLoading = waitingForContent && !error;
     return (
         <>
             <Dialog
@@ -214,14 +216,14 @@ export function InvoiceComposer({
             >
                 <DialogContent
                     overlayClassName="bg-black/45"
-                    className={`invoice-editor-modal bg-card flex max-h-[94dvh] w-[calc(100%-1rem)] max-w-[calc(100%-1rem)] flex-col gap-0 overflow-hidden p-0 ${stage === 'done' ? 'sm:max-w-lg' : 'sm:max-w-6xl'}`}
+                    className={`invoice-editor-modal bg-card flex max-h-[94dvh] w-[calc(100%-1rem)] max-w-[calc(100%-1rem)] flex-col gap-0 overflow-hidden p-0 ${compactLoading ? 'sm:max-w-sm' : waitingForContent || stage === 'done' ? 'sm:max-w-lg' : 'sm:max-w-6xl'}`}
                     onInteractOutside={(e) => e.preventDefault()}
                     onEscapeKeyDown={(e) => {
                         e.preventDefault();
                         if (!draggingItem) void close();
                     }}
                 >
-                    <DialogHeader className="bg-card shrink-0 border-b px-5 py-4 pr-12 text-left sm:px-6">
+                    <DialogHeader className={compactLoading ? 'sr-only' : 'bg-card shrink-0 border-b px-5 py-4 pr-12 text-left sm:px-6'}>
                         <div className="flex flex-wrap items-center gap-3">
                             <DialogTitle>
                                 {stage === 'done'
@@ -257,7 +259,10 @@ export function InvoiceComposer({
                     <div className={`min-h-0 flex-1 overflow-y-auto overscroll-contain ${stage === 'done' ? 'p-6 sm:p-8' : 'px-5 py-5 sm:px-6'}`}>
                         {error && <BillingFeedback kind="error">{error}</BillingFeedback>}
                         {busy && (
-                            <div role="status" className="text-muted-foreground flex items-center justify-center gap-3 py-12 text-sm">
+                            <div
+                                role="status"
+                                className={`text-muted-foreground flex items-center justify-center gap-3 text-sm ${compactLoading ? 'py-8' : 'py-12'}`}
+                            >
                                 <LoaderCircle className="size-5 animate-spin" />
                                 {issued && saveAction === 'payment'
                                     ? 'Opening payment details…'
@@ -265,7 +270,7 @@ export function InvoiceComposer({
                                       ? review
                                           ? 'Issuing invoice…'
                                           : 'Preparing review…'
-                                      : 'Loading…'}
+                                      : 'Loading invoice…'}
                             </div>
                         )}
                         {stage === 'edit' && seed && (
@@ -346,8 +351,8 @@ export function InvoiceComposer({
                             </div>
                         )}
                     </div>
-                    {stage === 'edit' && <div ref={setFooterTarget} className="bg-card shrink-0 border-t px-5 py-4 sm:px-6" />}
-                    {stage !== 'edit' && (
+                    {stage === 'edit' && seed && <div ref={setFooterTarget} className="bg-card shrink-0 border-t px-5 py-4 sm:px-6" />}
+                    {stage !== 'edit' && !busy && (
                         <div
                             className={`bg-card flex shrink-0 gap-3 border-t px-5 py-4 sm:px-6 ${stage === 'done' ? 'flex-col-reverse sm:flex-row sm:flex-wrap sm:justify-end' : 'flex-wrap justify-between'}`}
                         >
