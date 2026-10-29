@@ -23,7 +23,11 @@ class InvoicePresentation
 
     public function data(Invoice $invoice): array
     {
-        $invoice->load('items.taxes');
+        if ($invoice->status === 'draft') {
+            $invoice->load('items.taxes');
+        } else {
+            $invoice->loadMissing('items.taxes');
+        }
         $data                    = $invoice->only(['id', 'status', 'formatted_number', 'version', 'customer_id', 'currency', 'discount_mode', 'discount_value', 'customer_note', 'internal_note', 'terms', 'payment_instructions', 'customer_snapshot', 'seller_snapshot', 'cancellation_reason']);
         $data['seller_snapshot'] = Arr::except($data['seller_snapshot'], ['logo_file']);
         $data['invoice_date']    = $invoice->invoice_date->format('Y-m-d');

@@ -51,6 +51,35 @@ test('explicit issue allocates a number exactly once and records activity', func
     $this->get(route('admin.invoices.show', $invoice))->assertOk()->assertInertia(fn (Assert $page) => $page->component('billing::invoices/show')->where('invoice.totals.total', '1180.00')->where('canCancel', true));
 });
 
+test('JSON issuance reads the locked customer and invoice lines once', function () {
+    $input = issuanceInput($this->invoice);
+    DB::enableQueryLog();
+    try {
+        $this->postJson(route('admin.invoices.issue', $this->invoice), $input)->assertOk()
+            ->assertJsonPath('invoice.totals.total', '1180.00')
+            ->assertJsonPath('invoice.items.0.taxes.0.amount', '180.00');
+        $queries = collect(DB::getQueryLog())->pluck('query')->map(fn ($sql) => str_replace(['"', '`'], '', $sql));
+    } finally {
+        DB::disableQueryLog();
+        DB::flushQueryLog();
+    }
+    foreach (['billing_invoice_items', 'billing_invoice_item_taxes'] as $table) {
+        expect($queries->filter(fn ($sql) => str_starts_with($sql, 'select * from '.$table.' '))->count())->toBe(1);
+    }
+    expect($queries->filter(fn ($sql) => str_starts_with($sql, 'select * from billing_customers '))->count())->toBe(1)
+        ->and($queries->filter(fn ($sql) => str_starts_with($sql, 'select count(*) as aggregate from billing_customers '))->count())->toBe(1);
+});
+
+test('reviewing the same draft instance still reloads changed customer and line details', function () {
+    $review = app(InvoiceIssueReview::class)->prepare($this->invoice, true, true);
+    $this->customer->update(['billing_address' => 'Updated customer street']);
+    $this->invoice->items()->first()->taxes()->first()->update(['amount_minor' => 1]);
+    $updated = app(InvoiceIssueReview::class)->prepare($this->invoice, true, true);
+    expect($updated['customer']['billing_address'])->toBe('Updated customer street')
+        ->and($updated['token'])->not->toBe($review['token'])
+        ->and($updated['errors'])->toContain('Tax amounts have changed. Save the draft again.');
+});
+
 test('missing issuer and customer billing fields block issuance without consuming a number', function () {
     app(BillingSettings::class)->fill(['legal_name' => '', 'address' => '', 'country' => ''])->save();
     $this->customer->update(['billing_country' => '']);

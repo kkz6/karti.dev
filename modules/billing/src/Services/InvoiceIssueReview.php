@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Modules\Billing\Http\Requests\SaveInvoiceRequest;
+use Modules\Billing\Models\Customer;
 use Modules\Billing\Models\Invoice;
 use Modules\Billing\Settings\BillingSettings;
 use Modules\Billing\Support\Currencies;
@@ -13,9 +14,13 @@ use Modules\Media\Models\Media;
 
 class InvoiceIssueReview
 {
-    public function prepare(Invoice $invoice, bool $refreshSeller, bool $refreshCustomer): array
+    public function prepare(Invoice $invoice, bool $refreshSeller, bool $refreshCustomer, ?Customer $lockedCustomer = null): array
     {
-        $invoice->load('customer');
+        if ($lockedCustomer) {
+            $invoice->setRelation('customer', $lockedCustomer);
+        } else {
+            $invoice->load('customer');
+        }
         $data     = app(InvoicePresentation::class)->data($invoice);
         $seller   = $refreshSeller ? BillingSnapshots::seller() : $invoice->seller_snapshot;
         $customer = $refreshCustomer ? BillingSnapshots::customer($invoice->customer) : $invoice->customer_snapshot;
@@ -35,8 +40,9 @@ class InvoiceIssueReview
         $rules = (new SaveInvoiceRequest)->rules();
         unset($rules['version']);
         $validation = Validator::make($data, $rules);
+        $valid      = $validation->passes();
         $errors     = [...$errors, ...$validation->errors()->all()];
-        if (! $validation->fails()) {
+        if ($valid) {
             try {
                 $calculated = app(InvoiceCalculator::class)->calculate($data);
                 foreach (['subtotal_minor', 'discount_minor', 'tax_minor', 'total_minor'] as $field) {

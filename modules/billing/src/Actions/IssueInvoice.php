@@ -22,8 +22,8 @@ class IssueInvoice
                 if (DB::connection()->getDriverName() === 'sqlite') {
                     DB::table('billing_invoice_sequences')->where('scope', 'invoices')->update(['next_number' => DB::raw('next_number')]);
                 }
-                $locked = Invoice::whereKey($invoice->id)->lockForUpdate()->firstOrFail();
-                $locked->customer()->lockForUpdate()->firstOrFail();
+                $locked   = Invoice::whereKey($invoice->id)->lockForUpdate()->firstOrFail();
+                $customer = $locked->customer()->lockForUpdate()->firstOrFail();
                 if ($locked->status === 'issued') {
                     return $locked;
                 }
@@ -31,7 +31,7 @@ class IssueInvoice
                 if ($locked->version !== (int) $input['version']) {
                     throw ValidationException::withMessages(['review' => 'The draft changed. Review it again before issuing.']);
                 }
-                $review = app(InvoiceIssueReview::class)->prepare($locked, $input['refresh_seller'], $input['refresh_customer']);
+                $review = app(InvoiceIssueReview::class)->prepare($locked, $input['refresh_seller'], $input['refresh_customer'], $customer);
                 if ($review['errors']) {
                     throw ValidationException::withMessages(['review' => $review['errors']]);
                 }
