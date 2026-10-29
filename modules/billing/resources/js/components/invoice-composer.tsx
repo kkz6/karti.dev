@@ -105,13 +105,23 @@ export function InvoiceComposer({
         if (dirty && !(await confirm('Discard your unsaved invoice changes? Saved draft details will be kept.'))) return;
         if (saved || issued) {
             setBusy(true);
-            router.reload({
-                ...(reloadOnly ? { only: reloadOnly } : {}),
-                onFinish: () => {
-                    setBusy(false);
-                    onClose();
+            const url = new URL(window.location.href);
+            url.searchParams.delete('edit');
+            url.searchParams.delete('compose');
+            router.get(
+                url.pathname + url.search,
+                {},
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                    replace: true,
+                    ...(reloadOnly ? { only: reloadOnly } : {}),
+                    onFinish: () => {
+                        setBusy(false);
+                        onClose();
+                    },
                 },
-            });
+            );
         } else onClose();
     };
     const loadReview = async (invoice: InvoiceData, seller = refreshSeller, customer = refreshCustomer) => {

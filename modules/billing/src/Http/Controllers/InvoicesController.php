@@ -29,14 +29,16 @@ use Modules\Shared\Http\Controllers\BaseController;
 
 class InvoicesController extends BaseController
 {
-    public function index(Request $request): Response
+    public function index(Request $request): Response|RedirectResponse
     {
         $this->authorize('viewAny', Invoice::class);
         $request->validate(['search' => ['nullable', 'string', 'max:255'], 'invoice'=>['nullable', 'integer', 'exists:billing_invoices,id'], 'edit'=>['nullable', 'integer', 'exists:billing_invoices,id']]);
         $editing=$request->filled('edit') ? Invoice::findOrFail($request->integer('edit')) : null;
         if ($editing) {
             $this->authorize('update', $editing);
-            abort_if($editing->status !== 'draft', 409, 'Only draft invoices can be edited.');
+            if ($editing->status !== 'draft') {
+                return to_route('admin.invoices.index', \Illuminate\Support\Arr::except($request->query(), ['edit', 'compose']));
+            }
         }
         $selected=! $editing && $request->filled('invoice') ? Invoice::findOrFail($request->integer('invoice')) : null;
         if ($selected) {
