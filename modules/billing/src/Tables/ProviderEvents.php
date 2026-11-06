@@ -37,7 +37,7 @@ class ProviderEvents extends Table
     {
         return [Action::make('Retry verification', handle: function (ProviderEvent $e) {
             abort_unless(in_array($e->state, ['failed', 'pending'], true), 409);
-            ProcessProviderEvent::dispatch($e->id)->onQueue('billing');
+            ProcessProviderEvent::dispatch($e->id);
         }, authorize: fn () => auth()->user()->hasRole('super-admin') || auth()->user()->can('view payment reconciliation'), icon: 'refresh-cw')->disabledAndHidden(fn (ProviderEvent $e) => ! in_array($e->state, ['failed', 'pending'], true))];
     }
 

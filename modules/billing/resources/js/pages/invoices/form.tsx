@@ -101,6 +101,7 @@ export default function InvoiceForm({
                   customer_note: '',
                   internal_note: '',
                   refresh_customer: false,
+                  billing_details: { customer: {}, seller: {} },
                   items: [blankLine()],
               },
     );
@@ -121,7 +122,7 @@ export default function InvoiceForm({
     const [previewError, setPreviewError] = useState('');
     const [calculating, setCalculating] = useState(false);
     const [previewVersion, setPreviewVersion] = useState(0);
-    const title = invoice ? `Draft #${invoice.id}` : 'New invoice draft';
+    const title = invoice?.status === 'issued' ? `Edit ${invoice.formatted_number}` : invoice ? `Draft #${invoice.id}` : 'New invoice draft';
     const invoiceId = invoice?.id;
 
     useEffect(() => {
@@ -256,7 +257,7 @@ export default function InvoiceForm({
                         ]),
                     ),
                 );
-            } else setSaveError('The draft could not be saved. Your entries are still here; try again.');
+            } else setSaveError('The invoice could not be saved. Your entries are still here; try again.');
         } finally {
             setSaving(false);
         }
@@ -292,7 +293,7 @@ export default function InvoiceForm({
                 variant={embedded ? 'outline' : 'default'}
                 disabled={busy}
             >
-                {busy ? 'Saving…' : 'Save as draft'}
+                {busy ? 'Saving…' : invoice?.status === 'issued' ? 'Save changes' : 'Save as draft'}
             </Button>
             {canIssue && (
                 <InvoiceSaveButton
@@ -408,6 +409,7 @@ export default function InvoiceForm({
                                                     customer_id: value,
                                                     currency,
                                                     refresh_customer: false,
+                                                    billing_details: { customer: {}, seller: {} },
                                                     items:
                                                         currency === form.data.currency
                                                             ? form.data.items
@@ -470,7 +472,46 @@ export default function InvoiceForm({
                                     </BillingSelect>
                                 </div>
                             </section>
-                            {invoice && (
+                            {invoice?.status === 'issued' && (
+                                <section className="grid gap-4 sm:grid-cols-2" aria-label="Invoice billing details">
+                                    {(['customer', 'seller'] as const).map((party) => (
+                                        <Card key={party} className="space-y-3 p-4">
+                                            <h2 className="font-semibold">
+                                                {party === 'customer' ? 'Customer billing details' : 'Company billing details'}
+                                            </h2>
+                                            <div className="grid gap-3 sm:grid-cols-2">
+                                                {Object.entries(form.data.billing_details![party]).map(([field, value]) => (
+                                                    <div key={field} className="space-y-1">
+                                                        <Label htmlFor={`billing-${party}-${field}`}>
+                                                            {field
+                                                                .replace(/^billing_/, '')
+                                                                .replaceAll('_', ' ')
+                                                                .replace(/\b\w/g, (letter) => letter.toUpperCase())}
+                                                        </Label>
+                                                        <Input
+                                                            id={`billing-${party}-${field}`}
+                                                            value={value}
+                                                            disabled={party === 'customer' && form.data.refresh_customer}
+                                                            onChange={(event) =>
+                                                                form.setData('billing_details', {
+                                                                    ...form.data.billing_details!,
+                                                                    [party]: {
+                                                                        ...form.data.billing_details![party],
+                                                                        [field]: field.endsWith('country')
+                                                                            ? event.target.value.toUpperCase()
+                                                                            : event.target.value,
+                                                                    },
+                                                                })
+                                                            }
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </Card>
+                                    ))}
+                                </section>
+                            )}
+                            {invoice && invoice.status !== 'issued' && (
                                 <Card className="bg-muted/20 grid gap-4 p-4 sm:grid-cols-2">
                                     <div>
                                         <h2 className="mb-2 text-sm font-semibold">Saved customer details</h2>

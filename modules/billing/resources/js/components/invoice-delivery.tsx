@@ -1,4 +1,4 @@
-import { router, useForm } from '@inertiajs/react';
+import { router, useForm, usePage } from '@inertiajs/react';
 import { Badge } from '@shared/components/ui/badge';
 import { Button } from '@shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@shared/components/ui/card';
@@ -8,10 +8,13 @@ import { Label } from '@shared/components/ui/label';
 import { PhoneInput } from '@shared/components/ui/phone-input';
 import { Textarea } from '@shared/components/ui/textarea';
 import { statusTone } from '@shared/lib/status-colors';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { InvoiceData } from '../invoice-types';
+import { deliveryTime, watchDelivery, type DeliveryEcho } from '../lib/delivery-history';
+import { parseRecipients, validEmail } from '../lib/recipients';
 import { BillingFeedback } from './billing-feedback';
 import { BillingSelect, BillingSelectItem } from './billing-select';
+import { EmailRecipients } from './email-recipients';
 export type DeliveryConfiguration = {
     smsEnabled: boolean;
     smsProvider: 'twilio' | 'msg91';
@@ -50,6 +53,13 @@ export function InvoiceDelivery({
     embedded?: boolean;
     initialOpen?: boolean;
 }) {
+    const { billingRealtime = false } = usePage<{ billingRealtime?: boolean }>().props;
+    const shouldWatch = billingRealtime && deliveries !== null;
+    useEffect(
+        () => watchDelivery((window as Window & { Echo?: DeliveryEcho }).Echo, shouldWatch, invoice.id, () => router.reload({ only: [reloadKey] })),
+        [shouldWatch, invoice.id, reloadKey],
+    );
+    const [recipientDraft, setRecipientDraft] = useState('');
     const [open, setOpen] = useState(initialOpen);
     const contacts = (invoice.customer_snapshot as { contacts?: { email?: string; phone?: string }[] }).contacts ?? [];
     const form = useForm({
@@ -64,6 +74,7 @@ export function InvoiceDelivery({
     });
     const sms = form.data.channel === 'sms';
     function compose(channel: 'email' | 'sms') {
+        setRecipientDraft('');
         form.clearErrors();
         form.setData({
             channel,
@@ -104,9 +115,6 @@ export function InvoiceDelivery({
                         <>
                             <div className="flex flex-wrap items-center justify-between gap-2">
                                 <p className="text-muted-foreground text-sm">Each send or intentional resend keeps a separate record.</p>
-                                <Button variant="ghost" onClick={() => router.reload({ only: [reloadKey] })}>
-                                    Refresh history
-                                </Button>
                             </div>
                             {deliveries.length === 0 ? (
                                 <p className="text-muted-foreground text-sm">No delivery attempts.</p>
@@ -125,7 +133,8 @@ export function InvoiceDelivery({
                                                 <span className="text-sm">{delivery.subject}</span>
                                             </div>
                                             <p className="text-muted-foreground text-sm break-all">
-                                                {delivery.recipients.join(', ')} · {delivery.created_at}
+                                                {delivery.recipients.join(', ')} ·{' '}
+                                                <time dateTime={delivery.created_at}>{deliveryTime(delivery.created_at)}</time>
                                             </p>
                                             {delivery.actor_name && (
                                                 <p className="text-muted-foreground text-xs">Requested by {delivery.actor_name}</p>
@@ -135,7 +144,11 @@ export function InvoiceDelivery({
                                                     Provider reference: {delivery.provider_reference}
                                                 </p>
                                             )}
-                                            {delivery.sent_at && <p className="text-sm">Provider accepted: {delivery.sent_at}</p>}
+                                            {delivery.sent_at && (
+                                                <p className="text-sm">
+                                                    Provider accepted: <time dateTime={delivery.sent_at}>{deliveryTime(delivery.sent_at)}</time>
+                                                </p>
+                                            )}
                                             {delivery.error && <BillingFeedback kind="error">{delivery.error}</BillingFeedback>}
                                         </li>
                                     ))}
@@ -164,15 +177,14 @@ export function InvoiceDelivery({
                         className="space-y-4"
                         onSubmit={(event) => {
                             event.preventDefault();
+                            const emails = parseRecipients([form.data.recipients, recipientDraft].join(','));
+                            if (!sms && (!emails.length || emails.length > 10 || emails.some((email) => !validEmail(email)))) {
+                                form.setError('recipients', 'Add between one and ten valid email addresses.');
+                                return;
+                            }
                             form.transform((data) => ({
                                 ...data,
-                                recipients:
-                                    data.channel === 'sms'
-                                        ? [data.recipients]
-                                        : data.recipients
-                                              .split(/[\n,;]+/)
-                                              .map((email) => email.trim())
-                                              .filter(Boolean),
+                                recipients: data.channel === 'sms' ? [data.recipients] : emails,
                             }));
                             form.post(route('admin.invoices.send', invoice.id), { preserveScroll: true, onSuccess: () => setOpen(false) });
                         }}
@@ -209,18 +221,19 @@ export function InvoiceDelivery({
                                     disabled={form.processing}
                                 />
                             ) : (
-                                <Textarea
-                                    id="invoice-email-recipients"
+                                <EmailRecipients
                                     value={form.data.recipients}
-                                    onChange={(e) => form.setData('recipients', e.target.value)}
-                                    required
+                                    draft={recipientDraft}
+                                    onDraft={setRecipientDraft}
+                                    onChange={(value) => form.setData('recipients', value)}
                                     disabled={form.processing}
+                                    suggestions={contacts.flatMap((contact) => (contact.email ? [contact.email] : []))}
                                 />
                             )}
                             <p className="text-muted-foreground text-xs">
                                 {sms
                                     ? 'Use an international number with its country code.'
-                                    : 'Separate email addresses with commas. Up to ten recipients.'}
+                                    : 'Each address receives the same invoice. Remove an address using its × button.'}
                             </p>
                         </div>
                         {!sms && (

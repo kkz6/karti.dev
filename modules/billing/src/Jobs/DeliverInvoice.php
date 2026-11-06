@@ -56,6 +56,25 @@ class DeliverInvoice implements ShouldQueue
 
     public function handle(EmailConfiguration $configuration): void
     {
+        try {
+            $this->deliver($configuration);
+        } finally {
+            $this->notifyHistory();
+        }
+    }
+
+    private function notifyHistory(): void
+    {
+        if (\Modules\Billing\Events\InvoiceDeliveryUpdated::enabled()) {
+            $invoiceId = InvoiceDelivery::whereKey($this->deliveryId)->value('invoice_id');
+            if ($invoiceId) {
+                rescue(fn () => \Modules\Billing\Events\InvoiceDeliveryUpdated::dispatch((int) $invoiceId), report: true);
+            }
+        }
+    }
+
+    private function deliver(EmailConfiguration $configuration): void
+    {
         app()->forgetInstance(BillingAutomationSettings::class);
         $delivery = InvoiceDelivery::with('invoice')->findOrFail($this->deliveryId);
         if (in_array($delivery->state, ['sent', 'failed', 'uncertain', 'skipped'], true)) {
@@ -114,5 +133,6 @@ class DeliverInvoice implements ShouldQueue
     {
         InvoiceDelivery::whereKey($this->deliveryId)->where('state', 'queued')->update(['state' => 'failed', 'error' => 'Delivery worker failed. Check queue configuration and explicitly resend.']);
         InvoiceDelivery::whereKey($this->deliveryId)->where('state', 'sending')->update(['state' => 'uncertain', 'error' => 'Delivery worker stopped during sending. Check provider history before resending.']);
+        $this->notifyHistory();
     }
 }

@@ -50,7 +50,7 @@ test('invoice row menus expose draft editing and permission based document actio
         ->and($actions['invoice-payments']->isHidden($draft))->toBeTrue();
     $issued         = clone $draft;
     $issued->status = 'issued';
-    expect($actions['invoice-edit']->isHidden($issued))->toBeTrue()
+    expect($actions['invoice-edit']->isHidden($issued))->toBeFalse()
         ->and($actions['invoice-sharing']->isHidden($issued))->toBeFalse();
     $reader = User::factory()->create()->givePermissionTo(['view any invoice', 'view invoice']);
     $this->actingAs($reader);

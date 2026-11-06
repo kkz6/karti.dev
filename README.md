@@ -113,6 +113,8 @@ php artisan queue:work
 
 For production, run the worker under a process supervisor or use Laravel Horizon.
 
+Invoice delivery, payment receipts and payment-provider processing use the configured default queue. Horizon is optional. After upgrading from the previous dedicated `billing` queue, drain jobs already waiting there with `php artisan queue:work --queue=default,billing`. Moving new jobs to the default queue does not move jobs that are already queued.
+
 ### Media storage
 
 Local storage works out of the box. To use S3, set `FILESYSTEM_DISK=s3` and configure the `AWS_*` values in `.env`. Image presets and the code-managed compression defaults are visible under **Admin → Media settings**.

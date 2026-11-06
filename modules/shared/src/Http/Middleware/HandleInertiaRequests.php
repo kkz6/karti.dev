@@ -59,7 +59,8 @@ class HandleInertiaRequests extends Middleware
             'auth'             => [
                 'user' => $request->user(),
             ],
-            'billingAccess' => [
+            'billingRealtime' => \Modules\Billing\Events\InvoiceDeliveryUpdated::enabled(),
+            'billingAccess'   => [
                 'viewImports'        => ($request->user()?->hasRole('super-admin') ?? false) || ($request->user()?->can('import billing data') ?? false),
                 'viewCredits'        => $request->user()?->can('viewAny', \Modules\Billing\Models\CreditNote::class) ?? false,
                 'viewReconciliation' => ($request->user()?->hasRole('super-admin') ?? false) || ($request->user()?->can('view payment reconciliation') ?? false),

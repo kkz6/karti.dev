@@ -90,7 +90,7 @@ class ManagePayments
 
             $automation = app(\Modules\Billing\Settings\BillingAutomationSettings::class);
             if (($input['send_receipt'] ?? true) && ($automation->receipt_email || $automation->receipt_sms)) {
-                \Modules\Billing\Jobs\QueuePaymentReceipt::dispatch($payment->id)->onQueue('billing')->afterCommit();
+                \Modules\Billing\Jobs\QueuePaymentReceipt::dispatch($payment->id)->afterCommit();
             }
 
             return $payment;

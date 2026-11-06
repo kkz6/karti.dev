@@ -37,7 +37,7 @@ class ReconcileOnlinePayments extends Command
             }
         }
         foreach (ProviderEvent::whereIn('state', ['pending', 'failed'])->limit(100)->get() as $event) {
-            ProcessProviderEvent::dispatch($event->id)->onQueue('billing');
+            ProcessProviderEvent::dispatch($event->id);
         }$this->info($count.' online checkout payments checked.');
 
         return self::SUCCESS;

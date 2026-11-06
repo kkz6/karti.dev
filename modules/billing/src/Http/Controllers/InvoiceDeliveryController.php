@@ -32,6 +32,6 @@ class InvoiceDeliveryController extends BaseController
         ]);
         $action->handle($invoice, $input, $request->user());
 
-        return to_route('admin.invoices.show', $invoice)->with('billing_message', 'Invoice '.($sms ? 'SMS' : 'email').' queued. Delivery history will update after the billing queue worker runs.');
+        return to_route('admin.invoices.show', $invoice)->with('billing_message', 'Invoice '.($sms ? 'SMS' : 'email').' queued. Delivery history will update after the queue worker runs.');
     }
 }

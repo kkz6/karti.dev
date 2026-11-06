@@ -20,7 +20,7 @@ class ProviderWebhookController
         abort_unless(is_string($data['event_id'] ?? null) && $data['event_id'] !== '' && strlen($data['event_id']) <= 255 && is_string($data['event_type'] ?? null) && strlen($data['event_type']) <= 255 && is_array($data['payload'] ?? null), 400);
         $event = ProviderEvent::firstOrCreate(['provider' => $provider, 'event_id' => $data['event_id']], ['event_type' => $data['event_type'], 'payload' => $data['payload']]);
         if (in_array($event->state, ['pending', 'failed'], true)) {
-            ProcessProviderEvent::dispatch($event->id)->onQueue('billing');
+            ProcessProviderEvent::dispatch($event->id);
         }
 
         return response()->json(['received' => true]);

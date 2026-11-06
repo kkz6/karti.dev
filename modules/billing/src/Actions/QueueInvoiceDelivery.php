@@ -84,7 +84,7 @@ class QueueInvoiceDelivery
                 'payment_id'       => $payment?->id, 'actor_id' => $actor?->id, 'actor_name' => $actor?->name ?? 'System', 'invoice_url' => $link['url'],
             ]);
             $locked->recordActivity($channel.'_queued', 'Invoice '.$channel.' queued for '.implode(', ', $recipients).'.', $actor);
-            DeliverInvoice::dispatch($delivery->id)->onQueue('billing')->afterCommit();
+            DeliverInvoice::dispatch($delivery->id)->afterCommit();
 
             return $delivery;
         }, 5);

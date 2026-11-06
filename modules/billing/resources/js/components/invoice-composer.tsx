@@ -102,7 +102,7 @@ export function InvoiceComposer({
     }, [open, invoiceId, customerId]);
     const close = async () => {
         if (busy || formBusy) return;
-        if (dirty && !(await confirm('Discard your unsaved invoice changes? Saved draft details will be kept.'))) return;
+        if (dirty && !(await confirm('Discard your unsaved invoice changes? Saved details will be kept.'))) return;
         if (saved || issued) {
             setBusy(true);
             const url = new URL(window.location.href);
@@ -169,10 +169,10 @@ export function InvoiceComposer({
         if (
             !(await confirm(
                 action === 'send'
-                    ? 'Issue this invoice? Its number and financial details will become permanent. You will review the recipients and message before sending.'
+                    ? 'Issue this invoice? Its number will become permanent. Later edits are recorded in its history. You will review the recipients and message before sending.'
                     : action === 'payment'
-                      ? 'Issue this invoice? Its number and financial details will become permanent. You will enter the payment details next; no payment is recorded yet.'
-                      : 'Issue this invoice without sending? Its number and financial details will become permanent.',
+                      ? 'Issue this invoice? Its number will become permanent. Later edits are recorded in its history. You will enter the payment details next; no payment is recorded yet.'
+                      : 'Issue this invoice without sending? Its number will become permanent. Later edits are recorded in its history.',
             ))
         )
             return;
@@ -237,20 +237,24 @@ export function InvoiceComposer({
                                     ? 'Issued'
                                     : stage === 'review'
                                       ? 'Final review'
-                                      : saved
-                                        ? 'Draft saved'
-                                        : invoiceId
-                                          ? 'Draft'
-                                          : 'New draft'}
+                                      : seed?.invoice?.status === 'issued'
+                                        ? 'Issued'
+                                        : saved
+                                          ? 'Draft saved'
+                                          : invoiceId
+                                            ? 'Draft'
+                                            : 'New draft'}
                             </Badge>
                         </div>
                         <DialogDescription>
                             {stage === 'done'
                                 ? 'Your invoice has a permanent number and is ready to share.'
                                 : stage === 'review'
-                                  ? 'Check the company, customer and totals before creating a numbered invoice. Drafts stay editable until issued.'
+                                  ? 'Check the company, customer and totals before creating a numbered invoice. Later edits are recorded in the invoice history.'
                                   : invoiceId
-                                    ? 'Update your draft, arrange its items and review before issuing.'
+                                    ? seed?.invoice?.status === 'issued'
+                                        ? 'Update invoice details and items. Changes are recorded in its history.'
+                                        : 'Update your draft, arrange its items and review before issuing.'
                                     : 'Add customer details and items, then review your invoice before issuing.'}
                         </DialogDescription>
                     </DialogHeader>
@@ -278,7 +282,7 @@ export function InvoiceComposer({
                                 onSaved={(data) => {
                                     setSeed(data);
                                     setSaved(true);
-                                    toast.success('Invoice draft saved.');
+                                    toast.success(data.invoice?.status === 'issued' ? 'Invoice updated.' : 'Invoice draft saved.');
                                     setDirty(false);
                                 }}
                                 onReview={(invoice, action) => {

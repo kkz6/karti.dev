@@ -37,6 +37,7 @@ test('email entry queues one immutable attachment and exact retries create one a
     $this->post($url, $this->input)->assertSessionHasNoErrors();
     expect(InvoiceDelivery::count())->toBe(1);
     Queue::assertPushed(DeliverInvoice::class, 1);
+    Queue::assertPushed(DeliverInvoice::class, fn ($job) => $job->queue === null);
     Mail::assertNothingSent();
     $delivery=InvoiceDelivery::first();
     expect(hash('sha256', Storage::disk('local')->get($delivery->pdf_path)))->toBe($delivery->pdf_hash);
@@ -83,4 +84,27 @@ test('provider exceptions preserve an uncertain outcome without retries sending 
     (new DeliverInvoice($delivery->id))->handle($configuration);
     expect($delivery->fresh()->state)->toBe('uncertain')->and($delivery->fresh()->error)->not->toContain('Private transport detail');
     Mail::assertNothingSent();
+});
+
+test('delivery completion broadcasts only when realtime delivery is enabled', function (string $connection, bool $enabled) {
+    \Illuminate\Support\Facades\Event::fake([\Modules\Billing\Events\InvoiceDeliveryUpdated::class]);
+    config(['broadcasting.default' => $connection]);
+    $delivery = app(QueueInvoiceDelivery::class)->handle($this->invoice, $this->input, $this->admin);
+    (new DeliverInvoice($delivery->id))->handle(app(EmailConfiguration::class));
+    expect($delivery->fresh()->state)->toBe('sent');
+    if ($enabled) {
+        \Illuminate\Support\Facades\Event::assertDispatched(\Modules\Billing\Events\InvoiceDeliveryUpdated::class, fn ($event) => $event->invoiceId === $this->invoice->id && $event->broadcastWith() === ['invoiceId' => $this->invoice->id]);
+    } else {
+        \Illuminate\Support\Facades\Event::assertNotDispatched(\Modules\Billing\Events\InvoiceDeliveryUpdated::class);
+    }
+})->with([['log', false], ['null', false], ['pusher', true]]);
+
+test('delivery channel authorization requires invoice view and send permissions', function () {
+    $channels  = \Illuminate\Support\Facades\Broadcast::getChannels();
+    $authorize = $channels['billing.invoices.{invoice}'];
+    $reader    = User::factory()->create()->givePermissionTo('view invoice');
+    $sender    = User::factory()->create()->givePermissionTo('send invoice');
+    expect($authorize($reader, $this->invoice->id))->toBeFalse()
+        ->and($authorize($sender, $this->invoice->id))->toBeFalse()
+        ->and($authorize($this->admin, $this->invoice->id))->toBeTrue();
 });
