@@ -14,6 +14,6 @@ class InvoiceActivity extends Model
 
     protected function casts(): array
     {
-        return ['created_at' => 'datetime'];
+        return ['created_at' => 'datetime', 'changes' => 'array'];
     }
 }

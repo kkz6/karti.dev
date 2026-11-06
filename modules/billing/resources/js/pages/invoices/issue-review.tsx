@@ -96,10 +96,10 @@ export default function IssueReview({
         if (
             await confirm(
                 action === 'send'
-                    ? 'Issue this invoice? Its number and financial details will become permanent. You will review the recipients and message before sending.'
+                    ? 'Issue this invoice? Its number will become permanent. Later edits are recorded in its history. You will review the recipients and message before sending.'
                     : action === 'payment'
-                      ? 'Issue this invoice? Its number and financial details will become permanent. You will enter the payment details next; no payment is recorded yet.'
-                      : 'Issue this invoice without sending? Its number and financial details will become permanent.',
+                      ? 'Issue this invoice? Its number will become permanent. Later edits are recorded in its history. You will enter the payment details next; no payment is recorded yet.'
+                      : 'Issue this invoice without sending? Its number will become permanent. Later edits are recorded in its history.',
             )
         ) {
             if (action === 'payment') {
@@ -146,7 +146,7 @@ export default function IssueReview({
                     <p className="text-muted-foreground mt-2 text-sm">
                         {issued
                             ? 'The invoice has a permanent number. You can return to your invoices when you are done.'
-                            : 'Check the company, customer and totals. Issuing assigns a permanent number and locks the billing details.'}
+                            : 'Check the company, customer and totals. Issuing assigns a permanent number. Later edits are recorded in the invoice history.'}
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-6">

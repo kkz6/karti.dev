@@ -24,7 +24,30 @@ class SaveInvoiceRequest extends FormRequest
     {
         $decimal = ['required', 'string', 'regex:/^(?:0|[1-9][0-9]{0,8})(?:\.[0-9]{1,4})?$/'];
 
+        $billing                                                    = ['billing_details' => ['sometimes', 'array:customer,seller'], 'billing_details.customer' => ['sometimes', 'array:display_name,legal_name,billing_address,billing_address_line_2,billing_city,billing_state,billing_postal_code,billing_country,tax_identifier,phone'], 'billing_details.seller' => ['sometimes', 'array:legal_name,address,address_line_2,city,state,postal_code,country,tax_identifier,email,phone']];
+        $billing['billing_details.customer.display_name']           = ['required_with:billing_details.customer', 'string', 'max:255'];
+        $billing['billing_details.customer.legal_name']             = ['nullable', 'string', 'max:255'];
+        $billing['billing_details.customer.billing_address']        = ['required_with:billing_details.customer', 'string', 'max:255'];
+        $billing['billing_details.customer.billing_address_line_2'] = ['nullable', 'string', 'max:255'];
+        $billing['billing_details.customer.billing_city']           = ['nullable', 'string', 'max:255'];
+        $billing['billing_details.customer.billing_state']          = ['nullable', 'string', 'max:255'];
+        $billing['billing_details.customer.billing_postal_code']    = ['nullable', 'string', 'max:255'];
+        $billing['billing_details.customer.billing_country']        = ['required_with:billing_details.customer', 'string', 'max:255', 'regex:/^[A-Z]{2}$/'];
+        $billing['billing_details.customer.tax_identifier']         = ['nullable', 'string', 'max:255'];
+        $billing['billing_details.customer.phone']                  = ['nullable', 'string', 'max:255'];
+        $billing['billing_details.seller.legal_name']               = ['required_with:billing_details.seller', 'string', 'max:255'];
+        $billing['billing_details.seller.address']                  = ['required_with:billing_details.seller', 'string', 'max:255'];
+        $billing['billing_details.seller.address_line_2']           = ['nullable', 'string', 'max:255'];
+        $billing['billing_details.seller.city']                     = ['nullable', 'string', 'max:255'];
+        $billing['billing_details.seller.state']                    = ['nullable', 'string', 'max:255'];
+        $billing['billing_details.seller.postal_code']              = ['nullable', 'string', 'max:255'];
+        $billing['billing_details.seller.country']                  = ['required_with:billing_details.seller', 'string', 'max:255', 'regex:/^[A-Z]{2}$/'];
+        $billing['billing_details.seller.tax_identifier']           = ['nullable', 'string', 'max:255'];
+        $billing['billing_details.seller.email']                    = ['nullable', 'string', 'max:255', 'email'];
+        $billing['billing_details.seller.phone']                    = ['nullable', 'string', 'max:255'];
+
         return [
+            ...$billing,
             'customer_id'                 => ['required', 'integer', Rule::exists('billing_customers', 'id'), Rule::when($this->route('customer') !== null, fn () => Rule::in([$this->route('customer')->id]))],
             'version'                     => [$this->route('invoice') ? 'required' : 'nullable', 'integer', 'min:1'],
             'invoice_date'                => ['required', 'date_format:Y-m-d'], 'due_date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:invoice_date'],

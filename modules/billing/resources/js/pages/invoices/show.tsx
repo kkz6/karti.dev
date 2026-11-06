@@ -226,10 +226,10 @@ export default function InvoiceDetail({
         </DropdownMenu>
     );
     const primaryAction = (size: 'sm' | 'default') =>
-        draft && canUpdate ? (
+        canUpdate ? (
             <Button size={size} onClick={() => setComposing(true)}>
                 <Pencil className="size-4" />
-                Edit draft
+                {draft ? 'Edit draft' : 'Edit invoice'}
             </Button>
         ) : draft && canIssue ? (
             <Button size={size} asChild>
@@ -457,7 +457,7 @@ export default function InvoiceDetail({
                     }
                 />
             </PageContainer>
-            {draft && canUpdate && <InvoiceComposer invoiceId={invoice.id} open={composing} onClose={() => setComposing(false)} reloadOnly={null} />}
+            {canUpdate && <InvoiceComposer invoiceId={invoice.id} open={composing} onClose={() => setComposing(false)} reloadOnly={null} />}
             {hasSharing && (
                 <InvoiceSharingDialog
                     open={sharingOpen}

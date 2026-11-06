@@ -144,7 +144,7 @@ class OnlinePaymentsController extends BaseController
     {
         abort_unless($request->user()->hasRole('super-admin') || $request->user()->can('view payment reconciliation'), 403);
         abort_unless(in_array($event->state, ['failed', 'pending'], true), 409, 'This event is already processed or requires manual review.');
-        ProcessProviderEvent::dispatch($event->id)->onQueue('billing');
+        ProcessProviderEvent::dispatch($event->id);
 
         return back()->with('billing_message', 'Provider event queued for verification.');
     }

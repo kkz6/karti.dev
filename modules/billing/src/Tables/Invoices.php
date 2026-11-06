@@ -78,7 +78,7 @@ class Invoices extends Table
             Action::make('Download PDF', id: 'invoice-pdf', authorize: fn () => Gate::allows('download', new Invoice), hidden: fn (Invoice $invoice) => Gate::denies('download', $invoice), icon: 'download'),
             Action::make('Payment history', id: 'invoice-payments', authorize: fn () => Gate::allows('view', new \Modules\Billing\Models\Payment), hidden: fn (Invoice $invoice) => $invoice->status === 'draft' || Gate::denies('view', $invoice), icon: 'credit-card'),
             Action::make('Email & sharing', id: 'invoice-sharing', authorize: fn () => Gate::allows('view', new Invoice), hidden: fn (Invoice $invoice) => $invoice->status !== 'issued' || (Gate::denies('send', $invoice) && Gate::denies('share', $invoice)), icon: 'mail'),
-            Action::make('Edit draft', id: 'invoice-edit', authorize: fn () => Gate::allows('update', new Invoice), hidden: fn (Invoice $invoice) => $invoice->status !== 'draft' || Gate::denies('update', $invoice), icon: 'pencil'),
+            Action::make('Edit invoice', id: 'invoice-edit', authorize: fn () => Gate::allows('update', new Invoice), hidden: fn (Invoice $invoice) => $invoice->status === 'cancelled' || Gate::denies('update', $invoice), icon: 'pencil'),
         ];
     }
 

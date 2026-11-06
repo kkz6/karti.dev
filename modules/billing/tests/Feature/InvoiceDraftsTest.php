@@ -169,11 +169,11 @@ test('read only access cannot edit or preview an editable draft', function () {
     $this->postJson(route('admin.invoices.draft-preview', $invoice), invoiceDraftPayload($this->customer->id, ['version' => 1]))->assertForbidden();
 });
 
-test('only draft lifecycle is editable and payment input is required', function () {
+test('issued invoices remain editable and payment input is required', function () {
     $invoice = createDraftForTest($this->customer->id);
     $invoice->forceFill(['status' => 'issued'])->save();
-    $this->get(route('admin.invoices.edit', $invoice))->assertStatus(409);
-    $this->patch(route('admin.invoices.update', $invoice), invoiceDraftPayload($this->customer->id, ['version' => 1]))->assertStatus(409);
+    $this->get(route('admin.invoices.edit', $invoice))->assertRedirect();
+    $this->patch(route('admin.invoices.update', $invoice), invoiceDraftPayload($this->customer->id, ['version' => 1]))->assertSessionHasNoErrors();
     $this->post('/admin/invoices/'.$invoice->id.'/issue')->assertSessionHasErrors('review_token');
     $this->post('/admin/invoices/'.$invoice->id.'/payments')->assertSessionHasErrors(['version', 'request_key', 'amount']);
 });
@@ -201,7 +201,7 @@ test('invoice table shows IDs and sorts by creation time with an ID tie breaker'
 
 test('invoice table customer links point to the related customer independently of invoice preview', function () {
     $invoice = createDraftForTest($this->customer->id);
-    $row = Invoices::make()->toArray()['results']['data'][0];
+    $row     = Invoices::make()->toArray()['results']['data'][0];
     expect($row['_column_urls']['customer_name'])->toBe(route('admin.customers.show', $this->customer->id))
         ->and($row['_column_urls']['formatted_number'])->toBe(route('admin.invoices.index', ['invoice'=>$invoice->id]));
 });

@@ -24,6 +24,14 @@ class BillingServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        \Illuminate\Support\Facades\Broadcast::channel('billing.invoices.{invoice}', function ($user, $invoiceId) {
+            $invoice = \Modules\Billing\Models\Invoice::find($invoiceId);
+
+            return $invoice && $user->can('view', $invoice) && $user->can('send', $invoice);
+        });
+        if (\Modules\Billing\Events\InvoiceDeliveryUpdated::enabled() && ! \Illuminate\Support\Facades\Route::has('broadcasting.auth')) {
+            \Illuminate\Support\Facades\Broadcast::routes(['middleware' => ['web', 'auth']]);
+        }
         $this->loadViewsFrom(__DIR__.'/../../resources/views', 'billing');
         $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
         $this->loadRoutesFrom(__DIR__.'/../../routes/billing-routes.php');

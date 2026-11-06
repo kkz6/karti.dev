@@ -22,6 +22,7 @@ export type InvoiceFormData = {
     terms: string;
     payment_instructions: string;
     refresh_customer: boolean;
+    billing_details: { customer: Record<string, string>; seller: Record<string, string> };
     items: InvoiceLine[];
 };
 export type InvoiceTotals = {
@@ -35,7 +36,7 @@ export type InvoiceTotals = {
     tax_groups: { name: string; percentage: string; amount: string }[];
 };
 export type CustomerChoice = { id: number; display_name: string; default_currency: string | null; archived_at: string | null };
-export type InvoiceData = Omit<InvoiceFormData, 'customer_id' | 'refresh_customer'> & {
+export type InvoiceData = Omit<InvoiceFormData, 'customer_id' | 'refresh_customer' | 'billing_details'> & {
     logo?: string | null;
     id: number;
     customer_id: number;
@@ -72,6 +73,39 @@ export function editableInvoice(invoice: InvoiceData): InvoiceFormData {
         internal_note: invoice.internal_note ?? '',
         terms: invoice.terms ?? '',
         payment_instructions: invoice.payment_instructions ?? '',
+        billing_details:
+            invoice.status === 'issued'
+                ? {
+                      customer: Object.fromEntries(
+                          [
+                              'display_name',
+                              'legal_name',
+                              'billing_address',
+                              'billing_address_line_2',
+                              'billing_city',
+                              'billing_state',
+                              'billing_postal_code',
+                              'billing_country',
+                              'tax_identifier',
+                              'phone',
+                          ].map((key) => [key, String((invoice.customer_snapshot as Record<string, unknown>)[key] ?? '')]),
+                      ),
+                      seller: Object.fromEntries(
+                          [
+                              'legal_name',
+                              'address',
+                              'address_line_2',
+                              'city',
+                              'state',
+                              'postal_code',
+                              'country',
+                              'tax_identifier',
+                              'email',
+                              'phone',
+                          ].map((key) => [key, String((invoice.seller_snapshot as Record<string, unknown>)[key] ?? '')]),
+                      ),
+                  }
+                : { customer: {}, seller: {} },
         refresh_customer: false,
         items: invoice.items.map((line) => ({ ...line, additional_description: line.additional_description ?? '' })),
     };

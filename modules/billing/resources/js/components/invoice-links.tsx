@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@shared/components/ui/
 import { Input } from '@shared/components/ui/input';
 import { Label } from '@shared/components/ui/label';
 import { toast } from 'sonner';
+import { deliveryTime } from '../lib/delivery-history';
 import { BillingFeedback } from './billing-feedback';
 import { useBillingConfirm } from './use-billing-confirm';
 export type PrivateInvoiceLink = { id: number; label: string | null; expires_at: string; revoked_at: string | null };
@@ -99,7 +100,9 @@ export function InvoiceLinks({
                         <li key={link.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                             <div>
                                 <p className="text-sm">{link.label || `Link #${link.id}`}</p>
-                                <p className="text-muted-foreground text-xs">{link.revoked_at ? 'Revoked' : `Expires ${link.expires_at}`}</p>
+                                <p className="text-muted-foreground text-xs">
+                                    {link.revoked_at ? 'Revoked' : `Expires ${deliveryTime(link.expires_at)}`}
+                                </p>
                             </div>
                             {canShare && !link.revoked_at && (
                                 <Button

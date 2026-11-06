@@ -128,9 +128,9 @@ test('saved or current snapshots are explicitly selectable and issued values are
     $this->customer->update(['display_name' => 'Another customer']);
     app(BillingSettings::class)->fill(['legal_name' => 'Another issuer', 'payment_instructions' => 'New instructions'])->save();
     $this->get(route('admin.invoices.show', $invoice))->assertOk()->assertInertia(fn (Assert $page) => $page->where('invoice.seller_snapshot.legal_name', 'Example Issuer')->where('invoice.customer_snapshot.display_name', 'Example Customer')->where('invoice.payment_instructions', 'Original instructions')->where('invoice.totals.total', '1180.00'));
-    $this->get(route('admin.invoices.edit', $invoice))->assertStatus(409);
+    $this->get(route('admin.invoices.edit', $invoice))->assertRedirect();
     $data = app(\Modules\Billing\Services\InvoicePresentation::class)->data($invoice);
-    $this->patch(route('admin.invoices.update', $invoice), [...$data, 'status' => 'draft', 'formatted_number' => 'CHANGED', 'total_minor' => 1])->assertStatus(409);
+    $this->patch(route('admin.invoices.update', $invoice), [...$data, 'status' => 'draft', 'formatted_number' => 'CHANGED', 'total_minor' => 1])->assertSessionHasNoErrors();
     expect($invoice->fresh()->formatted_number)->toBe('INV-000001')->and($invoice->fresh()->total_minor)->toBe(118000);
 });
 

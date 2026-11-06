@@ -10,9 +10,9 @@ use Modules\Billing\Models\TaxRate;
 
 class ValidateDraftReferences
 {
-    public function check(array $data, ?Invoice $invoice = null, bool $lock = false): Customer
+    public function check(array $data, ?Invoice $invoice = null, bool $lock = false, bool $allowIssued = false): Customer
     {
-        abort_if($invoice && $invoice->status !== 'draft', 409, 'Only draft invoices can be edited.');
+        abort_if($invoice && $invoice->status !== 'draft' && ! ($allowIssued && $invoice->status === 'issued'), 409, 'This invoice cannot be edited.');
         if ($invoice && $invoice->version !== (int) $data['version']) {
             throw ValidationException::withMessages(['version' => 'This draft changed in another session. Reload it before saving your changes.']);
         }

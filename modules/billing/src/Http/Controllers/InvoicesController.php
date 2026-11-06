@@ -36,7 +36,7 @@ class InvoicesController extends BaseController
         $editing=$request->filled('edit') ? Invoice::findOrFail($request->integer('edit')) : null;
         if ($editing) {
             $this->authorize('update', $editing);
-            if ($editing->status !== 'draft') {
+            if ($editing->status === 'cancelled') {
                 return to_route('admin.invoices.index', \Illuminate\Support\Arr::except($request->query(), ['edit', 'compose']));
             }
         }
@@ -72,7 +72,7 @@ class InvoicesController extends BaseController
     {
         $this->authorize('view', $customer);
         $this->authorize('update', $invoice);
-        abort_unless((int) $invoice->customer_id === (int) $customer->id && $invoice->status === 'draft', 404);
+        abort_unless((int) $invoice->customer_id === (int) $customer->id && in_array($invoice->status, ['draft', 'issued'], true), 404);
 
         return $this->form($request, $invoice, lockedCustomer: $customer);
     }
@@ -87,7 +87,7 @@ class InvoicesController extends BaseController
     public function updateForCustomer(SaveInvoiceRequest $request, Customer $customer, Invoice $invoice, SaveInvoiceDraft $action): Response|JsonResponse
     {
         abort_unless((int) $invoice->customer_id === (int) $customer->id, 404);
-        $invoice = $action->handle($request->validated(), $invoice);
+        $invoice = $invoice->status === 'issued' ? app(\Modules\Billing\Actions\ReviseInvoice::class)->handle($request->validated(), $invoice) : $action->handle($request->validated(), $invoice);
 
         return $this->form($request, $invoice, lockedCustomer: $customer);
     }
@@ -110,7 +110,7 @@ class InvoicesController extends BaseController
     public function edit(Request $request, Invoice $invoice): Response|JsonResponse|RedirectResponse
     {
         $this->authorize('update', $invoice);
-        abort_if($invoice->status !== 'draft', 409, 'Only draft invoices can be edited.');
+        abort_if($invoice->status === 'cancelled', 409, 'Cancelled invoices cannot be edited.');
 
         if ($request->expectsJson()) {
             return $this->form($request, $invoice);
@@ -137,7 +137,7 @@ class InvoicesController extends BaseController
     public function preview(SaveInvoiceRequest $request, InvoiceCalculator $calculator, ValidateDraftReferences $references, ?Invoice $invoice = null): JsonResponse
     {
         $data = $request->validated();
-        $references->check($data, $invoice);
+        $references->check($data, $invoice, false, $invoice?->status === 'issued');
 
         return response()->json($calculator->calculate($data));
     }
@@ -155,7 +155,7 @@ class InvoicesController extends BaseController
 
     public function update(SaveInvoiceRequest $request, Invoice $invoice, SaveInvoiceDraft $action): RedirectResponse|JsonResponse
     {
-        $action->handle($request->validated(), $invoice);
+        $invoice->status === 'issued' ? app(\Modules\Billing\Actions\ReviseInvoice::class)->handle($request->validated(), $invoice) : $action->handle($request->validated(), $invoice);
 
         if ($request->expectsJson()) {
             return $this->form($request, $invoice->fresh());
@@ -208,6 +208,7 @@ class InvoicesController extends BaseController
         $settlement = $balance->data($invoice);
 
         return [
+            'canUpdate'             => $invoice->status === 'issued' && $request->user()->can('update', $invoice),
             'canUpdateInternalNote' => $request->user()->can('update', $invoice),
             'canCreateCredit'       => $invoice->status === 'issued' && $request->user()->can('create', \Modules\Billing\Models\CreditNote::class),
             'credits'               => $request->user()->can('view', new \Modules\Billing\Models\CreditNote) ? \Modules\Billing\Models\CreditNote::where('invoice_id', $invoice->id)->latest('id')->get()->map(fn ($c) => app(\Modules\Billing\Services\CreditNotePresentation::class)->data($c))->all() : null,
@@ -261,17 +262,17 @@ class InvoicesController extends BaseController
         $draft = $invoice ? $this->draftData($invoice) : null;
 
         $data = [
-            'lockedCustomer'  => $lockedCustomer?->only(['id', 'display_name', 'default_currency', 'archived_at']),
-            'invoice'         => $draft, 'customers' => $customers, 'currencies' => Currencies::options(),
-            'taxRates'        => $readOnly ? [] : TaxRate::whereNull('archived_at')->orderBy('name')->get(['id', 'name', 'percentage', 'archived_at']),
-            'defaults'        => $draft ? ['currency' => $draft['currency'], 'invoice_date' => $draft['invoice_date'], 'due_date' => $draft['due_date'] ?? '', 'terms' => $draft['terms'] ?? '', 'payment_instructions' => $draft['payment_instructions'] ?? ''] : ['currency' => $lockedCustomer?->default_currency ?: $settings->default_currency, 'invoice_date' => $today->format('Y-m-d'), 'due_date' => $today->addDays($settings->due_days)->format('Y-m-d'), 'terms' => $settings->default_terms, 'payment_instructions' => $settings->payment_instructions],
-            'canDownloadPdf'  => $invoice && $request->user()->can('download', $invoice), 'pdfError' => $request->session()->get('billing_pdf_error'),
-            'readOnly'        => $readOnly, 'canUpdate' => $invoice && $request->user()->can('update', $invoice) && $invoice->status === 'draft',
-            'canIssue'        => $request->user()->can('issue', $invoice ?? new Invoice) && (! $invoice || $invoice->status === 'draft'),
-            'canSend'         => $request->user()->can('send', $invoice ?? new Invoice),
+            'lockedCustomer'   => $lockedCustomer?->only(['id', 'display_name', 'default_currency', 'archived_at']),
+            'invoice'          => $draft, 'customers' => $customers, 'currencies' => Currencies::options(),
+            'taxRates'         => $readOnly ? [] : TaxRate::whereNull('archived_at')->orderBy('name')->get(['id', 'name', 'percentage', 'archived_at']),
+            'defaults'         => $draft ? ['currency' => $draft['currency'], 'invoice_date' => $draft['invoice_date'], 'due_date' => $draft['due_date'] ?? '', 'terms' => $draft['terms'] ?? '', 'payment_instructions' => $draft['payment_instructions'] ?? ''] : ['currency' => $lockedCustomer?->default_currency ?: $settings->default_currency, 'invoice_date' => $today->format('Y-m-d'), 'due_date' => $today->addDays($settings->due_days)->format('Y-m-d'), 'terms' => $settings->default_terms, 'payment_instructions' => $settings->payment_instructions],
+            'canDownloadPdf'   => $invoice && $request->user()->can('download', $invoice), 'pdfError' => $request->session()->get('billing_pdf_error'),
+            'readOnly'         => $readOnly, 'canUpdate' => $invoice && $request->user()->can('update', $invoice) && $invoice->status === 'draft',
+            'canIssue'         => $request->user()->can('issue', $invoice ?? new Invoice) && (! $invoice || $invoice->status === 'draft'),
+            'canSend'          => $request->user()->can('send', $invoice ?? new Invoice),
             'canRecordPayment' => $request->user()->can('record', [\Modules\Billing\Models\Payment::class, $invoice ?? new Invoice]),
-            'activities'      => $invoice ? $this->activities($invoice) : [],
-            'message'         => $request->session()->get('billing_message'),
+            'activities'       => $invoice ? $this->activities($invoice) : [],
+            'message'          => $request->session()->get('billing_message'),
         ];
 
         return $request->expectsJson() ? response()->json($data) : Inertia::render('billing::invoices/form', $data);
