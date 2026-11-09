@@ -45,6 +45,7 @@ Route::middleware(['web', 'auth', 'verified', \Modules\Billing\Http\Middleware\P
     Route::post('invoices/{invoice}/links', [\Modules\Billing\Http\Controllers\InvoiceLinkController::class, 'store'])->name('invoices.links.store');
     Route::post('invoices/{invoice}/links/{link}/revoke', [\Modules\Billing\Http\Controllers\InvoiceLinkController::class, 'revoke'])->scopeBindings()->name('invoices.links.revoke');
     Route::post('invoices/{invoice}/send', \Modules\Billing\Http\Controllers\InvoiceDeliveryController::class)->name('invoices.send');
+    Route::post('invoices/{invoice}/deliveries/{delivery}/send-now', [\Modules\Billing\Http\Controllers\InvoiceDeliveryController::class, 'sendNow'])->name('invoices.deliveries.send-now');
     Route::get('invoices/{invoice}/pdf', \Modules\Billing\Http\Controllers\InvoicePdfController::class)->name('invoices.pdf');
     Route::get('invoices/{invoice}/issue-review', [\Modules\Billing\Http\Controllers\InvoicesController::class, 'issueReview'])->name('invoices.issue-review');
     Route::post('invoices/{invoice}/issue', [\Modules\Billing\Http\Controllers\InvoicesController::class, 'issue'])->name('invoices.issue');
