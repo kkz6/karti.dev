@@ -271,6 +271,7 @@ class InvoicesController extends BaseController
             'canIssue'         => $request->user()->can('issue', $invoice ?? new Invoice) && (! $invoice || $invoice->status === 'draft'),
             'canSend'          => $request->user()->can('send', $invoice ?? new Invoice),
             'canRecordPayment' => $request->user()->can('record', [\Modules\Billing\Models\Payment::class, $invoice ?? new Invoice]),
+            'hasPayments'      => $invoice?->payments()->exists() ?? false,
             'activities'       => $invoice ? $this->activities($invoice) : [],
             'message'          => $request->session()->get('billing_message'),
         ];

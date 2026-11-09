@@ -8,7 +8,6 @@ import { IndexHeader } from '@shared/components/index-header';
 import { Badge } from '@shared/components/ui/badge';
 import { Button } from '@shared/components/ui/button';
 import { Card } from '@shared/components/ui/card';
-import { Checkbox } from '@shared/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@shared/components/ui/collapsible';
 import { Input } from '@shared/components/ui/input';
 import { Label } from '@shared/components/ui/label';
@@ -18,11 +17,12 @@ import AppLayout from '@shared/layouts/app-layout';
 import axios from 'axios';
 import { Receipt as BillingPageIcon, Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { BillingFeedback } from '../../components/billing-feedback';
 import { BillingSelect, BillingSelectItem } from '../../components/billing-select';
 import { CustomerPicker } from '../../components/customer-picker';
+import { InvoiceBillingAddress } from '../../components/invoice-billing-address';
 import { InvoiceHistory, type InvoiceActivity } from '../../components/invoice-document';
 import { InvoiceItemEditor, InvoiceItemsHeader } from '../../components/invoice-item-editor';
 import { InvoicePdfButtons } from '../../components/invoice-pdf-buttons';
@@ -57,6 +57,7 @@ export default function InvoiceForm({
     canIssue,
     canSend = false,
     canRecordPayment = false,
+    hasPayments = false,
     activities,
     footerTarget,
     embedded = false,
@@ -79,6 +80,7 @@ export default function InvoiceForm({
     canIssue: boolean;
     canSend?: boolean;
     canRecordPayment?: boolean;
+    hasPayments?: boolean;
     activities: InvoiceActivity[];
     footerTarget?: HTMLElement | null;
     embedded?: boolean;
@@ -107,6 +109,13 @@ export default function InvoiceForm({
     );
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState('');
+    const [savedSuccessfully, setSavedSuccessfully] = useState(false);
+    const errorSummary = useRef<HTMLDivElement>(null);
+    const focusErrors = () =>
+        requestAnimationFrame(() => {
+            errorSummary.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+            errorSummary.current?.focus({ preventScroll: true });
+        });
     const [previewErrors, setPreviewErrors] = useState<Record<string, string>>({});
     const busy = saving || form.processing;
     const sensors = useSensors(
@@ -186,7 +195,11 @@ export default function InvoiceForm({
                         ),
                     );
                     const messages = Object.values(errors).flat();
-                    setPreviewError(messages.length ? messages.map(String).join(' ') : 'Totals could not be calculated. Try again before saving.');
+                    setPreviewError(
+                        messages.length
+                            ? 'Complete the highlighted fields to calculate totals.'
+                            : 'Totals could not be calculated. Try again before saving.',
+                    );
                 });
         }, 350);
         return () => {
@@ -206,21 +219,30 @@ export default function InvoiceForm({
         rows.splice(index + direction, 0, line);
         form.setData('items', rows);
     };
-    const setCurrency = async (currency: string) => {
+    const setCurrency = (currency: string) => {
         if (currency === form.data.currency) return;
-        if (form.data.items.some((line) => line.rate !== '') && !(await confirm('Change invoice currency? Re-enter each price in the new currency.')))
-            return;
         form.setData({
             ...form.data,
             currency,
-            items: form.data.items.map((line) => ({ ...line, rate: '', service_id: null })),
-            discount_value: '0',
+            correct_payment_currency: false,
+            items: form.data.items.map((line) => ({ ...line, service_id: null })),
         });
     };
     const saveEmbedded = async (action: InvoiceSaveAction | 'draft' = 'draft') => {
         if (busy) return;
+        const correctingCurrency = hasPayments && invoice && form.data.currency !== invoice.currency;
+        if (
+            correctingCurrency &&
+            !(await confirm(
+                `Correct the currency from ${invoice.currency} to ${form.data.currency} on this invoice and all its recorded payments? Numeric amounts stay the same; no exchange conversion is applied.`,
+                { title: 'Correct invoice currency?', action: 'Correct currency and save', cancel: 'Keep editing' },
+            ))
+        )
+            return;
+        const payload = { ...form.data, correct_payment_currency: Boolean(correctingCurrency) };
         setSaving(true);
         setSaveError('');
+        setSavedSuccessfully(false);
         form.clearErrors();
         try {
             const response = invoice
@@ -228,17 +250,18 @@ export default function InvoiceForm({
                       lockedCustomer
                           ? route('admin.customers.invoices.update', [lockedCustomer.id, invoice.id])
                           : route('admin.invoices.update', invoice.id),
-                      form.data,
+                      payload,
                   )
                 : await axios.post(
                       lockedCustomer ? route('admin.customers.invoices.store', lockedCustomer.id) : route('admin.invoices.store'),
-                      form.data,
+                      payload,
                   );
             const saved = response.data as InvoiceFormSeed;
             const next = editableInvoice(saved.invoice!);
             form.setData(next);
             form.setDefaults(next);
             setTotals(saved.invoice!.totals);
+            setSavedSuccessfully(true);
             onSaved?.(saved);
             if (action !== 'draft') {
                 if (onReview) onReview(saved.invoice!, action);
@@ -258,6 +281,7 @@ export default function InvoiceForm({
                     ),
                 );
             } else setSaveError('The invoice could not be saved. Your entries are still here; try again.');
+            focusErrors();
         } finally {
             setSaving(false);
         }
@@ -270,6 +294,7 @@ export default function InvoiceForm({
         }
         const options = {
             preserveScroll: true,
+            onError: focusErrors,
             onSuccess: (page: { props: Record<string, unknown> }) => {
                 const saved = page.props.invoice as InvoiceData;
                 const data = editableInvoice(saved);
@@ -286,7 +311,16 @@ export default function InvoiceForm({
     const precision = currencies.find((currency) => currency.code === form.data.currency)?.precision ?? 2;
     const liveAmounts = lineAmounts(form.data, precision);
     const editorActions = (
-        <div className="flex flex-wrap items-center justify-end gap-3">
+        <div className="flex w-full flex-wrap items-center justify-end gap-3">
+            {saveError || Object.keys(form.errors).length > 0 ? (
+                <button type="button" className="text-destructive mr-auto text-left text-sm" onClick={focusErrors}>
+                    Not saved. Review the highlighted errors.
+                </button>
+            ) : savedSuccessfully && !form.isDirty ? (
+                <p role="status" className="text-muted-foreground mr-auto text-sm">
+                    Changes saved.
+                </p>
+            ) : null}
             <Button
                 type={embedded ? 'button' : 'submit'}
                 onClick={embedded ? () => void saveEmbedded() : undefined}
@@ -322,20 +356,26 @@ export default function InvoiceForm({
                         <div className="space-y-2">
                             <div className="flex items-center gap-3">
                                 <IndexHeader title={title} icon={BillingPageIcon} />
-                                <Badge variant="secondary">Draft</Badge>
+                                <Badge variant="secondary">{invoice?.status === 'issued' ? 'Issued' : 'Draft'}</Badge>
                             </div>
                             <p className="text-muted-foreground text-sm">Prepare the invoice details and review the totals before saving.</p>
                         </div>
                         {readOnly && canUpdate && invoice && (
                             <Button asChild>
-                                <Link href={route('admin.invoices.edit', invoice.id)}>Edit draft</Link>
+                                <Link href={route('admin.invoices.edit', invoice.id)}>
+                                    {invoice?.status === 'issued' ? 'Edit invoice' : 'Edit draft'}
+                                </Link>
                             </Button>
                         )}
                     </div>
                 )}
                 {!embedded && canDownloadPdf && invoice && (
                     <>
-                        <InvoicePdfButtons invoiceId={invoice.id} draft disabled={!readOnly && (form.isDirty || form.processing)} />
+                        <InvoicePdfButtons
+                            invoiceId={invoice.id}
+                            draft={invoice.status === 'draft'}
+                            disabled={!readOnly && (form.isDirty || form.processing)}
+                        />
                         {!readOnly && form.isDirty && <p className="text-muted-foreground text-sm">Save your changes before generating a PDF.</p>}
                     </>
                 )}
@@ -345,30 +385,37 @@ export default function InvoiceForm({
                         <Link href={route('admin.invoices.issue-review', invoice.id)}>Review and issue</Link>
                     </Button>
                 )}
-                {saveError && <BillingFeedback kind="error">{saveError}</BillingFeedback>}
                 <form noValidate={embedded} onSubmit={submit} className="space-y-6">
-                    {Object.values(form.errors).length > 0 && (
-                        <BillingFeedback kind="error">
-                            {Object.values(form.errors).map((error, i) => (
-                                <p key={i}>{error}</p>
-                            ))}
-                            {form.errors.version && invoice && (
-                                <Button
-                                    variant="outline"
-                                    type="button"
-                                    onClick={async () => {
-                                        if (await confirm('Reload the latest draft? Unsaved changes will be discarded.')) {
-                                            continueWithoutUnsavedChangesPrompt(() =>
-                                                router.visit(route('admin.invoices.edit', invoice.id), { preserveState: false }),
-                                            );
-                                        }
-                                    }}
-                                >
-                                    Reload draft
-                                </Button>
-                            )}
-                        </BillingFeedback>
-                    )}
+                    <div
+                        ref={errorSummary}
+                        tabIndex={-1}
+                        hidden={!saveError && Object.keys(form.errors).length === 0}
+                        className="scroll-mt-4 outline-none"
+                    >
+                        {(saveError || Object.values(form.errors).length > 0) && (
+                            <BillingFeedback kind="error" title="Changes were not saved">
+                                {saveError && <p>{saveError}</p>}
+                                {Object.values(form.errors).map((error, i) => (
+                                    <p key={i}>{error}</p>
+                                ))}
+                                {form.errors.version && invoice && (
+                                    <Button
+                                        variant="outline"
+                                        type="button"
+                                        onClick={async () => {
+                                            if (await confirm('Reload the latest invoice? Unsaved changes will be discarded.')) {
+                                                continueWithoutUnsavedChangesPrompt(() =>
+                                                    router.visit(route('admin.invoices.edit', invoice.id), { preserveState: false }),
+                                                );
+                                            }
+                                        }}
+                                    >
+                                        Reload invoice
+                                    </Button>
+                                )}
+                            </BillingFeedback>
+                        )}
+                    </div>
                     <fieldset disabled={readOnly || busy} className="min-w-0 space-y-6">
                         <div className="space-y-6">
                             <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -399,7 +446,7 @@ export default function InvoiceForm({
                                                     if (
                                                         !hasPrices ||
                                                         (await confirm(
-                                                            `Use this customer's ${preferred} default currency? Existing prices will be cleared for you to re-enter.`,
+                                                            `Use this customer's ${preferred} default currency? Entered prices will stay the same; no exchange conversion is applied.`,
                                                         ))
                                                     )
                                                         currency = preferred;
@@ -413,10 +460,10 @@ export default function InvoiceForm({
                                                     items:
                                                         currency === form.data.currency
                                                             ? form.data.items
-                                                            : form.data.items.map((item) => ({ ...item, rate: '', service_id: null })),
+                                                            : form.data.items.map((item) => ({ ...item, service_id: null })),
                                                 });
                                             }}
-                                            disabled={readOnly || busy}
+                                            disabled={readOnly || busy || hasPayments}
                                             placeholder="Choose customer"
                                         />
                                     )}
@@ -426,14 +473,8 @@ export default function InvoiceForm({
                                             This draft retains an archived customer. Restore the customer before issuing an invoice.
                                         </p>
                                     )}
-                                    {invoice && !readOnly && (
-                                        <Label className="flex items-center gap-2 text-xs">
-                                            <Checkbox
-                                                checked={form.data.refresh_customer}
-                                                onCheckedChange={(checked) => form.setData('refresh_customer', checked === true)}
-                                            />
-                                            Refresh customer billing details when saving
-                                        </Label>
+                                    {hasPayments && (
+                                        <p className="text-muted-foreground text-xs">Customer is fixed because this invoice has recorded payments.</p>
                                     )}
                                 </div>
                                 <div className="space-y-2">
@@ -461,7 +502,7 @@ export default function InvoiceForm({
                                         required
                                         value={form.data.currency}
                                         onValueChange={(value) => setCurrency(value)}
-                                        disabled={readOnly || busy}
+                                        disabled={readOnly || busy || (hasPayments && !canRecordPayment)}
                                         placeholder="Choose currency"
                                     >
                                         {currencies.map((currency) => (
@@ -470,71 +511,25 @@ export default function InvoiceForm({
                                             </BillingSelectItem>
                                         ))}
                                     </BillingSelect>
+                                    {form.data.currency !== (invoice?.currency ?? defaults.currency) && (
+                                        <p className="text-muted-foreground text-xs">
+                                            {hasPayments
+                                                ? 'Saving will correct the invoice and recorded payments to this currency. Amounts stay the same.'
+                                                : 'Prices stay the same. No exchange conversion is applied.'}
+                                        </p>
+                                    )}
                                 </div>
                             </section>
-                            {invoice?.status === 'issued' && (
-                                <section className="grid gap-4 sm:grid-cols-2" aria-label="Invoice billing details">
-                                    {(['customer', 'seller'] as const).map((party) => (
-                                        <Card key={party} className="space-y-3 p-4">
-                                            <h2 className="font-semibold">
-                                                {party === 'customer' ? 'Customer billing details' : 'Company billing details'}
-                                            </h2>
-                                            <div className="grid gap-3 sm:grid-cols-2">
-                                                {Object.entries(form.data.billing_details![party]).map(([field, value]) => (
-                                                    <div key={field} className="space-y-1">
-                                                        <Label htmlFor={`billing-${party}-${field}`}>
-                                                            {field
-                                                                .replace(/^billing_/, '')
-                                                                .replaceAll('_', ' ')
-                                                                .replace(/\b\w/g, (letter) => letter.toUpperCase())}
-                                                        </Label>
-                                                        <Input
-                                                            id={`billing-${party}-${field}`}
-                                                            value={value}
-                                                            disabled={party === 'customer' && form.data.refresh_customer}
-                                                            onChange={(event) =>
-                                                                form.setData('billing_details', {
-                                                                    ...form.data.billing_details!,
-                                                                    [party]: {
-                                                                        ...form.data.billing_details![party],
-                                                                        [field]: field.endsWith('country')
-                                                                            ? event.target.value.toUpperCase()
-                                                                            : event.target.value,
-                                                                    },
-                                                                })
-                                                            }
-                                                        />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </Card>
-                                    ))}
-                                </section>
-                            )}
-                            {invoice && invoice.status !== 'issued' && (
-                                <Card className="bg-muted/20 grid gap-4 p-4 sm:grid-cols-2">
-                                    <div>
-                                        <h2 className="mb-2 text-sm font-semibold">Saved customer details</h2>
-                                        <p className="text-sm">{invoice.customer_snapshot.legal_name || invoice.customer_snapshot.display_name}</p>
-                                        <p className="text-muted-foreground text-xs">
-                                            {[
-                                                invoice.customer_snapshot.billing_address,
-                                                invoice.customer_snapshot.billing_city,
-                                                invoice.customer_snapshot.billing_country,
-                                            ]
-                                                .filter(Boolean)
-                                                .join(', ')}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <h2 className="mb-2 text-sm font-semibold">Saved company identity</h2>
-                                        <p className="text-sm">
-                                            {invoice.seller_snapshot.legal_name ||
-                                                invoice.seller_snapshot.display_name ||
-                                                'Company details have not been configured.'}
-                                        </p>
-                                    </div>
-                                </Card>
+                            {invoice && String(invoice.customer_id) === form.data.customer_id && (
+                                <InvoiceBillingAddress
+                                    snapshot={invoice.customer_snapshot}
+                                    value={form.data.billing_details.customer}
+                                    refresh={form.data.refresh_customer}
+                                    disabled={readOnly || busy}
+                                    onApply={(customer, refresh) =>
+                                        form.setData({ ...form.data, billing_details: { customer, seller: {} }, refresh_customer: refresh })
+                                    }
+                                />
                             )}
 
                             <section className="space-y-3">
@@ -673,7 +668,7 @@ export default function InvoiceForm({
                                     ) : previewError ? (
                                         <div>
                                             <BillingFeedback kind="error">{previewError}</BillingFeedback>
-                                            {!readOnly && (
+                                            {!readOnly && Object.keys(previewErrors).length === 0 && (
                                                 <Button
                                                     variant="outline"
                                                     type="button"

@@ -205,3 +205,13 @@ test('invoice table customer links point to the related customer independently o
     expect($row['_column_urls']['customer_name'])->toBe(route('admin.customers.show', $this->customer->id))
         ->and($row['_column_urls']['formatted_number'])->toBe(route('admin.invoices.index', ['invoice'=>$invoice->id]));
 });
+
+test('draft saves optional units and invoice-specific billing address without changing company settings', function () {
+    $input                     = invoiceDraftPayload($this->customer->id);
+    $input['items'][0]['unit'] = '';
+    $input['billing_details']  = ['customer' => ['display_name' => 'Original customer', 'billing_address' => 'Invoice-only street', 'billing_country' => 'IE']];
+    $this->postJson(route('admin.invoices.store'), $input)->assertOk()
+        ->assertJsonPath('invoice.items.0.unit', '')
+        ->assertJsonPath('invoice.customer_snapshot.billing_address', 'Invoice-only street');
+    expect($this->customer->fresh()->billing_address)->toBe('Original address');
+});

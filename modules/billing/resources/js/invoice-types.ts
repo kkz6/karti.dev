@@ -22,6 +22,7 @@ export type InvoiceFormData = {
     terms: string;
     payment_instructions: string;
     refresh_customer: boolean;
+    correct_payment_currency?: boolean;
     billing_details: { customer: Record<string, string>; seller: Record<string, string> };
     items: InvoiceLine[];
 };
@@ -73,40 +74,9 @@ export function editableInvoice(invoice: InvoiceData): InvoiceFormData {
         internal_note: invoice.internal_note ?? '',
         terms: invoice.terms ?? '',
         payment_instructions: invoice.payment_instructions ?? '',
-        billing_details:
-            invoice.status === 'issued'
-                ? {
-                      customer: Object.fromEntries(
-                          [
-                              'display_name',
-                              'legal_name',
-                              'billing_address',
-                              'billing_address_line_2',
-                              'billing_city',
-                              'billing_state',
-                              'billing_postal_code',
-                              'billing_country',
-                              'tax_identifier',
-                              'phone',
-                          ].map((key) => [key, String((invoice.customer_snapshot as Record<string, unknown>)[key] ?? '')]),
-                      ),
-                      seller: Object.fromEntries(
-                          [
-                              'legal_name',
-                              'address',
-                              'address_line_2',
-                              'city',
-                              'state',
-                              'postal_code',
-                              'country',
-                              'tax_identifier',
-                              'email',
-                              'phone',
-                          ].map((key) => [key, String((invoice.seller_snapshot as Record<string, unknown>)[key] ?? '')]),
-                      ),
-                  }
-                : { customer: {}, seller: {} },
+        billing_details: { customer: {}, seller: {} },
+        correct_payment_currency: false,
         refresh_customer: false,
-        items: invoice.items.map((line) => ({ ...line, additional_description: line.additional_description ?? '' })),
+        items: invoice.items.map((line) => ({ ...line, additional_description: line.additional_description ?? '', unit: line.unit ?? '' })),
     };
 }

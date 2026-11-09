@@ -102,7 +102,15 @@ export function InvoiceComposer({
     }, [open, invoiceId, customerId]);
     const close = async () => {
         if (busy || formBusy) return;
-        if (dirty && !(await confirm('Discard your unsaved invoice changes? Saved details will be kept.'))) return;
+        if (
+            dirty &&
+            !(await confirm('Your changes have not been saved. Discard them and close the editor?', {
+                title: 'Discard unsaved changes?',
+                action: 'Discard changes',
+                cancel: 'Keep editing',
+            }))
+        )
+            return;
         if (saved || issued) {
             setBusy(true);
             const url = new URL(window.location.href);
@@ -216,7 +224,7 @@ export function InvoiceComposer({
             >
                 <DialogContent
                     overlayClassName="bg-black/45"
-                    className={`invoice-editor-modal bg-card flex max-h-[94dvh] w-[calc(100%-1rem)] max-w-[calc(100%-1rem)] flex-col gap-0 overflow-hidden p-0 ${compactLoading ? 'sm:max-w-sm' : waitingForContent || stage === 'done' ? 'sm:max-w-lg' : 'sm:max-w-6xl'}`}
+                    className={`invoice-editor-modal bg-card flex max-h-[94dvh] w-[calc(100%-1rem)] max-w-[calc(100%-1rem)] flex-col gap-0 overflow-clip p-0 ${compactLoading ? 'sm:max-w-sm' : waitingForContent || stage === 'done' ? 'sm:max-w-lg' : 'sm:max-w-6xl'}`}
                     onInteractOutside={(e) => e.preventDefault()}
                     onEscapeKeyDown={(e) => {
                         e.preventDefault();
@@ -248,7 +256,7 @@ export function InvoiceComposer({
                                             : 'New draft'}
                             </Badge>
                         </div>
-                        <DialogDescription>
+                        <DialogDescription className={stage === 'edit' ? 'sr-only' : undefined}>
                             {stage === 'done'
                                 ? 'Your invoice has a permanent number and is ready to share.'
                                 : stage === 'review'

@@ -14,7 +14,7 @@ class ValidateDraftReferences
     {
         abort_if($invoice && $invoice->status !== 'draft' && ! ($allowIssued && $invoice->status === 'issued'), 409, 'This invoice cannot be edited.');
         if ($invoice && $invoice->version !== (int) $data['version']) {
-            throw ValidationException::withMessages(['version' => 'This draft changed in another session. Reload it before saving your changes.']);
+            throw ValidationException::withMessages(['version' => 'This invoice changed in another session. Reload it before saving your changes.']);
         }
         $customer = Customer::whereKey($data['customer_id'])->when($lock, fn ($query) => $query->lockForUpdate())->firstOrFail();
         if ($customer->archived_at !== null && $invoice?->customer_id !== $customer->id) {

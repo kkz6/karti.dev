@@ -12,16 +12,18 @@ import { useRef, useState } from 'react';
 
 export function useBillingConfirm() {
     const [message, setMessage] = useState<string | null>(null);
+    const [labels, setLabels] = useState({ title: 'Confirm change', action: 'Continue', cancel: 'Cancel' });
     const resolve = useRef<((accepted: boolean) => void) | null>(null);
     const close = (accepted: boolean) => {
         resolve.current?.(accepted);
         resolve.current = null;
         setMessage(null);
     };
-    const confirm = (description: string) =>
+    const confirm = (description: string, options?: { title: string; action: string; cancel: string }) =>
         new Promise<boolean>((done) => {
             resolve.current?.(false);
             resolve.current = done;
+            setLabels(options ?? { title: 'Confirm change', action: 'Continue', cancel: 'Cancel' });
             setMessage(description);
         });
     const dialog = (
@@ -33,15 +35,15 @@ export function useBillingConfirm() {
         >
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Confirm change</AlertDialogTitle>
+                    <AlertDialogTitle>{labels.title}</AlertDialogTitle>
                     <AlertDialogDescription>{message}</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel type="button" onClick={() => close(false)}>
-                        Cancel
+                        {labels.cancel}
                     </AlertDialogCancel>
                     <AlertDialogAction type="button" onClick={() => close(true)}>
-                        Continue
+                        {labels.action}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

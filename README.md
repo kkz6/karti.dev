@@ -115,6 +115,10 @@ For production, run the worker under a process supervisor or use Laravel Horizon
 
 Invoice delivery, payment receipts and payment-provider processing use the configured default queue. Horizon is optional. After upgrading from the previous dedicated `billing` queue, drain jobs already waiting there with `php artisan queue:work --queue=default,billing`. Moving new jobs to the default queue does not move jobs that are already queued.
 
+### Invoice corrections
+
+Issued and paid invoices can be edited without changing their number. Use the pencil beside **Bill to** for the invoice's billing address; company details remain in Billing settings. Changing currency preserves entered prices. For recorded manual or imported payments, **Correct currency and save** updates the invoice and payments together without exchange conversion, records the old and new values, and preserves transaction references. This requires payment-recording permission. Provider charges and payments that would require rounding cannot be corrected this way. Saving an edit does not send an email.
+
 ### Media storage
 
 Local storage works out of the box. To use S3, set `FILESYSTEM_DISK=s3` and configure the `AWS_*` values in `.env`. Image presets and the code-managed compression defaults are visible under **Admin → Media settings**.

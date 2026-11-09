@@ -19,7 +19,7 @@ export function InvoiceItemsHeader() {
             role="row"
             className={cn('text-muted-foreground hidden items-center gap-3 border-b px-3 py-2.5 text-xs font-medium lg:grid', itemColumns)}
         >
-            {['Item', 'Description *', 'Quantity *', 'Unit price *', 'Unit *', 'Amount', 'Actions'].map((label) => (
+            {['Item', 'Description *', 'Quantity *', 'Unit price *', 'Unit', 'Amount', 'Actions'].map((label) => (
                 <div key={label} role="columnheader" className={label === 'Amount' ? 'text-right' : undefined}>
                     <span className={label === 'Actions' ? 'sr-only' : undefined}>{label}</span>
                 </div>
@@ -102,7 +102,7 @@ export function InvoiceItemEditor({
                 {(['quantity', 'rate', 'unit'] as const).map((field) => (
                     <div key={field} role="cell" className="space-y-1 lg:space-y-0">
                         <Label htmlFor={`${field}-${line.key}`} className="text-muted-foreground text-xs lg:sr-only">
-                            {field === 'rate' ? 'Unit price *' : field === 'quantity' ? 'Quantity *' : 'Unit *'}
+                            {field === 'rate' ? 'Unit price *' : field === 'quantity' ? 'Quantity *' : 'Unit'}
                         </Label>
                         <Input
                             id={`${field}-${line.key}`}
