@@ -8,7 +8,10 @@ import { Label } from '@shared/components/ui/label';
 import { PhoneInput } from '@shared/components/ui/phone-input';
 import { Textarea } from '@shared/components/ui/textarea';
 import { statusTone } from '@shared/lib/status-colors';
-import { useEffect, useState } from 'react';
+import axios from 'axios';
+import { LoaderCircle, Mail, MessageSquare, Send } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import type { InvoiceData } from '../invoice-types';
 import { deliveryTime, watchDelivery, type DeliveryEcho } from '../lib/delivery-history';
 import { parseRecipients, validEmail } from '../lib/recipients';
@@ -59,6 +62,34 @@ export function InvoiceDelivery({
         () => watchDelivery((window as Window & { Echo?: DeliveryEcho }).Echo, shouldWatch, invoice.id, () => router.reload({ only: [reloadKey] })),
         [shouldWatch, invoice.id, reloadKey],
     );
+    const [history, setHistory] = useState(deliveries);
+    const [sendingId, setSendingId] = useState<number | null>(null);
+    const sendPending = useRef(false);
+    useEffect(() => setHistory(deliveries), [deliveries]);
+    async function sendNow(delivery: Delivery) {
+        if (sendPending.current) return;
+        sendPending.current = true;
+        setSendingId(delivery.id);
+        try {
+            const { data } = await axios.post<{ delivery: Delivery }>(
+                route('admin.invoices.deliveries.send-now', [invoice.id, delivery.id]),
+                {},
+                {
+                    headers: { Accept: 'application/json' },
+                },
+            );
+            setHistory((current) => current?.map((item) => (item.id === data.delivery.id ? data.delivery : item)) ?? null);
+            router.reload({ only: [reloadKey] });
+            if (data.delivery.state === 'sent') toast.success('Email accepted for delivery.');
+            else if (data.delivery.state === 'sending') toast.info('This email is already being sent.');
+            else toast.error(data.delivery.error || 'This email was not sent. Check its delivery status.');
+        } catch {
+            toast.error('Could not confirm delivery. Check the delivery history before sending again.');
+        } finally {
+            sendPending.current = false;
+            setSendingId(null);
+        }
+    }
     const [recipientDraft, setRecipientDraft] = useState('');
     const [open, setOpen] = useState(initialOpen);
     const contacts = (invoice.customer_snapshot as { contacts?: { email?: string; phone?: string }[] }).contacts ?? [];
@@ -96,66 +127,97 @@ export function InvoiceDelivery({
     return (
         <>
             <Card className={embedded ? 'rounded-none border-0 bg-transparent' : undefined}>
-                <CardHeader className={embedded ? 'px-0 pt-0 pb-3' : undefined}>
-                    <CardTitle>Email & SMS</CardTitle>
-                </CardHeader>
-                <CardContent className={embedded ? 'space-y-4 p-0' : 'space-y-4'}>
+                <CardHeader
+                    className={
+                        embedded
+                            ? 'flex flex-row items-center justify-between gap-3 px-0 pt-0 pb-4'
+                            : 'flex flex-row items-center justify-between gap-3'
+                    }
+                >
+                    <CardTitle>Delivery history</CardTitle>
                     {canSend && (
                         <Button
-                            variant="outline"
+                            size="sm"
                             onClick={() => {
                                 compose('email');
                                 setOpen(true);
                             }}
                         >
-                            Send invoice
+                            <Send className="size-4" /> Send invoice
                         </Button>
                     )}
-                    {deliveries !== null && (
-                        <>
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                                <p className="text-muted-foreground text-sm">Each send or intentional resend keeps a separate record.</p>
+                </CardHeader>
+                <CardContent className={embedded ? 'space-y-3 p-0' : 'space-y-3'}>
+                    {history !== null &&
+                        (history.length === 0 ? (
+                            <div className="text-muted-foreground rounded-lg border border-dashed px-5 py-8 text-center text-sm">
+                                <Mail className="mx-auto mb-3 size-6" />
+                                No messages sent yet.
                             </div>
-                            {deliveries.length === 0 ? (
-                                <p className="text-muted-foreground text-sm">No delivery attempts.</p>
-                            ) : (
-                                <ol className="divide-y">
-                                    {deliveries.map((delivery) => (
-                                        <li key={delivery.id} className="space-y-2 py-3">
-                                            <div className="flex flex-wrap gap-2">
-                                                <Badge variant="outline">
-                                                    {delivery.channel === 'sms' ? 'SMS' : 'Email'}
-                                                    {delivery.provider ? ` · ${delivery.provider.toUpperCase()}` : ''}
-                                                </Badge>
-                                                <Badge variant={statusTone(delivery.state)}>
-                                                    {delivery.state === 'sent' ? 'Provider accepted' : delivery.state}
-                                                </Badge>
-                                                <span className="text-sm">{delivery.subject}</span>
+                        ) : (
+                            <ol className="space-y-3">
+                                {history.map((delivery) => (
+                                    <li key={delivery.id} className="rounded-lg border p-4">
+                                        <div className="flex items-start gap-3">
+                                            <div
+                                                className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg"
+                                                aria-hidden="true"
+                                            >
+                                                {delivery.channel === 'sms' ? <MessageSquare className="size-4" /> : <Mail className="size-4" />}
                                             </div>
-                                            <p className="text-muted-foreground text-sm break-all">
-                                                {delivery.recipients.join(', ')} ·{' '}
-                                                <time dateTime={delivery.created_at}>{deliveryTime(delivery.created_at)}</time>
-                                            </p>
-                                            {delivery.actor_name && (
-                                                <p className="text-muted-foreground text-xs">Requested by {delivery.actor_name}</p>
-                                            )}
-                                            {delivery.provider_reference && (
-                                                <p className="text-muted-foreground text-xs break-all">
-                                                    Provider reference: {delivery.provider_reference}
+                                            <div className="min-w-0 flex-1 space-y-2">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <p className="text-sm font-medium break-words">{delivery.subject}</p>
+                                                    <Badge variant={statusTone(delivery.state)}>
+                                                        {{
+                                                            queued: 'Queued',
+                                                            sending: 'Sending',
+                                                            sent: 'Sent',
+                                                            failed: 'Failed',
+                                                            uncertain: 'Unconfirmed',
+                                                            skipped: 'Skipped',
+                                                        }[delivery.state] ?? delivery.state}
+                                                    </Badge>
+                                                </div>
+                                                <p className="text-muted-foreground text-sm break-words">{delivery.recipients.join(', ')}</p>
+                                                <p className="text-muted-foreground text-xs">
+                                                    {delivery.sent_at ? 'Accepted ' : 'Requested '}
+                                                    <time dateTime={delivery.sent_at ?? delivery.created_at}>
+                                                        {deliveryTime(delivery.sent_at ?? delivery.created_at)}
+                                                    </time>
+                                                    {!delivery.sent_at && delivery.actor_name ? ` · ${delivery.actor_name}` : ''}
                                                 </p>
-                                            )}
-                                            {delivery.sent_at && (
-                                                <p className="text-sm">
-                                                    Provider accepted: <time dateTime={delivery.sent_at}>{deliveryTime(delivery.sent_at)}</time>
-                                                </p>
-                                            )}
-                                            {delivery.error && <BillingFeedback kind="error">{delivery.error}</BillingFeedback>}
-                                        </li>
-                                    ))}
-                                </ol>
-                            )}
-                        </>
-                    )}
+                                                {delivery.channel !== 'sms' && delivery.state === 'queued' && (
+                                                    <p className="text-muted-foreground text-xs">Waiting to send. You can send this email now.</p>
+                                                )}
+                                                {delivery.error && <BillingFeedback kind="error">{delivery.error}</BillingFeedback>}
+                                                {canSend && delivery.channel !== 'sms' && delivery.state === 'queued' && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        disabled={sendingId !== null}
+                                                        onClick={() => void sendNow(delivery)}
+                                                    >
+                                                        {sendingId === delivery.id ? (
+                                                            <LoaderCircle className="size-4 animate-spin" />
+                                                        ) : (
+                                                            <Send className="size-4" />
+                                                        )}
+                                                        {sendingId === delivery.id ? 'Sending…' : 'Send now'}
+                                                    </Button>
+                                                )}
+                                                {delivery.provider_reference && (
+                                                    <details className="text-muted-foreground text-xs">
+                                                        <summary className="cursor-pointer">Delivery details</summary>
+                                                        <p className="mt-2 break-all">Provider reference: {delivery.provider_reference}</p>
+                                                    </details>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ol>
+                        ))}
                 </CardContent>
             </Card>
             <Dialog

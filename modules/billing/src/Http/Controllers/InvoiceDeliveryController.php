@@ -2,14 +2,37 @@
 
 namespace Modules\Billing\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Modules\Billing\Actions\QueueInvoiceDelivery;
+use Modules\Billing\Jobs\DeliverInvoice;
 use Modules\Billing\Models\Invoice;
+use Modules\Billing\Models\InvoiceDelivery;
+use Modules\Settings\Support\EmailConfiguration;
 use Modules\Shared\Http\Controllers\BaseController;
 
 class InvoiceDeliveryController extends BaseController
 {
+    public function sendNow(Invoice $invoice, InvoiceDelivery $delivery, EmailConfiguration $configuration): JsonResponse
+    {
+        $this->authorize('view', $invoice);
+        $this->authorize('send', $invoice);
+        abort_unless($delivery->invoice_id === $invoice->id, 404);
+        abort_unless($delivery->channel === 'email', 422, 'Only queued emails can be sent now.');
+
+        // Use the worker's atomic claim so simultaneous requests cannot send twice.
+        // Never reset or resend a terminal attempt.
+        if ($delivery->state === 'queued') {
+            (new DeliverInvoice($delivery->id))->handle($configuration);
+        }
+
+        return response()->json(['delivery' => $delivery->fresh()->only([
+            'id', 'recipients', 'subject', 'kind', 'channel', 'provider', 'state', 'error',
+            'created_at', 'sent_at', 'provider_reference', 'actor_name',
+        ])]);
+    }
+
     public function __invoke(Request $request, Invoice $invoice, QueueInvoiceDelivery $action): RedirectResponse
     {
         $this->authorize('view', $invoice);

@@ -108,3 +108,65 @@ test('delivery channel authorization requires invoice view and send permissions'
         ->and($authorize($sender, $this->invoice->id))->toBeFalse()
         ->and($authorize($this->admin, $this->invoice->id))->toBeTrue();
 });
+
+test('send now delivers the queued email once even when its original job later runs', function () {
+    $delivery = app(QueueInvoiceDelivery::class)->handle($this->invoice, $this->input, $this->admin);
+    $url      = route('admin.invoices.deliveries.send-now', [$this->invoice, $delivery]);
+    $this->postJson($url)->assertOk()->assertJsonPath('delivery.state', 'sent')
+        ->assertJsonMissingPath('delivery.pdf_path')->assertJsonMissingPath('delivery.invoice_url');
+    $this->postJson($url)->assertOk()->assertJsonPath('delivery.state', 'sent');
+    (new DeliverInvoice($delivery->id))->handle(app(EmailConfiguration::class));
+    Mail::assertSent(InvoiceEmail::class, 1);
+    expect(InvoiceDelivery::count())->toBe(1);
+});
+
+test('send now requires view and send permissions and the matching invoice', function () {
+    $delivery = app(QueueInvoiceDelivery::class)->handle($this->invoice, $this->input, $this->admin);
+    $url      = route('admin.invoices.deliveries.send-now', [$this->invoice, $delivery]);
+    foreach (['view invoice', 'send invoice'] as $permission) {
+        $this->actingAs(User::factory()->create()->givePermissionTo($permission))->postJson($url)->assertForbidden();
+    }
+    // Route binding must reject an existing delivery belonging to a different invoice.
+    $other = app(SaveInvoiceDraft::class)->handle(['customer_id' => $this->invoice->customer_id, 'invoice_date' => '2026-10-10', 'currency' => 'INR', 'discount_mode' => 'none', 'discount_value' => '0', 'items' => [['key' => (string) Str::uuid(), 'description' => 'Other', 'unit' => 'hour', 'quantity' => '1', 'rate' => '100', 'taxes' => []]]]);
+    $this->actingAs($this->admin)->postJson(route('admin.invoices.deliveries.send-now', [$other, $delivery]))->assertNotFound();
+    Mail::assertNothingSent();
+});
+
+test('send now does not reset completed failed or in-flight attempts', function (string $state) {
+    $delivery = app(QueueInvoiceDelivery::class)->handle($this->invoice, $this->input, $this->admin);
+    $delivery->update(['state' => $state, 'started_at' => now()]);
+    $this->postJson(route('admin.invoices.deliveries.send-now', [$this->invoice, $delivery]))
+        ->assertOk()->assertJsonPath('delivery.state', $state);
+    Mail::assertNothingSent();
+})->with(['sent', 'sending', 'failed', 'uncertain', 'skipped']);
+
+test('send now retains eligibility and attachment checks', function (bool $cancelled) {
+    $delivery = app(QueueInvoiceDelivery::class)->handle($this->invoice, $this->input, $this->admin);
+    if ($cancelled) {
+        $this->invoice->forceFill(['status' => 'cancelled'])->save();
+    } else {
+        Storage::disk('local')->delete($delivery->pdf_path);
+    }
+    $this->postJson(route('admin.invoices.deliveries.send-now', [$this->invoice, $delivery]))
+        ->assertOk()->assertJsonPath('delivery.state', $cancelled ? 'skipped' : 'failed');
+    Mail::assertNothingSent();
+})->with([true, false]);
+
+test('send now reports uncertain provider outcomes without resending', function () {
+    $this->withoutMiddleware(\Modules\Settings\Http\Middleware\ApplyEmailSettings::class);
+    $delivery      = app(QueueInvoiceDelivery::class)->handle($this->invoice, $this->input, $this->admin);
+    $configuration = Mockery::mock(EmailConfiguration::class);
+    $configuration->shouldReceive('run')->once()->andThrow(new RuntimeException('Private transport detail'));
+    $this->app->instance(EmailConfiguration::class, $configuration);
+    $url = route('admin.invoices.deliveries.send-now', [$this->invoice, $delivery]);
+    $this->postJson($url)->assertOk()->assertJsonPath('delivery.state', 'uncertain')->assertDontSee('Private transport detail');
+    $this->postJson($url)->assertOk()->assertJsonPath('delivery.state', 'uncertain');
+    Mail::assertNothingSent();
+});
+
+test('send now cannot send SMS', function () {
+    $delivery = app(QueueInvoiceDelivery::class)->handle($this->invoice, $this->input, $this->admin);
+    $delivery->update(['channel' => 'sms']);
+    $this->postJson(route('admin.invoices.deliveries.send-now', [$this->invoice, $delivery]))->assertUnprocessable();
+    Mail::assertNothingSent();
+});
