@@ -82,7 +82,7 @@ export function InvoicePreviewDialog({ data, onClose, onEdit }: { data: InvoiceV
                         {data.canUpdate && (
                             <Button variant="outline" onClick={() => onEdit(invoice.id)}>
                                 <Pencil />
-                                Edit draft
+                                {invoice.status === 'draft' ? 'Edit draft' : 'Edit invoice'}
                             </Button>
                         )}
                     </div>

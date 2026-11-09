@@ -25,6 +25,9 @@ class SaveInvoiceDraft
             if (! $invoice->exists) {
                 $invoice->seller_snapshot = Arr::only(app(BillingSettings::class)->toArray(), ['display_name', 'legal_name', 'address', 'address_line_2', 'city', 'state', 'postal_code', 'country', 'tax_identifier', 'email', 'phone', 'logo_media_id']);
             }
+            if (! empty($data['billing_details']['customer']) && ! ($data['refresh_customer'] ?? false)) {
+                $invoice->customer_snapshot = [...$invoice->customer_snapshot, ...$data['billing_details']['customer']];
+            }
             $invoice->fill(Arr::only($data, ['customer_id', 'invoice_date', 'due_date', 'currency', 'discount_mode', 'discount_value', 'customer_note', 'internal_note', 'terms', 'payment_instructions']));
             $invoice->currency_precision = $totals['precision'];
             foreach (['subtotal_minor', 'discount_minor', 'tax_minor', 'total_minor'] as $field) {
@@ -40,6 +43,7 @@ class SaveInvoiceDraft
                 $lineTotals = $totals['lines'][$position];
                 $item       = $invoice->items()->create([
                     ...Arr::only($input, ['key', 'service_id', 'description', 'additional_description', 'unit', 'quantity', 'rate']),
+                    'unit' => $input['unit'] ?? '',
                     ...Arr::only($lineTotals, ['gross_minor', 'discount_minor', 'net_minor', 'tax_minor', 'total_minor']), 'position' => $position,
                 ]);
                 foreach ($lineTotals['taxes'] as $tax) {
