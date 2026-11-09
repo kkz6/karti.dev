@@ -61,7 +61,7 @@ export function InvoiceSharingDialog({
                 </DialogHeader>
                 <Tabs defaultValue={hasDelivery ? 'delivery' : 'sharing'} className="flex min-h-0 flex-col">
                     {hasDelivery && hasSharing && (
-                        <TabsList className="mx-5 mb-2 grid shrink-0 grid-cols-2 sm:mx-6" aria-label="Send and sharing options">
+                        <TabsList className="bg-accent mx-5 mb-2 grid shrink-0 grid-cols-2 sm:mx-6" aria-label="Send and sharing options">
                             <TabsTrigger value="delivery">Email & SMS</TabsTrigger>
                             <TabsTrigger value="sharing">Links & reminders</TabsTrigger>
                         </TabsList>
